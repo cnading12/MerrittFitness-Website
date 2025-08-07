@@ -113,15 +113,10 @@ export default function BookingPage() {
               {/* Embedded Google Calendar */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe 
-                  src="https://calendar.google.com/calendar/embed?src=YOUR_CALENDAR_ID_HERE&ctz=America/Denver&mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
+                  src="https://calendar.google.com/calendar/embed?src=04ac99c7464fa75a7fe252eccd8fff5cffd50a9de27f25555cb8886708b8ef21@group.calendar.google.com&ctz=America/Denver&mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
                   className="w-full h-96"
                   title="Available booking times - Replace YOUR_CALENDAR_ID_HERE with your actual calendar ID"
                 />
-              </div>
-              <div className="text-center mb-6">
-                <p className="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  📅 <strong>Next:</strong> Replace "YOUR_CALENDAR_ID_HERE" in the calendar embed above with your actual Google Calendar ID
-                </p>
               </div>
 
               {/* Date & Time Selection */}

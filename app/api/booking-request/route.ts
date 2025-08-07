@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     // Send email to staff
     const { data: staffEmail, error: staffEmailError } = await resend.emails.send({
-      from: 'Merritt Fitness <onboarding@resend.dev>',
+      from: 'Merritt Fitness <bookings@merritthouse.com>',
       to: 'merrittfitnessmanager@gmail.com',
       subject: `🧘 New Booking Request: ${bookingData.eventName}`,
       html: `
@@ -53,16 +53,11 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    // Send confirmation email to customer (only if it's your verified email for testing)
-    let customerEmail = null;
-    let customerEmailError = null;
-    
-    // Only send customer email if it's the same as your verified email (for testing)
-    if (bookingData.email === 'merrittfitnessmanager@gmail.com') {
-      const customerEmailResponse = await resend.emails.send({
-        from: 'Merritt Fitness <onboarding@resend.dev>',
-        to: bookingData.email,
-        subject: '🙏 Booking Request Received - Merritt Fitness',
+    // Send confirmation email to customer
+    const customerEmailResponse = await resend.emails.send({
+      from: 'Merritt Fitness <bookings@merritthouse.com>',
+      to: bookingData.email,
+      subject: '🙏 Booking Request Received - Merritt Fitness',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #059669, #065f46); padding: 30px; text-align: center; color: white;">
@@ -98,28 +93,23 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-      });
-      customerEmail = customerEmailResponse.data;
-      customerEmailError = customerEmailResponse.error;
-    }
+    });
+    const customerEmail = customerEmailResponse.data;
+    const customerEmailError = customerEmailResponse.error;
 
-    if (staffEmailError) {
-      console.error('Staff email error:', staffEmailError);
+    if (staffEmailError || customerEmailError) {
+      console.error('Email errors:', { staffEmailError, customerEmailError });
       return NextResponse.json(
-        { error: 'Failed to send staff notification', details: staffEmailError },
+        { error: 'Failed to send emails', details: { staffEmailError, customerEmailError } },
         { status: 500 }
       );
     }
 
-    // Return success even if customer email fails (since it's testing limitation)
     return NextResponse.json({ 
       success: true, 
       message: 'Booking request submitted successfully',
       staffEmailId: staffEmail?.id,
-      customerEmailId: customerEmail?.id,
-      note: bookingData.email !== 'merrittfitnessmanager@gmail.com' 
-        ? 'Customer confirmation email skipped (testing limitation)' 
-        : 'Customer confirmation sent'
+      customerEmailId: customerEmail?.id
     });
 
   } catch (error) {
