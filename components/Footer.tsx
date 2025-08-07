@@ -1,29 +1,40 @@
-// components/Footer.tsx
-import { FaFacebook, FaInstagram } from "react-icons/fa";
+import Link from "next/link";
+import { Instagram, Facebook, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 text-gray-700 text-sm py-4 px-6">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Contact Info */}
-        <div className="text-center sm:text-left">
-          <p className="mb-1">Phone: (720) 357-9499 · (720) 498-6734</p>
-          <p>Email: <a href="mailto:vanishmoving@gmail.com" className="underline">vanishmoving@gmail.com</a></p>
-        </div>
-
-        {/* Social Icons */}
-        <div className="flex gap-4">
-          <a href="https://www.facebook.com/profile.php?id=61576756012701" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <FaFacebook size={18} />
+    <footer className="bg-white border-t border-gray-100 py-5 px-4">
+      <div className="max-w-4xl mx-auto flex flex-col items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-gray-600 text-sm">
+          <Link
+            href="https://www.instagram.com/YOUR_INSTAGRAM_HANDLE"
+            className="flex items-center gap-1 hover:text-blue-500 transition"
+            target="_blank" rel="noopener"
+          >
+            <Instagram size={18} /> Instagram
+          </Link>
+          <Link
+            href="https://www.facebook.com/YOUR_FACEBOOK_PAGE"
+            className="flex items-center gap-1 hover:text-blue-700 transition"
+            target="_blank" rel="noopener"
+          >
+            <Facebook size={18} /> Facebook
+          </Link>
+          <a
+            href="tel:123-456-7890"
+            className="flex items-center gap-1 hover:text-green-600 transition"
+          >
+            <Phone size={18} /> (123) 456-7890
           </a>
-          <a href="https://www.instagram.com/vanishmovingco/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <FaInstagram size={18} />
+          <a
+            href="mailto:info@merrittfitness.com"
+            className="flex items-center gap-1 hover:text-rose-700 transition"
+          >
+            <Mail size={18} /> info@merrittfitness.com
           </a>
         </div>
-
-        {/* Copyright */}
-        <div className="text-center sm:text-right">
-          <p>&copy; {new Date().getFullYear()} Vanish Moving Company</p>
+        <div className="text-gray-400 text-xs text-center mt-2">
+          © {new Date().getFullYear()} Merritt Fitness. All rights reserved.
         </div>
       </div>
     </footer>
