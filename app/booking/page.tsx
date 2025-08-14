@@ -92,75 +92,43 @@ export default function BookingPage() {
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setSubmitMessage('');
+  setIsSubmitting(true);
+  setSubmitMessage('');
 
-    try {
-      console.log('🚀 Submitting booking...');
+  try {
+    console.log('🚀 Submitting booking...');
 
-      // Step 1: Create booking
-      const bookingResponse = await fetch('/api/booking-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          selectedDate,
-          selectedTime,
-          ...formData,
-          total: calculateEstimatedPrice(),
-          paymentMethod: 'pending'
-        }),
-      });
+    // Step 1: Create booking
+    const bookingResponse = await fetch('/api/booking-request', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        selectedDate,
+        selectedTime,
+        ...formData,
+        total: calculateEstimatedPrice(),
+        paymentMethod: 'pending'
+      }),
+    });
 
-      console.log('📊 Response status:', bookingResponse.status);
-      console.log('📊 Response ok:', bookingResponse.ok);
+    const bookingResult = await bookingResponse.json();
 
-      // Check if response is actually JSON
-      const contentType = bookingResponse.headers.get('content-type');
-      console.log('📊 Content type:', contentType);
-
-      if (!contentType || !contentType.includes('application/json')) {
-        const textResponse = await bookingResponse.text();
-        console.error('❌ Non-JSON response:', textResponse);
-        setSubmitMessage('❌ Server error: Invalid response format');
-        return;
-      }
-
-      const bookingResult = await bookingResponse.json();
-      console.log('📊 Booking result:', bookingResult);
-
-      if (bookingResponse.ok && bookingResult.success) {
-        setBookingId(bookingResult.id);
-        setShowConfirmation(true);
-        setSubmitMessage('✅ Booking request created successfully!');
-
-        // Reset form
-        setSelectedDate('');
-        setSelectedTime('');
-        setFormData({
-          eventName: '',
-          eventType: '',
-          attendees: '',
-          duration: '',
-          contactName: '',
-          email: '',
-          phone: '',
-          specialRequests: ''
-        });
-        setAvailableSlots({});
-      } else {
-        setSubmitMessage(`❌ ${bookingResult.error || 'Failed to create booking'}`);
-        console.error('Booking creation error:', bookingResult);
-      }
-    } catch (error) {
-      console.error('❌ Network/JSON error:', error);
-      setSubmitMessage('❌ Network error. Please check your connection and try again.');
-    } finally {
-      setIsSubmitting(false);
+    if (bookingResponse.ok && bookingResult.success) {
+      // Redirect to payment page instead of showing confirmation
+      window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
+    } else {
+      setSubmitMessage(`❌ ${bookingResult.error || 'Failed to create booking'}`);
+      console.error('Booking creation error:', bookingResult);
     }
-  };
-
+  } catch (error) {
+    console.error('❌ Network/JSON error:', error);
+    setSubmitMessage('❌ Network error. Please check your connection and try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const isFormValid = selectedDate && selectedTime && formData.eventName && formData.contactName && formData.email && formData.eventType && availableSlots[selectedTime];
 
   // Show confirmation screen after successful booking

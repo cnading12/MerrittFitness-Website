@@ -1,9 +1,8 @@
-// app/lib/stripe-config.js
 import Stripe from 'stripe';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16', // Use latest stable API version
+  apiVersion: '2023-10-16',
   typescript: false,
 });
 
@@ -25,23 +24,8 @@ export const PAYMENT_CONFIG = {
   
   // Fee structure (for transparency)
   fees: {
-    card: {
-      percentage: 2.9, // 2.9%
-      fixed: 30, // + $0.30
-    },
-    ach: {
-      percentage: 0.8, // 0.8%
-      fixed: 5, // + $0.05
-      cap: 500, // capped at $5.00
-    }
-  },
-  
-  // Security settings
-  security: {
-    enableRadarRules: true,
-    requireCVV: true,
-    requireZipCode: true,
-    enableSCA: true, // Strong Customer Authentication
+    card: { percentage: 2.9, fixed: 30 },
+    ach: { percentage: 0.8, fixed: 5, cap: 500 }
   }
 };
 
@@ -91,11 +75,6 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
         allow_redirects: 'never', // Keep user on our site
       },
       
-      // Enhanced fraud protection
-      radar_options: {
-        session: paymentMethod === 'card' ? generateRadarSession(bookingData) : undefined,
-      },
-      
       // Capture method - we'll capture immediately for events
       capture_method: 'automatic',
       
@@ -111,8 +90,8 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       paymentIntentData.payment_method_types = ['us_bank_account'];
       paymentIntentData.payment_method_options = {
         us_bank_account: {
-          verification_method: 'automatic', // Faster verification
-          preferred_settlement_speed: 'fastest', // Usually 1-2 business days
+          verification_method: 'automatic',
+          preferred_settlement_speed: 'fastest',
         },
       };
     }
@@ -128,110 +107,7 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
   }
 }
 
-// Generate Radar session for enhanced fraud detection
-function generateRadarSession(bookingData) {
-  return {
-    id: `booking_${bookingData.id}_${Date.now()}`,
-    version: '1.0.0',
-  };
-}
-
-// Confirm payment with additional security checks
-export async function confirmPaymentWithSecurity(paymentIntentId, paymentMethodId, bookingData) {
-  try {
-    console.log('🔒 Confirming payment with security checks...');
-    
-    const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
-      payment_method: paymentMethodId,
-      
-      // Use our return URL for 3D Secure
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/payment-complete?booking_id=${bookingData.id}`,
-      
-      // Additional fraud prevention
-      use_stripe_sdk: true,
-    });
-    
-    console.log('✅ Payment confirmed:', paymentIntent.id, 'Status:', paymentIntent.status);
-    return paymentIntent;
-    
-  } catch (error) {
-    console.error('❌ Payment confirmation error:', error);
-    throw error;
-  }
-}
-
-// Create customer for repeat bookings and ACH
-export async function createSecureCustomer(customerData) {
-  try {
-    const customer = await stripe.customers.create({
-      email: customerData.email,
-      name: customerData.contactName,
-      phone: customerData.phone,
-      
-      // Address for enhanced verification
-      address: {
-        line1: customerData.address?.line1,
-        line2: customerData.address?.line2,
-        city: customerData.address?.city,
-        state: customerData.address?.state,
-        postal_code: customerData.address?.postal_code,
-        country: 'US',
-      },
-      
-      // Metadata for tracking
-      metadata: {
-        source: 'merritt_house_booking',
-        created_by: 'booking_system',
-        first_booking_id: customerData.bookingId,
-      },
-      
-      // Tax ID collection (for business customers)
-      tax_exempt: 'none',
-    });
-    
-    console.log('✅ Secure customer created:', customer.id);
-    return customer;
-    
-  } catch (error) {
-    console.error('❌ Customer creation error:', error);
-    throw error;
-  }
-}
-
-// Setup ACH with verification
-export async function setupACHPayment(customerId, bookingData) {
-  try {
-    const setupIntent = await stripe.setupIntents.create({
-      customer: customerId,
-      payment_method_types: ['us_bank_account'],
-      usage: 'off_session',
-      
-      // Metadata for tracking
-      metadata: {
-        bookingId: bookingData.id,
-        amount: (bookingData.total * 100).toString(),
-        eventDate: bookingData.selectedDate,
-        purpose: 'event_booking',
-      },
-      
-      // ACH-specific options
-      payment_method_options: {
-        us_bank_account: {
-          verification_method: 'automatic',
-        },
-      },
-    });
-    
-    console.log('✅ ACH setup intent created:', setupIntent.id);
-    return setupIntent;
-    
-  } catch (error) {
-    console.error('❌ ACH setup error:', error);
-    throw error;
-  }
-}
-
-// Validate payment amount and calculate fees
+// Calculate payment details
 export function calculatePaymentDetails(amount, paymentMethod = 'card') {
   const amountCents = Math.round(amount * 100);
   const config = PAYMENT_CONFIG.fees[paymentMethod];
