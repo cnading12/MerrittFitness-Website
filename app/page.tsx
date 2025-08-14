@@ -50,7 +50,7 @@ export default function Home() {
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
           <Image
-            src="/images/hero/1.jpg"
+            src="/images/hero/outside3.jpg"
             alt="Historic Merritt Fitness sanctuary with soaring ceilings and natural light"
             fill
             className="object-cover brightness-75 scale-105 animate-slow-zoom"
