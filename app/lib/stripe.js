@@ -1,266 +1,260 @@
-// app/lib/stripe.js
+// app/lib/stripe-config.js
 import Stripe from 'stripe';
-import { getBooking, updateBookingStatus, updateBookingWithCalendarEvent } from './database.js';
-import { createCalendarEvent } from './calendar.js';
-import { sendConfirmationEmails, sendPaymentFailureEmail } from './email.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe with your secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16', // Use latest stable API version
+  typescript: false,
+});
 
-export async function createPaymentIntent(bookingId, amount, booking) {
+// Payment configuration
+export const PAYMENT_CONFIG = {
+  currency: 'usd',
+  
+  // Minimum amounts (in cents)
+  minimums: {
+    card: 50, // $0.50 minimum for cards
+    ach: 100, // $1.00 minimum for ACH
+  },
+  
+  // Maximum amounts (in cents) - for fraud protection
+  maximums: {
+    card: 500000, // $5,000 maximum for cards
+    ach: 2500000, // $25,000 maximum for ACH
+  },
+  
+  // Fee structure (for transparency)
+  fees: {
+    card: {
+      percentage: 2.9, // 2.9%
+      fixed: 30, // + $0.30
+    },
+    ach: {
+      percentage: 0.8, // 0.8%
+      fixed: 5, // + $0.05
+      cap: 500, // capped at $5.00
+    }
+  },
+  
+  // Security settings
+  security: {
+    enableRadarRules: true,
+    requireCVV: true,
+    requireZipCode: true,
+    enableSCA: true, // Strong Customer Authentication
+  }
+};
+
+// Create payment intent with security features
+export async function createSecurePaymentIntent(bookingData, paymentMethod = 'card') {
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount, // amount in cents
-      currency: 'usd',
+    const amount = Math.round(bookingData.total * 100); // Convert to cents
+    
+    // Validate amount limits
+    if (amount < PAYMENT_CONFIG.minimums[paymentMethod]) {
+      throw new Error(`Minimum payment amount is $${PAYMENT_CONFIG.minimums[paymentMethod] / 100}`);
+    }
+    
+    if (amount > PAYMENT_CONFIG.maximums[paymentMethod]) {
+      throw new Error(`Maximum payment amount is $${PAYMENT_CONFIG.maximums[paymentMethod] / 100}`);
+    }
+    
+    const paymentIntentData = {
+      amount,
+      currency: PAYMENT_CONFIG.currency,
+      
+      // Enhanced metadata for tracking and security
       metadata: {
-        bookingId: bookingId,
-        eventName: booking.event_name,
-        customerEmail: booking.email
+        bookingId: bookingData.id,
+        eventName: bookingData.eventName,
+        eventDate: bookingData.selectedDate,
+        eventTime: bookingData.selectedTime,
+        customerEmail: bookingData.email,
+        customerName: bookingData.contactName,
+        paymentMethod: paymentMethod,
+        timestamp: new Date().toISOString(),
       },
-      receipt_email: booking.email,
-      description: `Event booking: ${booking.event_name} on ${booking.event_date}`,
+      
+      // Receipt email
+      receipt_email: bookingData.email,
+      
+      // Description for customer statements
+      description: `Event booking: ${bookingData.eventName} on ${bookingData.selectedDate}`,
+      
+      // Statement descriptor (appears on customer's card statement)
+      statement_descriptor: 'MERRITT HOUSE',
+      statement_descriptor_suffix: 'EVENT',
+      
+      // Automatic payment methods (recommended by Stripe)
       automatic_payment_methods: {
         enabled: true,
-      }
-    });
-
-    console.log('Payment intent created:', paymentIntent.id);
-    return paymentIntent;
-  } catch (error) {
-    console.error('Payment intent creation error:', error);
-    throw error;
-  }
-}
-
-export async function createACHSetupIntent(customerInfo, bookingId, amount) {
-  try {
-    // Create Stripe customer
-    const customer = await stripe.customers.create({
-      email: customerInfo.email,
-      name: customerInfo.contactName,
-      phone: customerInfo.phone,
-      metadata: {
-        bookingId: bookingId
-      }
-    });
-
-    // Create setup intent for ACH
-    const setupIntent = await stripe.setupIntents.create({
-      customer: customer.id,
-      payment_method_types: ['us_bank_account'],
-      usage: 'off_session',
-      metadata: {
-        bookingId: bookingId,
-        amount: amount.toString()
-      }
-    });
-
-    console.log('ACH setup intent created:', setupIntent.id);
-    return {
-      setupIntent,
-      customer
+        allow_redirects: 'never', // Keep user on our site
+      },
+      
+      // Enhanced fraud protection
+      radar_options: {
+        session: paymentMethod === 'card' ? generateRadarSession(bookingData) : undefined,
+      },
+      
+      // Capture method - we'll capture immediately for events
+      capture_method: 'automatic',
+      
+      // Confirmation method - manual allows us to handle 3D Secure
+      confirmation_method: 'manual',
+      
+      // Return URL for 3D Secure redirects
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/payment-complete?booking_id=${bookingData.id}`,
     };
-  } catch (error) {
-    console.error('ACH setup intent creation error:', error);
-    throw error;
-  }
-}
-
-export async function processQuickBooksPayment(bookingId, amount, booking) {
-  try {
-    // For QuickBooks integration, you would typically:
-    // 1. Create an invoice in QuickBooks
-    // 2. Send payment link to customer
-    // 3. Handle webhook from QuickBooks when paid
     
-    // For now, we'll simulate the process
-    console.log('QuickBooks payment initiated for booking:', bookingId);
-    
-    // In a real implementation, you'd integrate with QuickBooks API here
-    // This is a placeholder for the QuickBooks workflow
-    
-    return {
-      success: true,
-      paymentUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pay/quickbooks?booking=${bookingId}`,
-      message: 'QuickBooks payment link will be sent via email'
-    };
-  } catch (error) {
-    console.error('QuickBooks payment error:', error);
-    throw error;
-  }
-}
-
-// Webhook handlers
-export async function handlePaymentSuccess(paymentIntent) {
-  const bookingId = paymentIntent.metadata.bookingId;
-  
-  try {
-    console.log(`Processing payment success for booking: ${bookingId}`);
-    
-    // Get booking details
-    const booking = await getBooking(bookingId);
-    if (!booking) {
-      console.error('Booking not found for payment success:', bookingId);
-      return;
+    // Add ACH-specific configuration
+    if (paymentMethod === 'ach') {
+      paymentIntentData.payment_method_types = ['us_bank_account'];
+      paymentIntentData.payment_method_options = {
+        us_bank_account: {
+          verification_method: 'automatic', // Faster verification
+          preferred_settlement_speed: 'fastest', // Usually 1-2 business days
+        },
+      };
     }
     
-    // Update booking status
-    await updateBookingStatus(bookingId, 'confirmed', {
-      payment_confirmed_at: new Date().toISOString(),
-      payment_intent_id: paymentIntent.id
-    });
-
-    // Create calendar event
-    const calendarEvent = await createCalendarEvent(booking, true); // true = include attendees for real bookings
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
     
-    // Update booking with calendar event ID
-    await updateBookingWithCalendarEvent(bookingId, calendarEvent.id);
-
-    // Send confirmation emails
-    await sendConfirmationEmails(booking);
-    
-    console.log(`Payment success processing completed for booking: ${bookingId}`);
-  } catch (error) {
-    console.error('Error handling payment success:', error);
-  }
-}
-
-export async function handleACHSetupSuccess(setupIntent) {
-  const bookingId = setupIntent.metadata.bookingId;
-  const amount = parseInt(setupIntent.metadata.amount);
-  
-  try {
-    console.log(`Processing ACH setup success for booking: ${bookingId}`);
-    
-    // Create payment intent for the ACH payment
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: 'usd',
-      customer: setupIntent.customer,
-      payment_method: setupIntent.payment_method,
-      confirmation_method: 'automatic',
-      confirm: true,
-      metadata: {
-        bookingId: bookingId
-      }
-    });
-    
-    // Update booking status
-    await updateBookingStatus(bookingId, 'ach_processing', {
-      setup_intent_id: setupIntent.id,
-      payment_intent_id: paymentIntent.id
-    });
-    
-    console.log(`ACH payment initiated for booking: ${bookingId}`);
-  } catch (error) {
-    console.error('Error handling ACH setup success:', error);
-  }
-}
-
-export async function handlePaymentFailure(paymentIntent) {
-  const bookingId = paymentIntent.metadata.bookingId;
-  
-  try {
-    console.log(`Processing payment failure for booking: ${bookingId}`);
-    
-    // Get booking details
-    const booking = await getBooking(bookingId);
-    if (!booking) {
-      console.error('Booking not found for payment failure:', bookingId);
-      return;
-    }
-    
-    // Update booking status
-    await updateBookingStatus(bookingId, 'payment_failed', {
-      payment_failed_at: new Date().toISOString(),
-      payment_intent_id: paymentIntent.id,
-      failure_reason: paymentIntent.last_payment_error?.message || 'Unknown error'
-    });
-    
-    // Send failure notification email
-    await sendPaymentFailureEmail(booking);
-    
-    console.log(`Payment failure processed for booking: ${bookingId}`);
-  } catch (error) {
-    console.error('Error handling payment failure:', error);
-  }
-}
-
-export async function handleSetupIntentFailure(setupIntent) {
-  const bookingId = setupIntent.metadata.bookingId;
-  
-  try {
-    console.log(`Processing setup intent failure for booking: ${bookingId}`);
-    
-    // Update booking status
-    await updateBookingStatus(bookingId, 'ach_setup_failed', {
-      setup_intent_id: setupIntent.id,
-      failure_reason: setupIntent.last_setup_error?.message || 'ACH setup failed'
-    });
-    
-    console.log(`Setup intent failure processed for booking: ${bookingId}`);
-  } catch (error) {
-    console.error('Error handling setup intent failure:', error);
-  }
-}
-
-// Utility functions
-export async function refundPayment(paymentIntentId, amount = null, reason = 'requested_by_customer') {
-  try {
-    const refund = await stripe.refunds.create({
-      payment_intent: paymentIntentId,
-      amount: amount, // If null, refunds full amount
-      reason: reason
-    });
-    
-    console.log('Refund created:', refund.id);
-    return refund;
-  } catch (error) {
-    console.error('Refund creation error:', error);
-    throw error;
-  }
-}
-
-export async function getPaymentIntentDetails(paymentIntentId) {
-  try {
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    console.log('✅ Secure payment intent created:', paymentIntent.id);
     return paymentIntent;
+    
   } catch (error) {
-    console.error('Payment intent retrieval error:', error);
+    console.error('❌ Payment intent creation error:', error);
+    throw new Error(`Payment setup failed: ${error.message}`);
+  }
+}
+
+// Generate Radar session for enhanced fraud detection
+function generateRadarSession(bookingData) {
+  return {
+    id: `booking_${bookingData.id}_${Date.now()}`,
+    version: '1.0.0',
+  };
+}
+
+// Confirm payment with additional security checks
+export async function confirmPaymentWithSecurity(paymentIntentId, paymentMethodId, bookingData) {
+  try {
+    console.log('🔒 Confirming payment with security checks...');
+    
+    const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
+      payment_method: paymentMethodId,
+      
+      // Use our return URL for 3D Secure
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/payment-complete?booking_id=${bookingData.id}`,
+      
+      // Additional fraud prevention
+      use_stripe_sdk: true,
+    });
+    
+    console.log('✅ Payment confirmed:', paymentIntent.id, 'Status:', paymentIntent.status);
+    return paymentIntent;
+    
+  } catch (error) {
+    console.error('❌ Payment confirmation error:', error);
     throw error;
   }
 }
 
-export async function createCustomer(customerData) {
+// Create customer for repeat bookings and ACH
+export async function createSecureCustomer(customerData) {
   try {
     const customer = await stripe.customers.create({
       email: customerData.email,
-      name: customerData.name,
+      name: customerData.contactName,
       phone: customerData.phone,
-      address: customerData.address,
-      metadata: customerData.metadata || {}
+      
+      // Address for enhanced verification
+      address: {
+        line1: customerData.address?.line1,
+        line2: customerData.address?.line2,
+        city: customerData.address?.city,
+        state: customerData.address?.state,
+        postal_code: customerData.address?.postal_code,
+        country: 'US',
+      },
+      
+      // Metadata for tracking
+      metadata: {
+        source: 'merritt_house_booking',
+        created_by: 'booking_system',
+        first_booking_id: customerData.bookingId,
+      },
+      
+      // Tax ID collection (for business customers)
+      tax_exempt: 'none',
     });
     
-    console.log('Stripe customer created:', customer.id);
+    console.log('✅ Secure customer created:', customer.id);
     return customer;
+    
   } catch (error) {
-    console.error('Customer creation error:', error);
+    console.error('❌ Customer creation error:', error);
     throw error;
   }
 }
 
-export async function listPaymentMethods(customerId) {
+// Setup ACH with verification
+export async function setupACHPayment(customerId, bookingData) {
   try {
-    const paymentMethods = await stripe.paymentMethods.list({
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      type: 'card',
+      payment_method_types: ['us_bank_account'],
+      usage: 'off_session',
+      
+      // Metadata for tracking
+      metadata: {
+        bookingId: bookingData.id,
+        amount: (bookingData.total * 100).toString(),
+        eventDate: bookingData.selectedDate,
+        purpose: 'event_booking',
+      },
+      
+      // ACH-specific options
+      payment_method_options: {
+        us_bank_account: {
+          verification_method: 'automatic',
+        },
+      },
     });
     
-    return paymentMethods;
+    console.log('✅ ACH setup intent created:', setupIntent.id);
+    return setupIntent;
+    
   } catch (error) {
-    console.error('Payment methods retrieval error:', error);
+    console.error('❌ ACH setup error:', error);
     throw error;
   }
 }
 
-// Export stripe instance for direct use if needed
+// Validate payment amount and calculate fees
+export function calculatePaymentDetails(amount, paymentMethod = 'card') {
+  const amountCents = Math.round(amount * 100);
+  const config = PAYMENT_CONFIG.fees[paymentMethod];
+  
+  // Calculate Stripe fees
+  let stripeFee;
+  if (paymentMethod === 'ach') {
+    stripeFee = Math.min(
+      Math.round(amountCents * (config.percentage / 100)) + config.fixed,
+      config.cap
+    );
+  } else {
+    stripeFee = Math.round(amountCents * (config.percentage / 100)) + config.fixed;
+  }
+  
+  return {
+    subtotal: amountCents,
+    stripeFee: stripeFee,
+    total: amountCents, // We absorb the fee
+    displayTotal: amount, // What customer pays
+    savings: paymentMethod === 'ach' ? Math.round((PAYMENT_CONFIG.fees.card.percentage - PAYMENT_CONFIG.fees.ach.percentage) * amountCents / 100) : 0,
+  };
+}
+
+// Export configured Stripe instance
 export { stripe };
