@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import SecurePaymentFlow from '../../components/payment/SecurePaymentFlow';
+import SecurePaymentFlow from '../../../components/payment/SecurePaymentFlow';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 function PaymentPageContent() {

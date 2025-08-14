@@ -1,3 +1,6 @@
+// Option 1: Update components/payment/SecurePaymentFlow.jsx
+// Add more detailed debugging and fallback handling
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -19,10 +22,40 @@ import {
   Clock
 } from 'lucide-react';
 
-// Load Stripe outside of component to avoid recreating on every render
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+// Enhanced debugging for Stripe key
+console.log('🔍 Stripe Environment Debug:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('All NEXT_PUBLIC vars:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
 
-// Payment Form Component
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+console.log('🔑 Stripe Key Debug:');
+console.log('Key present:', !!stripePublishableKey);
+console.log('Key type:', typeof stripePublishableKey);
+console.log('Key length:', stripePublishableKey?.length || 0);
+console.log('Key preview:', stripePublishableKey ? stripePublishableKey.substring(0, 15) + '...' : 'UNDEFINED');
+
+// More aggressive check
+if (!stripePublishableKey || stripePublishableKey.trim() === '') {
+  console.error('❌ STRIPE KEY ISSUE:');
+  console.error('- Key is:', stripePublishableKey);
+  console.error('- All env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')));
+}
+
+// Load Stripe with better error handling
+let stripePromise = null;
+try {
+  if (stripePublishableKey && stripePublishableKey.startsWith('pk_')) {
+    stripePromise = loadStripe(stripePublishableKey);
+    console.log('✅ Stripe loading initiated');
+  } else {
+    console.error('❌ Invalid Stripe key format:', stripePublishableKey);
+  }
+} catch (error) {
+  console.error('❌ Stripe loading error:', error);
+}
+
+// Payment Form Component (unchanged)
 function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -33,6 +66,7 @@ function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
     event.preventDefault();
 
     if (!stripe || !elements) {
+      setMessage('Payment system not ready. Please try refreshing the page.');
       return;
     }
 
@@ -126,7 +160,7 @@ function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
   );
 }
 
-// Main Payment Component
+// Main Payment Component with enhanced debugging
 export default function SecurePaymentFlow({ bookingId }) {
   const [clientSecret, setClientSecret] = useState('');
   const [bookingData, setBookingData] = useState(null);
@@ -135,9 +169,39 @@ export default function SecurePaymentFlow({ bookingId }) {
   const [error, setError] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
 
+  // Enhanced Stripe configuration check
+  useEffect(() => {
+    console.log('🔄 SecurePaymentFlow mounted');
+    console.log('Environment check:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- Stripe key present:', !!stripePublishableKey);
+    console.log('- Stripe key valid format:', stripePublishableKey?.startsWith('pk_'));
+    
+    if (!stripePublishableKey) {
+      const debugInfo = {
+        env: process.env.NODE_ENV,
+        allEnvKeys: Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC')),
+        stripeKeys: Object.keys(process.env).filter(k => k.includes('STRIPE'))
+      };
+      console.error('❌ Stripe key missing. Debug info:', debugInfo);
+      setError(`Payment system configuration error. Debug: ${JSON.stringify(debugInfo)}`);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!stripePublishableKey.startsWith('pk_')) {
+      console.error('❌ Invalid Stripe key format:', stripePublishableKey.substring(0, 10) + '...');
+      setError('Invalid payment configuration. Please contact support.');
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('✅ Stripe configuration looks good');
+  }, []);
+
   // Fetch payment intent on component mount
   useEffect(() => {
-    if (bookingId) {
+    if (bookingId && stripePublishableKey?.startsWith('pk_')) {
       createPaymentIntent();
     }
   }, [bookingId]);
@@ -147,6 +211,8 @@ export default function SecurePaymentFlow({ bookingId }) {
     setError('');
 
     try {
+      console.log('🔄 Creating payment intent for booking:', bookingId);
+      
       const response = await fetch('/api/payment/create-intent', {
         method: 'POST',
         headers: {
@@ -158,16 +224,22 @@ export default function SecurePaymentFlow({ bookingId }) {
         }),
       });
 
+      console.log('📥 Payment intent response status:', response.status);
+      
       const data = await response.json();
+      console.log('📊 Payment intent response:', { success: data.success, hasClientSecret: !!data.clientSecret });
 
       if (data.success) {
         setClientSecret(data.clientSecret);
         setBookingData(data.booking);
         setPaymentDetails(data.paymentDetails);
+        console.log('✅ Payment intent created successfully');
       } else {
+        console.error('❌ Payment intent creation failed:', data.error);
         setError(data.error || 'Failed to setup payment');
       }
     } catch (err) {
+      console.error('❌ Payment intent network error:', err);
       setError('Network error. Please check your connection.');
     } finally {
       setIsLoading(false);
@@ -176,9 +248,8 @@ export default function SecurePaymentFlow({ bookingId }) {
 
   const handlePaymentSuccess = (paymentIntent) => {
     setPaymentStatus('succeeded');
-    // Redirect to success page
     setTimeout(() => {
-      window.location.href = `/booking/success?booking_id=${bookingId}`;
+      window.location.href = `/booking/payment-complete?booking_id=${bookingId}`;
     }, 2000);
   };
 
@@ -186,6 +257,25 @@ export default function SecurePaymentFlow({ bookingId }) {
     setError(errorMessage);
     setPaymentStatus('failed');
   };
+
+  // Enhanced error display with debug info
+  if (!stripePublishableKey || !stripePublishableKey.startsWith('pk_')) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <AlertCircle className="text-red-600" size={24} />
+          <span className="text-red-800">Payment system configuration error</span>
+        </div>
+        <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+          <p><strong>Debug Info:</strong></p>
+          <p>Environment: {process.env.NODE_ENV}</p>
+          <p>Key present: {!!stripePublishableKey ? 'Yes' : 'No'}</p>
+          <p>Key format: {stripePublishableKey?.startsWith('pk_') ? 'Valid' : 'Invalid'}</p>
+          <p>Key preview: {stripePublishableKey ? stripePublishableKey.substring(0, 15) + '...' : 'undefined'}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -270,7 +360,7 @@ export default function SecurePaymentFlow({ bookingId }) {
         )}
 
         {/* Payment Form */}
-        {clientSecret && (
+        {clientSecret && stripePromise && (
           <Elements stripe={stripePromise} options={options}>
             <PaymentForm 
               bookingData={bookingData}

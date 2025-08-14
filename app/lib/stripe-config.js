@@ -43,6 +43,7 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       throw new Error(`Maximum payment amount is $${PAYMENT_CONFIG.maximums[paymentMethod] / 100}`);
     }
     
+    // FIXED: Simplified payment intent configuration
     const paymentIntentData = {
       amount,
       currency: PAYMENT_CONFIG.currency,
@@ -69,7 +70,7 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       statement_descriptor: 'MERRITT HOUSE',
       statement_descriptor_suffix: 'EVENT',
       
-      // Automatic payment methods (recommended by Stripe)
+      // FIXED: Use only automatic_payment_methods, remove confirmation_method
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: 'never', // Keep user on our site
@@ -77,12 +78,6 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       
       // Capture method - we'll capture immediately for events
       capture_method: 'automatic',
-      
-      // Confirmation method - manual allows us to handle 3D Secure
-      confirmation_method: 'manual',
-      
-      // Return URL for 3D Secure redirects
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/payment-complete?booking_id=${bookingData.id}`,
     };
     
     // Add ACH-specific configuration
@@ -94,6 +89,8 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
           preferred_settlement_speed: 'fastest',
         },
       };
+      // Remove automatic_payment_methods for ACH
+      delete paymentIntentData.automatic_payment_methods;
     }
     
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);

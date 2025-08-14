@@ -4,8 +4,8 @@ import { headers } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // Security: Rate limiting check
-    const headersList = headers();
+    // FIXED: Await headers before using
+    const headersList = await headers();
     const userIP = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
     
     console.log('💳 Creating payment intent from IP:', userIP);
