@@ -3,16 +3,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function Home() {
+  const [calendarLoaded, setCalendarLoaded] = useState(false);
+
   // Structured data for SEO
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "Merritt Fitness",
-    "description": "Historic wellness and event space in Denver's Sloans Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
+    "description": "Historic wellness and event space in Denver's Sloan's Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
     "url": "https://merrittfitness.com",
-    "telephone": "+1-XXX-XXX-XXXX", // Replace with your actual phone
+    "telephone": "+1-303-XXX-XXXX", // Replace with your actual phone
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "2246 Irving St",
@@ -27,12 +30,12 @@ export default function Home() {
       "longitude": -105.03225422320789
     },
     "openingHours": [
-      "Mo-Su 06:00-22:00" // Adjust as needed
+      "Mo-Su 06:00-22:00"
     ],
     "priceRange": "$$",
-    "image": "https://merrittfitness.com/images/hero/1.jpg",
+    "image": "https://merrittfitness.com/images/hero/outside3.jpg",
     "sameAs": [
-      "https://www.instagram.com/merrittfitness", // Add your actual social media
+      "https://www.instagram.com/merrittfitness",
       "https://www.facebook.com/merrittfitness"
     ]
   };
@@ -48,45 +51,51 @@ export default function Home() {
       <main className="bg-white font-sans">
         {/* ENHANCED HERO with Parallax Effect */}
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
           <Image
             src="/images/hero/outside3.jpg"
             alt="Historic Merritt Fitness sanctuary with soaring ceilings and natural light"
             fill
             className="object-cover brightness-75 scale-105 animate-slow-zoom"
             priority
-            quality={90}
+            quality={95}
           />
           
-          {/* Floating elements for visual interest */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-white/30 rounded-full animate-float"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-white/20 rounded-full animate-float-delay"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-white/25 rounded-full animate-float-slow"></div>
+          {/* Enhanced floating elements */}
+          <div className="absolute top-20 left-10 w-2 h-2 bg-white/40 rounded-full animate-float blur-sm"></div>
+          <div className="absolute top-40 right-20 w-1 h-1 bg-white/30 rounded-full animate-float-delay blur-sm"></div>
+          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-white/35 rounded-full animate-float-slow blur-sm"></div>
+          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/25 rounded-full animate-float blur-sm"></div>
           
           <div className="relative z-20 text-center text-white px-6 max-w-5xl mx-auto">
             <div className="mb-8 animate-fade-in-up">
               <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none">
-                <span className="block font-thin">Merritt</span>
-                <span className="block font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text">Fitness</span>
+                <span className="block font-thin drop-shadow-lg">Merritt</span>
+                <span className="block font-bold bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent drop-shadow-lg">Fitness</span>
               </h1>
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-white to-transparent mx-auto mb-8"></div>
-              <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95">
+              <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mx-auto mb-8"></div>
+              <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
                 Where 1905 sacred architecture meets contemporary mindful movement in Denver's most inspiring wellness sanctuary
               </p>
             </div>
             
-            {/* Premium CTA Section */}
+            {/* Enhanced CTA Section */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
               <Link
                 href="#booking"
-                className="group relative bg-white text-black font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden"
+                className="group relative bg-white text-black font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
               >
-                <span className="relative z-10">Reserve Your Experience</span>
+                <span className="relative z-10 flex items-center">
+                  <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Reserve Your Experience
+                </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
               <Link
-                href="#about"
-                className="group border-2 border-white/60 text-white font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white"
+                href="/about"
+                className="group border-2 border-white/70 text-white font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white"
               >
                 <span className="flex items-center">
                   Discover the Space
@@ -98,59 +107,71 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Scroll indicator */}
+          {/* Enhanced scroll indicator */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-white/60 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse"></div>
+            <div className="w-6 h-10 border-2 border-white/70 rounded-full flex justify-center backdrop-blur-sm">
+              <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
             </div>
           </div>
         </section>
 
-        {/* ENHANCED ABOUT with Split Layout */}
-        <section id="about" className="relative py-24 bg-gradient-to-b from-white to-gray-50/30">
+        {/* ENHANCED ABOUT with Better Typography */}
+        <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Left Content */}
+              {/* Left Content - Enhanced */}
               <div className="space-y-8">
                 <div>
-                  <span className="text-sm font-semibold text-gray-500 tracking-widest uppercase mb-4 block">Since 1905</span>
+                  <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Since 1905
+                  </span>
                   <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
                     A Sacred Space
-                    <span className="block font-bold">for Every Soul</span>
+                    <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Every Soul</span>
                   </h2>
-                  <div className="w-16 h-0.5 bg-gradient-to-r from-gray-400 to-transparent mb-8"></div>
-                  <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                    Nestled within the walls of a lovingly restored early 20th-century landmark, 
-                    Merritt Fitness transcends the ordinary. Here, original stained glass filters 
-                    morning light across polished floors where countless souls have found peace, 
-                    strength, and community.
-                  </p>
+                  <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
+                  <div className="space-y-6">
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      Nestled within the walls of a lovingly restored early 20th-century landmark, 
+                      Merritt Fitness transcends the ordinary. Here, original stained glass filters 
+                      morning light across polished floors where countless souls have found peace, 
+                      strength, and community.
+                    </p>
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      This sacred space has witnessed over a century of gathering, celebration, and 
+                      transformation. Today, we continue that legacy by offering a sanctuary where 
+                      modern wellness practices honor the building's spiritual heritage.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Stats */}
+                {/* Enhanced Stats */}
                 <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">119</div>
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
                     <div className="text-sm text-gray-500 uppercase tracking-wide">Years of History</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">24ft</div>
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
                     <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">100+</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Events Hosted</div>
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
+                    <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Features Grid */}
+              {/* Right Features Grid - Enhanced */}
               <div className="grid grid-cols-2 gap-6">
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2">
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🏛️</span>
+                    <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Historic Grandeur</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300">Historic Grandeur</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Original 1905 architecture with preserved stained glass, soaring ceilings, and timeless elegance
                   </p>
@@ -158,19 +179,19 @@ export default function Home() {
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 mt-8">
                   <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">☀️</span>
+                    <span className="text-3xl filter group-hover:brightness-110">☀️</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Divine Light</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300">Divine Light</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Floor-to-ceiling windows bathe the space in natural light throughout the day
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 -mt-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🤝</span>
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-3xl filter group-hover:brightness-110">🤝</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Inclusive Haven</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">Inclusive Haven</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     A non-denominational sanctuary welcoming all paths, practices, and people
                   </p>
@@ -178,9 +199,9 @@ export default function Home() {
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🎵</span>
+                    <span className="text-3xl filter group-hover:brightness-110">🎵</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Perfect Acoustics</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">Perfect Acoustics</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Original church acoustics create an immersive sound healing experience
                   </p>
@@ -190,16 +211,21 @@ export default function Home() {
           </div>
         </section>
 
-        {/* IMMERSIVE GALLERY */}
+        {/* ENHANCED GALLERY with Better Performance */}
         <section className="py-20 bg-gray-900 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900"></div>
           
           <div className="relative z-10">
             <div className="text-center mb-16 px-6">
-              <span className="text-sm font-semibold text-gray-400 tracking-widest uppercase mb-4 block">Visual Journey</span>
+              <span className="inline-flex items-center px-4 py-2 bg-white/10 text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6 backdrop-blur-sm">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Our Space
+              </span>
               <h2 className="text-4xl md:text-5xl font-light text-white mb-6">
                 Experience the
-                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text">Transformation</span>
+                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Transformation</span>
               </h2>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 From intimate meditation circles to dynamic movement workshops, witness how our sacred space adapts to every vision
@@ -207,97 +233,58 @@ export default function Home() {
             </div>
 
             <div className="flex gap-6 overflow-x-auto px-6 pb-6 snap-x snap-mandatory scrollbar-hide">
-              <div className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
-                <Image
-                  src="/images/hero/mat1.jpg"
-                  alt="Serene yoga practice in sunlit historic sanctuary"
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 640px) 90vw, 400px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <h3 className="text-2xl font-bold mb-2">Yoga & Flow</h3>
-                    <p className="text-gray-200">Where ancient practice meets timeless architecture</p>
+              {[
+                { src: "/images/hero/mat1.jpg", title: "Yoga & Flow", desc: "Where ancient practice meets timeless architecture" },
+                { src: "/images/hero/mat2.jpg", title: "Sound Healing", desc: "Sacred acoustics amplify transformation" },
+                { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/hero/nomats.jpg", title: "Architectural Wonder", desc: "Every corner tells a story of beauty" }
+              ].map((item, index) => (
+                <div key={index} className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
+                  <Image
+                    src={item.src}
+                    alt={item.desc}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    sizes="(max-width: 640px) 90vw, 400px"
+                    loading={index > 1 ? "lazy" : "eager"}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
+                    <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
+                      <p className="text-gray-200">{item.desc}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
-                <Image
-                  src="/images/hero/mat2.jpg"
-                  alt="Transformative sound bath session with crystal bowls"
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 640px) 90vw, 400px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <h3 className="text-2xl font-bold mb-2">Sound Healing</h3>
-                    <p className="text-gray-200">Sacred acoustics amplify transformation</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
-                <Image
-                  src="/images/events/1.JPEG"
-                  alt="Creative workshop in inspiring historic venue"
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 640px) 90vw, 400px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <h3 className="text-2xl font-bold mb-2">Creative Workshops</h3>
-                    <p className="text-gray-200">Inspiration flows through every gathering</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
-                <Image
-                  src="/images/hero/nomats.jpg"
-                  alt="Breathtaking historic architecture and natural light"
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 640px) 90vw, 400px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <h3 className="text-2xl font-bold mb-2">Architectural Wonder</h3>
-                    <p className="text-gray-200">Every corner tells a story of beauty</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center mt-12">
-              <p className="text-gray-400 text-sm">Drag to explore • Hover for details</p>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* PREMIUM FEATURES */}
+        {/* ENHANCED FEATURES with Better UX */}
         <section className="py-24 bg-white relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <span className="text-sm font-semibold text-gray-500 tracking-widest uppercase mb-4 block">Versatile Excellence</span>
+              <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Versatile Excellence
+              </span>
               <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
-                Perfect for Every
-                <span className="block font-bold">Sacred Practice</span>
+                Perfect for
+                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Every Practice</span>
               </h2>
-              <div className="w-24 h-0.5 bg-gradient-to-r from-gray-400 to-transparent mx-auto"></div>
+              <div className="w-24 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mx-auto"></div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
-              <div className="relative">
+              <div className="relative group">
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <Image
                     src="/images/events/2.JPEG"
                     alt="Dynamic movement arts in spacious historic venue"
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-gray-100">
@@ -307,60 +294,29 @@ export default function Home() {
               </div>
 
               <div className="space-y-12">
-                <div className="flex items-start space-x-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🧘</span>
+                {[
+                  { emoji: "🧘", title: "Yoga & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our adaptable space honors every practice with grace and reverence." },
+                  { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original church acoustics create an unparalleled resonance for crystal bowls, gongs, and voice work that touches the soul." },
+                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled sanctuary of inspiration." },
+                  { emoji: "🥋", title: "Movement Arts", desc: "24-foot ceilings and sprung floors support judo, dance, martial arts, and any dynamic practice your body craves." }
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start space-x-6 group">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors duration-300">{item.title}</h3>
+                      <p className="text-gray-600 leading-relaxed text-lg">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Yoga & Meditation</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">
-                      From intimate 8-person meditation circles to 60-person vinyasa flows, our adaptable space honors every practice with grace and reverence.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🔔</span>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Sound Baths & Healing</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">
-                      Our original church acoustics create an unparalleled resonance for crystal bowls, gongs, and voice work that touches the soul.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🎨</span>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Creative Workshops</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">
-                      Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled sanctuary of inspiration.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🥋</span>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Movement Arts</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">
-                      24-foot ceilings and sprung floors support judo, dance, martial arts, and any dynamic practice your body craves.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* WHY MERRITT - Reimagined */}
-        <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50/30 relative overflow-hidden">
+        {/* ENHANCED WHY MERRITT */}
+        <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full">
             <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
@@ -368,10 +324,15 @@ export default function Home() {
           
           <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
             <div className="mb-16">
-              <span className="text-sm font-semibold text-gray-500 tracking-widest uppercase mb-4 block">The Merritt Difference</span>
+              <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                The Merritt Difference
+              </span>
               <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-8">
                 Why Choose Our
-                <span className="block font-bold">Sacred Sanctuary</span>
+                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Sacred Sanctuary</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 More than a venue – we're stewards of a space where history, beauty, and wellness converge in perfect harmony
@@ -379,58 +340,25 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h10M7 15h10" />
-                  </svg>
+              {[
+                { icon: "🏛️", title: "Historic Elegance", desc: "Original 1905 architecture seamlessly blends with modern wellness amenities", color: "amber" },
+                { icon: "☀️", title: "Abundant Natural Light", desc: "Floor-to-ceiling windows create an inspiring, sun-drenched environment all day", color: "yellow" },
+                { icon: "🤝", title: "Inclusive Community", desc: "A non-denominational haven welcoming all paths, practices, and people", color: "emerald" },
+                { icon: "⚡", title: "Flexible Excellence", desc: "Seamlessly transforms for intimate gatherings or large-scale wellness events", color: "purple" }
+              ].map((item, index) => (
+                <div key={index} className="group bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
+                  <div className={`w-16 h-16 bg-gradient-to-br from-${item.color}-200 to-${item.color}-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <span className="text-3xl filter group-hover:brightness-110">{item.icon}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors duration-300">{item.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{item.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Historic Elegance</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Original 1905 architecture seamlessly blends with modern wellness amenities
-                </p>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-200 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Abundant Natural Light</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Floor-to-ceiling windows create an inspiring, sun-drenched environment all day
-                </p>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-200 to-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Inclusive Community</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  A non-denominational haven welcoming all paths, practices, and people
-                </p>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-200 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Flexible Excellence</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Seamlessly transforms for intimate gatherings or large-scale wellness events
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* PREMIUM BOOKING SECTION */}
+        {/* ENHANCED BOOKING SECTION with Fixed Calendar */}
         <section id="booking" className="py-24 bg-gray-900 relative overflow-hidden">
           <div className="absolute inset-0">
             <Image
@@ -444,17 +372,22 @@ export default function Home() {
           
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">
-              <span className="text-sm font-semibold text-gray-400 tracking-widest uppercase mb-4 block">Your Sacred Experience Awaits</span>
+              <span className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Your Sacred Experience Awaits
+              </span>
               <h2 className="text-4xl md:text-6xl font-light text-white mb-8">
                 Reserve Your
-                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text">Moment of Magic</span>
+                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Moment of Magic</span>
               </h2>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12">
                 Join our community events or create your own transformative experience in Denver's most inspiring wellness sanctuary
               </p>
             </div>
 
-            {/* Calendar Section */}
+            {/* Enhanced Calendar Section */}
             <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 mb-12">
               <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
                 <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
@@ -462,29 +395,29 @@ export default function Home() {
                   <p className="text-gray-600">Discover our community gatherings and workshops</p>
                 </div>
                 
-                {/* Calendar with loading state */}
+                {/* Calendar with improved loading */}
                 <div className="relative h-96 bg-gray-50">
-                  <div className="calendar-loader absolute inset-0 flex items-center justify-center">
-                    <div className="text-gray-400 text-center">
-                      <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-4 mx-auto"></div>
-                      <p className="text-lg">Loading sacred schedule...</p>
+                  {!calendarLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                      <div className="text-gray-400 text-center">
+                        <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mb-4 mx-auto"></div>
+                        <p className="text-lg font-medium">Loading sacred schedule...</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   <iframe
-                    src="https://calendar.google.com/calendar/embed?src=YOUR_PUBLIC_CALENDAR_LINK&theme=modern"
-                    className="w-full h-full border-0 relative z-10"
+                    src="https://calendar.google.com/calendar/embed?src=04ac99c7464fa75a7fe252eccd8fff5cffd50a9de27f25555cb8886708b8ef21@group.calendar.google.com&ctz=America/Denver&mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
+                    className="w-full h-full border-0"
                     title="Merritt Fitness Events Calendar"
-                    onLoad={() => {
-                      const loader = document.querySelector('.calendar-loader');
-                      if (loader) loader.style.display = 'none';
-                    }}
+                    onLoad={() => setCalendarLoaded(true)}
+                    style={{ display: calendarLoaded ? 'block' : 'none' }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Premium CTA Buttons */}
+            {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <Link
                 href="/booking"
@@ -501,7 +434,7 @@ export default function Home() {
               
               <Link
                 href="/contact"
-                className="group border-2 border-white/60 text-white font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white text-lg"
+                className="group border-2 border-white/70 text-white font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white text-lg"
               >
                 <span className="flex items-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -512,66 +445,66 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Trust Indicators */}
+            {/* Enhanced Trust Indicators */}
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">500+</div>
-                <div className="text-gray-400 text-sm uppercase tracking-wide">Sacred Gatherings</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">5★</div>
-                <div className="text-gray-400 text-sm uppercase tracking-wide">Average Rating</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">24/7</div>
-                <div className="text-gray-400 text-sm uppercase tracking-wide">Booking Support</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-white mb-2">100%</div>
-                <div className="text-gray-400 text-sm uppercase tracking-wide">Satisfaction</div>
-              </div>
+              {[
+                { number: "500+", label: "Sacred Gatherings" },
+                { number: "5★", label: "Average Rating" },
+                { number: "24/7", label: "Booking Support" },
+                { number: "100%", label: "Satisfaction" }
+              ].map((item, index) => (
+                <div key={index} className="group">
+                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors duration-300">{item.number}</div>
+                  <div className="text-gray-400 text-sm uppercase tracking-wide">{item.label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* PREMIUM CONTACT SECTION */}
+        {/* ENHANCED CONTACT SECTION */}
         <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Left Content */}
+              {/* Left Content - Enhanced */}
               <div>
-                <span className="text-sm font-semibold text-gray-500 tracking-widest uppercase mb-4 block">Visit Us</span>
+                <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  </svg>
+                  Visit Us
+                </span>
                 <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-8">
                   Find Your Way to
-                  <span className="block font-bold">Sacred Sanctuary</span>
+                  <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Fitness</span>
                 </h2>
                 
                 <div className="space-y-8 mb-12">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-start space-x-4 group">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Sacred Address</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors duration-300">Our Address</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
                         2246 Irving Street<br/>
                         Denver, Colorado 80211<br/>
-                        <span className="text-sm text-gray-500">Sloans Lake Neighborhood</span>
+                        <span className="text-sm text-gray-500">Sloan's Lake Neighborhood</span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-start space-x-4 group">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Sacred Hours</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">Our Hours</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
                         Available for bookings<br/>
                         Monday - Sunday<br/>
@@ -580,14 +513,14 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-start space-x-4 group">
+                    <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Sacred Connection</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors duration-300">Our Connection</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
                         Ready to answer your call<br/>
                         <span className="text-sm text-gray-500">Booking inquiries welcome</span>
@@ -598,16 +531,16 @@ export default function Home() {
 
                 <Link
                   href="/contact"
-                  className="inline-flex items-center bg-black text-white font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="inline-flex items-center bg-black text-white font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
                 >
-                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   Start the Conversation
                 </Link>
               </div>
 
-              {/* Right Map */}
+              {/* Right Map - Enhanced */}
               <div className="relative">
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <iframe
@@ -618,15 +551,15 @@ export default function Home() {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Find Merritt Fitness in Denver's Sloans Lake"
+                    title="Find Merritt Fitness in Denver's Sloan's Lake"
                     className="grayscale hover:grayscale-0 transition-all duration-500"
                   />
                 </div>
                 
-                {/* Location Badge */}
+                {/* Enhanced Location Badge */}
                 <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -644,7 +577,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Custom CSS for animations and effects */}
+      {/* Enhanced Custom CSS */}
       <style jsx>{`
         @keyframes slow-zoom {
           0% { transform: scale(1); }
@@ -711,6 +644,22 @@ export default function Home() {
         
         .shadow-3xl {
           box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Improved hover effects */
+        .group:hover .group-hover\\:brightness-110 {
+          filter: brightness(1.1);
+        }
+        
+        /* Better transitions for mobile */
+        @media (max-width: 768px) {
+          .hover\\:-translate-y-2:hover {
+            transform: translateY(-4px);
+          }
+          
+          .hover\\:scale-105:hover {
+            transform: scale(1.02);
+          }
         }
       `}</style>
     </>
