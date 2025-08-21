@@ -24,13 +24,13 @@ export default function Footer() {
             href="tel:123-456-7890"
             className="flex items-center gap-1 hover:text-green-600 transition"
           >
-            <Phone size={18} /> (123) 456-7890
+            <Phone size={18} /> (720) 357-9499
           </a>
           <a
-            href="mailto:info@merrittfitness.com"
+            href="mailto:merrittfitnessmanager@gmail.com"
             className="flex items-center gap-1 hover:text-rose-700 transition"
           >
-            <Mail size={18} /> info@merrittfitness.com
+            <Mail size={18} /> merrittfitnessmanager@gmail.com
           </a>
         </div>
         <div className="text-gray-400 text-xs text-center mt-2">
