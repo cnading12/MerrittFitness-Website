@@ -331,8 +331,8 @@ export default function Home() {
                 The Merritt Difference
               </span>
               <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-8">
-                Why Choose Our
-                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Sacred Sanctuary</span>
+                Why Choose
+                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Fitness?</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 More than a venue – we're stewards of a space where history, beauty, and wellness converge in perfect harmony
@@ -427,7 +427,7 @@ export default function Home() {
                   <svg className="w-6 h-6 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  Reserve Your Sacred Space
+                  Reserve Your Space
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>

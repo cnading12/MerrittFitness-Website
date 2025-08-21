@@ -53,7 +53,7 @@ export default function AboutPage() {
       <section className="bg-gradient-to-br from-gray-50 to-emerald-50 py-20">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-light mb-6 text-gray-900">Our Sacred Story</h2>
+            <h2 className="text-3xl font-light mb-6 text-gray-900">Our Story</h2>
             <div className="w-16 h-0.5 bg-emerald-600 mx-auto"></div>
           </div>
           
@@ -74,7 +74,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-lg font-semibold mb-3 text-gray-900">Transformation</h3>
               <p className="text-gray-600 leading-relaxed">
-                Through thoughtful restoration, we've preserved the building's soul while creating a modern sanctuary for wellness and creativity.
+                Through thoughtful restoration, we've preserved the building's soul while creating a modern space for wellness and creativity.
               </p>
             </div>
             
