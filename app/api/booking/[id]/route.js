@@ -1,9 +1,9 @@
 import { getBooking } from '../../../lib/database.js';
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    // FIXED: Await params before destructuring
-    const { id } = await params;
+    // FIXED: Don't await params - access directly
+    const { id } = context.params;
     
     if (!id) {
       return Response.json({ error: 'Booking ID required' }, { status: 400 });

@@ -15,8 +15,8 @@ export async function POST(request) {
     body = await request.text();
     console.log('📝 Raw body length:', body.length);
     
-    // FIXED: Await headers before using
-    const headersList = await headers();
+    // FIXED: Don't await headers() - it's synchronous in the latest Next.js
+    const headersList = headers();
     signature = headersList.get('stripe-signature');
     console.log('🔐 Signature present:', !!signature);
     
