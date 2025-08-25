@@ -31,7 +31,7 @@ export default function AboutPage() {
           <div className="order-1 lg:order-2">
             <div className="relative">
               <Image
-                src="/images/hero/outside2.jpg"
+                src="/images/hero/outside3.jpg"
                 alt="Historic Merritt Fitness building exterior showing 1905 church architecture"
                 width={600}
                 height={400}

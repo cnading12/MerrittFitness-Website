@@ -60,13 +60,13 @@ export default function Home() {
             priority
             quality={95}
           />
-          
+
           {/* Enhanced floating elements */}
           <div className="absolute top-20 left-10 w-2 h-2 bg-white/40 rounded-full animate-float blur-sm"></div>
           <div className="absolute top-40 right-20 w-1 h-1 bg-white/30 rounded-full animate-float-delay blur-sm"></div>
           <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-white/35 rounded-full animate-float-slow blur-sm"></div>
           <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/25 rounded-full animate-float blur-sm"></div>
-          
+
           <div className="relative z-20 text-center text-white px-6 max-w-5xl mx-auto">
             <div className="mb-8 animate-fade-in-up">
               <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none">
@@ -78,7 +78,7 @@ export default function Home() {
                 Where 1905 sacred architecture meets contemporary mindful movement in Denver's most inspiring wellness sanctuary
               </p>
             </div>
-            
+
             {/* Enhanced CTA Section */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
               <Link
@@ -116,105 +116,105 @@ export default function Home() {
         </section>
 
         {/* ENHANCED ABOUT with Better Typography */}
-        <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Left Content - Enhanced */}
-              <div className="space-y-8">
-                <div>
-                  <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Since 1905
-                  </span>
-                  <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
-                    A Sacred Space
-                    <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Every Soul</span>
-                  </h2>
-                  <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
-                  <div className="space-y-6">
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                      Nestled within the walls of a lovingly restored early 20th-century landmark, 
-                      Merritt Fitness transcends the ordinary. Here, original stained glass filters 
-                      morning light across polished floors where countless souls have found peace, 
-                      strength, and community.
-                    </p>
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                      This sacred space has witnessed over a century of gathering, celebration, and 
-                      transformation. Today, we continue that legacy by offering a sanctuary where 
-                      modern wellness practices honor the building's spiritual heritage.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Enhanced Stats */}
-                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-                  <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Years of History</div>
-                  </div>
-                  <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
-                  </div>
-                  <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Features Grid - Enhanced */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300">Historic Grandeur</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Original 1905 architecture with preserved stained glass, soaring ceilings, and timeless elegance
-                  </p>
-                </div>
-
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 mt-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl filter group-hover:brightness-110">☀️</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300">Divine Light</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Floor-to-ceiling windows bathe the space in natural light throughout the day
-                  </p>
-                </div>
-
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 -mt-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl filter group-hover:brightness-110">🤝</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">Inclusive Haven</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    A non-denominational sanctuary welcoming all paths, practices, and people
-                  </p>
-                </div>
-
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl filter group-hover:brightness-110">🎵</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">Perfect Acoustics</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Original church acoustics create an immersive sound healing experience
-                  </p>
-                </div>
-              </div>
-            </div>
+       <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
+  <div className="max-w-7xl mx-auto px-6">
+    <div className="grid lg:grid-cols-2 gap-16 items-center">
+      {/* Left Content - Enhanced */}
+      <div className="space-y-8">
+        <div>
+          <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Since 1905
+          </span>
+          <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
+            A Sacred Space
+            <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Every Soul</span>
+          </h2>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
+          <div className="space-y-6">
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Nestled within the walls of a lovingly restored early 20th-century landmark, 
+              Merritt Fitness transcends the ordinary. Here, original stained glass filters 
+              morning light across polished floors where countless souls have found peace, 
+              strength, and community.
+            </p>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              This sacred space has witnessed over a century of gathering, celebration, and 
+              transformation. Today, we continue that legacy by offering a sanctuary where 
+              modern wellness practices honor the building's spiritual heritage.
+            </p>
           </div>
-        </section>
+        </div>
+
+        {/* Enhanced Stats */}
+        <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+          <div className="text-center group">
+            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
+            <div className="text-sm text-gray-500 uppercase tracking-wide">Years of History</div>
+          </div>
+          <div className="text-center group">
+            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
+            <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
+          </div>
+          <div className="text-center group">
+            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
+            <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Features Grid - Enhanced with Equal Heights */}
+      <div className="grid grid-cols-2 gap-6 auto-rows-fr">
+        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0">Historic Grandeur</h3>
+          <p className="text-gray-600 text-sm leading-relaxed flex-1">
+            Original 1905 architecture with preserved stained glass, soaring ceilings, and timeless elegance
+          </p>
+        </div>
+
+        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+          <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            <span className="text-3xl filter group-hover:brightness-110">☀️</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0">Divine Light</h3>
+          <p className="text-gray-600 text-sm leading-relaxed flex-1">
+            Floor-to-ceiling windows bathe the space in natural light throughout the day
+          </p>
+        </div>
+
+        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            <span className="text-3xl filter group-hover:brightness-110">🤝</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300 flex-shrink-0">Inclusive Haven</h3>
+          <p className="text-gray-600 text-sm leading-relaxed flex-1">
+            A non-denominational sanctuary welcoming all paths, practices, and people
+          </p>
+        </div>
+
+        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            <span className="text-3xl filter group-hover:brightness-110">🎵</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300 flex-shrink-0">Perfect Acoustics</h3>
+          <p className="text-gray-600 text-sm leading-relaxed flex-1">
+            Original church acoustics create an immersive sound healing experience
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* ENHANCED GALLERY with Better Performance */}
         <section className="py-20 bg-gray-900 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900"></div>
-          
+
           <div className="relative z-10">
             <div className="text-center mb-16 px-6">
               <span className="inline-flex items-center px-4 py-2 bg-white/10 text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6 backdrop-blur-sm">
@@ -236,7 +236,11 @@ export default function Home() {
               {[
                 { src: "/images/hero/mat1.jpg", title: "Yoga & Flow", desc: "Where ancient practice meets timeless architecture" },
                 { src: "/images/hero/mat2.jpg", title: "Sound Healing", desc: "Sacred acoustics amplify transformation" },
-                { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },                           { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/events/katrina/1.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/events/katrina/2.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/events/katrina/3.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
+                { src: "/images/events/katrina/4.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
                 { src: "/images/hero/nomats.jpg", title: "Architectural Wonder", desc: "Every corner tells a story of beauty" }
               ].map((item, index) => (
                 <div key={index} className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
@@ -298,7 +302,7 @@ export default function Home() {
                   { emoji: "🧘", title: "Yoga & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our adaptable space honors every practice with grace and reverence." },
                   { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original church acoustics create an unparalleled resonance for crystal bowls, gongs, and voice work that touches the soul." },
                   { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled sanctuary of inspiration." },
-                  { emoji: "🥋", title: "Movement Arts", desc: "24-foot ceilings and sprung floors support judo, dance, martial arts, and any dynamic practice your body craves." }
+                  { emoji: "🥋", title: "Martial Arts", desc: "24-foot ceilings and sprung floors support judo, BJJ, wrestling, or any other martial arts you'd like." }
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-6 group">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -321,7 +325,7 @@ export default function Home() {
             <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
           </div>
-          
+
           <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
             <div className="mb-16">
               <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
@@ -369,7 +373,7 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-gray-900/95"></div>
           </div>
-          
+
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">
               <span className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
@@ -394,7 +398,7 @@ export default function Home() {
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Upcoming Events</h3>
                   <p className="text-gray-600">Discover our community gatherings and workshops</p>
                 </div>
-                
+
                 {/* Calendar with improved loading */}
                 <div className="relative h-96 bg-gray-50">
                   {!calendarLoaded && (
@@ -405,7 +409,7 @@ export default function Home() {
                       </div>
                     </div>
                   )}
-                  
+
                   <iframe
                     src="https://calendar.google.com/calendar/embed?src=04ac99c7464fa75a7fe252eccd8fff5cffd50a9de27f25555cb8886708b8ef21@group.calendar.google.com&ctz=America/Denver&mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
                     className="w-full h-full border-0"
@@ -431,7 +435,7 @@ export default function Home() {
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
-              
+
               <Link
                 href="/contact"
                 className="group border-2 border-white/70 text-white font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white text-lg"
@@ -478,7 +482,7 @@ export default function Home() {
                   Find Your Way to
                   <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Fitness</span>
                 </h2>
-                
+
                 <div className="space-y-8 mb-12">
                   <div className="flex items-start space-x-4 group">
                     <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors duration-300">
@@ -490,8 +494,8 @@ export default function Home() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors duration-300">Our Address</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
-                        2246 Irving Street<br/>
-                        Denver, Colorado 80211<br/>
+                        2246 Irving Street<br />
+                        Denver, Colorado 80211<br />
                         <span className="text-sm text-gray-500">Sloan's Lake Neighborhood</span>
                       </p>
                     </div>
@@ -506,8 +510,8 @@ export default function Home() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">Our Hours</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
-                        Available for bookings<br/>
-                        Monday - Sunday<br/>
+                        Available for bookings<br />
+                        Monday - Sunday<br />
                         <span className="text-sm text-gray-500">6:00 AM - 10:00 PM</span>
                       </p>
                     </div>
@@ -522,7 +526,7 @@ export default function Home() {
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors duration-300">Our Connection</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
-                        Ready to answer your call<br/>
+                        Ready to answer your call<br />
                         <span className="text-sm text-gray-500">Booking inquiries welcome</span>
                       </p>
                     </div>
@@ -555,7 +559,7 @@ export default function Home() {
                     className="grayscale hover:grayscale-0 transition-all duration-500"
                   />
                 </div>
-                
+
                 {/* Enhanced Location Badge */}
                 <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50">
                   <div className="flex items-center space-x-3">
