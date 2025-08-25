@@ -1,6 +1,7 @@
 // app/page.tsx
 'use client';
 
+import EnhancedGallery from "@/components/EnhancedGallery";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -15,7 +16,7 @@ export default function Home() {
     "name": "Merritt Fitness",
     "description": "Historic wellness and event space in Denver's Sloan's Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
     "url": "https://merrittfitness.com",
-    "telephone": "+1-303-XXX-XXXX", // Replace with your actual phone
+    "telephone": "+1-303-359-8337",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "2246 Irving St",
@@ -163,6 +164,19 @@ export default function Home() {
             <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
           </div>
         </div>
+
+        {/* Call-to-Action */}
+        <div className="pt-8">
+          <Link
+            href="/about"
+            className="inline-flex items-center bg-gray-900 text-white font-semibold px-8 py-4 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1 group shadow-lg hover:shadow-xl"
+          >
+            <span>Learn Our Story</span>
+            <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
       </div>
 
       {/* Right Features Grid - Enhanced with Equal Heights */}
@@ -211,58 +225,7 @@ export default function Home() {
   </div>
 </section>
 
-        {/* ENHANCED GALLERY with Better Performance */}
-        <section className="py-20 bg-gray-900 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900"></div>
-
-          <div className="relative z-10">
-            <div className="text-center mb-16 px-6">
-              <span className="inline-flex items-center px-4 py-2 bg-white/10 text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6 backdrop-blur-sm">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Our Space
-              </span>
-              <h2 className="text-4xl md:text-5xl font-light text-white mb-6">
-                Experience the
-                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Transformation</span>
-              </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                From intimate meditation circles to dynamic movement workshops, witness how our sacred space adapts to every vision
-              </p>
-            </div>
-
-            <div className="flex gap-6 overflow-x-auto px-6 pb-6 snap-x snap-mandatory scrollbar-hide">
-              {[
-                { src: "/images/hero/mat1.jpg", title: "Yoga & Flow", desc: "Where ancient practice meets timeless architecture" },
-                { src: "/images/hero/mat2.jpg", title: "Sound Healing", desc: "Sacred acoustics amplify transformation" },
-                { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },                           { src: "/images/events/1.JPEG", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
-                { src: "/images/events/katrina/1.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
-                { src: "/images/events/katrina/2.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
-                { src: "/images/events/katrina/3.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
-                { src: "/images/events/katrina/4.jpg", title: "Creative Workshops", desc: "Inspiration flows through every gathering" },
-                { src: "/images/hero/nomats.jpg", title: "Architectural Wonder", desc: "Every corner tells a story of beauty" }
-              ].map((item, index) => (
-                <div key={index} className="relative min-w-[400px] aspect-[4/3] rounded-3xl overflow-hidden snap-center group shadow-2xl">
-                  <Image
-                    src={item.src}
-                    alt={item.desc}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    sizes="(max-width: 640px) 90vw, 400px"
-                    loading={index > 1 ? "lazy" : "eager"}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
-                      <p className="text-gray-200">{item.desc}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+<EnhancedGallery />
 
         {/* ENHANCED FEATURES with Better UX */}
         <section className="py-24 bg-white relative">
@@ -315,49 +278,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ENHANCED WHY MERRITT */}
-        <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"></div>
-          </div>
-
-          <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-            <div className="mb-16">
-              <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                The Merritt Difference
-              </span>
-              <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-8">
-                Why Choose
-                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Fitness?</span>
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                More than a venue – we're stewards of a space where history, beauty, and wellness converge in perfect harmony
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { icon: "🏛️", title: "Historic Elegance", desc: "Original 1905 architecture seamlessly blends with modern wellness amenities", color: "amber" },
-                { icon: "☀️", title: "Abundant Natural Light", desc: "Floor-to-ceiling windows create an inspiring, sun-drenched environment all day", color: "yellow" },
-                { icon: "🤝", title: "Inclusive Community", desc: "A non-denominational haven welcoming all paths, practices, and people", color: "emerald" },
-                { icon: "⚡", title: "Flexible Excellence", desc: "Seamlessly transforms for intimate gatherings or large-scale wellness events", color: "purple" }
-              ].map((item, index) => (
-                <div key={index} className="group bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                  <div className={`w-16 h-16 bg-gradient-to-br from-${item.color}-200 to-${item.color}-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <span className="text-3xl filter group-hover:brightness-110">{item.icon}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors duration-300">{item.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

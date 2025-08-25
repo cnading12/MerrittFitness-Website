@@ -64,14 +64,14 @@ export default function Navbar() {
           ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
           : 'bg-white/80 backdrop-blur-sm'
       }`}>
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
-          {/* Logo */}
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          {/* Logo - Made Bigger */}
           <Link href="/" className="flex items-center shrink-0 z-50 group" tabIndex={0}>
             <Image
               src="/images/hero/logo.png"
               alt="Merritt Fitness Logo"
-              width={120}
-              height={52}
+              width={160}
+              height={70}
               className="transition-transform duration-200 group-hover:scale-105"
               priority
             />
@@ -151,8 +151,8 @@ export default function Navbar() {
               <Image
                 src="/images/hero/logo.png"
                 alt="Merritt Fitness Logo"
-                width={110}
-                height={48}
+                width={140}
+                height={60}
                 priority
               />
             </Link>
