@@ -121,7 +121,7 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - FIXED WITH SOLID WHITE BACKGROUND */}
       <div className={`
         md:hidden fixed inset-0 z-40 transition-all duration-300 ease-in-out
         ${menuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
@@ -134,14 +134,14 @@ export default function Navbar() {
           onClick={() => setMenuOpen(false)}
         ></div>
         
-        {/* Drawer */}
+        {/* Drawer - NOW WITH SOLID WHITE BACKGROUND */}
         <div className={`
           absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl
           transition-transform duration-300 ease-out
           ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
+          <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 bg-white">
             <Link
               href="/"
               className="flex items-center shrink-0"
@@ -165,8 +165,8 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="p-6">
+          {/* Navigation - WITH WHITE BACKGROUND */}
+          <nav className="p-6 bg-white">
             <div className="space-y-1">
               {NAV_ITEMS.map((item) => (
                 <Link
@@ -180,8 +180,8 @@ export default function Navbar() {
               ))}
             </div>
             
-            {/* Mobile Book CTA */}
-            <div className="mt-8 pt-6 border-t border-gray-100">
+            {/* Mobile Book CTA - WITH WHITE BACKGROUND */}
+            <div className="mt-8 pt-6 border-t border-gray-100 bg-white">
               <Link
                 href="/booking"
                 className="flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold py-4 px-6 rounded-2xl hover:bg-gray-800 transition-all duration-200 hover:scale-105 shadow-lg"

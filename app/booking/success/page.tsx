@@ -183,9 +183,9 @@ function SuccessPageContent() {
         <div className="text-center mt-8 p-6 bg-white rounded-xl border border-gray-100">
           <p className="text-gray-600 mb-2">Need immediate assistance?</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm">
-            <a href="tel:303-359-8337" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
+            <a href="tel:720-357-9499" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
               <Phone size={16} />
-              (303) 359-8337
+              (720) 357-9499
             </a>
             <a href="mailto:merrittfitnessmanager@gmail.com" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
               <Mail size={16} />

@@ -19,13 +19,13 @@ export default function ContactPage() {
           <h3 className="text-lg font-semibold mb-6 text-gray-900">Reach Out</h3>
           <div className="space-y-4">
             <a
-              href="tel:303-359-8337"
+              href="tel:720-357-9499"
               className="flex items-center gap-3 text-gray-700 hover:text-emerald-600 transition-colors group"
             >
               <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
                 <Phone size={18} />
               </div>
-              <span className="font-medium">(303) 359-8337</span>
+              <span className="font-medium">(720) 357-9499</span>
             </a>
             <a
               href="mailto:merrittfitnessmanager@gmail.com"

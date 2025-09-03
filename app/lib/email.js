@@ -156,7 +156,7 @@ const EMAIL_TEMPLATES = {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td>
-              <td style="padding: 8px 0; color: #111827;">
+              <td style="padding: 8px 0; color:hsl(221, 39.30%, 11.00%);">
                 <a href="mailto:${booking.email}" style="color: #059669; text-decoration: none;">${booking.email}</a>
               </td>
             </tr>

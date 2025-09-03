@@ -21,10 +21,10 @@ export default function Footer() {
             <Facebook size={18} /> Facebook
           </Link>
           <a
-            href="tel:303-359-8337"
+            href="tel:720-357-9499"
             className="flex items-center gap-1 hover:text-green-600 transition"
           >
-            <Phone size={18} /> (303) 359-8337
+            <Phone size={18} /> (720) 357-9499
           </a>
           <a
             href="mailto:merrittfitnessmanager@gmail.com"

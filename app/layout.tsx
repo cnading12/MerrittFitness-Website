@@ -8,6 +8,16 @@ export const metadata: Metadata = {
   title: 'Merritt Fitness | Historic Wellness Space in Denver\'s Sloans Lake',
   description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Fitness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
   keywords: 'yoga studio rental Denver, meditation space Denver, sound bath venue, wellness event space, historic venue Denver, Sloans Lake',
+  // UPDATED: Custom favicon configuration
+  icons: {
+    icon: [
+      { url: '/images/hero/logo.png', type: 'image/png' },
+      { url: '/favicon.ico' }, // fallback
+    ],
+    apple: [
+      { url: '/images/hero/logo.png', type: 'image/png' },
+    ],
+  },
   openGraph: {
     title: 'Merritt Fitness | Historic Wellness Space',
     description: 'A beautifully restored 1905 venue for yoga, meditation, and wellness events in Denver\'s Sloans Lake neighborhood.',
