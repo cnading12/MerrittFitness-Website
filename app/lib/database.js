@@ -1,4 +1,6 @@
 // app/lib/database.js
+// FIXED VERSION - Handles multiple bookings properly
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -6,6 +8,7 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+// FIXED: Updated createBooking to match new data structure
 export async function createBooking(bookingData) {
   try {
     const { data, error } = await supabase
@@ -13,29 +16,43 @@ export async function createBooking(bookingData) {
       .insert([
         {
           id: bookingData.id,
+          master_booking_id: bookingData.masterBookingId || null,
           event_name: bookingData.eventName,
           event_type: bookingData.eventType,
           event_date: bookingData.selectedDate,
           event_time: bookingData.selectedTime,
-          attendees: parseInt(bookingData.attendees) || 1,
-          duration: bookingData.duration,
+          hours_requested: parseFloat(bookingData.hoursRequested),
           contact_name: bookingData.contactName,
           email: bookingData.email,
-          phone: bookingData.phone,
-          special_requests: bookingData.specialRequests,
-          total_amount: bookingData.total,
-          payment_method: bookingData.paymentMethod,
-          status: 'pending_payment',
-          billing_address: bookingData.billingAddress,
-          created_at: new Date().toISOString()
+          phone: bookingData.phone || '',
+          business_name: bookingData.businessName || '',
+          website_url: bookingData.websiteUrl || '',
+          special_requests: bookingData.specialRequests || '',
+          payment_method: bookingData.paymentMethod || 'card',
+          total_amount: parseFloat(bookingData.total),
+          subtotal: parseFloat(bookingData.subtotal || bookingData.total),
+          stripe_fee: parseFloat(bookingData.stripeFee || 0),
+          status: bookingData.status || 'pending_payment',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Database booking creation error:', error);
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error('No booking data returned from database');
+    }
+    
+    console.log('✅ Booking created in database:', data[0].id);
     return data[0];
+    
   } catch (error) {
-    console.error('Database booking creation error:', error);
+    console.error('❌ Database booking creation error:', error);
     throw error;
   }
 }
@@ -48,10 +65,14 @@ export async function getBooking(bookingId) {
       .eq('id', bookingId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Database booking retrieval error:', error);
+      throw error;
+    }
+    
     return data;
   } catch (error) {
-    console.error('Database booking retrieval error:', error);
+    console.error('❌ Database booking retrieval error:', error);
     throw error;
   }
 }
@@ -68,10 +89,14 @@ export async function updateBookingStatus(bookingId, status, additionalData = {}
       .eq('id', bookingId)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Database booking update error:', error);
+      throw error;
+    }
+    
     return data[0];
   } catch (error) {
-    console.error('Database booking update error:', error);
+    console.error('❌ Database booking update error:', error);
     throw error;
   }
 }
@@ -87,10 +112,14 @@ export async function updateBookingWithCalendarEvent(bookingId, calendarEventId)
       .eq('id', bookingId)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Database calendar event update error:', error);
+      throw error;
+    }
+    
     return data[0];
   } catch (error) {
-    console.error('Database calendar event update error:', error);
+    console.error('❌ Database calendar event update error:', error);
     throw error;
   }
 }
@@ -111,14 +140,43 @@ export async function getAllBookings(filters = {}) {
       query = query.eq('email', filters.email);
     }
     
+    if (filters.masterBookingId) {
+      query = query.eq('master_booking_id', filters.masterBookingId);
+    }
+    
     query = query.order('created_at', { ascending: false });
     
     const { data, error } = await query;
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Database bookings retrieval error:', error);
+      throw error;
+    }
+    
     return data;
   } catch (error) {
-    console.error('Database bookings retrieval error:', error);
+    console.error('❌ Database bookings retrieval error:', error);
+    throw error;
+  }
+}
+
+// ADDED: Get bookings by master ID (for multiple booking groups)
+export async function getBookingsByMasterId(masterBookingId) {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('master_booking_id', masterBookingId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('❌ Database master booking retrieval error:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('❌ Database master booking retrieval error:', error);
     throw error;
   }
 }
