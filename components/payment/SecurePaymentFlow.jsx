@@ -1,5 +1,5 @@
-// Option 1: Update components/payment/SecurePaymentFlow.jsx
-// Add more detailed debugging and fallback handling
+// components/payment/SecurePaymentFlow.jsx
+// PRODUCTION VERSION - All debug logs removed, enhanced error handling
 
 'use client';
 
@@ -22,51 +22,41 @@ import {
   Clock
 } from 'lucide-react';
 
-// Enhanced debugging for Stripe key
-console.log('🔍 Stripe Environment Debug:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('All NEXT_PUBLIC vars:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
-
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
-console.log('🔑 Stripe Key Debug:');
-console.log('Key present:', !!stripePublishableKey);
-console.log('Key type:', typeof stripePublishableKey);
-console.log('Key length:', stripePublishableKey?.length || 0);
-console.log('Key preview:', stripePublishableKey ? stripePublishableKey.substring(0, 15) + '...' : 'UNDEFINED');
-
-// More aggressive check
-if (!stripePublishableKey || stripePublishableKey.trim() === '') {
-  console.error('❌ STRIPE KEY ISSUE:');
-  console.error('- Key is:', stripePublishableKey);
-  console.error('- All env vars:', Object.keys(process.env).filter(k => k.includes('STRIPE')));
+// Validate Stripe key at module load
+if (!stripePublishableKey || !stripePublishableKey.startsWith('pk_')) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error('❌ Invalid or missing Stripe publishable key');
+  }
 }
 
-// Load Stripe with better error handling
+// Initialize Stripe
 let stripePromise = null;
 try {
   if (stripePublishableKey && stripePublishableKey.startsWith('pk_')) {
     stripePromise = loadStripe(stripePublishableKey);
-    console.log('✅ Stripe loading initiated');
-  } else {
-    console.error('❌ Invalid Stripe key format:', stripePublishableKey);
   }
 } catch (error) {
-  console.error('❌ Stripe loading error:', error);
+  // Silent fail in production, log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.error('❌ Stripe initialization error:', error);
+  }
 }
 
-// Payment Form Component (unchanged)
+// Enhanced Payment Form Component
 function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!stripe || !elements) {
-      setMessage('Payment system not ready. Please try refreshing the page.');
+      setMessage('Payment system is initializing. Please wait a moment and try again.');
       return;
     }
 
@@ -83,20 +73,58 @@ function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
       });
 
       if (error) {
-        setMessage(error.message);
-        onPaymentError(error.message);
+        // Enhanced error handling
+        let userFriendlyMessage = 'Payment failed. Please try again.';
+        
+        switch (error.code) {
+          case 'card_declined':
+            userFriendlyMessage = 'Your card was declined. Please try a different payment method.';
+            break;
+          case 'expired_card':
+            userFriendlyMessage = 'Your card has expired. Please use a different card.';
+            break;
+          case 'insufficient_funds':
+            userFriendlyMessage = 'Insufficient funds. Please try a different payment method.';
+            break;
+          case 'incorrect_cvc':
+            userFriendlyMessage = 'Your card\'s security code is incorrect. Please check and try again.';
+            break;
+          case 'processing_error':
+            userFriendlyMessage = 'Payment processing error. Please try again in a few moments.';
+            break;
+          case 'rate_limit_exceeded':
+            userFriendlyMessage = 'Too many requests. Please wait a moment and try again.';
+            break;
+          default:
+            userFriendlyMessage = error.message || 'Payment failed. Please try again.';
+        }
+        
+        setMessage(userFriendlyMessage);
+        onPaymentError(userFriendlyMessage);
+        
+        // Track retry attempts
+        if (retryCount < 3) {
+          setRetryCount(prev => prev + 1);
+        }
+        
       } else if (paymentIntent) {
         if (paymentIntent.status === 'succeeded') {
           onPaymentSuccess(paymentIntent);
         } else if (paymentIntent.status === 'processing') {
-          setMessage('Payment is being processed. You will receive confirmation within 1-2 business days.');
+          setMessage('Your payment is being processed. You will receive confirmation within 1-2 business days.');
         } else if (paymentIntent.status === 'requires_action') {
-          setMessage('Additional authentication required. Please try again.');
+          setMessage('Additional authentication required. Please complete the verification and try again.');
         }
       }
     } catch (err) {
-      setMessage('Payment failed. Please try again.');
-      onPaymentError(err.message);
+      const errorMessage = 'An unexpected error occurred. Please try again.';
+      setMessage(errorMessage);
+      onPaymentError(errorMessage);
+      
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Payment error:', err);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -119,29 +147,36 @@ function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
       </div>
 
       {message && (
-        <div className={`p-4 rounded-lg flex items-center space-x-2 ${
+        <div className={`p-4 rounded-lg flex items-start space-x-3 ${
           message.includes('processing') 
             ? 'bg-yellow-50 border border-yellow-200' 
             : 'bg-red-50 border border-red-200'
         }`}>
           {message.includes('processing') ? (
-            <Clock className="text-yellow-600" size={20} />
+            <Clock className="text-yellow-600 mt-0.5 flex-shrink-0" size={20} />
           ) : (
-            <AlertCircle className="text-red-600" size={20} />
+            <AlertCircle className="text-red-600 mt-0.5 flex-shrink-0" size={20} />
           )}
-          <span className={message.includes('processing') ? 'text-yellow-800' : 'text-red-800'}>
-            {message}
-          </span>
+          <div>
+            <span className={message.includes('processing') ? 'text-yellow-800' : 'text-red-800'}>
+              {message}
+            </span>
+            {retryCount > 0 && retryCount < 3 && (
+              <p className="text-sm text-gray-600 mt-1">
+                Attempt {retryCount + 1} of 3
+              </p>
+            )}
+          </div>
         </div>
       )}
 
       <button
         type="submit"
         disabled={!stripe || isProcessing}
-        className={`w-full py-4 px-6 rounded-xl font-semibold transition-all ${
+        className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-200 ${
           !stripe || isProcessing
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg hover:shadow-xl'
+            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
         }`}
       >
         {isProcessing ? (
@@ -160,7 +195,7 @@ function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }) {
   );
 }
 
-// Main Payment Component with enhanced debugging
+// Main Payment Component - Production Ready
 export default function SecurePaymentFlow({ bookingId }) {
   const [clientSecret, setClientSecret] = useState('');
   const [bookingData, setBookingData] = useState(null);
@@ -168,51 +203,32 @@ export default function SecurePaymentFlow({ bookingId }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
-
-  // Enhanced Stripe configuration check
-  useEffect(() => {
-    console.log('🔄 SecurePaymentFlow mounted');
-    console.log('Environment check:');
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('- Stripe key present:', !!stripePublishableKey);
-    console.log('- Stripe key valid format:', stripePublishableKey?.startsWith('pk_'));
-    
-    if (!stripePublishableKey) {
-      const debugInfo = {
-        env: process.env.NODE_ENV,
-        allEnvKeys: Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC')),
-        stripeKeys: Object.keys(process.env).filter(k => k.includes('STRIPE'))
-      };
-      console.error('❌ Stripe key missing. Debug info:', debugInfo);
-      setError(`Payment system configuration error. Debug: ${JSON.stringify(debugInfo)}`);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!stripePublishableKey.startsWith('pk_')) {
-      console.error('❌ Invalid Stripe key format:', stripePublishableKey.substring(0, 10) + '...');
-      setError('Invalid payment configuration. Please contact support.');
-      setIsLoading(false);
-      return;
-    }
-
-    console.log('✅ Stripe configuration looks good');
-  }, []);
+  const retryTimeoutRef = useRef(null);
 
   // Fetch payment intent on component mount
   useEffect(() => {
     if (bookingId && stripePublishableKey?.startsWith('pk_')) {
       createPaymentIntent();
+    } else {
+      setError('Payment system configuration error. Please contact support.');
+      setIsLoading(false);
     }
   }, [bookingId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const createPaymentIntent = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('🔄 Creating payment intent for booking:', bookingId);
-      
       const response = await fetch('/api/payment/create-intent', {
         method: 'POST',
         headers: {
@@ -224,23 +240,23 @@ export default function SecurePaymentFlow({ bookingId }) {
         }),
       });
 
-      console.log('📥 Payment intent response status:', response.status);
-      
       const data = await response.json();
-      console.log('📊 Payment intent response:', { success: data.success, hasClientSecret: !!data.clientSecret });
 
-      if (data.success) {
+      if (data.success && data.clientSecret) {
         setClientSecret(data.clientSecret);
         setBookingData(data.booking);
         setPaymentDetails(data.paymentDetails);
-        console.log('✅ Payment intent created successfully');
       } else {
-        console.error('❌ Payment intent creation failed:', data.error);
-        setError(data.error || 'Failed to setup payment');
+        throw new Error(data.error || 'Failed to setup payment');
       }
     } catch (err) {
-      console.error('❌ Payment intent network error:', err);
-      setError('Network error. Please check your connection.');
+      const errorMessage = 'Unable to setup payment. Please try again.';
+      setError(errorMessage);
+      
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Payment intent error:', err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -248,7 +264,9 @@ export default function SecurePaymentFlow({ bookingId }) {
 
   const handlePaymentSuccess = (paymentIntent) => {
     setPaymentStatus('succeeded');
-    setTimeout(() => {
+    
+    // Redirect after short delay
+    retryTimeoutRef.current = setTimeout(() => {
       window.location.href = `/booking/payment-complete?booking_id=${bookingId}`;
     }, 2000);
   };
@@ -258,20 +276,24 @@ export default function SecurePaymentFlow({ bookingId }) {
     setPaymentStatus('failed');
   };
 
-  // Enhanced error display with debug info
+  // Enhanced error display for production
   if (!stripePublishableKey || !stripePublishableKey.startsWith('pk_')) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <div className="flex items-center justify-center space-x-3 mb-4">
           <AlertCircle className="text-red-600" size={24} />
-          <span className="text-red-800">Payment system configuration error</span>
+          <span className="text-red-800">Payment system temporarily unavailable</span>
         </div>
-        <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-          <p><strong>Debug Info:</strong></p>
-          <p>Environment: {process.env.NODE_ENV}</p>
-          <p>Key present: {!!stripePublishableKey ? 'Yes' : 'No'}</p>
-          <p>Key format: {stripePublishableKey?.startsWith('pk_') ? 'Valid' : 'Invalid'}</p>
-          <p>Key preview: {stripePublishableKey ? stripePublishableKey.substring(0, 15) + '...' : 'undefined'}</p>
+        <p className="text-gray-600 text-center">
+          Please try again later or contact support if the issue persists.
+        </p>
+        <div className="mt-6 text-center">
+          <a
+            href="/contact"
+            className="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Contact Support
+          </a>
         </div>
       </div>
     );
@@ -291,16 +313,18 @@ export default function SecurePaymentFlow({ bookingId }) {
   if (error && !clientSecret) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <div className="flex items-center justify-center space-x-3">
+        <div className="flex items-center justify-center space-x-3 mb-4">
           <AlertCircle className="text-red-600" size={24} />
           <span className="text-red-800">{error}</span>
         </div>
-        <button
-          onClick={createPaymentIntent}
-          className="mt-4 w-full py-2 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-        >
-          Try Again
-        </button>
+        <div className="text-center">
+          <button
+            onClick={createPaymentIntent}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }

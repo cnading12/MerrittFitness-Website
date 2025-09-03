@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp } from 'lucide-react';
 
 export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState('');
@@ -15,22 +15,76 @@ export default function BookingPage() {
   const [formData, setFormData] = useState({
     eventName: '',
     eventType: '',
-    attendees: '',
+    hoursRequested: '',
     duration: '',
     contactName: '',
     email: '',
     phone: '',
-    specialRequests: ''
+    specialRequests: '',
+    isRecurring: false,
+    recurringDetails: '',
+    businessName: '',
+    websiteUrl: ''
   });
 
+  // Updated event types with real business focus
   const eventTypes = [
-    { id: 'yoga-class', name: 'Yoga Class', duration: '60-90 min', basePrice: 150 },
-    { id: 'meditation', name: 'Meditation Session', duration: '30-60 min', basePrice: 100 },
-    { id: 'workshop', name: 'Workshop', duration: '2-4 hours', basePrice: 300 },
-    { id: 'retreat', name: 'Mini Retreat', duration: 'Half/Full day', basePrice: 500 },
-    { id: 'sound-bath', name: 'Sound Bath', duration: '60 min', basePrice: 120 },
-    { id: 'private-event', name: 'Private Event', duration: 'Custom', basePrice: 250 },
-    { id: 'other', name: 'Other', duration: 'Custom', basePrice: 200 }
+    { 
+      id: 'yoga-class', 
+      name: 'Yoga Classes', 
+      description: 'Vinyasa, Hatha, Restorative, Hot Yoga',
+      icon: '🧘‍♀️',
+      popular: true
+    },
+    { 
+      id: 'meditation', 
+      name: 'Meditation & Mindfulness', 
+      description: 'Guided meditation, breathwork, sound healing',
+      icon: '🕯️'
+    },
+    { 
+      id: 'fitness', 
+      name: 'Fitness Classes', 
+      description: 'Pilates, barre, strength training, cardio',
+      icon: '💪'
+    },
+    { 
+      id: 'martial-arts', 
+      name: 'Martial Arts', 
+      description: 'Judo, BJJ, wrestling, self-defense',
+      icon: '🥋',
+      popular: true
+    },
+    { 
+      id: 'dance', 
+      name: 'Dance Classes', 
+      description: 'Contemporary, ballroom, salsa, hip-hop',
+      icon: '💃'
+    },
+    { 
+      id: 'workshop', 
+      name: 'Workshops & Seminars', 
+      description: 'Educational events, team building',
+      icon: '📚'
+    },
+    { 
+      id: 'therapy', 
+      name: 'Therapy & Healing', 
+      description: 'Art therapy, sound baths, energy work',
+      icon: '🌟'
+    },
+    { 
+      id: 'private-event', 
+      name: 'Private Events', 
+      description: 'Birthday parties, celebrations, retreats',
+      icon: '🎉'
+    },
+    { 
+      id: 'other', 
+      name: 'Other Wellness Practice', 
+      description: 'Tell us about your unique offering',
+      icon: '✨'
+    }
   ];
 
   const timeSlots = [
@@ -38,6 +92,57 @@ export default function BookingPage() {
     '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
     '6:00 PM', '7:00 PM', '8:00 PM'
   ];
+
+  // Pricing calculation based on actual business model
+  const HOURLY_RATE = 95;
+  const calculatePricing = () => {
+    const hours = parseInt(formData.hoursRequested) || 0;
+    const isRecurring = formData.isRecurring;
+    const hasMultipleEvents = formData.recurringDetails.includes('multiple') || formData.recurringDetails.includes('weekly');
+    
+    // Apply business rules
+    let totalHours = hours;
+    let rate = HOURLY_RATE;
+    let minimumApplied = false;
+    let discount = 0;
+    let savings = 0;
+    
+    // Single event: 4-hour minimum
+    if (!isRecurring && hours < 4) {
+      totalHours = 4;
+      minimumApplied = true;
+    }
+    
+    // Multiple events per week: 2-hour minimum
+    if (isRecurring && hasMultipleEvents && hours < 2) {
+      totalHours = 2;
+      minimumApplied = true;
+    }
+    
+    // Long-term client incentives
+    if (isRecurring) {
+      if (hasMultipleEvents) {
+        discount = 5; // 5% discount for multiple weekly bookings
+        savings = (totalHours * rate * discount) / 100;
+      }
+    }
+    
+    const subtotal = totalHours * rate;
+    const total = subtotal - savings;
+    
+    return {
+      requestedHours: hours,
+      billedHours: totalHours,
+      hourlyRate: rate,
+      subtotal,
+      discount,
+      savings,
+      total,
+      minimumApplied,
+      isRecurring,
+      hasMultipleEvents
+    };
+  };
 
   // Check availability when date changes
   useEffect(() => {
@@ -48,7 +153,7 @@ export default function BookingPage() {
 
   const checkAvailability = async (date) => {
     setIsCheckingAvailability(true);
-    setSelectedTime(''); // Reset selected time when checking new date
+    setSelectedTime('');
 
     try {
       const response = await fetch(`/api/check-availability?date=${date}`);
@@ -67,7 +172,6 @@ export default function BookingPage() {
       }
     } catch (error) {
       console.error('Error checking availability:', error);
-      // Fallback: assume all slots available
       const fallbackAvailability = {};
       timeSlots.forEach(time => {
         fallbackAvailability[time] = true;
@@ -82,122 +186,77 @@ export default function BookingPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const calculateEstimatedPrice = () => {
-    const selectedEventType = eventTypes.find(t => t.id === formData.eventType);
-    if (!selectedEventType) return 0;
-
-    const basePrice = selectedEventType.basePrice;
-    const attendeeMultiplier = Math.max(1, Math.ceil((parseInt(formData.attendees) || 1) / 10));
-    return basePrice * attendeeMultiplier;
-  };
+  const pricing = calculatePricing();
 
   const handleSubmit = async () => {
-  setIsSubmitting(true);
-  setSubmitMessage('');
+    setIsSubmitting(true);
+    setSubmitMessage('');
 
-  try {
-    console.log('🚀 Submitting booking...');
+    try {
+      console.log('🚀 Submitting booking...');
 
-    // Step 1: Create booking
-    const bookingResponse = await fetch('/api/booking-request', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        selectedDate,
-        selectedTime,
-        ...formData,
-        total: calculateEstimatedPrice(),
-        paymentMethod: 'pending'
-      }),
-    });
+      const bookingResponse = await fetch('/api/booking-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedDate,
+          selectedTime,
+          ...formData,
+          ...pricing,
+          total: pricing.total,
+          paymentMethod: 'pending'
+        }),
+      });
 
-    const bookingResult = await bookingResponse.json();
+      const bookingResult = await bookingResponse.json();
 
-    if (bookingResponse.ok && bookingResult.success) {
-      // Redirect to payment page instead of showing confirmation
-      window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
-    } else {
-      setSubmitMessage(`❌ ${bookingResult.error || 'Failed to create booking'}`);
-      console.error('Booking creation error:', bookingResult);
+      if (bookingResponse.ok && bookingResult.success) {
+        window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
+      } else {
+        setSubmitMessage(`❌ ${bookingResult.error || 'Failed to create booking'}`);
+        console.error('Booking creation error:', bookingResult);
+      }
+    } catch (error) {
+      console.error('❌ Network/JSON error:', error);
+      setSubmitMessage('❌ Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error('❌ Network/JSON error:', error);
-    setSubmitMessage('❌ Network error. Please check your connection and try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-  const isFormValid = selectedDate && selectedTime && formData.eventName && formData.contactName && formData.email && formData.eventType && availableSlots[selectedTime];
+  };
 
-  // Show confirmation screen after successful booking
-  if (showConfirmation && bookingId) {
-    return (
-      <main className="pt-24 pb-20 bg-gray-50 min-h-screen">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="text-emerald-600" size={32} />
-            </div>
-
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Booking Request Created!</h1>
-
-            <p className="text-lg text-gray-600 mb-6">
-              Your event booking has been created and is pending payment confirmation.
-            </p>
-
-            <div className="bg-gray-50 rounded-xl p-6 mb-6 text-left">
-              <h3 className="font-semibold text-gray-900 mb-3">Booking Details</h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <p><strong>Booking ID:</strong> <code className="bg-gray-200 px-2 py-1 rounded">{bookingId}</code></p>
-                <p><strong>Date & Time:</strong> {selectedDate} at {selectedTime}</p>
-                <p><strong>Estimated Total:</strong> ${calculateEstimatedPrice()}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-sm text-gray-600 mb-6">
-              <p>📧 A confirmation email will be sent once payment is processed</p>
-              <p>📅 Calendar event will be created automatically</p>
-              <p>💳 Payment processing will be added in the next phase</p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setShowConfirmation(false);
-                  setBookingId('');
-                  setSubmitMessage('');
-                }}
-                className="w-full px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                Book Another Event
-              </button>
-
-              <p className="text-xs text-gray-500">
-                For immediate assistance, call (303) 359-8337
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const isFormValid = selectedDate && selectedTime && formData.eventName && formData.contactName && formData.email && formData.eventType && formData.hoursRequested && availableSlots[selectedTime];
 
   return (
     <main className="pt-24 pb-20 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl lg:text-5xl font-light mb-4 text-gray-900">Book Your Event</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Reserve our historic sanctuary with real-time availability and instant confirmation.
+          <h1 className="text-4xl lg:text-5xl font-light mb-4 text-gray-900">Reserve Your Sacred Space</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Join our community of wellness professionals in Denver's most inspiring historic sanctuary. 
+            <span className="font-semibold text-emerald-700"> $95/hour • Flexible long-term partnerships available</span>
+          </p>
+        </div>
+
+        {/* Business Focus Banner */}
+        <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-6 mb-8 border border-emerald-100">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <TrendingUp className="text-emerald-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-900">We're Building Something Special</h2>
+          </div>
+          <p className="text-center text-gray-700 max-w-4xl mx-auto">
+            Our vision: <span className="font-semibold">7-10 long-term wellness partners</span> who call Merritt Fitness home. 
+            We're seeking dedicated practitioners ready to build their business in our beautiful 2,400 sq ft sanctuary with 24-foot ceilings, 
+            original 1905 architecture, and perfect acoustics.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Calendar Section */}
+          {/* Main Booking Form */}
           <div className="lg:col-span-2">
+            {/* Calendar Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-emerald-100 rounded-lg">
@@ -271,15 +330,6 @@ export default function BookingPage() {
                   )}
                 </div>
               </div>
-
-              {selectedTime && !availableSlots[selectedTime] && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
-                  <AlertCircle className="text-amber-600" size={16} />
-                  <span className="text-amber-800 text-sm">
-                    This time slot is not available. Please select a different time.
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Event Details Form */}
@@ -288,13 +338,40 @@ export default function BookingPage() {
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Users className="text-blue-700" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Event Details</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Tell Us About Your Practice</h2>
               </div>
 
               <div className="space-y-6">
+                {/* Business Information */}
+                <div className="bg-blue-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Business Information</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Practice/Business Name *</label>
+                      <input
+                        type="text"
+                        value={formData.businessName}
+                        onChange={(e) => handleInputChange('businessName', e.target.value)}
+                        placeholder="e.g., Serene Soul Yoga"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Website/Instagram (Optional)</label>
+                      <input
+                        type="url"
+                        value={formData.websiteUrl}
+                        onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                        placeholder="www.example.com or @username"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Event Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Class/Event Name *</label>
                     <input
                       type="text"
                       value={formData.eventName}
@@ -305,16 +382,17 @@ export default function BookingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Event Type *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Practice Type *</label>
                     <select
                       value={formData.eventType}
                       onChange={(e) => handleInputChange('eventType', e.target.value)}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     >
-                      <option value="">Select type...</option>
+                      <option value="">Select your practice...</option>
                       {eventTypes.map(type => (
                         <option key={type.id} value={type.id}>
-                          {type.name} ({type.duration}) - Starting at ${type.basePrice}
+                          {type.icon} {type.name} - {type.description}
+                          {type.popular ? ' (Popular!)' : ''}
                         </option>
                       ))}
                     </select>
@@ -323,42 +401,85 @@ export default function BookingPage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Expected Attendees</label>
-                    <input
-                      type="number"
-                      value={formData.attendees}
-                      onChange={(e) => handleInputChange('attendees', e.target.value)}
-                      placeholder="e.g., 15"
-                      min="1"
-                      max="50"
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Hours Needed *</label>
+                    <select
+                      value={formData.hoursRequested}
+                      onChange={(e) => handleInputChange('hoursRequested', e.target.value)}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    />
-                    {formData.attendees && parseInt(formData.attendees) > 10 && (
-                      <p className="text-xs text-blue-600 mt-1">
-                        Large group pricing applies (groups over 10)
-                      </p>
-                    )}
+                    >
+                      <option value="">Select duration...</option>
+                      {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
+                        <option key={hours} value={hours}>
+                          {hours === 1 ? '1 hour' : `${hours} hours`}
+                          {hours < 4 && !formData.isRecurring ? ' (4hr minimum applies)' : ''}
+                          {hours < 2 && formData.isRecurring && formData.recurringDetails.includes('multiple') ? ' (2hr minimum applies)' : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                    <input
-                      type="text"
-                      value={formData.duration}
-                      onChange={(e) => handleInputChange('duration', e.target.value)}
-                      placeholder="e.g., 90 minutes"
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Session Format</label>
+                    <div className="space-y-3">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="recurring"
+                          value="single"
+                          checked={!formData.isRecurring}
+                          onChange={() => handleInputChange('isRecurring', false)}
+                          className="mr-2 text-emerald-600"
+                        />
+                        <span>Single Event (4-hour minimum)</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="recurring"
+                          value="recurring"
+                          checked={formData.isRecurring}
+                          onChange={() => handleInputChange('isRecurring', true)}
+                          className="mr-2 text-emerald-600"
+                        />
+                        <span className="text-emerald-700 font-medium">Long-term Partnership <Star className="inline ml-1" size={16} /></span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
+                {formData.isRecurring && (
+                  <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+                    <h3 className="text-lg font-semibold text-emerald-900 mb-4 flex items-center">
+                      <Star className="mr-2" size={20} />
+                      Partnership Details
+                    </h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tell us about your needs</label>
+                      <select
+                        value={formData.recurringDetails}
+                        onChange={(e) => handleInputChange('recurringDetails', e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors mb-3"
+                      >
+                        <option value="">Select partnership type...</option>
+                        <option value="single-weekly">Single weekly class (2hr minimum)</option>
+                        <option value="multiple-weekly">Multiple weekly classes (2hr minimum, 5% discount!)</option>
+                        <option value="daily">Daily classes (Premium partnership)</option>
+                        <option value="custom">Custom schedule - let's discuss</option>
+                      </select>
+                      <p className="text-sm text-emerald-700">
+                        💡 Long-term partners get priority booking, marketing support, and potential revenue sharing opportunities!
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Special Requests or Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
                   <textarea
                     value={formData.specialRequests}
                     onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                    rows={3}
-                    placeholder="Any special setup requirements, equipment needs, or other details..."
+                    rows={4}
+                    placeholder="Tell us about your practice, special equipment needs, setup requirements, target audience, or anything else that would help us support your success..."
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                   />
                 </div>
@@ -378,7 +499,7 @@ export default function BookingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
                       <input
                         type="tel"
                         value={formData.phone}
@@ -423,12 +544,12 @@ export default function BookingPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="animate-spin" size={20} />
-                        Creating Booking...
+                        Creating Your Booking...
                       </>
                     ) : (
                       <>
                         <Mail size={20} />
-                        Create Booking Request
+                        Reserve Your Space
                         <ArrowRight size={20} />
                       </>
                     )}
@@ -436,7 +557,7 @@ export default function BookingPage() {
 
                   {isFormValid && (
                     <p className="text-sm text-gray-500 mt-3 text-center">
-                      Payment processing will be added in the next step
+                      We'll contact you within 24 hours to confirm details
                     </p>
                   )}
                 </div>
@@ -444,11 +565,14 @@ export default function BookingPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Enhanced Sidebar */}
           <div className="lg:col-span-1">
-            {/* Booking Summary */}
+            {/* Pricing Summary */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <CreditCard className="mr-2" size={20} />
+                Pricing Summary
+              </h3>
 
               <div className="space-y-4 text-sm">
                 <div className="flex items-center gap-3 text-gray-600">
@@ -468,10 +592,6 @@ export default function BookingPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
-                  <Users size={16} />
-                  <span>{formData.attendees ? `${formData.attendees} attendees` : 'Attendees TBD'}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
                   <MapPin size={16} />
                   <span>Historic Merritt Space</span>
                 </div>
@@ -480,6 +600,9 @@ export default function BookingPage() {
               {formData.eventName && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="font-medium text-gray-900">{formData.eventName}</p>
+                  {formData.businessName && (
+                    <p className="text-sm text-gray-600">{formData.businessName}</p>
+                  )}
                   {formData.eventType && (
                     <p className="text-sm text-gray-600 capitalize">
                       {eventTypes.find(t => t.id === formData.eventType)?.name}
@@ -489,50 +612,149 @@ export default function BookingPage() {
               )}
 
               <div className="mt-6 pt-4 border-t border-gray-100">
-                <div className="space-y-2 text-sm">
-                  {formData.eventType && (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span>Hourly Rate</span>
+                    <span className="font-medium">${HOURLY_RATE}/hour</span>
+                  </div>
+                  
+                  {formData.hoursRequested && (
                     <>
                       <div className="flex justify-between">
-                        <span>Base rate</span>
-                        <span>${eventTypes.find(t => t.id === formData.eventType)?.basePrice || 0}</span>
+                        <span>
+                          Requested Hours
+                          {pricing.minimumApplied && (
+                            <span className="text-xs text-amber-600 block">
+                              ({pricing.isRecurring && pricing.hasMultipleEvents ? '2hr' : '4hr'} minimum applied)
+                            </span>
+                          )}
+                        </span>
+                        <span>{pricing.requestedHours} hours</span>
                       </div>
-                      {formData.attendees && parseInt(formData.attendees) > 10 && (
+                      
+                      {pricing.minimumApplied && (
                         <div className="flex justify-between">
-                          <span>Large group</span>
-                          <span>+${(eventTypes.find(t => t.id === formData.eventType)?.basePrice || 0) * (Math.ceil(parseInt(formData.attendees) / 10) - 1)}</span>
+                          <span>Minimum Hours</span>
+                          <span className="font-medium">{pricing.billedHours} hours</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span>${pricing.subtotal}</span>
+                      </div>
+                      
+                      {pricing.savings > 0 && (
+                        <div className="flex justify-between text-emerald-600">
+                          <span>Long-term Partner Discount ({pricing.discount}%)</span>
+                          <span>-${pricing.savings}</span>
                         </div>
                       )}
                     </>
                   )}
                 </div>
+                
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                  <span className="font-medium text-gray-900">Estimated Total</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    ${calculateEstimatedPrice() || 0}
+                  <span className="font-medium text-gray-900">Total</span>
+                  <span className="text-xl font-bold text-gray-900">
+                    ${pricing.total || 0}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Final pricing confirmed before payment
-                </p>
+                
+                {formData.hoursRequested && (
+                  <div className="mt-3 text-xs text-gray-500">
+                    {pricing.isRecurring ? (
+                      pricing.hasMultipleEvents ? (
+                        <p className="text-emerald-600">
+                          ✨ Multiple weekly bookings qualify for partnership rates!
+                        </p>
+                      ) : (
+                        <p>Long-term partnership • 2-hour minimum</p>
+                      )
+                    ) : (
+                      <p>Single event • 4-hour minimum</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Partnership Benefits */}
+            <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-6 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <Star className="mr-2 text-emerald-600" size={20} />
+                Partnership Benefits
+              </h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Priority Booking:</strong> First access to prime time slots</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Marketing Support:</strong> Featured on our website & social media</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Flexible Scheduling:</strong> 2-hour minimums for regular partners</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Community Building:</strong> Cross-promotion with other practitioners</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Revenue Sharing:</strong> Opportunities for joint workshops & events</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Market Position */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Why Choose Merritt Fitness?</h3>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">🏛️</span>
+                  <span>Historic 1905 church with 24-foot ceilings</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-600">☀️</span>
+                  <span>Abundant natural light all day</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-600">🎵</span>
+                  <span>Perfect acoustics for sound healing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">📍</span>
+                  <span>Sloan's Lake location with easy parking</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-red-600">💰</span>
+                  <span>Competitive $95/hr rate (vs $65-120 market)</span>
+                </div>
               </div>
             </div>
 
             {/* Contact Info */}
-            <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
+              <h3 className="font-semibold text-gray-900 mb-3">Questions About Partnership?</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Our team is here to help you plan the perfect event.
+                We'd love to discuss how we can support your wellness practice and build something amazing together.
               </p>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-700">
                   <Phone size={14} />
-                  <span>(303) 359-8337</span>
+                  <span>(720)-357-9499</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Mail size={14} />
-                  <span>manager@merritthouse.com</span>
+                  <span>merrittfitnessmanager@gmail.com</span>
                 </div>
               </div>
+              <p className="text-xs text-gray-500 mt-4">
+                💡 Pro tip: Mention "long-term partnership" for priority consideration!
+              </p>
             </div>
           </div>
         </div>
