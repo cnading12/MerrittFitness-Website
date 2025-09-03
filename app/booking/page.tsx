@@ -336,7 +336,7 @@ export default function BookingPage() {
               {/* Public Google Calendar - Anyone can view */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe
-                  src="hhttps://calendar.google.com/calendar/embed?src=c_fd6a5dda05dbcb64dcae55c08e8ca951112746042601e2926fa8d3ade084911b%40group.calendar.google.com&ctz=America%2FDenver" 
+                  src="https://calendar.google.com/calendar/embed?src=c_fd6a5dda05dbcb64dcae55c08e8ca951112746042601e2926fa8d3ade084911b%40group.calendar.google.com&ctz=America%2FDenver" 
                   className="w-full h-96"
                   title="Public Live Availability Calendar"
                 />

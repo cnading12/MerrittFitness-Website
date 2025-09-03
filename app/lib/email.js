@@ -5,15 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email configuration - Professional sending, but replies go to your Gmail
 const EMAIL_CONFIG = {
-  // Professional sending address (customers see this)
-  from: 'Merritt House <bookings@merrittfitness.net>',
-  
-  // Your actual Gmail where replies and notifications go
-  replyTo: 'merrittfitnessmanager@gmail.com',
-  managerEmail: 'merrittfitnessmanager@gmail.com',
-  
-  // You can also use the professional address for certain notifications
-  supportEmail: 'support@merrittfitness.net'
+  from: 'Merritt Fitness <bookings@merrittfitness.net>',
+  replyTo: 'manager@merrittfitness.net',  // CHANGED
+  managerEmail: 'manager@merrittfitness.net'  // CHANGED
 };
 
 // Updated email templates with correct reply-to
