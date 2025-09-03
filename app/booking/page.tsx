@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info } from 'lucide-react';
 
 export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState('');
@@ -12,19 +12,26 @@ export default function BookingPage() {
   const [bookingId, setBookingId] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const [formData, setFormData] = useState({
+  // NEW: Multiple bookings state
+  const [bookings, setBookings] = useState([{
+    id: 1,
     eventName: '',
     eventType: '',
+    selectedDate: '',
+    selectedTime: '',
     hoursRequested: '',
-    duration: '',
+    specialRequests: ''
+  }]);
+
+  const [formData, setFormData] = useState({
     contactName: '',
     email: '',
     phone: '',
-    specialRequests: '',
+    businessName: '',
+    websiteUrl: '',
     isRecurring: false,
     recurringDetails: '',
-    businessName: '',
-    websiteUrl: ''
+    paymentMethod: 'card' // NEW: Default to card, but allow pay-later
   });
 
   // Updated event types with real business focus
@@ -93,55 +100,91 @@ export default function BookingPage() {
     '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
-  // Pricing calculation based on actual business model
+  // Pricing calculation with Stripe fees disclosure
   const HOURLY_RATE = 95;
+  const STRIPE_FEE_PERCENTAGE = 3; // 2.9% + 30 cents ≈ 3%
+
   const calculatePricing = () => {
-    const hours = parseInt(formData.hoursRequested) || 0;
-    const isRecurring = formData.isRecurring;
-    const hasMultipleEvents = formData.recurringDetails.includes('multiple') || formData.recurringDetails.includes('weekly');
-    
-    // Apply business rules
-    let totalHours = hours;
-    let rate = HOURLY_RATE;
+    let totalHours = 0;
+    let totalBookings = 0;
     let minimumApplied = false;
+    
+    // Calculate total hours across all bookings
+    bookings.forEach(booking => {
+      if (booking.hoursRequested) {
+        let hours = parseFloat(booking.hoursRequested) || 0;
+        
+        // Apply minimums per booking
+        const isMultipleBookings = bookings.length > 1;
+        const hasRecurringMultiple = formData.isRecurring && formData.recurringDetails.includes('multiple');
+        
+        if (!formData.isRecurring && hours < 4) {
+          hours = 4;
+          minimumApplied = true;
+        } else if (formData.isRecurring && hasRecurringMultiple && hours < 2) {
+          hours = 2;
+          minimumApplied = true;
+        }
+        
+        totalHours += hours;
+        totalBookings++;
+      }
+    });
+
+    // Apply discounts
     let discount = 0;
     let savings = 0;
     
-    // Single event: 4-hour minimum
-    if (!isRecurring && hours < 4) {
-      totalHours = 4;
-      minimumApplied = true;
+    if (formData.isRecurring && formData.recurringDetails.includes('multiple')) {
+      discount = 5; // 5% discount for multiple weekly bookings
+      savings = (totalHours * HOURLY_RATE * discount) / 100;
     }
-    
-    // Multiple events per week: 2-hour minimum
-    if (isRecurring && hasMultipleEvents && hours < 2) {
-      totalHours = 2;
-      minimumApplied = true;
-    }
-    
-    // Long-term client incentives
-    if (isRecurring) {
-      if (hasMultipleEvents) {
-        discount = 5; // 5% discount for multiple weekly bookings
-        savings = (totalHours * rate * discount) / 100;
-      }
-    }
-    
-    const subtotal = totalHours * rate;
-    const total = subtotal - savings;
+
+    const subtotal = totalHours * HOURLY_RATE - savings;
+    const stripeFee = Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100));
+    const totalWithFees = subtotal + (formData.paymentMethod === 'card' ? stripeFee : 0);
     
     return {
-      requestedHours: hours,
-      billedHours: totalHours,
-      hourlyRate: rate,
+      totalHours,
+      totalBookings,
+      hourlyRate: HOURLY_RATE,
       subtotal,
       discount,
       savings,
-      total,
+      stripeFee,
+      total: totalWithFees,
       minimumApplied,
-      isRecurring,
-      hasMultipleEvents
+      isRecurring: formData.isRecurring,
+      hasMultipleEvents: formData.recurringDetails.includes('multiple')
     };
+  };
+
+  // NEW: Add booking function
+  const addBooking = () => {
+    const newId = Math.max(...bookings.map(b => b.id)) + 1;
+    setBookings([...bookings, {
+      id: newId,
+      eventName: '',
+      eventType: '',
+      selectedDate: '',
+      selectedTime: '',
+      hoursRequested: '',
+      specialRequests: ''
+    }]);
+  };
+
+  // NEW: Remove booking function
+  const removeBooking = (id) => {
+    if (bookings.length > 1) {
+      setBookings(bookings.filter(b => b.id !== id));
+    }
+  };
+
+  // NEW: Update individual booking
+  const updateBooking = (id, field, value) => {
+    setBookings(bookings.map(booking => 
+      booking.id === id ? { ...booking, [field]: value } : booking
+    ));
   };
 
   // Check availability when date changes
@@ -193,27 +236,34 @@ export default function BookingPage() {
     setSubmitMessage('');
 
     try {
-      console.log('🚀 Submitting booking...');
+      console.log('🚀 Submitting booking(s)...');
+
+      // Prepare submission data
+      const submissionData = {
+        bookings: bookings,
+        contactInfo: formData,
+        pricing: pricing,
+        paymentMethod: formData.paymentMethod
+      };
 
       const bookingResponse = await fetch('/api/booking-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          selectedDate,
-          selectedTime,
-          ...formData,
-          ...pricing,
-          total: pricing.total,
-          paymentMethod: 'pending'
-        }),
+        body: JSON.stringify(submissionData),
       });
 
       const bookingResult = await bookingResponse.json();
 
       if (bookingResponse.ok && bookingResult.success) {
-        window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
+        if (formData.paymentMethod === 'pay-later') {
+          // Redirect to confirmation page
+          window.location.href = `/booking/success?booking_id=${bookingResult.id}`;
+        } else {
+          // Redirect to payment page
+          window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
+        }
       } else {
         setSubmitMessage(`❌ ${bookingResult.error || 'Failed to create booking'}`);
         console.error('Booking creation error:', bookingResult);
@@ -226,7 +276,18 @@ export default function BookingPage() {
     }
   };
 
-  const isFormValid = selectedDate && selectedTime && formData.eventName && formData.contactName && formData.email && formData.eventType && formData.hoursRequested && availableSlots[selectedTime];
+  const isFormValid = () => {
+    // Check if at least one booking has required fields
+    const hasValidBooking = bookings.some(booking => 
+      booking.eventName && booking.eventType && booking.selectedDate && 
+      booking.selectedTime && booking.hoursRequested
+    );
+    
+    // Check contact info
+    const hasContactInfo = formData.contactName && formData.email;
+    
+    return hasValidBooking && hasContactInfo;
+  };
 
   return (
     <main className="pt-24 pb-20 bg-gray-50 min-h-screen">
@@ -256,261 +317,174 @@ export default function BookingPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Booking Form */}
           <div className="lg:col-span-2">
-            {/* Calendar Section */}
+            {/* Calendar Section - UPDATED: Public access */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-emerald-100 rounded-lg">
                   <Calendar className="text-emerald-700" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Available Dates & Times</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Live Availability Calendar</h2>
               </div>
 
-              {/* Embedded Google Calendar */}
+              {/* Public Google Calendar */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe
                   src="https://calendar.google.com/calendar/embed?src=04ac99c7464fa75a7fe252eccd8fff5cffd50a9de27f25555cb8886708b8ef21@group.calendar.google.com&ctz=America/Denver&mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTz=0"
                   className="w-full h-96"
-                  title="Live Availability Calendar"
+                  title="Public Live Availability Calendar - Anyone can view"
                 />
-              </div>
-
-              {/* Date & Time Selection */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Select Date</label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Available Times
-                    {isCheckingAvailability && (
-                      <span className="ml-2 text-emerald-600">
-                        <Loader2 className="inline animate-spin" size={14} />
-                      </span>
-                    )}
-                  </label>
-
-                  {!selectedDate ? (
-                    <div className="w-full p-8 border border-gray-200 rounded-lg bg-gray-50 text-center text-gray-500">
-                      Select a date to see available times
-                    </div>
-                  ) : isCheckingAvailability ? (
-                    <div className="w-full p-8 border border-gray-200 rounded-lg bg-gray-50 text-center">
-                      <Loader2 className="animate-spin text-emerald-600 mx-auto" size={24} />
-                      <p className="text-gray-600 mt-2">Checking availability...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                      {timeSlots.map(time => (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTime(availableSlots[time] ? time : '')}
-                          disabled={!availableSlots[time]}
-                          className={`p-2 text-sm rounded-lg border transition-all ${availableSlots[time]
-                              ? selectedTime === time
-                                ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50'
-                              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                            }`}
-                        >
-                          {time}
-                          {!availableSlots[time] && (
-                            <div className="text-xs mt-1 text-red-500">Booked</div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="p-4 bg-green-50 border-t border-green-200">
+                  <p className="text-sm text-green-800">
+                    ✅ <strong>Live Calendar:</strong> This shows real-time availability. Red blocks = booked, white spaces = available for your events!
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Event Details Form */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="text-blue-700" size={20} />
+            {/* Multiple Bookings Section - NEW */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Users className="text-blue-700" size={20} />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Your Booking(s)</h2>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Tell Us About Your Practice</h2>
+                <button
+                  onClick={addBooking}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  <Plus size={16} />
+                  Add Another Class
+                </button>
               </div>
 
-              <div className="space-y-6">
-                {/* Business Information */}
-                <div className="bg-blue-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Business Information</h3>
+              {/* Individual Bookings */}
+              {bookings.map((booking, index) => (
+                <div key={booking.id} className="border border-gray-200 rounded-xl p-6 mb-6 last:mb-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Class #{index + 1}</h3>
+                    {bookings.length > 1 && (
+                      <button
+                        onClick={() => removeBooking(booking.id)}
+                        className="flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Minus size={14} />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Practice/Business Name *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Class/Event Name *</label>
                       <input
                         type="text"
-                        value={formData.businessName}
-                        onChange={(e) => handleInputChange('businessName', e.target.value)}
-                        placeholder="e.g., Serene Soul Yoga"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={booking.eventName}
+                        onChange={(e) => updateBooking(booking.id, 'eventName', e.target.value)}
+                        placeholder="e.g., Morning Flow Yoga"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Website/Instagram (Optional)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Practice Type *</label>
+                      <select
+                        value={booking.eventType}
+                        onChange={(e) => updateBooking(booking.id, 'eventType', e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      >
+                        <option value="">Select your practice...</option>
+                        {eventTypes.map(type => (
+                          <option key={type.id} value={type.id}>
+                            {type.icon} {type.name} - {type.description}
+                            {type.popular ? ' (Popular!)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
                       <input
-                        type="url"
-                        value={formData.websiteUrl}
-                        onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-                        placeholder="www.example.com or @username"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        type="date"
+                        value={booking.selectedDate}
+                        onChange={(e) => updateBooking(booking.id, 'selectedDate', e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+                      <select
+                        value={booking.selectedTime}
+                        onChange={(e) => updateBooking(booking.id, 'selectedTime', e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      >
+                        <option value="">Select time...</option>
+                        {timeSlots.map(time => (
+                          <option key={time} value={time}>
+                            {time} {availableSlots[time] === false ? '(Booked)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Hours Needed *</label>
+                      <select
+                        value={booking.hoursRequested}
+                        onChange={(e) => updateBooking(booking.id, 'hoursRequested', e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      >
+                        <option value="">Select duration...</option>
+                        {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
+                          <option key={hours} value={hours}>
+                            {hours === 1 ? '1 hour' : `${hours} hours`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Special Notes for This Class</label>
+                      <textarea
+                        value={booking.specialRequests}
+                        onChange={(e) => updateBooking(booking.id, 'specialRequests', e.target.value)}
+                        rows={3}
+                        placeholder="Equipment needs, setup requirements, etc."
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
                       />
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
 
+            {/* Contact & Payment Information */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Mail className="text-purple-700" size={20} />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Contact & Payment</h2>
+              </div>
+
+              <div className="space-y-6">
+                {/* Contact Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Class/Event Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                     <input
                       type="text"
-                      value={formData.eventName}
-                      onChange={(e) => handleInputChange('eventName', e.target.value)}
-                      placeholder="e.g., Morning Flow Yoga"
+                      value={formData.contactName}
+                      onChange={(e) => handleInputChange('contactName', e.target.value)}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Practice Type *</label>
-                    <select
-                      value={formData.eventType}
-                      onChange={(e) => handleInputChange('eventType', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    >
-                      <option value="">Select your practice...</option>
-                      {eventTypes.map(type => (
-                        <option key={type.id} value={type.id}>
-                          {type.icon} {type.name} - {type.description}
-                          {type.popular ? ' (Popular!)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hours Needed *</label>
-                    <select
-                      value={formData.hoursRequested}
-                      onChange={(e) => handleInputChange('hoursRequested', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    >
-                      <option value="">Select duration...</option>
-                      {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
-                        <option key={hours} value={hours}>
-                          {hours === 1 ? '1 hour' : `${hours} hours`}
-                          {hours < 4 && !formData.isRecurring ? ' (4hr minimum applies)' : ''}
-                          {hours < 2 && formData.isRecurring && formData.recurringDetails.includes('multiple') ? ' (2hr minimum applies)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Session Format</label>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="recurring"
-                          value="single"
-                          checked={!formData.isRecurring}
-                          onChange={() => handleInputChange('isRecurring', false)}
-                          className="mr-2 text-emerald-600"
-                        />
-                        <span>Single Event (4-hour minimum)</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="recurring"
-                          value="recurring"
-                          checked={formData.isRecurring}
-                          onChange={() => handleInputChange('isRecurring', true)}
-                          className="mr-2 text-emerald-600"
-                        />
-                        <span className="text-emerald-700 font-medium">Long-term Partnership <Star className="inline ml-1" size={16} /></span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {formData.isRecurring && (
-                  <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-                    <h3 className="text-lg font-semibold text-emerald-900 mb-4 flex items-center">
-                      <Star className="mr-2" size={20} />
-                      Partnership Details
-                    </h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tell us about your needs</label>
-                      <select
-                        value={formData.recurringDetails}
-                        onChange={(e) => handleInputChange('recurringDetails', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors mb-3"
-                      >
-                        <option value="">Select partnership type...</option>
-                        <option value="single-weekly">Single weekly class (2hr minimum)</option>
-                        <option value="multiple-weekly">Multiple weekly classes (2hr minimum, 5% discount!)</option>
-                        <option value="daily">Daily classes (Premium partnership)</option>
-                        <option value="custom">Custom schedule - let's discuss</option>
-                      </select>
-                      <p className="text-sm text-emerald-700">
-                        💡 Long-term partners get priority booking, marketing support, and potential revenue sharing opportunities!
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
-                  <textarea
-                    value={formData.specialRequests}
-                    onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                    rows={4}
-                    placeholder="Tell us about your practice, special equipment needs, setup requirements, target audience, or anything else that would help us support your success..."
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
-                  />
-                </div>
-
-                {/* Contact Information */}
-                <div className="border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                      <input
-                        type="text"
-                        value={formData.contactName}
-                        onChange={(e) => handleInputChange('contactName', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        placeholder="(303) 555-0123"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
                     <input
                       type="email"
@@ -518,6 +492,93 @@ export default function BookingPage() {
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="(303) 555-0123"
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                    <input
+                      type="text"
+                      value={formData.businessName}
+                      onChange={(e) => handleInputChange('businessName', e.target.value)}
+                      placeholder="e.g., Serene Soul Yoga"
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Method Selection - NEW */}
+                <div className="border-t border-gray-100 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <label className="flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="card"
+                        checked={formData.paymentMethod === 'card'}
+                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                        className="mt-1 mr-3 text-emerald-600"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CreditCard className="text-emerald-600" size={20} />
+                          <span className="font-medium">Pay Online Now</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">Secure card payment via Stripe</p>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <div className="flex items-start gap-2">
+                            <Info className="text-amber-600 mt-0.5" size={16} />
+                            <div>
+                              <p className="text-sm text-amber-800 font-medium">Processing Fee</p>
+                              <p className="text-xs text-amber-700">
+                                3% processing fee applies (required by Stripe). 
+                                Choose "Pay Later" for no fees with alternative payment methods.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-500 transition-colors">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="pay-later"
+                        checked={formData.paymentMethod === 'pay-later'}
+                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                        className="mt-1 mr-3 text-blue-600"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Phone className="text-blue-600" size={20} />
+                          <span className="font-medium">Pay Later</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">Alternative payment arrangements</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="text-sm text-blue-800">
+                            <p className="font-medium mb-1">💰 No Processing Fees!</p>
+                            <ul className="text-xs space-y-1">
+                              <li>• Pay by phone: (720) 357-9499</li>
+                              <li>• Check payments accepted</li>
+                              <li>• Venmo/Zelle available</li>
+                              <li>• Bank transfer options</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
@@ -535,8 +596,8 @@ export default function BookingPage() {
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={!isFormValid || isSubmitting}
-                    className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${isFormValid && !isSubmitting
+                    disabled={!isFormValid() || isSubmitting}
+                    className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${isFormValid() && !isSubmitting
                         ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       }`}
@@ -548,16 +609,23 @@ export default function BookingPage() {
                       </>
                     ) : (
                       <>
-                        <Mail size={20} />
-                        Reserve Your Space
+                        {formData.paymentMethod === 'pay-later' ? (
+                          <CheckCircle size={20} />
+                        ) : (
+                          <CreditCard size={20} />
+                        )}
+                        {formData.paymentMethod === 'pay-later' ? 'Confirm Booking' : 'Proceed to Payment'}
                         <ArrowRight size={20} />
                       </>
                     )}
                   </button>
 
-                  {isFormValid && (
+                  {isFormValid() && (
                     <p className="text-sm text-gray-500 mt-3 text-center">
-                      We'll contact you within 24 hours to confirm details
+                      {formData.paymentMethod === 'pay-later' 
+                        ? 'We\'ll contact you within 24 hours about payment arrangements'
+                        : 'You\'ll be redirected to our secure payment page'
+                      }
                     </p>
                   )}
                 </div>
@@ -565,118 +633,109 @@ export default function BookingPage() {
             </div>
           </div>
 
-          {/* Enhanced Sidebar */}
+          {/* Enhanced Sidebar with Multiple Bookings Support */}
           <div className="lg:col-span-1">
             {/* Pricing Summary */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <CreditCard className="mr-2" size={20} />
+                <DollarSign className="mr-2" size={20} />
                 Pricing Summary
               </h3>
 
-              <div className="space-y-4 text-sm">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Calendar size={16} />
-                  <span>{selectedDate || 'Date not selected'}</span>
+              {/* Booking Count */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-blue-900">Total Classes</span>
+                  <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Clock size={16} />
-                  <span>
-                    {selectedTime || 'Time not selected'}
-                    {selectedTime && availableSlots[selectedTime] === false && (
-                      <span className="text-red-500 ml-1">(Unavailable)</span>
-                    )}
-                    {selectedTime && availableSlots[selectedTime] === true && (
-                      <span className="text-emerald-500 ml-1">✓</span>
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <MapPin size={16} />
-                  <span>Historic Merritt Space</span>
-                </div>
+                <p className="text-sm text-blue-700 mt-1">
+                  {pricing.totalHours} total hours • ${HOURLY_RATE}/hour
+                </p>
               </div>
 
-              {formData.eventName && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="font-medium text-gray-900">{formData.eventName}</p>
-                  {formData.businessName && (
-                    <p className="text-sm text-gray-600">{formData.businessName}</p>
-                  )}
-                  {formData.eventType && (
-                    <p className="text-sm text-gray-600 capitalize">
-                      {eventTypes.find(t => t.id === formData.eventType)?.name}
-                    </p>
-                  )}
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-medium">${pricing.subtotal}</span>
                 </div>
-              )}
-
-              <div className="mt-6 pt-4 border-t border-gray-100">
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span>Hourly Rate</span>
-                    <span className="font-medium">${HOURLY_RATE}/hour</span>
+                
+                {pricing.savings > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Partnership Discount ({pricing.discount}%)</span>
+                    <span>-${pricing.savings}</span>
                   </div>
-                  
-                  {formData.hoursRequested && (
-                    <>
-                      <div className="flex justify-between">
-                        <span>
-                          Requested Hours
-                          {pricing.minimumApplied && (
-                            <span className="text-xs text-amber-600 block">
-                              ({pricing.isRecurring && pricing.hasMultipleEvents ? '2hr' : '4hr'} minimum applied)
-                            </span>
-                          )}
-                        </span>
-                        <span>{pricing.requestedHours} hours</span>
-                      </div>
-                      
-                      {pricing.minimumApplied && (
-                        <div className="flex justify-between">
-                          <span>Minimum Hours</span>
-                          <span className="font-medium">{pricing.billedHours} hours</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between">
-                        <span>Subtotal</span>
-                        <span>${pricing.subtotal}</span>
-                      </div>
-                      
-                      {pricing.savings > 0 && (
-                        <div className="flex justify-between text-emerald-600">
-                          <span>Long-term Partner Discount ({pricing.discount}%)</span>
-                          <span>-${pricing.savings}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-                
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                  <span className="font-medium text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-gray-900">
-                    ${pricing.total || 0}
-                  </span>
-                </div>
-                
-                {formData.hoursRequested && (
-                  <div className="mt-3 text-xs text-gray-500">
-                    {pricing.isRecurring ? (
-                      pricing.hasMultipleEvents ? (
-                        <p className="text-emerald-600">
-                          ✨ Multiple weekly bookings qualify for partnership rates!
-                        </p>
-                      ) : (
-                        <p>Long-term partnership • 2-hour minimum</p>
-                      )
-                    ) : (
-                      <p>Single event • 4-hour minimum</p>
-                    )}
+                )}
+
+                {/* Stripe Fee Disclosure */}
+                {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
+                  <div className="flex justify-between text-amber-600 border-t pt-2">
+                    <span>Processing Fee (3%)</span>
+                    <span>+${pricing.stripeFee}</span>
                   </div>
                 )}
               </div>
+              
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                <span className="font-medium text-gray-900">Total</span>
+                <span className="text-xl font-bold text-gray-900">
+                  ${pricing.total || 0}
+                </span>
+              </div>
+              
+              {/* Payment Method Notice */}
+              <div className="mt-3 text-xs text-gray-500">
+                {formData.paymentMethod === 'card' ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                    <p className="text-amber-800">
+                      💳 <strong>Card Payment:</strong> 3% processing fee applies (Stripe requirement)
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                    <p className="text-blue-800">
+                      💰 <strong>Pay Later:</strong> No processing fees! Alternative payment methods available.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Minimums Applied Notice */}
+              {pricing.minimumApplied && (
+                <div className="mt-3 text-xs text-gray-500">
+                  <p className="bg-gray-50 p-2 rounded-lg">
+                    ℹ️ <strong>Minimums Applied:</strong> {pricing.isRecurring && pricing.hasMultipleEvents ? '2-hour' : '4-hour'} minimum per booking enforced
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Payment Options Info */}
+            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-6 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                <CreditCard className="mr-2 text-blue-600" size={20} />
+                Payment Options
+              </h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">💳</span>
+                  <span><strong>Online Card Payment:</strong> Instant confirmation + 3% processing fee</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-0.5">📞</span>
+                  <span><strong>Phone Payment:</strong> Call (720) 357-9499 - No fees!</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-purple-600 mt-0.5">💸</span>
+                  <span><strong>Venmo/Zelle:</strong> @MerrittFitness - No fees!</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-orange-600 mt-0.5">🏛️</span>
+                  <span><strong>Check/Bank Transfer:</strong> Traditional options - No fees!</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 mt-4 italic">
+                💡 Choose "Pay Later" to avoid the 3% processing fee and use any of our alternative payment methods!
+              </p>
             </div>
 
             {/* Partnership Benefits */}
@@ -686,6 +745,10 @@ export default function BookingPage() {
                 Partnership Benefits
               </h3>
               <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span><strong>Multiple Bookings:</strong> Book several classes at once with ease</span>
+                </div>
                 <div className="flex items-start gap-2">
                   <span className="text-emerald-600 mt-0.5">•</span>
                   <span><strong>Priority Booking:</strong> First access to prime time slots</span>
@@ -709,43 +772,39 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* Market Position */}
+            {/* Security & Trust */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Why Choose Merritt Fitness?</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">🏛️</span>
-                  <span>Historic 1905 church with 24-foot ceilings</span>
+                  <span className="text-green-600">🔒</span>
+                  <span>SSL encrypted & PCI compliant payments</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-yellow-600">☀️</span>
-                  <span>Abundant natural light all day</span>
+                  <span className="text-blue-600">🛡️</span>
+                  <span>Stripe-powered secure payment processing</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-purple-600">🎵</span>
-                  <span>Perfect acoustics for sound healing</span>
+                  <span className="text-purple-600">📱</span>
+                  <span>Multiple payment options for your convenience</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-green-600">📍</span>
-                  <span>Sloan's Lake location with easy parking</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-red-600">💰</span>
-                  <span>Competitive $95/hr rate (vs $65-120 market)</span>
+                  <span className="text-orange-600">👥</span>
+                  <span>Trusted by 500+ wellness professionals</span>
                 </div>
               </div>
             </div>
 
             {/* Contact Info */}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Questions About Partnership?</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Questions About Your Booking?</h3>
               <p className="text-sm text-gray-600 mb-4">
-                We'd love to discuss how we can support your wellness practice and build something amazing together.
+                We're here to help you create the perfect experience for your classes and events.
               </p>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-700">
                   <Phone size={14} />
-                  <span>(720)-357-9499</span>
+                  <span>(720) 357-9499</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Mail size={14} />
@@ -753,7 +812,7 @@ export default function BookingPage() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
-                💡 Pro tip: Mention "long-term partnership" for priority consideration!
+                💡 Pro tip: Call us for bulk discounts on 10+ classes or custom partnership arrangements!
               </p>
             </div>
           </div>
