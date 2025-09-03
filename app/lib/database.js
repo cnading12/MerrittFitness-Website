@@ -1,5 +1,5 @@
 // app/lib/database.js
-// FIXED VERSION - Handles multiple bookings properly
+// FIXED VERSION - Better error handling and lookup logic
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -57,20 +57,46 @@ export async function createBooking(bookingData) {
   }
 }
 
+// FIXED: Enhanced getBooking with better lookup logic
 export async function getBooking(bookingId) {
   try {
-    const { data, error } = await supabase
+    console.log('🔍 Looking up booking ID:', bookingId);
+    
+    // First, try to find by individual booking ID
+    let { data, error } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
       .single();
 
-    if (error) {
-      console.error('❌ Database booking retrieval error:', error);
-      throw error;
+    if (data) {
+      console.log('✅ Found booking by individual ID:', data.id);
+      return data;
     }
+
+    // If not found by individual ID, try master booking ID
+    console.log('🔍 Trying master booking ID lookup...');
     
-    return data;
+    const { data: masterData, error: masterError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('master_booking_id', bookingId)
+      .limit(1);
+
+    if (masterData && masterData.length > 0) {
+      console.log('✅ Found booking by master ID:', masterData[0].id);
+      return masterData[0];
+    }
+
+    // If still not found, log the error details
+    console.error('❌ Booking not found in database:', {
+      searchedId: bookingId,
+      individualError: error,
+      masterError: masterError
+    });
+    
+    return null;
+    
   } catch (error) {
     console.error('❌ Database booking retrieval error:', error);
     throw error;
@@ -79,6 +105,8 @@ export async function getBooking(bookingId) {
 
 export async function updateBookingStatus(bookingId, status, additionalData = {}) {
   try {
+    console.log('📝 Updating booking status:', bookingId, 'to', status);
+    
     const { data, error } = await supabase
       .from('bookings')
       .update({ 
@@ -94,6 +122,11 @@ export async function updateBookingStatus(bookingId, status, additionalData = {}
       throw error;
     }
     
+    if (!data || data.length === 0) {
+      throw new Error('Booking not found for status update');
+    }
+    
+    console.log('✅ Booking status updated:', data[0].id, '->', data[0].status);
     return data[0];
   } catch (error) {
     console.error('❌ Database booking update error:', error);
@@ -103,6 +136,8 @@ export async function updateBookingStatus(bookingId, status, additionalData = {}
 
 export async function updateBookingWithCalendarEvent(bookingId, calendarEventId) {
   try {
+    console.log('📅 Adding calendar event ID to booking:', bookingId);
+    
     const { data, error } = await supabase
       .from('bookings')
       .update({ 
@@ -178,6 +213,71 @@ export async function getBookingsByMasterId(masterBookingId) {
   } catch (error) {
     console.error('❌ Database master booking retrieval error:', error);
     throw error;
+  }
+}
+
+// ADDED: Enhanced booking search for flexible lookup
+export async function findBooking(searchId) {
+  try {
+    console.log('🔍 Comprehensive booking search for:', searchId);
+    
+    // Try multiple search strategies
+    const searchPromises = [
+      // 1. Direct ID match
+      supabase.from('bookings').select('*').eq('id', searchId).maybeSingle(),
+      
+      // 2. Master booking ID match (get first booking in group)
+      supabase.from('bookings').select('*').eq('master_booking_id', searchId).limit(1),
+      
+      // 3. Payment intent ID match (for webhook lookups)
+      supabase.from('bookings').select('*').eq('payment_intent_id', searchId).maybeSingle()
+    ];
+    
+    const [directResult, masterResult, paymentResult] = await Promise.allSettled(searchPromises);
+    
+    // Return the first successful match
+    if (directResult.status === 'fulfilled' && directResult.value.data) {
+      console.log('✅ Found booking by direct ID');
+      return directResult.value.data;
+    }
+    
+    if (masterResult.status === 'fulfilled' && masterResult.value.data?.length > 0) {
+      console.log('✅ Found booking by master ID');
+      return masterResult.value.data[0];
+    }
+    
+    if (paymentResult.status === 'fulfilled' && paymentResult.value.data) {
+      console.log('✅ Found booking by payment intent ID');
+      return paymentResult.value.data;
+    }
+    
+    console.warn('❌ No booking found for any search strategy:', searchId);
+    return null;
+    
+  } catch (error) {
+    console.error('❌ Comprehensive booking search error:', error);
+    throw error;
+  }
+}
+
+// Test database connection
+export async function testDatabaseConnection() {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('count(*)')
+      .limit(1);
+
+    if (error) {
+      console.error('❌ Database connection test failed:', error);
+      return false;
+    }
+    
+    console.log('✅ Database connection test passed');
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection test error:', error);
+    return false;
   }
 }
 
