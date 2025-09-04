@@ -27,10 +27,10 @@ export default function Footer() {
             <Phone size={18} /> (720) 357-9499
           </a>
           <a
-            href="mailto:merrittfitnessmanager@gmail.com"
+            href="mailto:manager@merrittfitness.net"
             className="flex items-center gap-1 hover:text-rose-700 transition"
           >
-            <Mail size={18} /> merrittfitnessmanager@gmail.com
+            <Mail size={18} /> manager@merrittfitness.net
           </a>
         </div>
         <div className="text-gray-400 text-xs text-center mt-2">

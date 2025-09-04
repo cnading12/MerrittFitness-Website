@@ -1049,7 +1049,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Mail size={14} />
-                  <span>merrittfitnessmanager@gmail.com</span>
+                  <span>manager@merrittfitness.net</span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
