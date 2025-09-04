@@ -1,24 +1,22 @@
 // app/lib/calendar.js
+// FIXED VERSION - Proper date handling and error recovery
+
 import { google } from 'googleapis';
 
 async function getGoogleAuth() {
   try {
-    // Ensure environment variables are properly formatted
     if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-      throw new Error('Missing Google Calendar credentials. Please check GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY in your .env.local file');
+      throw new Error('Missing Google Calendar credentials');
     }
 
-    // Fix common formatting issues with private key
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     
-    // Handle different private key formats
+    // Fix common formatting issues with private key
     if (privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n');
     }
     
-    // Ensure proper line breaks for PEM format
     if (!privateKey.includes('\n')) {
-      // If it's one long string, add proper line breaks
       privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
                             .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
                             .replace(/(.{64})/g, '$1\n');
@@ -30,7 +28,7 @@ async function getGoogleAuth() {
         private_key: privateKey,
         type: 'service_account',
       },
-      scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
+      scopes: ['https://www.googleapis.com/auth/calendar'],
     });
 
     return auth;
@@ -50,12 +48,13 @@ export async function checkCalendarAvailability(date) {
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
     
-    // Get events for the specified date with proper timezone
-    const startTime = new Date(date + 'T00:00:00-07:00'); // Denver timezone
-    const endTime = new Date(date + 'T23:59:59-07:00');
+    // FIXED: Proper date handling for Denver timezone
+    const targetDate = new Date(date + 'T00:00:00');
+    const startTime = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0);
+    const endTime = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59);
     
-    console.log('Checking calendar availability for:', date);
-    console.log('Time range:', startTime.toISOString(), 'to', endTime.toISOString());
+    console.log('🗓️ Checking availability for:', date);
+    console.log('🕐 Time range:', startTime.toISOString(), 'to', endTime.toISOString());
 
     const response = await calendar.events.list({
       auth,
@@ -67,9 +66,9 @@ export async function checkCalendarAvailability(date) {
     });
 
     const events = response.data.items || [];
-    console.log('Found events:', events.length);
+    console.log('📅 Found events:', events.length);
     
-    // Define available time slots (Denver business hours)
+    // Define available time slots
     const timeSlots = [
       '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
       '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
@@ -81,9 +80,16 @@ export async function checkCalendarAvailability(date) {
     
     timeSlots.forEach(slot => {
       try {
-        // Convert slot to proper date/time for comparison
-        const slotTime = new Date(`${date} ${slot}`);
-        const slotEndTime = new Date(slotTime.getTime() + 2 * 60 * 60 * 1000); // 2 hours buffer
+        // FIXED: Proper time parsing
+        const [time, period] = slot.split(' ');
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        let hour24 = hours;
+        if (period === 'PM' && hours !== 12) hour24 += 12;
+        if (period === 'AM' && hours === 12) hour24 = 0;
+        
+        const slotDateTime = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), hour24, minutes);
+        const slotEndTime = new Date(slotDateTime.getTime() + 2 * 60 * 60 * 1000); // 2 hour buffer
         
         // Check if this slot conflicts with any existing event
         const hasConflict = events.some(event => {
@@ -93,23 +99,27 @@ export async function checkCalendarAvailability(date) {
           const eventEnd = new Date(event.end.dateTime || event.end.date);
           
           // Check for time overlap
-          return (slotTime < eventEnd && slotEndTime > eventStart);
+          const overlap = slotDateTime < eventEnd && slotEndTime > eventStart;
+          if (overlap) {
+            console.log('⚠️ Conflict found:', slot, 'overlaps with', event.summary);
+          }
+          return overlap;
         });
         
         availability[slot] = !hasConflict;
       } catch (slotError) {
         console.warn('Error processing slot:', slot, slotError);
-        availability[slot] = true; // Default to available if there's an error
+        availability[slot] = true; // Default to available if error
       }
     });
 
-    console.log('Calculated availability:', availability);
+    console.log('✅ Calculated availability:', availability);
     return availability;
 
   } catch (error) {
-    console.error('Calendar availability error:', error);
+    console.error('❌ Calendar availability error:', error);
     
-    // Return fallback availability (all slots available) instead of throwing
+    // Return fallback availability (all slots available)
     const fallbackAvailability = {};
     const timeSlots = [
       '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
@@ -121,7 +131,7 @@ export async function checkCalendarAvailability(date) {
       fallbackAvailability[slot] = true;
     });
     
-    console.warn('Using fallback availability due to calendar API error');
+    console.warn('⚠️ Using fallback availability due to calendar API error');
     return fallbackAvailability;
   }
 }
@@ -131,16 +141,27 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
     
-    // Parse the date and time properly
+    // FIXED: Better date/time parsing
     const eventDate = booking.event_date;
     const eventTime = booking.event_time;
-    const eventDateTime = new Date(`${eventDate} ${eventTime}`);
+    
+    // Parse time properly
+    const [time, period] = eventTime.split(' ');
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    let hour24 = hours;
+    if (period === 'PM' && hours !== 12) hour24 += 12;
+    if (period === 'AM' && hours === 12) hour24 = 0;
+    
+    // Create proper date objects
+    const eventDateTime = new Date(eventDate + 'T00:00:00');
+    eventDateTime.setHours(hour24, minutes, 0, 0);
     
     // Calculate end time based on hours_requested or default to 2 hours
     const duration = booking.hours_requested || 2;
     const endDateTime = new Date(eventDateTime.getTime() + duration * 60 * 60 * 1000);
     
-    console.log('Creating calendar event:', {
+    console.log('📅 Creating calendar event:', {
       event: booking.event_name,
       start: eventDateTime.toISOString(),
       end: endDateTime.toISOString(),
@@ -148,19 +169,20 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     });
 
     const event = {
-      summary: booking.event_name || 'Merritt Fitness Event',
+      summary: `🧘 ${booking.event_name} - ${booking.contact_name}`,
       description: `
 Event Type: ${booking.event_type || 'Not specified'}
 Organizer: ${booking.contact_name}
 Email: ${booking.email}
 Phone: ${booking.phone || 'Not provided'}
 Duration: ${duration} hours
-Business: ${booking.business_name || 'Individual booking'}
-
+${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
 ${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
-Booking ID: ${booking.id}
 
-Created via Merritt Fitness booking system
+Booking ID: ${booking.id}
+Status: ${booking.status}
+
+This booking automatically blocks the time slot for other users.
       `.trim(),
       start: {
         dateTime: eventDateTime.toISOString(),
@@ -171,6 +193,7 @@ Created via Merritt Fitness booking system
         timeZone: 'America/Denver',
       },
       location: 'Merritt Fitness, 2246 Irving St, Denver, CO 80211',
+      colorId: '10', // Green color for confirmed bookings
       reminders: {
         useDefault: false,
         overrides: [
@@ -184,7 +207,7 @@ Created via Merritt Fitness booking system
       auth,
       calendarId: process.env.GOOGLE_CALENDAR_ID,
       resource: event,
-      sendUpdates: 'none' // Don't send Google Calendar invites (we handle our own)
+      sendUpdates: 'none'
     });
 
     console.log('✅ Calendar event created successfully:', response.data.id);
@@ -193,8 +216,8 @@ Created via Merritt Fitness booking system
   } catch (error) {
     console.error('❌ Calendar event creation error:', error);
     
-    // Don't fail the entire booking process if calendar fails
-    console.warn('Calendar event creation failed, but booking will continue');
+    // Log but don't fail the booking process
+    console.warn('⚠️ Calendar event creation failed, but booking will continue');
     return null;
   }
 }

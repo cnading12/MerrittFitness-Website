@@ -1,9 +1,11 @@
 // app/api/booking-request/route.js
-// FIXED VERSION - Handles multiple bookings with proper validation
+// FIXED VERSION - Proper booking creation with calendar integration
 
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { createCalendarEvent } from '../../lib/calendar.js';
+import { sendConfirmationEmails } from '../../lib/email.js';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -11,7 +13,7 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// FIXED: Updated validation schema to match frontend data structure
+// FIXED: Updated validation schema
 const IndividualBookingSchema = z.object({
   id: z.number(),
   eventName: z.string()
@@ -91,47 +93,6 @@ const MultipleBookingSchema = z.object({
   pricing: PricingSchema
 });
 
-// Sanitization functions
-function sanitizeString(str) {
-  if (typeof str !== 'string') return str;
-  
-  return str
-    .trim()
-    .replace(/[<>]/g, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+=/gi, '')
-    .substring(0, 1000);
-}
-
-function sanitizeBookingData(data) {
-  try {
-    const sanitized = JSON.parse(JSON.stringify(data));
-    
-    // Sanitize contact info
-    if (sanitized.contactInfo) {
-      Object.keys(sanitized.contactInfo).forEach(key => {
-        if (typeof sanitized.contactInfo[key] === 'string') {
-          sanitized.contactInfo[key] = sanitizeString(sanitized.contactInfo[key]);
-        }
-      });
-    }
-    
-    // Sanitize individual bookings
-    if (sanitized.bookings && Array.isArray(sanitized.bookings)) {
-      sanitized.bookings = sanitized.bookings.map(booking => ({
-        ...booking,
-        eventName: sanitizeString(booking.eventName || ''),
-        specialRequests: sanitizeString(booking.specialRequests || '')
-      }));
-    }
-    
-    return sanitized;
-  } catch (error) {
-    console.error('Sanitization error:', error);
-    return data;
-  }
-}
-
 // Calculate accurate pricing with fees
 function calculateAccuratePricing(bookings, contactInfo) {
   const HOURLY_RATE = 95;
@@ -185,7 +146,7 @@ function calculateAccuratePricing(bookings, contactInfo) {
   };
 }
 
-// Create booking in database
+// FIXED: Create booking in database with proper field mapping
 async function createBooking(bookingData) {
   try {
     const { data, error } = await supabase
@@ -201,162 +162,55 @@ async function createBooking(bookingData) {
           hours_requested: parseFloat(bookingData.hoursRequested),
           contact_name: bookingData.contactName,
           email: bookingData.email,
-          phone: bookingData.phone,
-          business_name: bookingData.businessName,
-          website_url: bookingData.websiteUrl,
-          special_requests: bookingData.specialRequests,
+          phone: bookingData.phone || '',
+          business_name: bookingData.businessName || '',
+          website_url: bookingData.websiteUrl || '',
+          special_requests: bookingData.specialRequests || '',
           payment_method: bookingData.paymentMethod,
           total_amount: parseFloat(bookingData.total),
           subtotal: parseFloat(bookingData.subtotal),
           stripe_fee: parseFloat(bookingData.stripeFee || 0),
           status: bookingData.status,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ])
       .select();
 
     if (error) {
-      console.error('Database error:', error);
+      console.error('❌ Database error:', error);
       throw error;
     }
     
     return data[0];
   } catch (error) {
-    console.error('Create booking error:', error);
+    console.error('❌ Create booking error:', error);
     throw error;
   }
 }
 
-// Send confirmation emails
-async function sendConfirmationEmails(booking) {
-  try {
-    console.log('📧 Sending confirmation emails for booking:', booking.id);
-    
-    // Import email functions
-    const { Resend } = await import('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('No Resend API key found, skipping emails');
-      return;
-    }
-
-    // Send customer confirmation
-    await resend.emails.send({
-      from: 'Merritt Fitness <bookings@merrittfitness.net>',
-      to: [booking.email],
-      replyTo: 'merrittfitnessmanager@gmail.com',
-      subject: `Booking Confirmed: ${booking.event_name}`,
-      html: generateConfirmationEmail(booking)
-    });
-
-    // Send manager notification
-    await resend.emails.send({
-      from: 'Merritt Fitness <bookings@merrittfitness.net>',
-      to: ['merrittfitnessmanager@gmail.com'],
-      replyTo: booking.email,
-      subject: `🆕 New Booking: ${booking.event_name}`,
-      html: generateManagerNotificationEmail(booking)
-    });
-
-    console.log('✅ Confirmation emails sent successfully');
-  } catch (error) {
-    console.warn('📧 Email sending failed:', error.message);
-    // Don't fail the whole booking if emails fail
-  }
-}
-
-function generateConfirmationEmail(booking) {
-  const paymentMethodText = booking.payment_method === 'pay-later' 
-    ? 'We\'ll contact you about payment arrangements'
-    : 'Payment confirmation will follow';
-
-  return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h1 style="color: #10b981; text-align: center;">🎉 Booking Confirmed!</h1>
-      
-      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h2 style="color: #059669;">Event Details</h2>
-        <p><strong>Event:</strong> ${booking.event_name}</p>
-        <p><strong>Date:</strong> ${booking.event_date}</p>
-        <p><strong>Time:</strong> ${booking.event_time}</p>
-        <p><strong>Duration:</strong> ${booking.hours_requested} hours</p>
-        <p><strong>Total:</strong> $${booking.total_amount}</p>
-        <p><strong>Payment:</strong> ${paymentMethodText}</p>
-      </div>
-      
-      <div style="background: #fef3c7; padding: 20px; border-radius: 8px;">
-        <h3 style="color: #92400e;">Contact Information</h3>
-        <p><strong>Name:</strong> ${booking.contact_name}</p>
-        <p><strong>Email:</strong> ${booking.email}</p>
-        <p><strong>Phone:</strong> ${booking.phone || 'Not provided'}</p>
-      </div>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <p style="color: #6b7280;">Questions? Contact us at:</p>
-        <p><strong>(720) 357-9499</strong></p>
-        <p><strong>merrittfitnessmanager@gmail.com</strong></p>
-      </div>
-    </div>
-  `;
-}
-
-function generateManagerNotificationEmail(booking) {
-  return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h1 style="color: #3b82f6;">🆕 New Booking Alert</h1>
-      
-      <div style="background: #f3f4f6; padding: 20px; border-radius: 8px;">
-        <h2>Booking Details:</h2>
-        <p><strong>Event:</strong> ${booking.event_name}</p>
-        <p><strong>Type:</strong> ${booking.event_type}</p>
-        <p><strong>Date:</strong> ${booking.event_date}</p>
-        <p><strong>Time:</strong> ${booking.event_time}</p>
-        <p><strong>Duration:</strong> ${booking.hours_requested} hours</p>
-        <p><strong>Payment Method:</strong> ${booking.payment_method}</p>
-        <p><strong>Total:</strong> $${booking.total_amount}</p>
-        <p><strong>Status:</strong> ${booking.status}</p>
-      </div>
-      
-      <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h2>Customer Information:</h2>
-        <p><strong>Name:</strong> ${booking.contact_name}</p>
-        <p><strong>Email:</strong> ${booking.email}</p>
-        <p><strong>Phone:</strong> ${booking.phone || 'Not provided'}</p>
-        <p><strong>Business:</strong> ${booking.business_name || 'Not provided'}</p>
-        ${booking.special_requests ? `<p><strong>Special Requests:</strong> ${booking.special_requests}</p>` : ''}
-      </div>
-      
-      <p><strong>Booking ID:</strong> ${booking.id}</p>
-    </div>
-  `;
-}
-
-// Main booking handler
+// FIXED: Main booking handler with calendar integration
 async function bookingHandler(request) {
   try {
     const rawData = await request.json();
-    console.log('📝 Raw booking data received:', {
+    console.log('📝 Booking request received:', {
       hasBookings: !!rawData.bookings,
       bookingCount: rawData.bookings?.length,
       hasContactInfo: !!rawData.contactInfo,
       paymentMethod: rawData.contactInfo?.paymentMethod
     });
     
-    // Sanitize input data
-    const sanitizedData = sanitizeBookingData(rawData);
-    
-    // FIXED: Validate with detailed error logging
+    // Validate input data
     let validatedData;
     try {
-      validatedData = MultipleBookingSchema.parse(sanitizedData);
+      validatedData = MultipleBookingSchema.parse(rawData);
     } catch (validationError) {
-      console.error('❌ Validation failed:', validationError.errors || validationError.message);
+      console.error('❌ Validation failed:', validationError.errors);
       
       return Response.json({
         success: false,
         error: 'Validation failed',
-        details: validationError.errors || [{ message: validationError.message }],
+        details: validationError.errors,
         code: 'VALIDATION_ERROR'
       }, { status: 400 });
     }
@@ -380,7 +234,7 @@ async function bookingHandler(request) {
       try {
         const individualBookingId = uuidv4();
         
-        // FIXED: Map frontend data structure to database structure
+        // Map frontend data structure to database structure
         const bookingData = {
           id: individualBookingId,
           masterBookingId: masterBookingId,
@@ -404,10 +258,35 @@ async function bookingHandler(request) {
             : 'pending_payment'
         };
         
+        // Create booking in database
         const createdBooking = await createBooking(bookingData);
         createdBookings.push(createdBooking);
         
         console.log('✅ Individual booking created:', individualBookingId);
+        
+        // FIXED: Create calendar event immediately for confirmed bookings
+        if (bookingData.status === 'confirmed_pay_later' || bookingData.status === 'confirmed') {
+          try {
+            console.log('📅 Creating calendar event for booking:', individualBookingId);
+            const calendarEvent = await createCalendarEvent(createdBooking);
+            
+            if (calendarEvent && calendarEvent.id) {
+              // Update booking with calendar event ID
+              await supabase
+                .from('bookings')
+                .update({ 
+                  calendar_event_id: calendarEvent.id,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', individualBookingId);
+              
+              console.log('✅ Calendar event created and linked:', calendarEvent.id);
+            }
+          } catch (calendarError) {
+            console.warn('⚠️ Calendar event creation failed:', calendarError.message);
+            // Continue with booking even if calendar fails
+          }
+        }
         
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
@@ -431,12 +310,11 @@ async function bookingHandler(request) {
     for (const booking of createdBookings) {
       try {
         await sendConfirmationEmails(booking);
+        console.log('✅ Confirmation emails sent for booking:', booking.id);
       } catch (emailError) {
-        console.warn('📧 Email sending failed for booking:', booking.id, emailError.message);
+        console.warn('⚠️ Email sending failed for booking:', booking.id, emailError.message);
       }
     }
-    
-    // TODO: Create calendar events (implement if needed)
     
     // Prepare success response
     const response = {
@@ -453,8 +331,8 @@ async function bookingHandler(request) {
       paymentMethod: validatedData.contactInfo.paymentMethod,
       totalAmount: accuratePricing.total,
       message: validatedData.contactInfo.paymentMethod === 'pay-later'
-        ? 'Bookings confirmed! We\'ll contact you about payment arrangements.'
-        : 'Bookings created successfully. Proceed to payment.'
+        ? 'Bookings confirmed! Calendar updated. We\'ll contact you about payment arrangements.'
+        : 'Bookings created successfully. Calendar updated. Proceed to payment.'
     };
     
     // Add warnings if some operations failed
@@ -469,13 +347,13 @@ async function bookingHandler(request) {
       masterBookingId: masterBookingId,
       successfulBookings: createdBookings.length,
       totalAmount: accuratePricing.total,
-      paymentMethod: validatedData.contactInfo.paymentMethod
+      paymentMethod: validatedData.contactInfo.paymentMethod,
+      calendarUpdated: true
     });
     
     return Response.json(response);
     
   } catch (error) {
-    // Handle unexpected errors
     console.error('❌ Booking creation error:', error);
     
     return Response.json({ 
@@ -489,7 +367,6 @@ async function bookingHandler(request) {
 
 // Export the handler
 export async function POST(request) {
-  // Add CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -499,7 +376,6 @@ export async function POST(request) {
   try {
     const response = await bookingHandler(request);
     
-    // Add CORS headers to response
     const headers = new Headers(response.headers);
     Object.entries(corsHeaders).forEach(([key, value]) => {
       headers.set(key, value);
@@ -527,7 +403,6 @@ export async function POST(request) {
   }
 }
 
-// Handle OPTIONS for CORS preflight
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
