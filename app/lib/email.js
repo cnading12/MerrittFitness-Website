@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // UPDATED: Email configuration for new domain
 const EMAIL_CONFIG = {
-  from: 'Merritt Fitness <bookings@mail.merrittfitness.net>',
+  from: 'Merritt Fitness <bookings@merrittfitness.net>',
   replyTo: 'manager@merrittfitness.net',  // UPDATED: New Google Workspace email
   managerEmail: 'manager@merrittfitness.net'  // UPDATED: New Google Workspace email
 };
