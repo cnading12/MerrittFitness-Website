@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Merritt Fitness | Historic Wellness Space in Denver\'s Sloans Lake',
   description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Fitness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
   keywords: 'yoga studio rental Denver, meditation space Denver, sound bath venue, wellness event space, historic venue Denver, Sloans Lake',
-  // FIXED: Using your actual favicon.io generated files
+  // Simplified favicon declarations - Next.js will handle these automatically
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -46,7 +46,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://merrittfitness.com',
   },
-  // ENHANCED SEO: Additional metadata for better search visibility
   robots: {
     index: true,
     follow: true,
@@ -86,12 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* ENHANCED SEO: Favicon.io generated favicon links with cache busting */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
-        <link rel="manifest" href="/site.webmanifest?v=2" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+        {/* REMOVED: Duplicate favicon links - Next.js handles these via metadata */}
         
         {/* ENHANCED SEO: Additional meta tags for better search performance */}
         <meta name="author" content="Merritt Fitness" />
