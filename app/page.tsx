@@ -331,7 +331,7 @@ export default function Home() {
                   )}
 
                   <iframe
-                    src="https://calendar.google.com/calendar/embed?src=c_fd6a5dda05dbcb64dcae55c08e8ca951112746042601e2926fa8d3ade084911b%40group.calendar.google.com&ctz=America%2FDenver"
+                    src="https://calendar.google.com/calendar/embed?src=c_3b551f029c24c4bae5c74fd94ba5f8bbfae09ddf059090837f29c284fca7bf9f%40group.calendar.google.com&ctz=America%2FDenver"
                     className="w-full h-full border-0"
                     title="Merritt Fitness Events Calendar"
                     onLoad={() => setCalendarLoaded(true)}

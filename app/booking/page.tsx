@@ -7,6 +7,7 @@ export default function BookingPage() {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Enhanced multiple bookings state
   const [bookings, setBookings] = useState([{
@@ -96,6 +97,89 @@ export default function BookingPage() {
     '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
+  // FIXED: Enhanced email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // FIXED: Enhanced phone validation
+  const validatePhone = (phone) => {
+    if (!phone.trim()) return true; // Phone is optional
+    const phoneRegex = /^[\+]?[1-9]?[\d\s\-\(\)]{10,}$/;
+    return phoneRegex.test(phone.trim());
+  };
+
+  // FIXED: Comprehensive form validation
+  const validateForm = () => {
+    const errors = {};
+    
+    // Validate contact information
+    if (!formData.contactName.trim()) {
+      errors.contactName = 'Contact name is required';
+    } else if (formData.contactName.trim().length < 2) {
+      errors.contactName = 'Contact name must be at least 2 characters';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email address is required';
+    } else if (!validateEmail(formData.email)) {
+      errors.email = 'Please enter a valid email address (e.g., name@example.com)';
+    }
+    
+    if (formData.phone.trim() && !validatePhone(formData.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+    
+    // Validate at least one complete booking
+    const validBookings = bookings.filter(booking => 
+      booking.eventName.trim() && 
+      booking.eventType && 
+      booking.selectedDate && 
+      booking.selectedTime && 
+      booking.hoursRequested
+    );
+    
+    if (validBookings.length === 0) {
+      errors.bookings = 'Please complete at least one booking';
+    }
+    
+    // Validate individual bookings
+    bookings.forEach((booking, index) => {
+      if (booking.eventName.trim() || booking.eventType || booking.selectedDate) {
+        // If any field is filled, all required fields should be filled
+        if (!booking.eventName.trim()) {
+          errors[`booking_${index}_eventName`] = 'Event name is required';
+        }
+        if (!booking.eventType) {
+          errors[`booking_${index}_eventType`] = 'Event type is required';
+        }
+        if (!booking.selectedDate) {
+          errors[`booking_${index}_selectedDate`] = 'Date is required';
+        } else {
+          // Validate date is not in the past
+          const selectedDate = new Date(booking.selectedDate);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          if (selectedDate < today) {
+            errors[`booking_${index}_selectedDate`] = 'Date cannot be in the past';
+          }
+        }
+        if (!booking.selectedTime) {
+          errors[`booking_${index}_selectedTime`] = 'Time is required';
+        }
+        if (!booking.hoursRequested) {
+          errors[`booking_${index}_hoursRequested`] = 'Duration is required';
+        } else if (parseFloat(booking.hoursRequested) < 0.5) {
+          errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
+        }
+      }
+    });
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Pricing calculations with transparent fee structure
   const HOURLY_RATE = 95;
   const STRIPE_FEE_PERCENTAGE = 3; // Clear 3% fee for transparency
@@ -172,6 +256,15 @@ export default function BookingPage() {
   const removeBooking = (id) => {
     if (bookings.length > 1) {
       setBookings(bookings.filter(b => b.id !== id));
+      // Clear related validation errors
+      const newErrors = { ...validationErrors };
+      const bookingIndex = bookings.findIndex(b => b.id === id);
+      Object.keys(newErrors).forEach(key => {
+        if (key.includes(`booking_${bookingIndex}_`)) {
+          delete newErrors[key];
+        }
+      });
+      setValidationErrors(newErrors);
     }
   };
 
@@ -179,10 +272,26 @@ export default function BookingPage() {
     setBookings(bookings.map(booking => 
       booking.id === id ? { ...booking, [field]: value } : booking
     ));
+    
+    // Clear validation error for this field
+    const bookingIndex = bookings.findIndex(b => b.id === id);
+    const errorKey = `booking_${bookingIndex}_${field}`;
+    if (validationErrors[errorKey]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[errorKey];
+      setValidationErrors(newErrors);
+    }
   };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[field];
+      setValidationErrors(newErrors);
+    }
   };
 
   // Enhanced availability checking for individual bookings
@@ -196,7 +305,7 @@ export default function BookingPage() {
       const availability = await response.json();
 
       if (response.ok) {
-        setAvailableSlots(availability);
+        setAvailableSlots(availability.availability || availability);
       } else {
         console.error('Availability check failed:', availability);
         // Fallback: assume all slots available with warning
@@ -221,29 +330,31 @@ export default function BookingPage() {
 
   const pricing = calculatePricing();
 
-  // Enhanced form validation
+  // FIXED: Enhanced form validation
   const isFormValid = () => {
-    // Check if at least one booking has all required fields
-    const hasValidBooking = bookings.some(booking => 
-      booking.eventName.trim() && 
-      booking.eventType && 
-      booking.selectedDate && 
-      booking.selectedTime && 
-      booking.hoursRequested
-    );
-    
-    // Check contact info
-    const hasContactInfo = formData.contactName.trim() && 
-                          formData.email.trim() && 
-                          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-    
-    return hasValidBooking && hasContactInfo;
+    return validateForm();
   };
 
-  // Enhanced submission with multiple booking support
+  // FIXED: Enhanced submission with better error handling
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    // Clear previous messages
     setSubmitMessage('');
+    setValidationErrors({});
+
+    // Validate form first
+    if (!validateForm()) {
+      setSubmitMessage('❌ Please fix the errors below');
+      // Scroll to first error
+      setTimeout(() => {
+        const firstError = document.querySelector('.border-red-500, .text-red-600');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       // Filter out incomplete bookings
@@ -265,6 +376,12 @@ export default function BookingPage() {
         pricing: pricing
       };
 
+      console.log('🚀 Submitting booking data:', {
+        bookingCount: validBookings.length,
+        email: formData.email,
+        paymentMethod: formData.paymentMethod
+      });
+
       const bookingResponse = await fetch('/api/booking-request', {
         method: 'POST',
         headers: {
@@ -276,6 +393,8 @@ export default function BookingPage() {
       const bookingResult = await bookingResponse.json();
 
       if (bookingResponse.ok && bookingResult.success) {
+        console.log('✅ Booking created successfully:', bookingResult);
+        
         if (formData.paymentMethod === 'pay-later') {
           // Redirect to success page for pay-later bookings
           window.location.href = `/booking/success?booking_id=${bookingResult.id}`;
@@ -287,11 +406,31 @@ export default function BookingPage() {
         throw new Error(bookingResult.error || 'Failed to create booking');
       }
     } catch (error) {
-      console.error('Booking submission error:', error);
+      console.error('❌ Booking submission error:', error);
       setSubmitMessage(`❌ ${error.message}`);
+      
+      // Scroll to error message
+      setTimeout(() => {
+        const errorElement = document.querySelector('[role="alert"]');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // FIXED: Display helper function for validation errors
+  const getFieldError = (fieldName) => {
+    return validationErrors[fieldName];
+  };
+
+  const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-lg transition-colors") => {
+    const hasError = validationErrors[fieldName];
+    return hasError 
+      ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500` 
+      : `${baseClassName} border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`;
   };
 
   return (
@@ -305,6 +444,21 @@ export default function BookingPage() {
             <span className="font-semibold text-emerald-700"> $95/hour • Partnership discounts available</span>
           </p>
         </div>
+
+        {/* FIXED: Error Summary Display */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8" role="alert">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="text-red-600" size={24} />
+              <h3 className="text-lg font-semibold text-red-900">Please fix the following errors:</h3>
+            </div>
+            <ul className="text-red-800 space-y-1">
+              {Object.entries(validationErrors).map(([field, error]) => (
+                <li key={field}>• {error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Business Partnership Focus */}
         <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-6 mb-8 border border-emerald-100">
@@ -336,233 +490,86 @@ export default function BookingPage() {
               {/* Public Google Calendar - Anyone can view */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe
-                  src="https://calendar.google.com/calendar/embed?src=c_fd6a5dda05dbcb64dcae55c08e8ca951112746042601e2926fa8d3ade084911b%40group.calendar.google.com&ctz=America%2FDenver" 
+                  src="https://calendar.google.com/calendar/embed?src=c_3b551f029c24c4bae5c74fd94ba5f8bbfae09ddf059090837f29c284fca7bf9f%40group.calendar.google.com&ctz=America%2FDenver"
                   className="w-full h-96"
                   title="Public Live Availability Calendar"
                 />
-                <div className="p-4 bg-green-50 border-t border-green-200">
-                  <p className="text-sm text-green-800">
-                    ✅ <strong>Public Calendar:</strong> Real-time availability for all visitors. Red blocks = booked, white spaces = available!
-                  </p>
-                </div>
               </div>
-            </div>
-
-            {/* Multiple Bookings Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="text-blue-700" size={20} />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Your Booking(s)</h2>
-                  {bookings.length > 1 && (
-                    <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
-                      {bookings.length} Classes
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={addBooking}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                  disabled={bookings.length >= 10}
-                >
-                  <Plus size={16} />
-                  Add Class
-                </button>
-              </div>
-
-              {/* Individual Bookings */}
-              {bookings.map((booking, index) => (
-                <div key={booking.id} className="border border-gray-200 rounded-xl p-6 mb-6 last:mb-0">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Class #{index + 1}</h3>
-                    {bookings.length > 1 && (
-                      <button
-                        onClick={() => removeBooking(booking.id)}
-                        className="flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Minus size={14} />
-                        Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Class/Event Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={booking.eventName}
-                        onChange={(e) => updateBooking(booking.id, 'eventName', e.target.value)}
-                        placeholder="e.g., Morning Flow Yoga"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                        maxLength={100}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Practice Type *
-                      </label>
-                      <select
-                        value={booking.eventType}
-                        onChange={(e) => updateBooking(booking.id, 'eventType', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      >
-                        <option value="">Select your practice...</option>
-                        {eventTypes.map(type => (
-                          <option key={type.id} value={type.id}>
-                            {type.icon} {type.name}
-                            {type.popular ? ' (Popular!)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={booking.selectedDate}
-                        onChange={(e) => {
-                          updateBooking(booking.id, 'selectedDate', e.target.value);
-                          checkAvailability(e.target.value);
-                        }}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Start Time *
-                      </label>
-                      <select
-                        value={booking.selectedTime}
-                        onChange={(e) => updateBooking(booking.id, 'selectedTime', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      >
-                        <option value="">Select time...</option>
-                        {timeSlots.map(time => (
-                          <option 
-                            key={time} 
-                            value={time}
-                            disabled={availableSlots[time] === false}
-                          >
-                            {time} {availableSlots[time] === false ? '(Unavailable)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Duration *
-                      </label>
-                      <select
-                        value={booking.hoursRequested}
-                        onChange={(e) => updateBooking(booking.id, 'hoursRequested', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                      >
-                        <option value="">Select duration...</option>
-                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
-                          <option key={hours} value={hours}>
-                            {hours === 0.5 ? '30 minutes' : hours === 1 ? '1 hour' : `${hours} hours`}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Special Notes for This Class
-                      </label>
-                      <textarea
-                        value={booking.specialRequests}
-                        onChange={(e) => updateBooking(booking.id, 'specialRequests', e.target.value)}
-                        rows={3}
-                        placeholder="Equipment needs, setup requirements, etc."
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
-                        maxLength={500}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Add more classes prompt */}
-              {bookings.length < 10 && (
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
-                  <div className="text-gray-500 mb-2">Planning multiple classes?</div>
-                  <button
-                    onClick={addBooking}
-                    className="text-emerald-600 hover:text-emerald-700 font-medium"
-                  >
-                    + Add another class to save time
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Contact & Payment Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Mail className="text-purple-700" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Contact & Payment</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
               </div>
 
               <div className="space-y-6">
                 {/* Contact Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name *
+                    </label>
                     <input
                       type="text"
                       value={formData.contactName}
                       onChange={(e) => handleInputChange('contactName', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      className={getInputClassName('contactName')}
                       maxLength={50}
+                      placeholder="Your full name"
                     />
+                    {getFieldError('contactName') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('contactName')}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      className={getInputClassName('email')}
                       maxLength={255}
+                      placeholder="your.name@example.com"
                     />
+                    {getFieldError('email') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('email')}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone (Optional)
+                    </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="(720) 555-0123"
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      className={getInputClassName('phone')}
                       maxLength={20}
                     />
+                    {getFieldError('phone') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('phone')}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Name (Optional)
+                    </label>
                     <input
                       type="text"
                       value={formData.businessName}
                       onChange={(e) => handleInputChange('businessName', e.target.value)}
                       placeholder="e.g., Serene Soul Yoga"
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      className={getInputClassName('businessName')}
                       maxLength={100}
                     />
                   </div>
@@ -683,58 +690,237 @@ export default function BookingPage() {
                     </label>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Submit Button */}
-                <div className="flex flex-col items-center pt-6">
-                  {submitMessage && (
-                    <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${
-                      submitMessage.includes('✅')
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}>
-                      <p className="text-sm font-medium">{submitMessage}</p>
+            {/* Multiple Bookings Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Users className="text-blue-700" size={20} />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Your Booking(s)</h2>
+                  {bookings.length > 1 && (
+                    <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                      {bookings.length} Classes
                     </div>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={!isFormValid() || isSubmitting}
-                    className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${
-                      isFormValid() && !isSubmitting
-                        ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="animate-spin" size={20} />
-                        Creating Your Booking...
-                      </>
-                    ) : (
-                      <>
-                        {formData.paymentMethod === 'pay-later' ? (
-                          <CheckCircle size={20} />
-                        ) : (
-                          <CreditCard size={20} />
-                        )}
-                        {formData.paymentMethod === 'pay-later' 
-                          ? 'Confirm Booking (Pay Later)' 
-                          : 'Proceed to Secure Payment'}
-                        <ArrowRight size={20} />
-                      </>
-                    )}
-                  </button>
-
-                  {isFormValid() && (
-                    <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
-                      {formData.paymentMethod === 'pay-later' 
-                        ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
-                        : 'You\'ll be redirected to our secure Stripe payment page'
-                      }
-                    </p>
-                  )}
                 </div>
+                <button
+                  onClick={addBooking}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                  disabled={bookings.length >= 10}
+                >
+                  <Plus size={16} />
+                  Add Class
+                </button>
+              </div>
+
+              {/* Individual Bookings */}
+              {bookings.map((booking, index) => (
+                <div key={booking.id} className="border border-gray-200 rounded-xl p-6 mb-6 last:mb-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Class #{index + 1}</h3>
+                    {bookings.length > 1 && (
+                      <button
+                        onClick={() => removeBooking(booking.id)}
+                        className="flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Minus size={14} />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Class/Event Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={booking.eventName}
+                        onChange={(e) => updateBooking(booking.id, 'eventName', e.target.value)}
+                        placeholder="e.g., Morning Flow Yoga"
+                        className={getInputClassName(`booking_${index}_eventName`)}
+                        maxLength={100}
+                      />
+                      {getFieldError(`booking_${index}_eventName`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_eventName`)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Practice Type *
+                      </label>
+                      <select
+                        value={booking.eventType}
+                        onChange={(e) => updateBooking(booking.id, 'eventType', e.target.value)}
+                        className={getInputClassName(`booking_${index}_eventType`)}
+                      >
+                        <option value="">Select your practice...</option>
+                        {eventTypes.map(type => (
+                          <option key={type.id} value={type.id}>
+                            {type.icon} {type.name}
+                            {type.popular ? ' (Popular!)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError(`booking_${index}_eventType`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_eventType`)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date *
+                      </label>
+                      <input
+                        type="date"
+                        value={booking.selectedDate}
+                        onChange={(e) => {
+                          updateBooking(booking.id, 'selectedDate', e.target.value);
+                          checkAvailability(e.target.value);
+                        }}
+                        min={new Date().toISOString().split('T')[0]}
+                        className={getInputClassName(`booking_${index}_selectedDate`)}
+                      />
+                      {getFieldError(`booking_${index}_selectedDate`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedDate`)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Time *
+                      </label>
+                      <select
+                        value={booking.selectedTime}
+                        onChange={(e) => updateBooking(booking.id, 'selectedTime', e.target.value)}
+                        className={getInputClassName(`booking_${index}_selectedTime`)}
+                      >
+                        <option value="">Select time...</option>
+                        {timeSlots.map(time => (
+                          <option 
+                            key={time} 
+                            value={time}
+                            disabled={availableSlots[time] === false}
+                          >
+                            {time} {availableSlots[time] === false ? '(Unavailable)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError(`booking_${index}_selectedTime`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedTime`)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Duration *
+                      </label>
+                      <select
+                        value={booking.hoursRequested}
+                        onChange={(e) => updateBooking(booking.id, 'hoursRequested', e.target.value)}
+                        className={getInputClassName(`booking_${index}_hoursRequested`)}
+                      >
+                        <option value="">Select duration...</option>
+                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
+                          <option key={hours} value={hours}>
+                            {hours === 0.5 ? '30 minutes' : hours === 1 ? '1 hour' : `${hours} hours`}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError(`booking_${index}_hoursRequested`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_hoursRequested`)}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Special Notes for This Class
+                      </label>
+                      <textarea
+                        value={booking.specialRequests}
+                        onChange={(e) => updateBooking(booking.id, 'specialRequests', e.target.value)}
+                        rows={3}
+                        placeholder="Equipment needs, setup requirements, etc."
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+                        maxLength={500}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add more classes prompt */}
+              {bookings.length < 10 && (
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                  <div className="text-gray-500 mb-2">Planning multiple classes?</div>
+                  <button
+                    onClick={addBooking}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    + Add another class to save time
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex flex-col items-center">
+                {/* Submit Message */}
+                {submitMessage && (
+                  <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${
+                    submitMessage.includes('✅')
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`} role="alert">
+                    <p className="text-sm font-medium">{submitMessage}</p>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${
+                    !isSubmitting
+                      ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Creating Your Booking...
+                    </>
+                  ) : (
+                    <>
+                      {formData.paymentMethod === 'pay-later' ? (
+                        <CheckCircle size={20} />
+                      ) : (
+                        <CreditCard size={20} />
+                      )}
+                      {formData.paymentMethod === 'pay-later' 
+                        ? 'Confirm Booking (Pay Later)' 
+                        : 'Proceed to Secure Payment'}
+                      <ArrowRight size={20} />
+                    </>
+                  )}
+                </button>
+
+                {/* Submit Help Text */}
+                <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
+                  {formData.paymentMethod === 'pay-later' 
+                    ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
+                    : 'You\'ll be redirected to our secure Stripe payment page'
+                  }
+                </p>
               </div>
             </div>
           </div>
@@ -825,79 +1011,6 @@ export default function BookingPage() {
                   </p>
                 </div>
               )}
-            </div>
-
-            {/* Payment Options Detail */}
-            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-6 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                <CreditCard className="mr-2 text-blue-600" size={20} />
-                Payment Options
-              </h3>
-              <div className="space-y-3 text-sm text-gray-700">
-                <div className="flex items-start gap-2">
-                  <span className="text-green-600 mt-0.5">💳</span>
-                  <div>
-                    <strong>Online Card Payment:</strong> Instant confirmation
-                    <div className="text-orange-600 text-xs mt-1">
-                      + 3% processing fee (Stripe mandate)
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-600 mt-0.5">📞</span>
-                  <div>
-                    <strong>Phone Payment:</strong> (720) 357-9499
-                    <div className="text-green-600 text-xs mt-1">No processing fees!</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-600 mt-0.5">💸</span>
-                  <div>
-                    <strong>Venmo/Zelle:</strong> Contact us!
-                    <div className="text-green-600 text-xs mt-1">No processing fees!</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-orange-600 mt-0.5">🏛️</span>
-                  <div>
-                    <strong>Check/Bank Transfer:</strong> Traditional options
-                    <div className="text-green-600 text-xs mt-1">No processing fees!</div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-gray-600 mt-4 p-3 bg-white/50 rounded-lg">
-                💡 <strong>Pro Tip:</strong> Choose "Pay Later" to avoid all processing fees and use any of our fee-free payment methods!
-              </p>
-            </div>
-
-            {/* Partnership Benefits */}
-            <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-6 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                <Star className="mr-2 text-emerald-600" size={20} />
-                Partnership Benefits
-              </h3>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600">•</span>
-                  <span><strong>Multiple Bookings:</strong> Book several classes efficiently</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600">•</span>
-                  <span><strong>Lower Minimums:</strong> 2-hour minimum for partners</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600">•</span>
-                  <span><strong>5% Discount:</strong> On all partner bookings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600">•</span>
-                  <span><strong>Priority Booking:</strong> First access to prime slots</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600">•</span>
-                  <span><strong>Marketing Support:</strong> Featured promotion</span>
-                </div>
-              </div>
             </div>
 
             {/* Security & Trust */}
