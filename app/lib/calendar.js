@@ -1,5 +1,5 @@
-// app/lib/calendar.js - FIXED AM/PM CONVERSION
-// The issue was in the AM/PM logic - it was backwards!
+// app/lib/calendar.js - FIXED AM/PM AND TIMEZONE HANDLING
+// The main issues: 1) AM/PM conversion was incorrect, 2) Timezone inconsistencies
 
 import { google } from 'googleapis';
 
@@ -52,7 +52,7 @@ async function getGoogleAuth() {
   }
 }
 
-// FIXED: Corrected AM/PM conversion logic
+// FIXED: Proper timezone handling and AM/PM conversion
 export async function checkCalendarAvailability(date) {
   try {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -64,19 +64,19 @@ export async function checkCalendarAvailability(date) {
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
 
-    // Create proper Denver timezone date range
-    const targetDate = new Date(date + 'T00:00:00-07:00');
-    const startTime = new Date(targetDate);
-    startTime.setHours(0, 0, 0, 0);
-
-    const endTime = new Date(targetDate);
-    endTime.setHours(23, 59, 59, 999);
+    // FIXED: Consistent timezone handling for deployment
+    // Use explicit timezone specification that works both locally and in production
+    const denverTimeZone = 'America/Denver';
+    
+    // Create date boundaries in Denver timezone
+    const startTime = new Date(`${date}T00:00:00-07:00`); // Explicit MST offset
+    const endTime = new Date(`${date}T23:59:59-07:00`);   // End of day in Denver
 
     console.log('🕐 Checking time range (Denver):', {
       start: startTime.toISOString(),
       end: endTime.toISOString(),
-      localStart: startTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-      localEnd: endTime.toLocaleString('en-US', { timeZone: 'America/Denver' })
+      localStart: startTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
+      localEnd: endTime.toLocaleString('en-US', { timeZone: denverTimeZone })
     });
 
     const response = await calendar.events.list({
@@ -87,28 +87,29 @@ export async function checkCalendarAvailability(date) {
       singleEvents: true,
       orderBy: 'startTime',
       maxResults: 50,
-      timeZone: 'America/Denver'
+      timeZone: denverTimeZone
     });
 
     const events = response.data.items || [];
     console.log('📅 Found', events.length, 'existing events on', date);
 
-    // Enhanced event processing with better timezone handling
+    // Enhanced event processing with proper timezone handling
     const processedEvents = events.map(event => {
       let eventStart, eventEnd;
 
       if (event.start.dateTime) {
-        // Timed event
+        // Timed event - parse with timezone consideration
         eventStart = new Date(event.start.dateTime);
-        eventEnd = new Date(event.end.dateTime);
       } else if (event.start.date) {
-        // All-day event - these should block the entire day
-        eventStart = new Date(event.start.date + 'T00:00:00-07:00');
-        eventEnd = new Date(event.end.date + 'T00:00:00-07:00');
-        eventEnd.setDate(eventEnd.getDate() - 1);
+        // All-day event - treat as blocking entire day
+        eventStart = new Date(`${event.start.date}T00:00:00-07:00`);
+        eventEnd = new Date(`${event.end.date}T00:00:00-07:00`);
+        eventEnd.setDate(eventEnd.getDate() - 1); // End date is exclusive
         eventEnd.setHours(23, 59, 59, 999);
-      } else {
-        return null;
+      }
+
+      if (event.end.dateTime && !eventEnd) {
+        eventEnd = new Date(event.end.dateTime);
       }
 
       return {
@@ -118,14 +119,14 @@ export async function checkCalendarAvailability(date) {
         isAllDay: !event.start.dateTime,
         originalEvent: event
       };
-    }).filter(Boolean);
+    }).filter(event => event.start && event.end);
 
     // Log processed events for debugging
     processedEvents.forEach(event => {
       console.log('📌 Processed event:', {
         summary: event.summary,
-        start: event.start.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-        end: event.end.toLocaleString('en-US', { timeZone: 'America/Denver' }),
+        start: event.start.toLocaleString('en-US', { timeZone: denverTimeZone }),
+        end: event.end.toLocaleString('en-US', { timeZone: denverTimeZone }),
         isAllDay: event.isAllDay
       });
     });
@@ -142,59 +143,61 @@ export async function checkCalendarAvailability(date) {
 
     timeSlots.forEach(slot => {
       try {
-        // Parse slot time with CORRECTED timezone handling
+        // FIXED: Proper AM/PM parsing
         const [time, period] = slot.split(' ');
         const [hours, minutes] = time.split(':').map(Number);
 
         let hour24 = hours;
         
-        // 🚨 FIXED: Correct AM/PM conversion logic
+        // CORRECT AM/PM conversion logic
         if (period === 'AM') {
           if (hours === 12) {
             hour24 = 0; // 12:00 AM = midnight (00:00)
           }
           // Other AM hours (1-11) stay the same
         } else if (period === 'PM') {
-          if (hours === 12) {
-            hour24 = 12; // 12:00 PM = noon (12:00)
-          } else {
+          if (hours !== 12) {
             hour24 = hours + 12; // 1:00 PM = 13:00, 2:00 PM = 14:00, etc.
           }
+          // 12:00 PM stays as 12 (noon)
         }
 
         console.log(`🕐 Converting ${slot}: hours=${hours}, period=${period} → hour24=${hour24}`);
 
-        // Create slot datetime in Denver timezone
-        const slotDateTime = new Date(date + 'T00:00:00-07:00');
-        slotDateTime.setHours(hour24, minutes, 0, 0);
-
-        // Use minimum booking duration (30 minutes) for conflict checking
+        // FIXED: Create slot datetime with consistent timezone handling
+        const slotDateTime = new Date(`${date}T${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00-07:00`);
+        
+        // Check for minimum 30-minute conflict window
         const slotEndTime = new Date(slotDateTime.getTime() + 30 * 60 * 1000);
 
         console.log(`📍 Slot ${slot} converts to:`, {
-          localTime: slotDateTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
+          localTime: slotDateTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
           hour24: hour24,
-          isoTime: slotDateTime.toISOString()
+          isoTime: slotDateTime.toISOString(),
+          utcTime: slotDateTime.toUTCString()
         });
 
         // Check if this slot conflicts with any existing event
         const hasConflict = processedEvents.some(event => {
           if (event.isAllDay) {
+            // All-day events block the entire day
             const eventDate = event.start.toDateString();
             const slotDate = slotDateTime.toDateString();
             return eventDate === slotDate;
           } else {
-            // Timed events - check for overlap
+            // Timed events - check for overlap with buffer
             const overlap = slotDateTime < event.end && slotEndTime > event.start;
 
             if (overlap) {
               console.log('🚫 CONFLICT DETECTED:', {
                 slot: slot,
-                slotStart: slotDateTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-                slotEnd: slotEndTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
+                slotStart: slotDateTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
+                slotEnd: slotEndTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
                 eventSummary: event.summary,
-                eventStart: event.start.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-                eventEnd: event.end.toLocaleString('en-US', { timeZone: 'America/Denver' })
+                eventStart: event.start.toLocaleString('en-US', { timeZone: denverTimeZone }),
+                eventEnd: event.end.toLocaleString('en-US', { timeZone: denverTimeZone }),
+                slotStartUTC: slotDateTime.toISOString(),
+                eventStartUTC: event.start.toISOString()
               });
             }
 
@@ -212,7 +215,7 @@ export async function checkCalendarAvailability(date) {
 
       } catch (slotError) {
         console.warn('⚠️ Error processing slot:', slot, slotError.message);
-        availability[slot] = true;
+        availability[slot] = true; // Default to available on parsing error
       }
     });
 
@@ -232,7 +235,7 @@ export async function checkCalendarAvailability(date) {
   }
 }
 
-// FIXED: Enhanced calendar event creation with CORRECT timezone
+// FIXED: Enhanced calendar event creation with CORRECT timezone handling
 export async function createCalendarEvent(booking, includeAttendees = false) {
   try {
     console.log('📅 Creating calendar event for booking:', booking.id);
@@ -251,25 +254,23 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
 
     let hour24 = hours;
     
-    // 🚨 FIXED: Same corrected AM/PM conversion logic
+    // CORRECT AM/PM conversion logic (same as above)
     if (period === 'AM') {
       if (hours === 12) {
         hour24 = 0; // 12:00 AM = midnight (00:00)
       }
       // Other AM hours (1-11) stay the same
     } else if (period === 'PM') {
-      if (hours === 12) {
-        hour24 = 12; // 12:00 PM = noon (12:00)
-      } else {
+      if (hours !== 12) {
         hour24 = hours + 12; // 1:00 PM = 13:00, 2:00 PM = 14:00, etc.
       }
+      // 12:00 PM stays as 12 (noon)
     }
 
     console.log(`🕐 Creating event: ${eventTime} → hour24=${hour24}`);
 
-    // Create event start time with explicit Denver timezone
-    const eventDateTime = new Date(eventDate + 'T00:00:00-07:00');
-    eventDateTime.setHours(hour24, minutes, 0, 0);
+    // FIXED: Create event with explicit timezone specification
+    const eventDateTime = new Date(`${eventDate}T${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00-07:00`);
 
     // Calculate end time based on actual hours_requested
     const duration = parseFloat(booking.hours_requested) || 2;
