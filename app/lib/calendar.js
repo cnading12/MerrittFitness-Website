@@ -185,10 +185,14 @@ export async function checkCalendarAvailability(date) {
             const slotDate = slotDateTime.toDateString();
             return eventDate === slotDate;
           } else {
-            // Timed events - check for overlap with buffer
-            const overlap = slotDateTime < event.end && slotEndTime > event.start;
+            // FIXED: Check if the slot falls within the booked time period
+            // A slot is unavailable if it starts within or overlaps with the booked period
+            const slotStartsWithinEvent = slotDateTime >= event.start && slotDateTime < event.end;
+            const slotOverlapsWithEvent = slotDateTime < event.end && slotEndTime > event.start;
+            
+            const hasConflict = slotStartsWithinEvent || slotOverlapsWithEvent;
 
-            if (overlap) {
+            if (hasConflict) {
               console.log('🚫 CONFLICT DETECTED:', {
                 slot: slot,
                 slotStart: slotDateTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
@@ -196,12 +200,13 @@ export async function checkCalendarAvailability(date) {
                 eventSummary: event.summary,
                 eventStart: event.start.toLocaleString('en-US', { timeZone: denverTimeZone }),
                 eventEnd: event.end.toLocaleString('en-US', { timeZone: denverTimeZone }),
-                slotStartUTC: slotDateTime.toISOString(),
-                eventStartUTC: event.start.toISOString()
+                slotStartsWithin: slotStartsWithinEvent,
+                slotOverlaps: slotOverlapsWithEvent,
+                reason: slotStartsWithinEvent ? 'Slot starts within booked period' : 'Slot overlaps with booked period'
               });
             }
 
-            return overlap;
+            return hasConflict;
           }
         });
 
