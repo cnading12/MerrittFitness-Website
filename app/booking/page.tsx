@@ -110,7 +110,48 @@ export default function BookingPage() {
     return phoneRegex.test(phone.trim());
   };
 
-  // FIXED: Comprehensive form validation
+  // CRITICAL: Enhanced availability checking with strict error handling
+  const checkAvailability = async (date) => {
+    if (!date) return;
+    
+    setIsCheckingAvailability(true);
+    setAvailableSlots({}); // Clear previous slots
+
+    try {
+      console.log('🔍 Checking availability for:', date);
+      const response = await fetch(`/api/check-availability?date=${date}`);
+      const data = await response.json();
+
+      if (response.ok && data.availability) {
+        setAvailableSlots(data.availability);
+        console.log('✅ Availability loaded:', data.availability);
+        
+        // Clear any previous calendar errors
+        const newErrors = { ...validationErrors };
+        delete newErrors.calendar;
+        setValidationErrors(newErrors);
+      } else {
+        // CRITICAL: If calendar check fails, don't allow any bookings
+        console.error('Calendar availability check failed:', data);
+        setAvailableSlots({}); // No slots available if check fails
+        setValidationErrors(prev => ({
+          ...prev,
+          calendar: data.message || 'Unable to check availability. Please try a different date or contact us.'
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      setAvailableSlots({}); // No slots available on error
+      setValidationErrors(prev => ({
+        ...prev,
+        calendar: 'Calendar service temporarily unavailable. Please try again later.'
+      }));
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
+  // FIXED: Comprehensive form validation with availability checking
   const validateForm = () => {
     const errors = {};
     
@@ -167,6 +208,16 @@ export default function BookingPage() {
         }
         if (!booking.selectedTime) {
           errors[`booking_${index}_selectedTime`] = 'Time is required';
+        } else {
+          // CRITICAL: Validate that selected times are actually available
+          const isAvailable = availableSlots[booking.selectedTime] !== false;
+          const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+          
+          if (!hasAvailabilityData && booking.selectedDate) {
+            errors[`booking_${index}_selectedTime`] = 'Please wait for availability check to complete.';
+          } else if (!isAvailable) {
+            errors[`booking_${index}_selectedTime`] = 'This time slot is no longer available. Please choose another time.';
+          }
         }
         if (!booking.hoursRequested) {
           errors[`booking_${index}_hoursRequested`] = 'Duration is required';
@@ -268,6 +319,7 @@ export default function BookingPage() {
     }
   };
 
+  // CRITICAL: Enhanced updateBooking with availability checking
   const updateBooking = (id, field, value) => {
     setBookings(bookings.map(booking => 
       booking.id === id ? { ...booking, [field]: value } : booking
@@ -281,6 +333,25 @@ export default function BookingPage() {
       delete newErrors[errorKey];
       setValidationErrors(newErrors);
     }
+    
+    // CRITICAL: Check availability when date changes
+    if (field === 'selectedDate' && value) {
+      checkAvailability(value);
+    }
+    
+    // CRITICAL: Validate time selection against availability
+    if (field === 'selectedTime' && value) {
+      const isAvailable = availableSlots[value] !== false;
+      const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+      
+      if (hasAvailabilityData && !isAvailable) {
+        setValidationErrors(prev => ({
+          ...prev,
+          [`booking_${bookingIndex}_selectedTime`]: 'This time slot is no longer available. Please choose another time.'
+        }));
+        return; // Don't update if slot is unavailable
+      }
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -291,40 +362,6 @@ export default function BookingPage() {
       const newErrors = { ...validationErrors };
       delete newErrors[field];
       setValidationErrors(newErrors);
-    }
-  };
-
-  // Enhanced availability checking for individual bookings
-  const checkAvailability = async (date) => {
-    if (!date) return;
-    
-    setIsCheckingAvailability(true);
-
-    try {
-      const response = await fetch(`/api/check-availability?date=${date}`);
-      const availability = await response.json();
-
-      if (response.ok) {
-        setAvailableSlots(availability.availability || availability);
-      } else {
-        console.error('Availability check failed:', availability);
-        // Fallback: assume all slots available with warning
-        const fallbackAvailability = {};
-        timeSlots.forEach(time => {
-          fallbackAvailability[time] = true;
-        });
-        setAvailableSlots(fallbackAvailability);
-      }
-    } catch (error) {
-      console.error('Error checking availability:', error);
-      // Fallback availability
-      const fallbackAvailability = {};
-      timeSlots.forEach(time => {
-        fallbackAvailability[time] = true;
-      });
-      setAvailableSlots(fallbackAvailability);
-    } finally {
-      setIsCheckingAvailability(false);
     }
   };
 
@@ -457,6 +494,19 @@ export default function BookingPage() {
                 <li key={field}>• {error}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Calendar Error Display */}
+        {validationErrors.calendar && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-yellow-600" size={24} />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-900">Calendar System Notice</h3>
+                <p className="text-yellow-800">{validationErrors.calendar}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -782,7 +832,6 @@ export default function BookingPage() {
                         value={booking.selectedDate}
                         onChange={(e) => {
                           updateBooking(booking.id, 'selectedDate', e.target.value);
-                          checkAvailability(e.target.value);
                         }}
                         min={new Date().toISOString().split('T')[0]}
                         className={getInputClassName(`booking_${index}_selectedDate`)}
@@ -795,22 +844,40 @@ export default function BookingPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Start Time *
+                        {isCheckingAvailability && (
+                          <span className="text-sm text-blue-600 ml-2">
+                            <Loader2 className="inline w-3 h-3 animate-spin mr-1" />
+                            Checking...
+                          </span>
+                        )}
                       </label>
                       <select
                         value={booking.selectedTime}
                         onChange={(e) => updateBooking(booking.id, 'selectedTime', e.target.value)}
                         className={getInputClassName(`booking_${index}_selectedTime`)}
+                        disabled={isCheckingAvailability || Object.keys(availableSlots).length === 0}
                       >
-                        <option value="">Select time...</option>
-                        {timeSlots.map(time => (
-                          <option 
-                            key={time} 
-                            value={time}
-                            disabled={availableSlots[time] === false}
-                          >
-                            {time} {availableSlots[time] === false ? '(Unavailable)' : ''}
-                          </option>
-                        ))}
+                        <option value="">
+                          {isCheckingAvailability ? 'Checking availability...' : 'Select time...'}
+                        </option>
+                        {timeSlots.map(time => {
+                          const isAvailable = availableSlots[time] !== false;
+                          const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+                          
+                          return (
+                            <option 
+                              key={time} 
+                              value={time}
+                              disabled={!isAvailable || !hasAvailabilityData}
+                              style={{ 
+                                color: !isAvailable ? '#dc2626' : '#374151',
+                                textDecoration: !isAvailable ? 'line-through' : 'none'
+                              }}
+                            >
+                              {time} {!isAvailable ? '(Unavailable - Already Booked)' : hasAvailabilityData ? '' : '(Loading...)'}
+                            </option>
+                          );
+                        })}
                       </select>
                       {getFieldError(`booking_${index}_selectedTime`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedTime`)}</p>
