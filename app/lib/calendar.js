@@ -96,7 +96,7 @@ export async function checkCalendarAvailability(date) {
     // FIXED: Enhanced event processing with better timezone handling
     const processedEvents = events.map(event => {
       let eventStart, eventEnd;
-      
+
       // Handle different event types properly
       if (event.start.dateTime) {
         // Timed event
@@ -149,8 +149,18 @@ export async function checkCalendarAvailability(date) {
         const [hours, minutes] = time.split(':').map(Number);
 
         let hour24 = hours;
-        if (period === 'PM' && hours !== 12) hour24 += 12;
-        if (period === 'AM' && hours === 12) hour24 = 0;
+        // CORRECT - Fixed AM/PM logic
+        if (period === 'AM') {
+          if (hours === 12) {
+            hour24 = 0; // 12:00 AM = 00:00 (midnight)
+          }
+          // AM hours 1-11 stay as is
+        } else if (period === 'PM') {
+          if (hours !== 12) {
+            hour24 = hours + 12; // 1:00 PM = 13:00, etc.
+          }
+          // 12:00 PM stays as 12 (noon)
+        }
 
         // Create slot datetime in Denver timezone
         const slotDateTime = new Date(date + 'T00:00:00-07:00');
@@ -171,7 +181,7 @@ export async function checkCalendarAvailability(date) {
             // Timed events - check for overlap
             // An overlap occurs if: slot_start < event_end AND slot_end > event_start
             const overlap = slotDateTime < event.end && slotEndTime > event.start;
-            
+
             if (overlap) {
               console.log('🚫 CONFLICT DETECTED:', {
                 slot: slot,
@@ -182,7 +192,7 @@ export async function checkCalendarAvailability(date) {
                 eventEnd: event.end.toLocaleString('en-US', { timeZone: 'America/Denver' })
               });
             }
-            
+
             return overlap;
           }
         });
@@ -235,9 +245,18 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     const [hours, minutes] = time.split(':').map(Number);
 
     let hour24 = hours;
-    if (period === 'PM' && hours !== 12) hour24 += 12;
-    if (period === 'AM' && hours === 12) hour24 = 0;
-
+    // CORRECT - Fixed AM/PM logic
+    if (period === 'AM') {
+      if (hours === 12) {
+        hour24 = 0; // 12:00 AM = 00:00 (midnight)
+      }
+      // AM hours 1-11 stay as is
+    } else if (period === 'PM') {
+      if (hours !== 12) {
+        hour24 = hours + 12; // 1:00 PM = 13:00, etc.
+      }
+      // 12:00 PM stays as 12 (noon)
+    }
     // FIXED: Create event start time with explicit Denver timezone
     const eventDateTime = new Date(eventDate + 'T00:00:00-07:00');
     eventDateTime.setHours(hour24, minutes, 0, 0);
