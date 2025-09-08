@@ -1,5 +1,5 @@
 // app/api/check-availability/route.js
-// FIXED VERSION - Properly prevents double bookings
+// PRODUCTION VERSION - Better error handling and fallback
 
 import { checkCalendarAvailability } from '../../lib/calendar.js';
 
@@ -53,32 +53,88 @@ export async function GET(request) {
       });
     }
 
-    // Get availability from calendar - THIS IS THE KEY FIX
-    console.log('📅 Checking REAL calendar availability...');
-    const availability = await checkCalendarAvailability(date);
+    // ENHANCED: Better environment check
+    const requiredEnvVars = ['GOOGLE_CLIENT_EMAIL', 'GOOGLE_PRIVATE_KEY', 'GOOGLE_CALENDAR_ID'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
-    console.log('✅ Availability check completed:', {
-      date,
-      totalSlots: Object.keys(availability).length,
-      availableSlots: Object.values(availability).filter(Boolean).length,
-      bookedSlots: Object.values(availability).filter(slot => !slot).length
-    });
+    if (missingVars.length > 0) {
+      console.error('❌ Missing environment variables:', missingVars);
+      return Response.json({
+        error: 'Calendar system temporarily unavailable',
+        message: 'Calendar service configuration error. Please try again later.',
+        details: process.env.NODE_ENV === 'development' 
+          ? `Missing: ${missingVars.join(', ')}` 
+          : 'Configuration error'
+      }, { status: 503 });
+    }
 
-    return Response.json({
-      date,
-      availability,
-      message: 'Availability retrieved successfully',
-      lastUpdated: new Date().toISOString()
-    });
+    // Get availability from calendar with enhanced error handling
+    console.log('📅 Checking calendar availability...');
+    
+    try {
+      const availability = await checkCalendarAvailability(date);
+      
+      console.log('✅ Availability check completed:', {
+        date,
+        totalSlots: Object.keys(availability).length,
+        availableSlots: Object.values(availability).filter(Boolean).length,
+        bookedSlots: Object.values(availability).filter(slot => !slot).length
+      });
+
+      return Response.json({
+        date,
+        availability,
+        message: 'Availability retrieved successfully',
+        lastUpdated: new Date().toISOString()
+      });
+      
+    } catch (calendarError) {
+      console.error('❌ Calendar API error:', calendarError);
+      
+      // Provide specific error messages based on error type
+      let userMessage = 'Unable to check availability. Please try again later.';
+      let statusCode = 503;
+      
+      if (calendarError.message.includes('DECODER routines')) {
+        userMessage = 'Calendar service configuration error.';
+        console.error('💡 HINT: Private key format issue - check newlines and encoding');
+      } else if (calendarError.message.includes('auth') || calendarError.message.includes('401')) {
+        userMessage = 'Calendar authentication error.';
+        console.error('💡 HINT: Check service account permissions and calendar access');
+      } else if (calendarError.message.includes('not found') || calendarError.message.includes('404')) {
+        userMessage = 'Calendar not found.';
+        console.error('💡 HINT: Verify calendar ID and sharing settings');
+      } else if (calendarError.message.includes('quota') || calendarError.message.includes('429')) {
+        userMessage = 'Calendar service temporarily busy. Please try again in a moment.';
+        statusCode = 429;
+      }
+      
+      return Response.json({
+        error: 'Calendar system temporarily unavailable',
+        message: userMessage,
+        details: process.env.NODE_ENV === 'development' ? calendarError.message : 'Calendar service error'
+      }, { status: statusCode });
+    }
     
   } catch (error) {
     console.error('❌ Availability check error:', error);
     
-    // CRITICAL: Don't use fallback - return error so system doesn't allow bookings when calendar is broken
     return Response.json({
-      error: 'Calendar system temporarily unavailable',
-      message: 'Unable to check availability. Please try again later.',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Calendar service error'
-    }, { status: 503 }); // Service Unavailable
+      error: 'Service temporarily unavailable',
+      message: 'Unable to process availability request. Please try again later.',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal service error'
+    }, { status: 503 });
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
