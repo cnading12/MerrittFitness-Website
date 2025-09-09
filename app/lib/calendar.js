@@ -1,5 +1,5 @@
-// app/lib/calendar.js - FIXED AM/PM AND TIMEZONE HANDLING
-// The main issues: 1) AM/PM conversion was incorrect, 2) Timezone inconsistencies
+// app/lib/calendar.js - FINAL SIMPLE FIX
+// Stop overthinking timezones - just match the times directly
 
 import { google } from 'googleapis';
 
@@ -10,8 +10,6 @@ async function getGoogleAuth() {
     }
 
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
-
-    console.log('🔑 Processing Google private key...');
 
     if (typeof privateKey === 'string') {
       privateKey = privateKey.replace(/^["']|["']$/g, '');
@@ -32,8 +30,6 @@ async function getGoogleAuth() {
         .replace(/\n{2,}/g, '\n');
     }
 
-    console.log('✅ Private key format validated');
-
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -43,7 +39,6 @@ async function getGoogleAuth() {
       scopes: ['https://www.googleapis.com/auth/calendar'],
     });
 
-    console.log('✅ Google Auth initialized');
     return auth;
 
   } catch (error) {
@@ -52,32 +47,29 @@ async function getGoogleAuth() {
   }
 }
 
-// FIXED: Proper timezone handling and AM/PM conversion
+// Convert time string to 24-hour format
+function timeStringTo24Hour(timeStr) {
+  const [time, period] = timeStr.split(' ');
+  const [hours, minutes] = time.split(':').map(Number);
+  
+  let hour24 = hours;
+  if (period === 'AM' && hours === 12) hour24 = 0;
+  if (period === 'PM' && hours !== 12) hour24 = hours + 12;
+  
+  return { hour: hour24, minute: minutes };
+}
+
+// SIMPLE APPROACH: Just extract the hour from both and compare directly
 export async function checkCalendarAvailability(date) {
   try {
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      throw new Error('Invalid date format. Expected YYYY-MM-DD');
-    }
-
-    console.log('🗓️ Checking calendar availability for:', date);
+    console.log('🗓️ FINAL CHECK: Checking availability for:', date);
 
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
 
-    // FIXED: Consistent timezone handling for deployment
-    // Use explicit timezone specification that works both locally and in production
-    const denverTimeZone = 'America/Denver';
-    
-    // Create date boundaries in Denver timezone
-    const startTime = new Date(`${date}T00:00:00-07:00`); // Explicit MST offset
-    const endTime = new Date(`${date}T23:59:59-07:00`);   // End of day in Denver
-
-    console.log('🕐 Checking time range (Denver):', {
-      start: startTime.toISOString(),
-      end: endTime.toISOString(),
-      localStart: startTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
-      localEnd: endTime.toLocaleString('en-US', { timeZone: denverTimeZone })
-    });
+    // Get events for the day
+    const startTime = new Date(date + 'T00:00:00-07:00');
+    const endTime = new Date(date + 'T23:59:59-07:00');
 
     const response = await calendar.events.list({
       auth,
@@ -86,161 +78,102 @@ export async function checkCalendarAvailability(date) {
       timeMax: endTime.toISOString(),
       singleEvents: true,
       orderBy: 'startTime',
-      maxResults: 50,
-      timeZone: denverTimeZone
+      timeZone: 'America/Denver'
     });
 
     const events = response.data.items || [];
-    console.log('📅 Found', events.length, 'existing events on', date);
+    console.log('📅 Found events:', events.length);
 
-    // Enhanced event processing with proper timezone handling
-    const processedEvents = events.map(event => {
-      let eventStart, eventEnd;
+    // Extract the booked time ranges in simple format
+    const bookedRanges = [];
+    
+    events.forEach(event => {
+      if (event.start.dateTime && event.end.dateTime) {
+        // Get the LOCAL time strings from the event
+        const startLocal = new Date(event.start.dateTime).toLocaleString('en-US', { 
+          timeZone: 'America/Denver',
+          hour12: true,
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+        
+        const endLocal = new Date(event.end.dateTime).toLocaleString('en-US', { 
+          timeZone: 'America/Denver',
+          hour12: true,
+          hour: 'numeric',
+          minute: '2-digit'
+        });
 
-      if (event.start.dateTime) {
-        // Timed event - parse with timezone consideration
-        eventStart = new Date(event.start.dateTime);
-      } else if (event.start.date) {
-        // All-day event - treat as blocking entire day
-        eventStart = new Date(`${event.start.date}T00:00:00-07:00`);
-        eventEnd = new Date(`${event.end.date}T00:00:00-07:00`);
-        eventEnd.setDate(eventEnd.getDate() - 1); // End date is exclusive
-        eventEnd.setHours(23, 59, 59, 999);
+        console.log(`📌 Event: ${event.summary}`);
+        console.log(`   Local time: ${startLocal} to ${endLocal}`);
+        
+        // Convert to 24-hour for easy comparison
+        const startTime = timeStringTo24Hour(startLocal);
+        const endTime = timeStringTo24Hour(endLocal);
+        
+        bookedRanges.push({
+          startHour: startTime.hour,
+          startMin: startTime.minute,
+          endHour: endTime.hour,
+          endMin: endTime.minute,
+          summary: event.summary
+        });
+        
+        console.log(`   24hr format: ${startTime.hour}:${String(startTime.minute).padStart(2,'0')} to ${endTime.hour}:${String(endTime.minute).padStart(2,'0')}`);
       }
-
-      if (event.end.dateTime && !eventEnd) {
-        eventEnd = new Date(event.end.dateTime);
-      }
-
-      return {
-        summary: event.summary,
-        start: eventStart,
-        end: eventEnd,
-        isAllDay: !event.start.dateTime,
-        originalEvent: event
-      };
-    }).filter(event => event.start && event.end);
-
-    // Log processed events for debugging
-    processedEvents.forEach(event => {
-      console.log('📌 Processed event:', {
-        summary: event.summary,
-        start: event.start.toLocaleString('en-US', { timeZone: denverTimeZone }),
-        end: event.end.toLocaleString('en-US', { timeZone: denverTimeZone }),
-        isAllDay: event.isAllDay
-      });
     });
 
-    // Define available time slots
+    // Check each time slot
     const timeSlots = [
       '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
       '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
       '6:00 PM', '7:00 PM', '8:00 PM'
     ];
 
-    // FIXED: Corrected slot availability checking with proper AM/PM conversion
     const availability = {};
 
     timeSlots.forEach(slot => {
-      try {
-        // FIXED: Proper AM/PM parsing
-        const [time, period] = slot.split(' ');
-        const [hours, minutes] = time.split(':').map(Number);
-
-        let hour24 = hours;
+      const slotTime = timeStringTo24Hour(slot);
+      let isBlocked = false;
+      
+      console.log(`\n🕐 Checking slot: ${slot} (${slotTime.hour}:${String(slotTime.minute).padStart(2,'0')})`);
+      
+      // Check against each booked range
+      bookedRanges.forEach(range => {
+        // Convert everything to minutes for easy comparison
+        const slotMinutes = slotTime.hour * 60 + slotTime.minute;
+        const rangeStartMinutes = range.startHour * 60 + range.startMin;
+        const rangeEndMinutes = range.endHour * 60 + range.endMin;
         
-        // CORRECT AM/PM conversion logic
-        if (period === 'AM') {
-          if (hours === 12) {
-            hour24 = 0; // 12:00 AM = midnight (00:00)
-          }
-          // Other AM hours (1-11) stay the same
-        } else if (period === 'PM') {
-          if (hours !== 12) {
-            hour24 = hours + 12; // 1:00 PM = 13:00, 2:00 PM = 14:00, etc.
-          }
-          // 12:00 PM stays as 12 (noon)
-        }
-
-        console.log(`🕐 Converting ${slot}: hours=${hours}, period=${period} → hour24=${hour24}`);
-
-        // FIXED: Create slot datetime with consistent timezone handling
-        const slotDateTime = new Date(`${date}T${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00-07:00`);
+        console.log(`   vs ${range.summary}: ${range.startHour}:${String(range.startMin).padStart(2,'0')} to ${range.endHour}:${String(range.endMin).padStart(2,'0')}`);
+        console.log(`   Minutes: slot=${slotMinutes}, range=${rangeStartMinutes}-${rangeEndMinutes}`);
         
-        // Check for minimum 30-minute conflict window
-        const slotEndTime = new Date(slotDateTime.getTime() + 30 * 60 * 1000);
-
-        console.log(`📍 Slot ${slot} converts to:`, {
-          localTime: slotDateTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
-          hour24: hour24,
-          isoTime: slotDateTime.toISOString(),
-          utcTime: slotDateTime.toUTCString()
-        });
-
-        // Check if this slot conflicts with any existing event
-        const hasConflict = processedEvents.some(event => {
-          if (event.isAllDay) {
-            // All-day events block the entire day
-            const eventDate = event.start.toDateString();
-            const slotDate = slotDateTime.toDateString();
-            return eventDate === slotDate;
-          } else {
-            // FIXED: Check if the slot falls within the booked time period
-            // A slot is unavailable if it starts within or overlaps with the booked period
-            const slotStartsWithinEvent = slotDateTime >= event.start && slotDateTime < event.end;
-            const slotOverlapsWithEvent = slotDateTime < event.end && slotEndTime > event.start;
-            
-            const hasConflict = slotStartsWithinEvent || slotOverlapsWithEvent;
-
-            if (hasConflict) {
-              console.log('🚫 CONFLICT DETECTED:', {
-                slot: slot,
-                slotStart: slotDateTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
-                slotEnd: slotEndTime.toLocaleString('en-US', { timeZone: denverTimeZone }),
-                eventSummary: event.summary,
-                eventStart: event.start.toLocaleString('en-US', { timeZone: denverTimeZone }),
-                eventEnd: event.end.toLocaleString('en-US', { timeZone: denverTimeZone }),
-                slotStartsWithin: slotStartsWithinEvent,
-                slotOverlaps: slotOverlapsWithEvent,
-                reason: slotStartsWithinEvent ? 'Slot starts within booked period' : 'Slot overlaps with booked period'
-              });
-            }
-
-            return hasConflict;
-          }
-        });
-
-        availability[slot] = !hasConflict;
-
-        if (!hasConflict) {
-          console.log('✅ Available:', slot);
+        // Slot is blocked if it starts within the booked range
+        if (slotMinutes >= rangeStartMinutes && slotMinutes < rangeEndMinutes) {
+          isBlocked = true;
+          console.log(`   ❌ BLOCKED: Slot starts within booked period`);
         } else {
-          console.log('❌ Blocked:', slot);
+          console.log(`   ✅ Available against this event`);
         }
-
-      } catch (slotError) {
-        console.warn('⚠️ Error processing slot:', slot, slotError.message);
-        availability[slot] = true; // Default to available on parsing error
-      }
+      });
+      
+      availability[slot] = !isBlocked;
+      console.log(`   FINAL: ${slot} is ${isBlocked ? 'BLOCKED' : 'AVAILABLE'}`);
     });
 
-    console.log('✅ Final availability calculated:', {
-      date,
-      totalSlots: Object.keys(availability).length,
-      availableSlots: Object.values(availability).filter(Boolean).length,
-      bookedSlots: Object.values(availability).filter(slot => !slot).length,
-      availability
-    });
+    console.log('\n📊 FINAL RESULT:');
+    console.log('Available:', Object.entries(availability).filter(([,avail]) => avail).map(([slot]) => slot));
+    console.log('Blocked:', Object.entries(availability).filter(([,avail]) => !avail).map(([slot]) => slot));
 
     return availability;
 
   } catch (error) {
-    console.error('❌ Calendar availability error:', error);
-    throw new Error(`Calendar integration failed: ${error.message}`);
+    console.error('❌ Calendar error:', error);
+    throw error;
   }
 }
 
-// FIXED: Enhanced calendar event creation with CORRECT timezone handling
+// Calendar event creation - simplified
 export async function createCalendarEvent(booking, includeAttendees = false) {
   try {
     console.log('📅 Creating calendar event for booking:', booking.id);
@@ -248,49 +181,16 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
 
-    const eventDate = booking.event_date;
-    const eventTime = booking.event_time;
-
-    console.log('📅 Event details:', { eventDate, eventTime });
-
-    // FIXED: Proper time parsing with CORRECTED AM/PM logic
-    const [time, period] = eventTime.split(' ');
-    const [hours, minutes] = time.split(':').map(Number);
-
-    let hour24 = hours;
-    
-    // CORRECT AM/PM conversion logic (same as above)
-    if (period === 'AM') {
-      if (hours === 12) {
-        hour24 = 0; // 12:00 AM = midnight (00:00)
-      }
-      // Other AM hours (1-11) stay the same
-    } else if (period === 'PM') {
-      if (hours !== 12) {
-        hour24 = hours + 12; // 1:00 PM = 13:00, 2:00 PM = 14:00, etc.
-      }
-      // 12:00 PM stays as 12 (noon)
-    }
-
-    console.log(`🕐 Creating event: ${eventTime} → hour24=${hour24}`);
-
-    // FIXED: Create event with explicit timezone specification
-    const eventDateTime = new Date(`${eventDate}T${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00-07:00`);
-
-    // Calculate end time based on actual hours_requested
+    const { hour, minute } = timeStringTo24Hour(booking.event_time);
     const duration = parseFloat(booking.hours_requested) || 2;
-    const endDateTime = new Date(eventDateTime.getTime() + duration * 60 * 60 * 1000);
 
-    console.log('📅 Creating calendar event:', {
-      event: booking.event_name,
-      start: eventDateTime.toISOString(),
-      end: endDateTime.toISOString(),
-      startLocal: eventDateTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-      endLocal: endDateTime.toLocaleString('en-US', { timeZone: 'America/Denver' }),
-      duration: duration + ' hours'
-    });
+    // Create start time
+    const startDateTime = new Date(booking.event_date + 'T00:00:00-07:00');
+    startDateTime.setHours(hour, minute, 0, 0);
 
-    // Create event that blocks the time slot
+    // Create end time
+    const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 60 * 1000);
+
     const event = {
       summary: `🔒 BOOKED: ${booking.event_name}`,
       description: `
@@ -305,16 +205,11 @@ Duration: ${duration} hours
 ${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
 ${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
 
-🚨 THIS TIME SLOT IS NOW UNAVAILABLE FOR OTHER BOOKINGS
-
 Booking ID: ${booking.id}
-Status: ${booking.status}
-Created: ${booking.created_at}
-
 Contact manager@merrittfitness.net for changes.
       `.trim(),
       start: {
-        dateTime: eventDateTime.toISOString(),
+        dateTime: startDateTime.toISOString(),
         timeZone: 'America/Denver',
       },
       end: {
@@ -322,23 +217,9 @@ Contact manager@merrittfitness.net for changes.
         timeZone: 'America/Denver',
       },
       location: 'Merritt Fitness, 2246 Irving St, Denver, CO 80211',
-      colorId: '11', // Red color to clearly show it's booked
-      transparency: 'opaque', // Blocks the time slot
-      visibility: 'public', // Visible to availability checking
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 24 * 60 }, // 1 day before
-          { method: 'email', minutes: 60 }       // 1 hour before
-        ]
-      },
-      extendedProperties: {
-        private: {
-          bookingId: booking.id,
-          bookingStatus: booking.status,
-          merrittFitnessBooking: 'true'
-        }
-      }
+      colorId: '11',
+      transparency: 'opaque',
+      visibility: 'public'
     };
 
     const response = await calendar.events.insert({
@@ -348,14 +229,11 @@ Contact manager@merrittfitness.net for changes.
       sendUpdates: 'none'
     });
 
-    console.log('✅ Calendar event created successfully!');
-    console.log('📅 Event ID:', response.data.id);
-    console.log('🔒 Time slot now blocked for other users');
-
+    console.log('✅ Calendar event created:', response.data.id);
     return response.data;
 
   } catch (error) {
     console.error('❌ Calendar event creation failed:', error);
-    throw new Error(`Calendar event creation failed: ${error.message}`);
+    throw error;
   }
 }
