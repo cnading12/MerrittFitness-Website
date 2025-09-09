@@ -230,7 +230,7 @@ export default function Home() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Since 1905 • Denver Historic Landmark
+            Since 1905•Denver Historic Landmark
           </span>
           <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
             Denver's Sacred Space
