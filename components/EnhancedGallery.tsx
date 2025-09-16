@@ -10,42 +10,42 @@ const EnhancedGallery = () => {
   const scrollRef = useRef(null);
   const autoPlayRef = useRef(null);
 
-  // Updated gallery items with more diverse content
+// Updated gallery items with more diverse content
   const galleryItems = [
     { 
       id: 1,
       src: "/images/hero/mat1.jpg", 
       title: "Yoga & Flow Sessions", 
       desc: "Where ancient practice meets timeless architecture",
-      category: "yoga"
+      category: "space"
     },
     { 
       id: 2,
       src: "/images/hero/mat2.jpg", 
       title: "Sound Healing", 
       desc: "Sacred acoustics amplify transformation",
-      category: "sound-healing"
+      category: "space"
     },
     { 
       id: 3,
       src: "/images/events/1.JPEG", 
       title: "Community Gatherings", 
       desc: "Building connections through movement",
-      category: "events"
+      category: "yoga"
     },
     { 
       id: 4,
       src: "/images/events/2.JPEG", 
       title: "Dynamic Movement", 
       desc: "Expressive arts in sacred spaces",
-      category: "movement"
+      category: "yoga"
     },
     { 
       id: 5,
       src: "/images/events/katrina/1.jpg", 
       title: "Workshop Series", 
       desc: "Learning and growing together",
-      category: "workshops",
+      category: "yoga",
       photographer: "Katrina_born_"
     },
     { 
@@ -53,7 +53,7 @@ const EnhancedGallery = () => {
       src: "/images/events/katrina/2.jpg", 
       title: "Mindful Practice", 
       desc: "Finding peace in motion",
-      category: "meditation",
+      category: "yoga",
       photographer: "Katrina_born_"
     },
     { 
@@ -61,7 +61,7 @@ const EnhancedGallery = () => {
       src: "/images/events/katrina/3.jpg", 
       title: "Group Sessions", 
       desc: "Strength in community",
-      category: "group",
+      category: "yoga",
       photographer: "Katrina_born_"
     },
     { 
@@ -69,22 +69,64 @@ const EnhancedGallery = () => {
       src: "/images/events/katrina/4.jpg", 
       title: "Personal Journey", 
       desc: "Individual paths to wellness",
-      category: "personal",
+      category: "yoga",
       photographer: "Katrina_born_"
     },
     { 
       id: 9,
-      src: "/images/hero/nomats.jpg", 
-      title: "Architectural Wonder", 
-      desc: "Every corner tells a story of beauty",
-      category: "architecture"
+      src: "/images/events/judo/1.JPG", 
+      title: "Judo Training", 
+      desc: "Martial arts discipline in our sacred space",
+      category: "events"
     },
     { 
       id: 10,
+      src: "/images/events/judo/2.JPG", 
+      title: "Judo Practice", 
+      desc: "Building strength and character through martial arts",
+      category: "events"
+    },
+    { 
+      id: 11,
+      src: "/images/events/judo/3.JPG", 
+      title: "Judo Techniques", 
+      desc: "Precision and focus in every movement",
+      category: "judo"
+    },
+    { 
+      id: 12,
+      src: "/images/events/judo/4.JPG", 
+      title: "Judo Community", 
+      desc: "Learning respect and discipline together",
+      category: "events"
+    },
+    { 
+      id: 13,
+      src: "/images/events/judo/5.JPG", 
+      title: "Judo Mastery", 
+      desc: "The way of gentle force",
+      category: "events"
+    },
+    { 
+      id: 14,
+      src: "/images/events/judo/10.JPG", 
+      title: "Judo Excellence", 
+      desc: "Tradition meets modern training methods",
+      category: "events"
+    },
+    { 
+      id: 15,
+      src: "/images/hero/nomats.jpg", 
+      title: "Architectural Wonder", 
+      desc: "Every corner tells a story of beauty",
+      category: "space"
+    },
+    { 
+      id: 16,
       src: "/images/hero/outside3.jpg", 
       title: "Historic Sanctuary", 
       desc: "1905 church transformed for modern wellness",
-      category: "exterior"
+      category: "space"
     }
   ];
 
@@ -95,8 +137,7 @@ const EnhancedGallery = () => {
     { id: 'all', name: 'All', count: galleryItems.length },
     { id: 'yoga', name: 'Yoga', count: galleryItems.filter(item => item.category === 'yoga').length },
     { id: 'events', name: 'Events', count: galleryItems.filter(item => item.category === 'events').length },
-    { id: 'workshops', name: 'Workshops', count: galleryItems.filter(item => item.category === 'workshops').length },
-    { id: 'architecture', name: 'Space', count: galleryItems.filter(item => item.category === 'architecture' || item.category === 'exterior').length }
+    { id: 'space', name: 'Space', count: galleryItems.filter(item => item.category === 'space' || item.category === 'exterior').length }
   ];
 
   // Filter functionality
