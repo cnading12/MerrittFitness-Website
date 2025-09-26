@@ -1,83 +1,102 @@
-// app/api/complete-payment/route.js
-// Simple script to complete stuck payments
+// app/api/payment/create-intent/route.js
+// FIXED VERSION - Proper payment intent creation (not payment completion!)
 
-import { updateBookingStatus, getBooking } from '../../lib/database.js';
+import { createSecurePaymentIntent } from '../../../lib/stripe-config.js';
+import { getBooking } from '../../../lib/database.js';
 
 export async function POST(request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
   try {
-    const { bookingId } = await request.json();
+    const { bookingId, paymentMethod = 'card' } = await request.json();
+    
+    console.log('💳 Creating payment intent for booking:', bookingId);
     
     if (!bookingId) {
-      return Response.json({ error: 'Booking ID required' }, { status: 400 });
+      return Response.json({ 
+        error: 'Booking ID is required' 
+      }, { 
+        status: 400, 
+        headers: corsHeaders 
+      });
     }
 
-    console.log('🧪 Completing payment for booking:', bookingId);
-
-    // Get current booking
+    // Get booking details
     const booking = await getBooking(bookingId);
     if (!booking) {
-      return Response.json({ error: 'Booking not found' }, { status: 404 });
+      return Response.json({ 
+        error: 'Booking not found' 
+      }, { 
+        status: 404, 
+        headers: corsHeaders 
+      });
     }
 
-    console.log('📋 Current booking status:', booking.status);
+    console.log('📋 Found booking:', booking.event_name, 'Amount:', booking.total_amount);
 
-    // Update to confirmed status with minimal data
-    await updateBookingStatus(bookingId, 'confirmed', {
-      payment_confirmed_at: new Date().toISOString()
-    });
+    // Check if booking is already confirmed
+    if (booking.status === 'confirmed') {
+      return Response.json({ 
+        error: 'Booking is already confirmed',
+        redirect: `/booking/success?booking_id=${bookingId}`
+      }, { 
+        status: 400, 
+        headers: corsHeaders 
+      });
+    }
 
-    console.log('✅ Booking status updated to confirmed');
+    // Prepare booking data for Stripe
+    const bookingDataForStripe = {
+      id: booking.id,
+      eventName: booking.event_name,
+      selectedDate: booking.event_date,
+      selectedTime: booking.event_time,
+      email: booking.email,
+      contactName: booking.contact_name,
+      total: parseFloat(booking.total_amount)
+    };
 
-    // Get updated booking
-    const updatedBooking = await getBooking(bookingId);
+    console.log('💳 Creating Stripe payment intent...');
+
+    // Create payment intent
+    const paymentIntent = await createSecurePaymentIntent(bookingDataForStripe, paymentMethod);
+    
+    console.log('✅ Payment intent created:', paymentIntent.id);
 
     return Response.json({
       success: true,
-      message: 'Payment completed successfully',
-      booking: {
-        id: updatedBooking.id,
-        status: updatedBooking.status,
-        event_name: updatedBooking.event_name,
-        payment_confirmed_at: updatedBooking.payment_confirmed_at
-      }
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency
+    }, { 
+      headers: corsHeaders 
     });
-    
+
   } catch (error) {
-    console.error('❌ Payment completion error:', error);
+    console.error('❌ Payment intent creation error:', error);
+    
     return Response.json({
       success: false,
-      error: error.message
-    }, { status: 500 });
+      error: error.message || 'Failed to create payment intent'
+    }, { 
+      status: 500, 
+      headers: corsHeaders 
+    });
   }
 }
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const bookingId = searchParams.get('booking_id');
-  
-  if (!bookingId) {
-    return Response.json({
-      message: 'Simple payment completion endpoint',
-      usage: 'POST /api/complete-payment with {"bookingId": "YOUR_BOOKING_ID"}'
-    });
-  }
-  
-  try {
-    const booking = await getBooking(bookingId);
-    if (!booking) {
-      return Response.json({ error: 'Booking not found' }, { status: 404 });
-    }
-    
-    return Response.json({
-      booking: {
-        id: booking.id,
-        status: booking.status,
-        event_name: booking.event_name,
-        payment_confirmed_at: booking.payment_confirmed_at
-      }
-    });
-    
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
