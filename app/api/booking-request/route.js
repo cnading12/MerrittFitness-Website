@@ -19,12 +19,12 @@ const IndividualBookingSchema = z.object({
   eventName: z.string()
     .min(1, 'Event name is required')
     .max(100, 'Event name too long'),
-  
+
   eventType: z.enum([
-    'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance', 
+    'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
     'workshop', 'therapy', 'private-event', 'other'
   ]),
-  
+
   selectedDate: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
     .refine(date => {
@@ -33,14 +33,14 @@ const IndividualBookingSchema = z.object({
       today.setHours(0, 0, 0, 0);
       return bookingDate >= today;
     }, 'Booking date cannot be in the past'),
-  
+
   selectedTime: z.string()
     .regex(/^\d{1,2}:\d{2} (AM|PM)$/, 'Invalid time format'),
-  
+
   hoursRequested: z.coerce.number()
     .min(0.5, 'Minimum 0.5 hours')
     .max(12, 'Maximum 12 hours per booking'),
-  
+
   specialRequests: z.string()
     .max(500, 'Special requests too long')
     .optional()
@@ -51,27 +51,27 @@ const ContactInfoSchema = z.object({
   contactName: z.string()
     .min(1, 'Contact name is required')
     .max(50, 'Contact name too long'),
-  
+
   email: z.string()
     .email('Invalid email format')
     .max(255, 'Email too long')
     .toLowerCase(),
-  
+
   phone: z.string()
     .max(20, 'Phone number too long')
     .optional()
     .default(''),
-  
+
   businessName: z.string()
     .max(100, 'Business name too long')
     .optional()
     .default(''),
-  
+
   websiteUrl: z.string()
     .max(200, 'URL too long')
     .optional()
     .default(''),
-  
+
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
   paymentMethod: z.enum(['card', 'pay-later']).default('card')
@@ -97,23 +97,23 @@ const MultipleBookingSchema = z.object({
 function calculateAccuratePricing(bookings, contactInfo) {
   const HOURLY_RATE = 95;
   const STRIPE_FEE_PERCENTAGE = 3;
-  
+
   let totalHours = 0;
   let totalBookings = 0;
-  
+
   bookings.forEach(booking => {
     let hours = parseFloat(booking.hoursRequested) || 0;
-    
+
     // Apply minimums per booking
-    const hasRecurringMultiple = contactInfo.isRecurring && 
+    const hasRecurringMultiple = contactInfo.isRecurring &&
       contactInfo.recurringDetails?.includes('multiple');
-    
+
     if (!contactInfo.isRecurring && hours < 4) {
       hours = 4; // Single event: 4-hour minimum
     } else if (contactInfo.isRecurring && hasRecurringMultiple && hours < 2) {
       hours = 2; // Multiple events per week: 2-hour minimum
     }
-    
+
     totalHours += hours;
     totalBookings++;
   });
@@ -121,18 +121,18 @@ function calculateAccuratePricing(bookings, contactInfo) {
   // Apply discounts
   let discount = 0;
   let savings = 0;
-  
+
   if (contactInfo.isRecurring && contactInfo.recurringDetails?.includes('multiple')) {
     discount = 5; // 5% discount for multiple weekly bookings
     savings = (totalHours * HOURLY_RATE * discount) / 100;
   }
 
   const subtotal = totalHours * HOURLY_RATE - savings;
-  const stripeFee = contactInfo.paymentMethod === 'card' 
-    ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100)) 
+  const stripeFee = contactInfo.paymentMethod === 'card'
+    ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
     : 0;
   const total = subtotal + stripeFee;
-  
+
   return {
     totalHours,
     totalBookings,
@@ -181,7 +181,7 @@ async function createBooking(bookingData) {
       console.error('❌ Database error:', error);
       throw error;
     }
-    
+
     return data[0];
   } catch (error) {
     console.error('❌ Create booking error:', error);
@@ -199,14 +199,14 @@ async function bookingHandler(request) {
       hasContactInfo: !!rawData.contactInfo,
       paymentMethod: rawData.contactInfo?.paymentMethod
     });
-    
+
     // Validate input data
     let validatedData;
     try {
       validatedData = MultipleBookingSchema.parse(rawData);
     } catch (validationError) {
       console.error('❌ Validation failed:', validationError.errors);
-      
+
       return Response.json({
         success: false,
         error: 'Validation failed',
@@ -214,26 +214,26 @@ async function bookingHandler(request) {
         code: 'VALIDATION_ERROR'
       }, { status: 400 });
     }
-    
+
     console.log('✅ Data validated successfully');
-    
+
     // Recalculate pricing to ensure accuracy
     const accuratePricing = calculateAccuratePricing(
-      validatedData.bookings, 
+      validatedData.bookings,
       validatedData.contactInfo
     );
-    
+
     // Create master booking ID for multiple bookings
     const masterBookingId = uuidv4();
-    
+
     // Create individual bookings in database
     const createdBookings = [];
     let bookingErrors = [];
-    
+
     for (const booking of validatedData.bookings) {
       try {
         const individualBookingId = uuidv4();
-        
+
         // Map frontend data structure to database structure
         const bookingData = {
           id: individualBookingId,
@@ -253,41 +253,38 @@ async function bookingHandler(request) {
           total: accuratePricing.total,
           subtotal: accuratePricing.subtotal,
           stripeFee: accuratePricing.stripeFee,
-          status: validatedData.contactInfo.paymentMethod === 'pay-later' 
-            ? 'confirmed_pay_later' 
+          status: validatedData.contactInfo.paymentMethod === 'pay-later'
+            ? 'confirmed_pay_later'
             : 'pending_payment'
         };
-        
+
         // Create booking in database
         const createdBooking = await createBooking(bookingData);
         createdBookings.push(createdBooking);
-        
         console.log('✅ Individual booking created:', individualBookingId);
-        
-        // FIXED: Create calendar event immediately for confirmed bookings
-        if (bookingData.status === 'confirmed_pay_later' || bookingData.status === 'confirmed') {
-          try {
-            console.log('📅 Creating calendar event for booking:', individualBookingId);
-            const calendarEvent = await createCalendarEvent(createdBooking);
-            
-            if (calendarEvent && calendarEvent.id) {
-              // Update booking with calendar event ID
-              await supabase
-                .from('bookings')
-                .update({ 
-                  calendar_event_id: calendarEvent.id,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', individualBookingId);
-              
-              console.log('✅ Calendar event created and linked:', calendarEvent.id);
-            }
-          } catch (calendarError) {
-            console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-            // Continue with booking even if calendar fails
+
+        // FIXED: Create calendar event immediately for ALL bookings
+        try {
+          console.log('📅 Creating calendar event for booking:', individualBookingId);
+          const calendarEvent = await createCalendarEvent(createdBooking);
+
+          if (calendarEvent && calendarEvent.id) {
+            // Update booking with calendar event ID
+            await supabase
+              .from('bookings')
+              .update({
+                calendar_event_id: calendarEvent.id,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', individualBookingId);
+
+            console.log('✅ Calendar event created and linked:', calendarEvent.id);
           }
+        } catch (calendarError) {
+          console.warn('⚠️ Calendar event creation failed:', calendarError.message);
+          // Continue with booking even if calendar fails
         }
-        
+
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
         bookingErrors.push({
@@ -296,7 +293,7 @@ async function bookingHandler(request) {
         });
       }
     }
-    
+
     if (createdBookings.length === 0) {
       return Response.json({
         success: false,
@@ -305,7 +302,7 @@ async function bookingHandler(request) {
         code: 'BOOKING_CREATION_FAILED'
       }, { status: 500 });
     }
-    
+
     // Send confirmation emails for each booking
     for (const booking of createdBookings) {
       try {
@@ -315,7 +312,7 @@ async function bookingHandler(request) {
         console.warn('⚠️ Email sending failed for booking:', booking.id, emailError.message);
       }
     }
-    
+
     // Prepare success response
     const response = {
       success: true,
@@ -334,7 +331,7 @@ async function bookingHandler(request) {
         ? 'Bookings confirmed! Calendar updated. We\'ll contact you about payment arrangements.'
         : 'Bookings created successfully. Calendar updated. Proceed to payment.'
     };
-    
+
     // Add warnings if some operations failed
     if (bookingErrors.length > 0) {
       response.warnings = {
@@ -342,7 +339,7 @@ async function bookingHandler(request) {
         message: `${bookingErrors.length} bookings failed to create`
       };
     }
-    
+
     console.log('🎉 Multiple bookings processed successfully:', {
       masterBookingId: masterBookingId,
       successfulBookings: createdBookings.length,
@@ -350,20 +347,20 @@ async function bookingHandler(request) {
       paymentMethod: validatedData.contactInfo.paymentMethod,
       calendarUpdated: true
     });
-    
+
     return Response.json(response);
-    
+
   } catch (error) {
     console.error('❌ Booking creation error:', error);
-    
-    return Response.json({ 
+
+    return Response.json({
       success: false,
       error: 'Failed to create bookings',
       details: error.message,
       code: 'INTERNAL_ERROR'
     }, { status: 500 });
   }
-}
+} // <-- ADDED THIS MISSING CLOSING BRACE
 
 // Export the handler
 export async function POST(request) {
@@ -375,29 +372,29 @@ export async function POST(request) {
 
   try {
     const response = await bookingHandler(request);
-    
+
     const headers = new Headers(response.headers);
     Object.entries(corsHeaders).forEach(([key, value]) => {
       headers.set(key, value);
     });
-    
+
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: headers,
     });
-    
+
   } catch (error) {
     console.error('Handler error:', error);
     return Response.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Server error',
-        details: error.message 
-      }, 
-      { 
+        details: error.message
+      },
+      {
         status: 500,
-        headers: corsHeaders 
+        headers: corsHeaders
       }
     );
   }
