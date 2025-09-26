@@ -175,14 +175,6 @@ export default function SecurePaymentFlow({ bookingId }) {
   const options = {
     clientSecret,
     appearance,
-    // Enable Apple Pay and Google Pay
-    paymentMethodCreation: 'manual',
-    paymentMethodOptions: {
-      applePay: {
-        buttonType: 'pay',
-        buttonStyle: 'black'
-      }
-    }
   };
 
   return (
