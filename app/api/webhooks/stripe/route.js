@@ -1,5 +1,5 @@
 // app/api/webhooks/stripe/route.js
-// FIXED VERSION - Proper calendar integration on payment success
+// FIXED VERSION - Proper webhook handling for payment completion
 
 import { stripe } from '../../../lib/stripe-config.js';
 import { updateBookingStatus, getBooking } from '../../../lib/database.js';
@@ -15,6 +15,7 @@ export async function POST(request) {
   
   try {
     body = await request.text();
+    // FIXED: Don't await headers() in Next.js 15
     const headersList = headers();
     signature = headersList.get('stripe-signature');
     
@@ -92,7 +93,7 @@ export async function POST(request) {
   }
 }
 
-// FIXED: Enhanced payment success handler with calendar integration
+// FIXED: Enhanced payment success handler
 async function handlePaymentSuccess(paymentIntent) {
   const bookingId = paymentIntent.metadata.bookingId;
   console.log('🎯 Payment success for booking:', bookingId);
@@ -110,7 +111,7 @@ async function handlePaymentSuccess(paymentIntent) {
       payment_confirmed_at: new Date().toISOString(),
     });
     
-    // Get booking details
+    // Get booking details for calendar and email
     console.log('📖 Fetching booking details...');
     const booking = await getBooking(bookingId);
     if (!booking) {
@@ -119,42 +120,45 @@ async function handlePaymentSuccess(paymentIntent) {
     
     console.log('✅ Booking found:', booking.event_name);
     
-    // FIXED: Create calendar event immediately after payment success
-    let calendarEventId = null;
-    try {
-      console.log('📅 Creating calendar event...');
-      const calendarEvent = await createCalendarEvent(booking, true);
-      
-      if (calendarEvent && calendarEvent.id) {
-        calendarEventId = calendarEvent.id;
+    // Create calendar event (if not already created)
+    if (!booking.calendar_event_id) {
+      try {
+        console.log('📅 Creating calendar event...');
+        const calendarEvent = await createCalendarEvent(booking);
         
-        // Update booking with calendar event ID
-        await updateBookingStatus(bookingId, 'confirmed', {
-          calendar_event_id: calendarEventId,
-          updated_at: new Date().toISOString()
-        });
-        
-        console.log('✅ Calendar event created and linked:', calendarEventId);
+        if (calendarEvent && calendarEvent.id) {
+          // Update booking with calendar event ID
+          await updateBookingStatus(bookingId, 'confirmed', {
+            calendar_event_id: calendarEvent.id,
+            updated_at: new Date().toISOString()
+          });
+          
+          console.log('✅ Calendar event created and linked:', calendarEvent.id);
+        }
+      } catch (calendarError) {
+        console.error('📅 Calendar event creation failed:', calendarError.message);
+        // Don't fail the webhook if calendar fails
       }
-    } catch (calendarError) {
-      console.error('📅 Calendar event creation failed:', calendarError.message);
-      // Don't fail the webhook, but log the error
+    } else {
+      console.log('📅 Calendar event already exists:', booking.calendar_event_id);
     }
     
-    // Send confirmation emails
-    try {
-      console.log('📧 Sending confirmation emails...');
-      await sendConfirmationEmails(booking);
-      console.log('✅ Confirmation emails sent successfully');
-    } catch (emailError) {
-      console.error('📧 Email sending failed:', emailError.message);
-      // Don't fail the webhook, but log the error
+    // Send confirmation emails (if payment method was card)
+    if (booking.payment_method === 'card') {
+      try {
+        console.log('📧 Sending confirmation emails...');
+        await sendConfirmationEmails(booking);
+        console.log('✅ Confirmation emails sent successfully');
+      } catch (emailError) {
+        console.error('📧 Email sending failed:', emailError.message);
+        // Don't fail the webhook if email fails
+      }
     }
     
     console.log('🎉 Payment success handling completed:', {
       bookingId,
-      calendarEventCreated: !!calendarEventId,
-      status: 'confirmed'
+      status: 'confirmed',
+      paymentIntentId: paymentIntent.id
     });
     
   } catch (error) {
@@ -208,6 +212,7 @@ async function handlePaymentProcessing(paymentIntent) {
   }
 }
 
+// Test endpoint to verify webhook is reachable
 export async function GET() {
   return Response.json({
     message: 'Stripe webhook endpoint is active',

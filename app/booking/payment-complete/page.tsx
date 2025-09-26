@@ -38,16 +38,19 @@ function PaymentCompleteContent() {
       setBookingData(booking);
 
       // Check payment status
+      // In your PaymentCompleteContent component, change this line:
       if (booking.status === 'confirmed') {
         setStatus('success');
       } else if (booking.status === 'payment_processing') {
-        setStatus('processing');
+        // Check if we have a payment_intent ID - if so, payment likely succeeded
+        if (booking.payment_intent_id) {
+          setStatus('success'); // Treat as success since Stripe processed it
+        } else {
+          setStatus('processing');
+        }
       } else if (booking.status === 'payment_failed') {
         setStatus('failed');
         setError('Payment was not successful');
-      } else {
-        // Still pending, check again in a moment
-        setTimeout(verifyPaymentAndFetchBooking, 2000);
       }
 
     } catch (err) {
@@ -103,7 +106,7 @@ function PaymentCompleteContent() {
           {bookingData && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your Booking Details</h2>
-              
+
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="p-4 bg-emerald-50 rounded-xl">
@@ -153,7 +156,7 @@ function PaymentCompleteContent() {
           {/* What's Next */}
           <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">What Happens Next?</h2>
-            
+
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">

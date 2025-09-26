@@ -1,11 +1,14 @@
-import { createSecurePaymentIntent, calculatePaymentDetails } from '../../../lib/stripe-config.js';
-import { getBooking } from '../../../lib/database.js';
+// app/api/payment/create-intent/route.js
+// FIXED VERSION - Compatible with Next.js 15 and proper Stripe configuration
+
+import { stripe } from '../../../lib/stripe-config.js';
+import { getBooking, updateBookingStatus } from '../../../lib/database.js';
 import { headers } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // FIXED: Don't await headers()
-    const headersList = headers();
+    // FIXED: Await headers() for Next.js 15 compatibility
+    const headersList = await headers();
     const userIP = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
     
     console.log('💳 Creating payment intent from IP:', userIP);
@@ -32,26 +35,79 @@ export async function POST(request) {
       return Response.json({ error: 'Booking cancelled' }, { status: 400 });
     }
     
-    // Calculate payment details
-    const paymentDetails = calculatePaymentDetails(booking.total_amount, paymentMethod);
+    // Convert amount to cents for Stripe
+    const amountInCents = Math.round(parseFloat(booking.total_amount) * 100);
     
-    // Create secure payment intent
-    const paymentIntent = await createSecurePaymentIntent({
-      id: booking.id,
-      total: booking.total_amount,
-      eventName: booking.event_name,
-      selectedDate: booking.event_date,
-      selectedTime: booking.event_time,
-      email: booking.email,
-      contactName: booking.contact_name,
-    }, paymentMethod);
+    // Validate amount
+    if (amountInCents < 50) { // $0.50 minimum
+      return Response.json({ error: 'Minimum payment amount is $0.50' }, { status: 400 });
+    }
+    
+    if (amountInCents > 500000) { // $5,000 maximum
+      return Response.json({ error: 'Maximum payment amount is $5,000' }, { status: 400 });
+    }
+    
+    // FIXED: Create payment intent without setup_future_usage parameter
+    const paymentIntentData = {
+      amount: amountInCents,
+      currency: 'usd',
+      
+      // Use automatic payment methods for simplicity
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never', // Keep user on site
+      },
+      
+      // Enhanced metadata for tracking
+      metadata: {
+        bookingId: booking.id,
+        eventName: booking.event_name,
+        eventDate: booking.event_date,
+        eventTime: booking.event_time,
+        customerEmail: booking.email,
+        customerName: booking.contact_name,
+        businessName: booking.business_name || '',
+        timestamp: new Date().toISOString(),
+      },
+      
+      // Customer information
+      receipt_email: booking.email,
+      description: `Merritt Fitness: ${booking.event_name} on ${booking.event_date}`,
+      
+      // Statement descriptor (what shows on customer's bank statement)
+      statement_descriptor: 'MERRITT FITNESS',
+      statement_descriptor_suffix: 'EVENT',
+      
+      // Capture immediately for events
+      capture_method: 'automatic',
+      
+      // REMOVED: setup_future_usage - this was causing the error
+      // We don't need to store payment methods for future use
+    };
+    
+    console.log('🔄 Creating Stripe payment intent with data:', {
+      amount: amountInCents,
+      currency: 'usd',
+      bookingId: booking.id,
+      customerEmail: booking.email
+    });
+    
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
+    
+    // Update booking with payment intent ID
+    await updateBookingStatus(booking.id, 'payment_processing', {
+      payment_intent_id: paymentIntent.id,
+      updated_at: new Date().toISOString(),
+    });
+    
+    // Calculate fees for transparency
+    const stripeFee = Math.round(amountInCents * 0.029) + 30; // 2.9% + 30¢
     
     // Log for security monitoring
-    console.log('✅ Payment intent created:', {
+    console.log('✅ Payment intent created successfully:', {
+      paymentIntentId: paymentIntent.id,
       bookingId: booking.id,
       amount: booking.total_amount,
-      paymentMethod,
-      paymentIntentId: paymentIntent.id,
       customerEmail: booking.email,
       timestamp: new Date().toISOString(),
     });
@@ -60,13 +116,17 @@ export async function POST(request) {
       success: true,
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
-      paymentDetails,
+      amount: amountInCents,
+      amountDisplay: booking.total_amount,
+      stripeFee: stripeFee,
       booking: {
         id: booking.id,
         eventName: booking.event_name,
         eventDate: booking.event_date,
         eventTime: booking.event_time,
         totalAmount: booking.total_amount,
+        customerEmail: booking.email,
+        customerName: booking.contact_name,
       }
     });
     
@@ -74,13 +134,39 @@ export async function POST(request) {
     console.error('❌ Payment intent creation failed:', error);
     
     // Security: Don't expose internal errors
-    const userError = error.message.includes('Minimum payment') || error.message.includes('Maximum payment') 
-      ? error.message 
-      : 'Payment setup failed. Please try again.';
+    let userMessage = 'Payment setup failed. Please try again.';
+    
+    if (error.type === 'StripeCardError') {
+      userMessage = error.message;
+    } else if (error.message.includes('amount')) {
+      userMessage = error.message;
+    } else if (error.type === 'StripeInvalidRequestError') {
+      // Handle Stripe parameter errors
+      userMessage = 'Payment configuration error. Please contact support.';
+      console.error('Stripe parameter error:', {
+        type: error.type,
+        code: error.code,
+        param: error.param,
+        message: error.message
+      });
+    }
     
     return Response.json({ 
       success: false,
-      error: userError 
+      error: userMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 });
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }

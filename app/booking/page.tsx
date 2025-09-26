@@ -33,59 +33,59 @@ export default function BookingPage() {
 
   // Business-focused event types
   const eventTypes = [
-    { 
-      id: 'yoga-class', 
-      name: 'Yoga Classes', 
+    {
+      id: 'yoga-class',
+      name: 'Yoga Classes',
       description: 'Vinyasa, Hatha, Restorative, Hot Yoga',
       icon: '🧘‍♀️',
       popular: true
     },
-    { 
-      id: 'meditation', 
-      name: 'Meditation & Mindfulness', 
+    {
+      id: 'meditation',
+      name: 'Meditation & Mindfulness',
       description: 'Guided meditation, breathwork, sound healing',
       icon: '🕯️'
     },
-    { 
-      id: 'fitness', 
-      name: 'Fitness Classes', 
+    {
+      id: 'fitness',
+      name: 'Fitness Classes',
       description: 'Pilates, barre, strength training, cardio',
       icon: '💪'
     },
-    { 
-      id: 'martial-arts', 
-      name: 'Martial Arts', 
+    {
+      id: 'martial-arts',
+      name: 'Martial Arts',
       description: 'Judo, BJJ, wrestling, self-defense',
       icon: '🥋',
       popular: true
     },
-    { 
-      id: 'dance', 
-      name: 'Dance Classes', 
+    {
+      id: 'dance',
+      name: 'Dance Classes',
       description: 'Contemporary, ballroom, salsa, hip-hop',
       icon: '💃'
     },
-    { 
-      id: 'workshop', 
-      name: 'Workshops & Seminars', 
+    {
+      id: 'workshop',
+      name: 'Workshops & Seminars',
       description: 'Educational events, team building',
       icon: '📚'
     },
-    { 
-      id: 'therapy', 
-      name: 'Therapy & Healing', 
+    {
+      id: 'therapy',
+      name: 'Therapy & Healing',
       description: 'Art therapy, sound baths, energy work',
       icon: '🌟'
     },
-    { 
-      id: 'private-event', 
-      name: 'Private Events', 
+    {
+      id: 'private-event',
+      name: 'Private Events',
       description: 'Birthday parties, celebrations, retreats',
       icon: '🎉'
     },
-    { 
-      id: 'other', 
-      name: 'Other Wellness Practice', 
+    {
+      id: 'other',
+      name: 'Other Wellness Practice',
       description: 'Tell us about your unique offering',
       icon: '✨'
     }
@@ -113,7 +113,7 @@ export default function BookingPage() {
   // CRITICAL: Enhanced availability checking with strict error handling
   const checkAvailability = async (date) => {
     if (!date) return;
-    
+
     setIsCheckingAvailability(true);
     setAvailableSlots({}); // Clear previous slots
 
@@ -125,7 +125,7 @@ export default function BookingPage() {
       if (response.ok && data.availability) {
         setAvailableSlots(data.availability);
         console.log('✅ Availability loaded:', data.availability);
-        
+
         // Clear any previous calendar errors
         const newErrors = { ...validationErrors };
         delete newErrors.calendar;
@@ -154,37 +154,37 @@ export default function BookingPage() {
   // FIXED: Comprehensive form validation with availability checking
   const validateForm = () => {
     const errors = {};
-    
+
     // Validate contact information
     if (!formData.contactName.trim()) {
       errors.contactName = 'Contact name is required';
     } else if (formData.contactName.trim().length < 2) {
       errors.contactName = 'Contact name must be at least 2 characters';
     }
-    
+
     if (!formData.email.trim()) {
       errors.email = 'Email address is required';
     } else if (!validateEmail(formData.email)) {
       errors.email = 'Please enter a valid email address (e.g., name@example.com)';
     }
-    
+
     if (formData.phone.trim() && !validatePhone(formData.phone)) {
       errors.phone = 'Please enter a valid phone number';
     }
-    
+
     // Validate at least one complete booking
-    const validBookings = bookings.filter(booking => 
-      booking.eventName.trim() && 
-      booking.eventType && 
-      booking.selectedDate && 
-      booking.selectedTime && 
+    const validBookings = bookings.filter(booking =>
+      booking.eventName.trim() &&
+      booking.eventType &&
+      booking.selectedDate &&
+      booking.selectedTime &&
       booking.hoursRequested
     );
-    
+
     if (validBookings.length === 0) {
       errors.bookings = 'Please complete at least one booking';
     }
-    
+
     // Validate individual bookings
     bookings.forEach((booking, index) => {
       if (booking.eventName.trim() || booking.eventType || booking.selectedDate) {
@@ -212,7 +212,7 @@ export default function BookingPage() {
           // CRITICAL: Validate that selected times are actually available
           const isAvailable = availableSlots[booking.selectedTime] !== false;
           const hasAvailabilityData = Object.keys(availableSlots).length > 0;
-          
+
           if (!hasAvailabilityData && booking.selectedDate) {
             errors[`booking_${index}_selectedTime`] = 'Please wait for availability check to complete.';
           } else if (!isAvailable) {
@@ -226,7 +226,7 @@ export default function BookingPage() {
         }
       }
     });
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -239,15 +239,15 @@ export default function BookingPage() {
     let totalHours = 0;
     let totalBookings = 0;
     let minimumApplied = false;
-    
+
     // Calculate total hours across all bookings with minimums
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
         let hours = parseFloat(booking.hoursRequested) || 0;
-        
+
         // Apply minimums per booking based on type
         const hasRecurringMultiple = formData.isRecurring && formData.recurringDetails.includes('multiple');
-        
+
         if (!formData.isRecurring && hours < 4) {
           hours = 4; // Single event: 4-hour minimum
           minimumApplied = true;
@@ -255,7 +255,7 @@ export default function BookingPage() {
           hours = 2; // Regular partnership: 2-hour minimum
           minimumApplied = true;
         }
-        
+
         totalHours += hours;
         totalBookings++;
       }
@@ -264,18 +264,18 @@ export default function BookingPage() {
     // Apply partnership discounts
     let discount = 0;
     let savings = 0;
-    
+
     if (formData.isRecurring && formData.recurringDetails.includes('multiple')) {
       discount = 5; // 5% discount for multiple weekly bookings
       savings = (totalHours * HOURLY_RATE * discount) / 100;
     }
 
     const subtotal = totalHours * HOURLY_RATE - savings;
-    const stripeFee = formData.paymentMethod === 'card' 
-      ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100)) 
+    const stripeFee = formData.paymentMethod === 'card'
+      ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
       : 0;
     const total = subtotal + stripeFee;
-    
+
     return {
       totalHours,
       totalBookings,
@@ -321,10 +321,10 @@ export default function BookingPage() {
 
   // CRITICAL: Enhanced updateBooking with availability checking
   const updateBooking = (id, field, value) => {
-    setBookings(bookings.map(booking => 
+    setBookings(bookings.map(booking =>
       booking.id === id ? { ...booking, [field]: value } : booking
     ));
-    
+
     // Clear validation error for this field
     const bookingIndex = bookings.findIndex(b => b.id === id);
     const errorKey = `booking_${bookingIndex}_${field}`;
@@ -333,17 +333,17 @@ export default function BookingPage() {
       delete newErrors[errorKey];
       setValidationErrors(newErrors);
     }
-    
+
     // CRITICAL: Check availability when date changes
     if (field === 'selectedDate' && value) {
       checkAvailability(value);
     }
-    
+
     // CRITICAL: Validate time selection against availability
     if (field === 'selectedTime' && value) {
       const isAvailable = availableSlots[value] !== false;
       const hasAvailabilityData = Object.keys(availableSlots).length > 0;
-      
+
       if (hasAvailabilityData && !isAvailable) {
         setValidationErrors(prev => ({
           ...prev,
@@ -356,7 +356,7 @@ export default function BookingPage() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear validation error for this field
     if (validationErrors[field]) {
       const newErrors = { ...validationErrors };
@@ -395,11 +395,11 @@ export default function BookingPage() {
 
     try {
       // Filter out incomplete bookings
-      const validBookings = bookings.filter(booking => 
-        booking.eventName.trim() && 
-        booking.eventType && 
-        booking.selectedDate && 
-        booking.selectedTime && 
+      const validBookings = bookings.filter(booking =>
+        booking.eventName.trim() &&
+        booking.eventType &&
+        booking.selectedDate &&
+        booking.selectedTime &&
         booking.hoursRequested
       );
 
@@ -431,7 +431,7 @@ export default function BookingPage() {
 
       if (bookingResponse.ok && bookingResult.success) {
         console.log('✅ Booking created successfully:', bookingResult);
-        
+
         if (formData.paymentMethod === 'pay-later') {
           // Redirect to success page for pay-later bookings
           window.location.href = `/booking/success?booking_id=${bookingResult.id}`;
@@ -445,7 +445,7 @@ export default function BookingPage() {
     } catch (error) {
       console.error('❌ Booking submission error:', error);
       setSubmitMessage(`❌ ${error.message}`);
-      
+
       // Scroll to error message
       setTimeout(() => {
         const errorElement = document.querySelector('[role="alert"]');
@@ -465,8 +465,8 @@ export default function BookingPage() {
 
   const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-lg transition-colors") => {
     const hasError = validationErrors[fieldName];
-    return hasError 
-      ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500` 
+    return hasError
+      ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500`
       : `${baseClassName} border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`;
   };
 
@@ -477,7 +477,7 @@ export default function BookingPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl lg:text-5xl font-light mb-4 text-gray-900">Reserve Your Sacred Space</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Join our community of wellness professionals in Denver's most inspiring historic sanctuary. 
+            Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
             <span className="font-semibold text-emerald-700"> $95/hour • Partnership discounts available</span>
           </p>
         </div>
@@ -517,7 +517,7 @@ export default function BookingPage() {
             <h2 className="text-xl font-semibold text-gray-900">Building Our Wellness Community</h2>
           </div>
           <p className="text-center text-gray-700 max-w-4xl mx-auto">
-            We're seeking <span className="font-semibold">7-10 dedicated wellness partners</span> to call Merritt Fitness home. 
+            We're seeking <span className="font-semibold">7-10 dedicated wellness partners</span> to call Merritt Fitness home.
             Our 2,400 sq ft sanctuary with 24-foot ceilings and perfect acoustics awaits your practice.
           </p>
         </div>
@@ -544,202 +544,6 @@ export default function BookingPage() {
                   className="w-full h-96"
                   title="Public Live Availability Calendar"
                 />
-              </div>
-            </div>
-
-            {/* Contact & Payment Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Mail className="text-purple-700" size={20} />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
-              </div>
-
-              <div className="space-y-6">
-                {/* Contact Information */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.contactName}
-                      onChange={(e) => handleInputChange('contactName', e.target.value)}
-                      className={getInputClassName('contactName')}
-                      maxLength={50}
-                      placeholder="Your full name"
-                    />
-                    {getFieldError('contactName') && (
-                      <p className="text-red-600 text-sm mt-1">{getFieldError('contactName')}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={getInputClassName('email')}
-                      maxLength={255}
-                      placeholder="your.name@example.com"
-                    />
-                    {getFieldError('email') && (
-                      <p className="text-red-600 text-sm mt-1">{getFieldError('email')}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone (Optional)
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="(720) 555-0123"
-                      className={getInputClassName('phone')}
-                      maxLength={20}
-                    />
-                    {getFieldError('phone') && (
-                      <p className="text-red-600 text-sm mt-1">{getFieldError('phone')}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Business Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.businessName}
-                      onChange={(e) => handleInputChange('businessName', e.target.value)}
-                      placeholder="e.g., Serene Soul Yoga"
-                      className={getInputClassName('businessName')}
-                      maxLength={100}
-                    />
-                  </div>
-                </div>
-
-                {/* Partnership Options */}
-                <div className="border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Partnership Type</h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.isRecurring}
-                        onChange={(e) => {
-                          handleInputChange('isRecurring', e.target.checked);
-                          if (!e.target.checked) {
-                            handleInputChange('recurringDetails', '');
-                          }
-                        }}
-                        className="mr-3 text-emerald-600"
-                      />
-                      <span className="font-medium">Regular Partnership (2-hour minimums + 5% discount)</span>
-                    </label>
-                    
-                    {formData.isRecurring && (
-                      <select
-                        value={formData.recurringDetails}
-                        onChange={(e) => handleInputChange('recurringDetails', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ml-6"
-                      >
-                        <option value="">Select frequency...</option>
-                        <option value="weekly">Weekly classes</option>
-                        <option value="multiple">Multiple classes per week</option>
-                        <option value="monthly">Monthly workshops</option>
-                        <option value="custom">Custom arrangement</option>
-                      </select>
-                    )}
-                  </div>
-                </div>
-
-                {/* Enhanced Payment Method Selection */}
-                <div className="border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Card Payment Option */}
-                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                      formData.paymentMethod === 'card' 
-                        ? 'border-emerald-500 bg-emerald-50' 
-                        : 'border-gray-200 hover:border-emerald-300'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={formData.paymentMethod === 'card'}
-                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-emerald-600"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CreditCard className="text-emerald-600" size={20} />
-                          <span className="font-medium">Pay Online Now</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Secure card payment via Stripe • Instant confirmation
-                        </p>
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <Info className="text-orange-600 mt-0.5" size={16} />
-                            <div>
-                              <p className="text-sm text-orange-800 font-medium">3% Processing Fee</p>
-                              <p className="text-xs text-orange-700">
-                                Required by Stripe for card processing. Choose "Pay Later" to avoid this fee.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </label>
-
-                    {/* Pay Later Option */}
-                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                      formData.paymentMethod === 'pay-later' 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="pay-later"
-                        checked={formData.paymentMethod === 'pay-later'}
-                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-blue-600"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Phone className="text-blue-600" size={20} />
-                          <span className="font-medium">Pay Later</span>
-                          <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
-                            NO FEES
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Book now, pay with alternative methods
-                        </p>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <div className="text-sm text-blue-800">
-                            <p className="font-medium mb-1">💰 Zero Processing Fees!</p>
-                            <ul className="text-xs space-y-1">
-                              <li>• Phone: (720) 357-9499</li>
-                              <li>• Venmo/Zelle: Contact us!</li>
-                              <li>• Check payments welcome</li>
-                              <li>• Bank transfer options</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -863,13 +667,13 @@ export default function BookingPage() {
                         {timeSlots.map(time => {
                           const isAvailable = availableSlots[time] !== false;
                           const hasAvailabilityData = Object.keys(availableSlots).length > 0;
-                          
+
                           return (
-                            <option 
-                              key={time} 
+                            <option
+                              key={time}
                               value={time}
                               disabled={!isAvailable || !hasAvailabilityData}
-                              style={{ 
+                              style={{
                                 color: !isAvailable ? '#dc2626' : '#374151',
                                 textDecoration: !isAvailable ? 'line-through' : 'none'
                               }}
@@ -936,16 +740,209 @@ export default function BookingPage() {
               )}
             </div>
 
+            {/* Contact & Payment Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Mail className="text-purple-700" size={20} />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
+              </div>
+
+              <div className="space-y-6">
+                {/* Contact Information */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contactName}
+                      onChange={(e) => handleInputChange('contactName', e.target.value)}
+                      className={getInputClassName('contactName')}
+                      maxLength={50}
+                      placeholder="Your full name"
+                    />
+                    {getFieldError('contactName') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('contactName')}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={getInputClassName('email')}
+                      maxLength={255}
+                      placeholder="your.name@example.com"
+                    />
+                    {getFieldError('email') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('email')}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="(720) 555-0123"
+                      className={getInputClassName('phone')}
+                      maxLength={20}
+                    />
+                    {getFieldError('phone') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('phone')}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.businessName}
+                      onChange={(e) => handleInputChange('businessName', e.target.value)}
+                      placeholder="e.g., Serene Soul Yoga"
+                      className={getInputClassName('businessName')}
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+
+                {/* Partnership Options */}
+                <div className="border-t border-gray-100 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Partnership Type</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.isRecurring}
+                        onChange={(e) => {
+                          handleInputChange('isRecurring', e.target.checked);
+                          if (!e.target.checked) {
+                            handleInputChange('recurringDetails', '');
+                          }
+                        }}
+                        className="mr-3 text-emerald-600"
+                      />
+                      <span className="font-medium">Regular Partnership (2-hour minimums + 5% discount)</span>
+                    </label>
+
+                    {formData.isRecurring && (
+                      <select
+                        value={formData.recurringDetails}
+                        onChange={(e) => handleInputChange('recurringDetails', e.target.value)}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ml-6"
+                      >
+                        <option value="">Select frequency...</option>
+                        <option value="weekly">Weekly classes</option>
+                        <option value="multiple">Multiple classes per week</option>
+                        <option value="monthly">Monthly workshops</option>
+                        <option value="custom">Custom arrangement</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enhanced Payment Method Selection */}
+                <div className="border-t border-gray-100 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Card Payment Option */}
+                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-emerald-300'
+                      }`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="card"
+                        checked={formData.paymentMethod === 'card'}
+                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                        className="mt-1 mr-3 text-emerald-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CreditCard className="text-emerald-600" size={20} />
+                          <span className="font-medium">Pay Online Now</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Secure card payment via Stripe • Instant confirmation
+                        </p>
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                          <div className="flex items-start gap-2">
+                            <Info className="text-orange-600 mt-0.5" size={16} />
+                            <div>
+                              <p className="text-sm text-orange-800 font-medium">3% Processing Fee</p>
+                              <p className="text-xs text-orange-700">
+                                Required by Stripe for card processing. Choose "Pay Later" to avoid this fee.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Pay Later Option */}
+                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300'
+                      }`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="pay-later"
+                        checked={formData.paymentMethod === 'pay-later'}
+                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                        className="mt-1 mr-3 text-blue-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Phone className="text-blue-600" size={20} />
+                          <span className="font-medium">Pay Later</span>
+                          <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                            NO FEES
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Book now, pay with alternative methods
+                        </p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="text-sm text-blue-800">
+                            <p className="font-medium mb-1">💰 Zero Processing Fees!</p>
+                            <ul className="text-xs space-y-1">
+                              <li>• Phone: (720) 357-9499</li>
+                              <li>• Venmo/Zelle: Contact us!</li>
+                              <li>• Check payments welcome</li>
+                              <li>• Bank transfer options</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Submit Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex flex-col items-center">
                 {/* Submit Message */}
                 {submitMessage && (
-                  <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${
-                    submitMessage.includes('✅')
+                  <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${submitMessage.includes('✅')
                       ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                       : 'bg-red-50 text-red-800 border border-red-200'
-                  }`} role="alert">
+                    }`} role="alert">
                     <p className="text-sm font-medium">{submitMessage}</p>
                   </div>
                 )}
@@ -955,11 +952,10 @@ export default function BookingPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${
-                    !isSubmitting
+                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${!isSubmitting
                       ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
                       : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -973,8 +969,8 @@ export default function BookingPage() {
                       ) : (
                         <CreditCard size={20} />
                       )}
-                      {formData.paymentMethod === 'pay-later' 
-                        ? 'Confirm Booking (Pay Later)' 
+                      {formData.paymentMethod === 'pay-later'
+                        ? 'Confirm Booking (Pay Later)'
                         : 'Proceed to Secure Payment'}
                       <ArrowRight size={20} />
                     </>
@@ -983,7 +979,7 @@ export default function BookingPage() {
 
                 {/* Submit Help Text */}
                 <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
-                  {formData.paymentMethod === 'pay-later' 
+                  {formData.paymentMethod === 'pay-later'
                     ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
                     : 'You\'ll be redirected to our secure Stripe payment page'
                   }
@@ -1017,7 +1013,7 @@ export default function BookingPage() {
                   <span>Subtotal ({pricing.totalHours} hrs × $95)</span>
                   <span className="font-medium">${(pricing.totalHours * 95).toFixed(2)}</span>
                 </div>
-                
+
                 {pricing.savings > 0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>Partnership Discount ({pricing.discount}%)</span>
@@ -1038,28 +1034,28 @@ export default function BookingPage() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <span className="font-medium text-gray-900">Total Amount</span>
                 <span className="text-xl font-bold text-gray-900">
                   ${pricing.total.toFixed(2)}
                 </span>
               </div>
-              
+
               {/* Payment Method Notice */}
               <div className="mt-3 text-xs">
                 {formData.paymentMethod === 'card' ? (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <p className="text-orange-800">
-                      <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement). 
+                      <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
                       Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
                     </p>
                   </div>
                 ) : (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-green-800">
-                      <strong>💰 Pay Later - No Fees!</strong> 
-                      Alternative payment methods available. 
+                      <strong>💰 Pay Later - No Fees!</strong>
+                      Alternative payment methods available.
                       Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
                     </p>
                   </div>
@@ -1071,8 +1067,8 @@ export default function BookingPage() {
                 <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-blue-800">
                     <strong>ℹ️ Minimums Applied:</strong> {
-                      formData.isRecurring && formData.recurringDetails.includes('multiple') 
-                        ? '2-hour minimum per class (Partnership rate)' 
+                      formData.isRecurring && formData.recurringDetails.includes('multiple')
+                        ? '2-hour minimum per class (Partnership rate)'
                         : '4-hour minimum per single event'
                     }
                   </p>
