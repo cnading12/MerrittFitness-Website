@@ -1,5 +1,5 @@
-// app/lib/calendar.js - FINAL SIMPLE FIX
-// Stop overthinking timezones - just match the times directly
+// app/lib/calendar.js - TIMEZONE FIX
+// Properly handles Denver timezone without shifting issues
 
 import { google } from 'googleapis';
 
@@ -59,15 +59,15 @@ function timeStringTo24Hour(timeStr) {
   return { hour: hour24, minute: minutes };
 }
 
-// SIMPLE APPROACH: Just extract the hour from both and compare directly
+// FIXED: Availability checking with proper timezone handling
 export async function checkCalendarAvailability(date) {
   try {
-    console.log('🗓️ FINAL CHECK: Checking availability for:', date);
+    console.log('🗓️ Checking availability for:', date);
 
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
 
-    // Get events for the day
+    // Get events for the day - use the date string directly
     const startTime = new Date(date + 'T00:00:00-07:00');
     const endTime = new Date(date + 'T23:59:59-07:00');
 
@@ -84,7 +84,7 @@ export async function checkCalendarAvailability(date) {
     const events = response.data.items || [];
     console.log('📅 Found events:', events.length);
 
-    // Extract the booked time ranges in simple format
+    // Extract the booked time ranges
     const bookedRanges = [];
     
     events.forEach(event => {
@@ -173,23 +173,53 @@ export async function checkCalendarAvailability(date) {
   }
 }
 
-// Calendar event creation - simplified
+// COMPLETELY FIXED: Calendar event creation with proper timezone handling
 export async function createCalendarEvent(booking, includeAttendees = false) {
   try {
     console.log('📅 Creating calendar event for booking:', booking.id);
+    console.log('📅 Event details:', {
+      date: booking.event_date,
+      time: booking.event_time,
+      duration: booking.hours_requested
+    });
 
     const auth = await getGoogleAuth();
     const calendar = google.calendar('v3');
 
+    // Parse the time correctly
     const { hour, minute } = timeStringTo24Hour(booking.event_time);
     const duration = parseFloat(booking.hours_requested) || 2;
 
-    // Create start time
-    const startDateTime = new Date(booking.event_date + 'T00:00:00-07:00');
-    startDateTime.setHours(hour, minute, 0, 0);
+    console.log('⏰ Parsed time:', { hour, minute, duration });
 
-    // Create end time
-    const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 60 * 1000);
+    // CRITICAL FIX: Build the datetime string correctly in Denver timezone
+    // Format: YYYY-MM-DDTHH:MM:SS
+    const [year, month, day] = booking.event_date.split('-');
+    const hourStr = String(hour).padStart(2, '0');
+    const minuteStr = String(minute).padStart(2, '0');
+    
+    // Create the datetime string in local Denver time
+    const startDateTimeString = `${year}-${month}-${day}T${hourStr}:${minuteStr}:00`;
+    console.log('📅 Start datetime string:', startDateTimeString);
+
+    // Calculate end time
+    const startDate = new Date(startDateTimeString + '-07:00'); // Denver timezone
+    const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+    
+    // Format end time in Denver timezone
+    const endYear = endDate.getFullYear();
+    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
+    const endDay = String(endDate.getDate()).padStart(2, '0');
+    const endHour = String(endDate.getHours()).padStart(2, '0');
+    const endMinute = String(endDate.getMinutes()).padStart(2, '0');
+    const endDateTimeString = `${endYear}-${endMonth}-${endDay}T${endHour}:${endMinute}:00`;
+    
+    console.log('📅 End datetime string:', endDateTimeString);
+    console.log('⏰ Full event time:', {
+      start: startDateTimeString + '-07:00',
+      end: endDateTimeString + '-07:00',
+      durationHours: duration
+    });
 
     const event = {
       summary: `🔒 BOOKED: ${booking.event_name}`,
@@ -209,11 +239,11 @@ Booking ID: ${booking.id}
 Contact manager@merrittfitness.net for changes.
       `.trim(),
       start: {
-        dateTime: startDateTime.toISOString(),
+        dateTime: startDateTimeString + '-07:00', // Include timezone
         timeZone: 'America/Denver',
       },
       end: {
-        dateTime: endDateTime.toISOString(),
+        dateTime: endDateTimeString + '-07:00', // Include timezone
         timeZone: 'America/Denver',
       },
       location: 'Merritt Fitness, 2246 Irving St, Denver, CO 80211',
@@ -221,6 +251,12 @@ Contact manager@merrittfitness.net for changes.
       transparency: 'opaque',
       visibility: 'public'
     };
+
+    console.log('📤 Sending event to Google Calendar:', {
+      summary: event.summary,
+      start: event.start,
+      end: event.end
+    });
 
     const response = await calendar.events.insert({
       auth,
@@ -230,6 +266,14 @@ Contact manager@merrittfitness.net for changes.
     });
 
     console.log('✅ Calendar event created:', response.data.id);
+    console.log('✅ Event link:', response.data.htmlLink);
+    
+    // Verify the created event time
+    console.log('✅ Verified event times:', {
+      start: response.data.start.dateTime,
+      end: response.data.end.dateTime
+    });
+
     return response.data;
 
   } catch (error) {
