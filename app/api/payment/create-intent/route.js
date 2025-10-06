@@ -1,8 +1,5 @@
-// app/api/payment/create-intent/route.js
-// FIXED VERSION - Proper payment intent creation (not payment completion!)
-
 import { createSecurePaymentIntent } from '../../../lib/stripe-config.js';
-import { getBooking } from '../../../lib/database.js';
+import { getBooking, updateBookingStatus } from '../../../lib/database.js';
 
 export async function POST(request) {
   const corsHeaders = {
@@ -14,42 +11,38 @@ export async function POST(request) {
   try {
     const { bookingId, paymentMethod = 'card' } = await request.json();
     
-    console.log('💳 Creating payment intent for booking:', bookingId);
+    console.log('💳 [PAYMENT] Creating payment intent for booking:', bookingId);
     
     if (!bookingId) {
       return Response.json({ 
         error: 'Booking ID is required' 
-      }, { 
-        status: 400, 
-        headers: corsHeaders 
-      });
+      }, { status: 400, headers: corsHeaders });
     }
 
-    // Get booking details
     const booking = await getBooking(bookingId);
     if (!booking) {
       return Response.json({ 
         error: 'Booking not found' 
-      }, { 
-        status: 404, 
-        headers: corsHeaders 
-      });
+      }, { status: 404, headers: corsHeaders });
     }
 
-    console.log('📋 Found booking:', booking.event_name, 'Amount:', booking.total_amount);
+    console.log('💳 [PAYMENT] Booking found:', {
+      id: booking.id,
+      amount: booking.total_amount,
+      status: booking.status
+    });
 
-    // Check if booking is already confirmed
     if (booking.status === 'confirmed') {
       return Response.json({ 
         error: 'Booking is already confirmed',
         redirect: `/booking/success?booking_id=${bookingId}`
-      }, { 
-        status: 400, 
-        headers: corsHeaders 
-      });
+      }, { status: 400, headers: corsHeaders });
     }
 
-    // Prepare booking data for Stripe
+    // CRITICAL: Update status to payment_processing
+    await updateBookingStatus(bookingId, 'payment_processing');
+    console.log('💳 [PAYMENT] Status updated to payment_processing');
+
     const bookingDataForStripe = {
       id: booking.id,
       eventName: booking.event_name,
@@ -60,12 +53,19 @@ export async function POST(request) {
       total: parseFloat(booking.total_amount)
     };
 
-    console.log('💳 Creating Stripe payment intent...');
-
-    // Create payment intent
+    console.log('💳 [PAYMENT] Creating Stripe payment intent...');
     const paymentIntent = await createSecurePaymentIntent(bookingDataForStripe, paymentMethod);
     
-    console.log('✅ Payment intent created:', paymentIntent.id);
+    // CRITICAL: Store payment intent ID immediately
+    await updateBookingStatus(bookingId, 'payment_processing', {
+      payment_intent_id: paymentIntent.id
+    });
+    
+    console.log('✅ [PAYMENT] Payment intent created:', {
+      id: paymentIntent.id,
+      amount: paymentIntent.amount,
+      status: paymentIntent.status
+    });
 
     return Response.json({
       success: true,
@@ -73,20 +73,14 @@ export async function POST(request) {
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount,
       currency: paymentIntent.currency
-    }, { 
-      headers: corsHeaders 
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
-    console.error('❌ Payment intent creation error:', error);
-    
+    console.error('❌ [PAYMENT] Error:', error);
     return Response.json({
       success: false,
       error: error.message || 'Failed to create payment intent'
-    }, { 
-      status: 500, 
-      headers: corsHeaders 
-    });
+    }, { status: 500, headers: corsHeaders });
   }
 }
 
