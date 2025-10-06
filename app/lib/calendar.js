@@ -193,12 +193,14 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     console.log('⏰ Parsed time:', { hour, minute, duration });
 
     // CRITICAL FIX: Build the datetime string correctly in Denver timezone
+    // DON'T add timezone offset - let Google Calendar handle it with timeZone field
     // Format: YYYY-MM-DDTHH:MM:SS
     const [year, month, day] = booking.event_date.split('-');
     const hourStr = String(hour).padStart(2, '0');
     const minuteStr = String(minute).padStart(2, '0');
     
-    // Create the datetime string in local Denver time
+    // Create the datetime string WITHOUT timezone offset
+    // We'll use timeZone: 'America/Denver' instead
     const startDateTimeString = `${year}-${month}-${day}T${hourStr}:${minuteStr}:00`;
     console.log('📅 Start datetime string:', startDateTimeString);
 
@@ -227,9 +229,10 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     
     console.log('📅 End datetime string:', endDateTimeString);
     console.log('⏰ Full event time:', {
-      start: startDateTimeString + '-07:00',
-      end: endDateTimeString + '-07:00',
-      durationHours: duration
+      start: startDateTimeString,
+      end: endDateTimeString,
+      durationHours: duration,
+      timezone: 'America/Denver'
     });
 
     const event = {
@@ -250,11 +253,11 @@ Booking ID: ${booking.id}
 Contact manager@merrittfitness.net for changes.
       `.trim(),
       start: {
-        dateTime: startDateTimeString + '-07:00', // Include timezone
+        dateTime: startDateTimeString,
         timeZone: 'America/Denver',
       },
       end: {
-        dateTime: endDateTimeString + '-07:00', // Include timezone
+        dateTime: endDateTimeString,
         timeZone: 'America/Denver',
       },
       location: 'Merritt Fitness, 2246 Irving St, Denver, CO 80211',
