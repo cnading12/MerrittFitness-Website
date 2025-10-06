@@ -202,17 +202,28 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
     const startDateTimeString = `${year}-${month}-${day}T${hourStr}:${minuteStr}:00`;
     console.log('📅 Start datetime string:', startDateTimeString);
 
-    // Calculate end time
-    const startDate = new Date(startDateTimeString + '-07:00'); // Denver timezone
-    const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+    // Calculate end time by adding hours directly to the hour value
+    // This avoids any Date object timezone conversion issues
+    let endHour = hour + Math.floor(duration);
+    let endMinute = minute + ((duration % 1) * 60);
     
-    // Format end time in Denver timezone
-    const endYear = endDate.getFullYear();
-    const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-    const endDay = String(endDate.getDate()).padStart(2, '0');
-    const endHour = String(endDate.getHours()).padStart(2, '0');
-    const endMinute = String(endDate.getMinutes()).padStart(2, '0');
-    const endDateTimeString = `${endYear}-${endMonth}-${endDay}T${endHour}:${endMinute}:00`;
+    // Handle minute overflow
+    if (endMinute >= 60) {
+      endHour += 1;
+      endMinute -= 60;
+    }
+    
+    // Handle day overflow (if event goes past midnight)
+    let endDay = parseInt(day);
+    if (endHour >= 24) {
+      endHour -= 24;
+      endDay += 1;
+    }
+    
+    const endHourStr = String(endHour).padStart(2, '0');
+    const endMinuteStr = String(endMinute).padStart(2, '0');
+    const endDayStr = String(endDay).padStart(2, '0');
+    const endDateTimeString = `${year}-${month}-${endDayStr}T${endHourStr}:${endMinuteStr}:00`;
     
     console.log('📅 End datetime string:', endDateTimeString);
     console.log('⏰ Full event time:', {
