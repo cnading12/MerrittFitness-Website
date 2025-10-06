@@ -255,6 +255,27 @@ async function bookingHandler(request) {
         const createdBooking = await createBooking(bookingData);
         createdBookings.push(createdBooking);
 
+        try {
+          console.log('📅 Creating calendar event for booking:', individualBookingId);
+          const calendarEvent = await createCalendarEvent(createdBooking);
+
+          if (calendarEvent && calendarEvent.id) {
+            // Update booking with calendar event ID
+            await supabase
+              .from('bookings')
+              .update({
+                calendar_event_id: calendarEvent.id,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', individualBookingId);
+
+            console.log('✅ Calendar event created and linked:', calendarEvent.id);
+          }
+        } catch (calendarError) {
+          console.warn('⚠️ Calendar event creation failed:', calendarError.message);
+          // Continue with booking even if calendar fails
+        }
+
         console.log('✅ Booking created in DB:', {
           id: individualBookingId,
           status: createdBooking.status
