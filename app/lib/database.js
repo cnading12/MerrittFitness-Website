@@ -189,8 +189,8 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
 // Enhanced booking creation with better error handling
 export async function createBooking(bookingData) {
   try {
-    console.log('📝 Creating booking:', bookingData.eventName);
-
+    console.log('📝 [DB] Creating booking:', bookingData.eventName);
+    
     const { data, error } = await supabase
       .from('bookings')
       .insert([
@@ -217,36 +217,37 @@ export async function createBooking(bookingData) {
           updated_at: new Date().toISOString()
         }
       ])
-      .select();
+      .select()
+      .single(); // Get single result
 
     if (error) {
-      console.error('❌ Database booking creation error:', error);
-
+      console.error('❌ [DB] Database booking creation error:', error);
+      
       // Provide specific error guidance
       if (error.code === '23505') { // Unique constraint violation
         throw new Error('Booking ID already exists. Please try again.');
       }
-
+      
       if (error.code === '23503') { // Foreign key constraint
         throw new Error('Invalid reference data. Please check your input.');
       }
-
+      
       if (error.code === '23514') { // Check constraint violation
         throw new Error('Invalid data format. Please verify all required fields.');
       }
-
+      
       throw new Error(`Database error: ${error.message}`);
     }
-
-    if (!data || data.length === 0) {
+    
+    if (!data) {
       throw new Error('No booking data returned from database');
     }
-
-    console.log('✅ Booking created successfully:', data[0].id);
-    return data[0];
-
+    
+    console.log('✅ [DB] Booking created successfully:', data.id);
+    return data;
+    
   } catch (error) {
-    console.error('❌ Create booking error:', error);
+    console.error('❌ [DB] Create booking error:', error);
     throw error;
   }
 }
@@ -256,13 +257,35 @@ export async function createBooking(bookingData) {
 export async function getBooking(bookingId) {
   try {
     console.log('🔍 [DB] Looking up booking:', bookingId);
-
+    
     // Try direct ID lookup first
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
       .single();
+
+    if (error) {
+      console.error('❌ [DB] Error fetching booking:', error);
+      
+      // If not found by ID, try master booking ID
+      console.log('🔍 [DB] Trying master booking ID lookup...');
+      
+      const { data: masterData, error: masterError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('master_booking_id', bookingId)
+        .limit(1)
+        .single();
+
+      if (masterData) {
+        console.log('✅ [DB] Found booking by master ID:', masterData.id);
+        return masterData;
+      }
+      
+      console.warn('❌ [DB] Booking not found:', bookingId);
+      return null;
+    }
 
     if (data) {
       console.log('✅ [DB] Found booking by ID:', {
@@ -273,37 +296,9 @@ export async function getBooking(bookingId) {
       return data;
     }
 
-    // If not found by ID, try master booking ID
-    console.log('🔍 [DB] Trying master booking ID lookup...');
-
-    const { data: masterData, error: masterError } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('master_booking_id', bookingId)
-      .limit(1);
-
-    if (masterData && masterData.length > 0) {
-      console.log('✅ [DB] Found booking by master ID:', {
-        id: masterData[0].id,
-        event_name: masterData[0].event_name
-      });
-      return masterData[0];
-    }
-
-    console.warn('❌ [DB] Booking not found:', bookingId);
-    console.warn('❌ [DB] Tried ID and master_booking_id, both failed');
-
-    // List recent bookings for debugging
-    const { data: recentBookings } = await supabase
-      .from('bookings')
-      .select('id, event_name, status, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    console.log('📋 [DB] Recent bookings in database:', recentBookings);
-
+    console.warn('❌ [DB] No booking data returned');
     return null;
-
+    
   } catch (error) {
     console.error('❌ [DB] Get booking error:', error);
     throw error;
@@ -313,32 +308,56 @@ export async function getBooking(bookingId) {
 // Enhanced booking status update
 export async function updateBookingStatus(bookingId, status, additionalData = {}) {
   try {
-    console.log('📝 Updating booking status:', bookingId, 'to', status);
-
+    console.log('📝 [DB] Updating booking status:', {
+      bookingId,
+      newStatus: status,
+      additionalData
+    });
+    
+    // CRITICAL FIX: Use .update() correctly with proper error handling
     const { data, error } = await supabase
       .from('bookings')
-      .update({
+      .update({ 
         status,
         ...additionalData,
         updated_at: new Date().toISOString()
       })
       .eq('id', bookingId)
-      .select();
+      .select()
+      .single(); // Get single result instead of array
 
     if (error) {
-      console.error('❌ Update booking error:', error);
+      console.error('❌ [DB] Update booking error:', error);
+      console.error('❌ [DB] Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      // Check if it's a "not found" error
+      if (error.code === 'PGRST116') {
+        throw new Error(`Booking not found: ${bookingId}`);
+      }
+      
       throw error;
     }
-
-    if (!data || data.length === 0) {
-      throw new Error('Booking not found for status update');
+    
+    if (!data) {
+      console.error('❌ [DB] No data returned from update');
+      throw new Error(`Booking update returned no data: ${bookingId}`);
     }
-
-    console.log('✅ Booking status updated:', data[0].status);
-    return data[0];
-
+    
+    console.log('✅ [DB] Booking status updated successfully:', {
+      id: data.id,
+      status: data.status,
+      updated_at: data.updated_at
+    });
+    
+    return data;
+    
   } catch (error) {
-    console.error('❌ Update booking status error:', error);
+    console.error('❌ [DB] Update booking status error:', error);
     throw error;
   }
 }
