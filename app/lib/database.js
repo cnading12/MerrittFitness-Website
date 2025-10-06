@@ -13,7 +13,7 @@ try {
 
   console.log('🔗 Initializing Supabase connection...');
   console.log('📍 Supabase URL:', process.env.SUPABASE_URL?.substring(0, 30) + '...');
-  
+
   supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY,
@@ -32,9 +32,9 @@ try {
       },
     }
   );
-  
+
   console.log('✅ Supabase client initialized');
-  
+
 } catch (error) {
   console.error('❌ Supabase initialization failed:', error);
   throw error;
@@ -44,7 +44,7 @@ try {
 export async function testDatabaseConnection() {
   try {
     console.log('🧪 Testing database connection...');
-    
+
     // Test 1: Basic connection - FIXED: Use Supabase count syntax
     const { count, error: connectionError } = await supabase
       .from('bookings')
@@ -52,7 +52,7 @@ export async function testDatabaseConnection() {
 
     if (connectionError) {
       console.error('❌ Basic connection test failed:', connectionError);
-      
+
       // Provide specific error guidance
       if (connectionError.message?.includes('relation "bookings" does not exist')) {
         console.error('💡 Database table missing. Run this SQL in Supabase:');
@@ -90,14 +90,14 @@ CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(event_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(email);
 CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id);
         `);
-        
+
         return {
           success: false,
           error: 'Database table missing',
           solution: 'Create bookings table using SQL above'
         };
       }
-      
+
       if (connectionError.message?.includes('Invalid API key')) {
         return {
           success: false,
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
           solution: 'Check SUPABASE_ANON_KEY in environment variables'
         };
       }
-      
+
       if (connectionError.message?.includes('not found')) {
         return {
           success: false,
@@ -113,19 +113,19 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
           solution: 'Check SUPABASE_URL in environment variables'
         };
       }
-      
+
       return {
         success: false,
         error: connectionError.message,
         solution: 'Check Supabase project status and credentials'
       };
     }
-    
+
     console.log('✅ Database connection test passed');
-    
+
     // Test 2: Write permission test
     const testId = `test-${Date.now()}`;
-    
+
     try {
       const { data: writeTest, error: writeError } = await supabase
         .from('bookings')
@@ -142,7 +142,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
           status: 'test'
         })
         .select();
-        
+
       if (writeError) {
         console.error('❌ Write permission test failed:', writeError);
         return {
@@ -152,15 +152,15 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
           solution: 'Check Supabase RLS policies and permissions'
         };
       }
-      
+
       // Clean up test record
       await supabase
         .from('bookings')
         .delete()
         .eq('id', testId);
-        
+
       console.log('✅ Database write test passed');
-      
+
     } catch (writeTestError) {
       console.error('❌ Write test error:', writeTestError);
       return {
@@ -169,13 +169,13 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
         details: writeTestError.message
       };
     }
-    
+
     return {
       success: true,
       message: 'Database connection and permissions working',
       timestamp: new Date().toISOString()
     };
-    
+
   } catch (error) {
     console.error('❌ Database test error:', error);
     return {
@@ -190,7 +190,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
 export async function createBooking(bookingData) {
   try {
     console.log('📝 Creating booking:', bookingData.eventName);
-    
+
     const { data, error } = await supabase
       .from('bookings')
       .insert([
@@ -221,30 +221,30 @@ export async function createBooking(bookingData) {
 
     if (error) {
       console.error('❌ Database booking creation error:', error);
-      
+
       // Provide specific error guidance
       if (error.code === '23505') { // Unique constraint violation
         throw new Error('Booking ID already exists. Please try again.');
       }
-      
+
       if (error.code === '23503') { // Foreign key constraint
         throw new Error('Invalid reference data. Please check your input.');
       }
-      
+
       if (error.code === '23514') { // Check constraint violation
         throw new Error('Invalid data format. Please verify all required fields.');
       }
-      
+
       throw new Error(`Database error: ${error.message}`);
     }
-    
+
     if (!data || data.length === 0) {
       throw new Error('No booking data returned from database');
     }
-    
+
     console.log('✅ Booking created successfully:', data[0].id);
     return data[0];
-    
+
   } catch (error) {
     console.error('❌ Create booking error:', error);
     throw error;
@@ -252,10 +252,11 @@ export async function createBooking(bookingData) {
 }
 
 // Enhanced booking retrieval with better lookup
+// Replace the getBooking function
 export async function getBooking(bookingId) {
   try {
-    console.log('🔍 Looking up booking:', bookingId);
-    
+    console.log('🔍 [DB] Looking up booking:', bookingId);
+
     // Try direct ID lookup first
     let { data, error } = await supabase
       .from('bookings')
@@ -264,13 +265,17 @@ export async function getBooking(bookingId) {
       .single();
 
     if (data) {
-      console.log('✅ Found booking by ID:', data.event_name);
+      console.log('✅ [DB] Found booking by ID:', {
+        id: data.id,
+        event_name: data.event_name,
+        status: data.status
+      });
       return data;
     }
 
     // If not found by ID, try master booking ID
-    console.log('🔍 Trying master booking ID lookup...');
-    
+    console.log('🔍 [DB] Trying master booking ID lookup...');
+
     const { data: masterData, error: masterError } = await supabase
       .from('bookings')
       .select('*')
@@ -278,15 +283,29 @@ export async function getBooking(bookingId) {
       .limit(1);
 
     if (masterData && masterData.length > 0) {
-      console.log('✅ Found booking by master ID:', masterData[0].event_name);
+      console.log('✅ [DB] Found booking by master ID:', {
+        id: masterData[0].id,
+        event_name: masterData[0].event_name
+      });
       return masterData[0];
     }
 
-    console.warn('❌ Booking not found:', bookingId);
+    console.warn('❌ [DB] Booking not found:', bookingId);
+    console.warn('❌ [DB] Tried ID and master_booking_id, both failed');
+
+    // List recent bookings for debugging
+    const { data: recentBookings } = await supabase
+      .from('bookings')
+      .select('id, event_name, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    console.log('📋 [DB] Recent bookings in database:', recentBookings);
+
     return null;
-    
+
   } catch (error) {
-    console.error('❌ Get booking error:', error);
+    console.error('❌ [DB] Get booking error:', error);
     throw error;
   }
 }
@@ -295,10 +314,10 @@ export async function getBooking(bookingId) {
 export async function updateBookingStatus(bookingId, status, additionalData = {}) {
   try {
     console.log('📝 Updating booking status:', bookingId, 'to', status);
-    
+
     const { data, error } = await supabase
       .from('bookings')
-      .update({ 
+      .update({
         status,
         ...additionalData,
         updated_at: new Date().toISOString()
@@ -310,14 +329,14 @@ export async function updateBookingStatus(bookingId, status, additionalData = {}
       console.error('❌ Update booking error:', error);
       throw error;
     }
-    
+
     if (!data || data.length === 0) {
       throw new Error('Booking not found for status update');
     }
-    
+
     console.log('✅ Booking status updated:', data[0].status);
     return data[0];
-    
+
   } catch (error) {
     console.error('❌ Update booking status error:', error);
     throw error;

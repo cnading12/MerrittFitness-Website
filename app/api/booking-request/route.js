@@ -189,16 +189,13 @@ async function createBooking(bookingData) {
   }
 }
 
-// FIXED: Main booking handler with calendar integration
+// Around line 200, in the bookingHandler function
+// BEFORE creating payment intent, make sure booking exists in database
+
 async function bookingHandler(request) {
   try {
     const rawData = await request.json();
-    console.log('📝 Booking request received:', {
-      hasBookings: !!rawData.bookings,
-      bookingCount: rawData.bookings?.length,
-      hasContactInfo: !!rawData.contactInfo,
-      paymentMethod: rawData.contactInfo?.paymentMethod
-    });
+    console.log('📝 Booking request received');
 
     // Validate input data
     let validatedData;
@@ -206,7 +203,6 @@ async function bookingHandler(request) {
       validatedData = MultipleBookingSchema.parse(rawData);
     } catch (validationError) {
       console.error('❌ Validation failed:', validationError.errors);
-
       return Response.json({
         success: false,
         error: 'Validation failed',
@@ -217,24 +213,21 @@ async function bookingHandler(request) {
 
     console.log('✅ Data validated successfully');
 
-    // Recalculate pricing to ensure accuracy
+    // Recalculate pricing
     const accuratePricing = calculateAccuratePricing(
       validatedData.bookings,
       validatedData.contactInfo
     );
 
-    // Create master booking ID for multiple bookings
     const masterBookingId = uuidv4();
-
-    // Create individual bookings in database
     const createdBookings = [];
     let bookingErrors = [];
 
+    // CRITICAL: Create ALL bookings in database FIRST
     for (const booking of validatedData.bookings) {
       try {
         const individualBookingId = uuidv4();
 
-        // Map frontend data structure to database structure
         const bookingData = {
           id: individualBookingId,
           masterBookingId: masterBookingId,
@@ -255,35 +248,40 @@ async function bookingHandler(request) {
           stripeFee: accuratePricing.stripeFee,
           status: validatedData.contactInfo.paymentMethod === 'pay-later'
             ? 'confirmed_pay_later'
-            : 'pending_payment'
+            : 'pending_payment'  // CRITICAL: This status for card payments
         };
 
         // Create booking in database
         const createdBooking = await createBooking(bookingData);
         createdBookings.push(createdBooking);
-        console.log('✅ Individual booking created:', individualBookingId);
 
-        // FIXED: Create calendar event immediately for ALL bookings
-        try {
-          console.log('📅 Creating calendar event for booking:', individualBookingId);
-          const calendarEvent = await createCalendarEvent(createdBooking);
+        console.log('✅ Booking created in DB:', {
+          id: individualBookingId,
+          status: createdBooking.status
+        });
 
-          if (calendarEvent && calendarEvent.id) {
-            // Update booking with calendar event ID
-            await supabase
-              .from('bookings')
-              .update({
-                calendar_event_id: calendarEvent.id,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', individualBookingId);
+        // Create calendar event for pay-later bookings
+        if (validatedData.contactInfo.paymentMethod === 'pay-later') {
+          try {
+            console.log('📅 Creating calendar event for pay-later booking');
+            const calendarEvent = await createCalendarEvent(createdBooking);
 
-            console.log('✅ Calendar event created and linked:', calendarEvent.id);
+            if (calendarEvent && calendarEvent.id) {
+              await supabase
+                .from('bookings')
+                .update({
+                  calendar_event_id: calendarEvent.id,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', individualBookingId);
+
+              console.log('✅ Calendar event created:', calendarEvent.id);
+            }
+          } catch (calendarError) {
+            console.warn('⚠️ Calendar event creation failed:', calendarError.message);
           }
-        } catch (calendarError) {
-          console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-          // Continue with booking even if calendar fails
         }
+        // For card payments, calendar event will be created after payment success
 
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
@@ -303,13 +301,15 @@ async function bookingHandler(request) {
       }, { status: 500 });
     }
 
-    // Send confirmation emails for each booking
-    for (const booking of createdBookings) {
-      try {
-        await sendConfirmationEmails(booking);
-        console.log('✅ Confirmation emails sent for booking:', booking.id);
-      } catch (emailError) {
-        console.warn('⚠️ Email sending failed for booking:', booking.id, emailError.message);
+    // Send confirmation emails for pay-later bookings
+    if (validatedData.contactInfo.paymentMethod === 'pay-later') {
+      for (const booking of createdBookings) {
+        try {
+          await sendConfirmationEmails(booking);
+          console.log('✅ Confirmation emails sent for booking:', booking.id);
+        } catch (emailError) {
+          console.warn('⚠️ Email sending failed:', booking.id, emailError.message);
+        }
       }
     }
 
@@ -329,10 +329,9 @@ async function bookingHandler(request) {
       totalAmount: accuratePricing.total,
       message: validatedData.contactInfo.paymentMethod === 'pay-later'
         ? 'Bookings confirmed! Calendar updated. We\'ll contact you about payment arrangements.'
-        : 'Bookings created successfully. Calendar updated. Proceed to payment.'
+        : 'Bookings created successfully. Proceed to payment.'
     };
 
-    // Add warnings if some operations failed
     if (bookingErrors.length > 0) {
       response.warnings = {
         bookingErrors: bookingErrors,
@@ -340,19 +339,17 @@ async function bookingHandler(request) {
       };
     }
 
-    console.log('🎉 Multiple bookings processed successfully:', {
+    console.log('🎉 Bookings created successfully:', {
       masterBookingId: masterBookingId,
       successfulBookings: createdBookings.length,
       totalAmount: accuratePricing.total,
-      paymentMethod: validatedData.contactInfo.paymentMethod,
-      calendarUpdated: true
+      paymentMethod: validatedData.contactInfo.paymentMethod
     });
 
     return Response.json(response);
 
   } catch (error) {
     console.error('❌ Booking creation error:', error);
-
     return Response.json({
       success: false,
       error: 'Failed to create bookings',
@@ -360,7 +357,7 @@ async function bookingHandler(request) {
       code: 'INTERNAL_ERROR'
     }, { status: 500 });
   }
-} // <-- ADDED THIS MISSING CLOSING BRACE
+}// <-- ADDED THIS MISSING CLOSING BRACE
 
 // Export the handler
 export async function POST(request) {
