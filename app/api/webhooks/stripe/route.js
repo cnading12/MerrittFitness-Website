@@ -1,5 +1,5 @@
 // app/api/webhooks/stripe/route.js
-// FIXED: Handles redirects and improved database lookups
+// FIXED VERSION 5.2 - Handles 307 redirects
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -17,14 +17,16 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// CRITICAL: This prevents Next.js from trying to parse the body
+// CRITICAL: Configuration to prevent Next.js issues
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const preferredRegion = 'auto';
 
 export async function POST(request) {
-  console.log('🔔 [WEBHOOK] ========================================');
-  console.log('🔔 [WEBHOOK] Stripe webhook received');
-  console.log('🔔 [WEBHOOK] Time:', new Date().toISOString());
-  console.log('🔔 [WEBHOOK] ========================================');
+  // SUPER VISIBLE LOGGING
+  console.log('🚨 WEBHOOK HANDLER REACHED - If you see this, no redirect!');
+  console.log('🚨 Request URL:', request.url);
+  console.log('🚨 Request method:', request.method);
   
   let body;
   let signature;
@@ -114,12 +116,19 @@ export async function POST(request) {
     console.log('✅ [WEBHOOK] Webhook processed successfully');
     console.log('🔔 [WEBHOOK] ========================================');
     
+    // Return detailed status for debugging
     return Response.json({ 
       received: true, 
       handled: true,
       eventType: event.type,
       eventId: event.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      debug: {
+        bookingId: event.data.object.metadata?.bookingId,
+        processingComplete: true,
+        emailAttempted: true,
+        version: '5.1.0'
+      }
     }, { status: 200 });
     
   } catch (error) {
