@@ -1,5 +1,5 @@
 // app/api/webhooks/stripe/route.js
-// COMPLETE FIXED VERSION - Replace entire file
+// ENHANCED VERSION - Better email debugging and error handling
 
 import { stripe } from '../../../lib/stripe-config.js';
 import { updateBookingStatus, getBooking } from '../../../lib/database.js';
@@ -93,7 +93,7 @@ export async function POST(request) {
   }
 }
 
-// FIXED: Enhanced payment success handler
+// ENHANCED: Payment success handler with detailed email logging
 async function handlePaymentSuccess(paymentIntent) {
   const bookingId = paymentIntent.metadata.bookingId;
   
@@ -105,7 +105,7 @@ async function handlePaymentSuccess(paymentIntent) {
   });
   
   if (!bookingId) {
-    console.error('❌ .[WEBHOOK] No booking ID in payment intent metadata');
+    console.error('❌ [WEBHOOK] No booking ID in payment intent metadata');
     throw new Error('Missing booking ID in payment intent metadata');
   }
   
@@ -139,6 +139,8 @@ async function handlePaymentSuccess(paymentIntent) {
       id: booking.id,
       event_name: booking.event_name,
       current_status: booking.status,
+      email: booking.email,
+      contact_name: booking.contact_name,
       payment_intent_id: booking.payment_intent_id
     });
     
@@ -166,6 +168,12 @@ async function handlePaymentSuccess(paymentIntent) {
     // Re-fetch to get updated booking
     const updatedBooking = await getBooking(booking.id);
     
+    console.log('📋 [WEBHOOK] Updated booking data:', {
+      id: updatedBooking.id,
+      status: updatedBooking.status,
+      payment_confirmed_at: updatedBooking.payment_confirmed_at
+    });
+    
     // Create calendar event (if not already created)
     if (!updatedBooking.calendar_event_id) {
       try {
@@ -191,14 +199,68 @@ async function handlePaymentSuccess(paymentIntent) {
       console.log('📅 [WEBHOOK] Calendar event already exists:', updatedBooking.calendar_event_id);
     }
     
-    // Send confirmation emails
+    // ===== CRITICAL: EMAIL SENDING WITH DETAILED LOGGING =====
+    console.log('');
+    console.log('================================================');
+    console.log('📧 [WEBHOOK] ===== SENDING CONFIRMATION EMAILS =====');
+    console.log('================================================');
+    console.log('📧 [WEBHOOK] Email Recipients:');
+    console.log('   Customer:', updatedBooking.email);
+    console.log('   Manager: manager@merrittfitness.net');
+    console.log('📧 [WEBHOOK] Booking Details for Email:');
+    console.log('   ID:', updatedBooking.id);
+    console.log('   Event:', updatedBooking.event_name);
+    console.log('   Date:', updatedBooking.event_date);
+    console.log('   Time:', updatedBooking.event_time);
+    console.log('   Status:', updatedBooking.status);
+    console.log('================================================');
+    
     try {
-      console.log('📧 [WEBHOOK] Sending confirmation emails...');
-      await sendConfirmationEmails(updatedBooking);
-      console.log('✅ [WEBHOOK] Confirmation emails sent successfully');
+      // Check if sendConfirmationEmails function exists
+      if (typeof sendConfirmationEmails !== 'function') {
+        throw new Error('sendConfirmationEmails is not a function - check import');
+      }
+      
+      console.log('📧 [WEBHOOK] Calling sendConfirmationEmails()...');
+      const emailResult = await sendConfirmationEmails(updatedBooking);
+      
+      console.log('================================================');
+      console.log('✅ [WEBHOOK] EMAIL SUCCESS!');
+      console.log('================================================');
+      console.log('📧 [WEBHOOK] Email Results:', {
+        customerSent: !!emailResult.customerConfirmation,
+        managerSent: !!emailResult.managerNotification,
+        errors: emailResult.errors || [],
+        customerEmailId: emailResult.customerConfirmation?.data?.id,
+        managerEmailId: emailResult.managerNotification?.data?.id
+      });
+      console.log('================================================');
+      console.log('');
+      
     } catch (emailError) {
-      console.error('📧 [WEBHOOK] Email sending failed:', emailError.message);
-      // Don't fail the webhook if email fails
+      console.log('================================================');
+      console.error('❌ [WEBHOOK] EMAIL SENDING FAILED!');
+      console.log('================================================');
+      console.error('📧 [WEBHOOK] Error Details:', {
+        message: emailError.message,
+        stack: emailError.stack,
+        bookingId: updatedBooking.id,
+        email: updatedBooking.email,
+        name: emailError.name
+      });
+      console.log('================================================');
+      
+      // Check if it's a Resend API error
+      if (emailError.message.includes('Resend') || emailError.message.includes('API')) {
+        console.error('💡 [WEBHOOK] Resend API Error - Check:');
+        console.error('   1. RESEND_API_KEY environment variable');
+        console.error('   2. Resend domain verification');
+        console.error('   3. Resend API status');
+      }
+      
+      // Don't throw - we don't want webhook to fail just because email failed
+      // But log prominently so we know there's an issue
+      console.error('⚠️ [WEBHOOK] Continuing despite email failure...');
     }
     
     console.log('🎉 [WEBHOOK] Payment success handling completed:', {
@@ -285,6 +347,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     webhookConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
-    version: '3.0.0'
+    resendConfigured: !!process.env.RESEND_API_KEY,
+    version: '4.0.0 - Enhanced Email Debugging'
   });
 }
