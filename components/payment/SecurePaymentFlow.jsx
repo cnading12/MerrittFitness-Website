@@ -11,12 +11,12 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
-import { 
-  CreditCard, 
-  Shield, 
-  Lock, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  CreditCard,
+  Shield,
+  Lock,
+  CheckCircle,
+  AlertCircle,
   Loader2,
   ArrowLeft,
   Calendar,
@@ -29,19 +29,19 @@ import {
 // FIXED: Proper Stripe initialization with comprehensive error handling
 const initializeStripe = () => {
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-  
+
   console.log('🔑 Checking Stripe publishable key:', publishableKey ? 'Present' : 'Missing');
-  
+
   if (!publishableKey) {
     console.error('❌ Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable');
     return null;
   }
-  
+
   if (!publishableKey.startsWith('pk_')) {
     console.error('❌ Invalid Stripe publishable key format');
     return null;
   }
-  
+
   console.log('✅ Initializing Stripe with key:', publishableKey.substring(0, 20) + '...');
   return loadStripe(publishableKey);
 };
@@ -152,7 +152,10 @@ export default function SecurePaymentFlow({ bookingId }) {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -190,7 +193,7 @@ export default function SecurePaymentFlow({ bookingId }) {
           <Loader2 className="animate-spin text-emerald-600 mx-auto mb-4" size={32} />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Setting up secure payment</h2>
           <p className="text-gray-600 mb-4">Please wait while we prepare your payment form...</p>
-          
+
           {/* Debug info in development */}
           {process.env.NODE_ENV === 'development' && debugInfo.length > 0 && (
             <details className="text-left mt-4">
@@ -216,7 +219,7 @@ export default function SecurePaymentFlow({ bookingId }) {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Payment Setup Error</h2>
             <p className="text-red-600 mb-4">{error}</p>
           </div>
-          
+
           <div className="flex gap-4 justify-center mb-6">
             <button
               onClick={() => window.location.href = '/booking'}
@@ -301,7 +304,7 @@ export default function SecurePaymentFlow({ bookingId }) {
       <div className="lg:col-span-1">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-emerald-50 rounded-xl">
               <h4 className="font-medium text-emerald-900 mb-2">{bookingData.event_name}</h4>
@@ -370,9 +373,9 @@ export default function SecurePaymentFlow({ bookingId }) {
           </div>
 
           <Elements options={options} stripe={stripePromise}>
-            <CheckoutForm 
-              bookingId={bookingId} 
-              bookingData={bookingData} 
+            <CheckoutForm
+              bookingId={bookingId}
+              bookingData={bookingData}
               onDebug={addDebugInfo}
             />
           </Elements>
@@ -386,7 +389,7 @@ export default function SecurePaymentFlow({ bookingId }) {
 function CheckoutForm({ bookingId, bookingData, onDebug }) {
   const stripe = useStripe();
   const elements = useElements();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -432,7 +435,7 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
         onDebug?.(`⏳ Payment status: ${paymentIntent?.status} - Redirecting (sandbox mode)`);
         console.log('Payment status:', paymentIntent?.status, '- Redirecting to success page');
         setMessage('Payment processed! Redirecting...');
-        
+
         // Immediate redirect in sandbox mode
         setTimeout(() => {
           window.location.href = `/booking/payment-complete?booking_id=${bookingId}&payment_intent=${paymentIntent?.id || 'pending'}`;
@@ -451,7 +454,7 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
     <div className="space-y-6">
       {/* Payment Element */}
       <div className="p-4 border border-gray-200 rounded-xl">
-        <PaymentElement 
+        <PaymentElement
           options={{
             layout: 'tabs',
             business: {
@@ -463,11 +466,10 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
 
       {/* Error/Success Message */}
       {message && (
-        <div className={`p-4 rounded-xl ${
-          message.includes('error') || message.includes('failed') 
-            ? 'bg-red-50 border border-red-200 text-red-800' 
+        <div className={`p-4 rounded-xl ${message.includes('error') || message.includes('failed')
+            ? 'bg-red-50 border border-red-200 text-red-800'
             : 'bg-blue-50 border border-blue-200 text-blue-800'
-        }`}>
+          }`}>
           <p className="text-sm">{message}</p>
         </div>
       )}
@@ -476,11 +478,10 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
       <button
         onClick={handleSubmit}
         disabled={isLoading || !stripe || !elements}
-        className={`w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold transition-all duration-200 ${
-          isLoading || !stripe || !elements
+        className={`w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold transition-all duration-200 ${isLoading || !stripe || !elements
             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
             : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-105 shadow-lg hover:shadow-xl'
-        }`}
+          }`}
       >
         {isLoading ? (
           <>
@@ -501,7 +502,7 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
       {/* Security Notice */}
       <div className="text-center">
         <p className="text-xs text-gray-500">
-          Your payment information is encrypted and secure. 
+          Your payment information is encrypted and secure.
           We never store your card details.
         </p>
       </div>

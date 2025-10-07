@@ -46,7 +46,10 @@ function SuccessPageContent() {
   }
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -76,7 +79,7 @@ function SuccessPageContent() {
         {bookingData && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your Booking Details</h2>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="p-4 bg-emerald-50 rounded-xl">
@@ -126,7 +129,7 @@ function SuccessPageContent() {
         {/* What's Next */}
         <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">What Happens Next?</h2>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">

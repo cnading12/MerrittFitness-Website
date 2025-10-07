@@ -69,7 +69,10 @@ function PaymentCompleteContent() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -112,7 +115,7 @@ function PaymentCompleteContent() {
             <p className="text-gray-500">
               Welcome to the Merritt Fitness community!
             </p>
-            
+
             {/* Sandbox Mode Indicator */}
             {process.env.NODE_ENV === 'development' && (
               <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
@@ -260,7 +263,7 @@ function PaymentCompleteContent() {
           <AlertCircle className="text-red-600 mx-auto mb-4" size={32} />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Payment Issue</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          
+
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => router.push('/booking')}
