@@ -105,7 +105,7 @@ async function handlePaymentSuccess(paymentIntent) {
   });
   
   if (!bookingId) {
-    console.error('❌ [WEBHOOK] No booking ID in payment intent metadata');
+    console.error('❌ .[WEBHOOK] No booking ID in payment intent metadata');
     throw new Error('Missing booking ID in payment intent metadata');
   }
   
