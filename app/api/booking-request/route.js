@@ -337,7 +337,10 @@ async function bookingHandler(request) {
     // Prepare success response
     const response = {
       success: true,
-      id: masterBookingId,
+      // CRITICAL FIX: Return the FIRST booking's ID, not masterBookingId
+      // This is what gets passed to payment and webhook
+      id: createdBookings[0].id,  // <-- CHANGED FROM masterBookingId
+      masterBookingId: masterBookingId,  // Keep this for reference
       bookings: createdBookings.map(b => ({
         id: b.id,
         eventName: b.event_name,
