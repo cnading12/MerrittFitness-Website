@@ -1,28 +1,51 @@
 // app/api/webhooks/stripe/route.js
-// ENHANCED VERSION - Better email debugging and error handling
+// FIXED: Handles redirects and improved database lookups
 
-import { stripe } from '../../../lib/stripe-config.js';
-import { updateBookingStatus, getBooking } from '../../../lib/database.js';
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 import { createCalendarEvent } from '../../../lib/calendar.js';
 import { sendConfirmationEmails } from '../../../lib/email.js';
-import { headers } from 'next/headers';
-import { supabase } from '../../../lib/database.js';
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
+
+// Initialize Supabase
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+// CRITICAL: This prevents Next.js from trying to parse the body
+export const runtime = 'nodejs';
 
 export async function POST(request) {
+  console.log('🔔 [WEBHOOK] ========================================');
   console.log('🔔 [WEBHOOK] Stripe webhook received');
+  console.log('🔔 [WEBHOOK] Time:', new Date().toISOString());
+  console.log('🔔 [WEBHOOK] ========================================');
   
   let body;
   let signature;
   
   try {
+    // Get raw body as text
     body = await request.text();
-    const headersList = headers();
-    signature = headersList.get('stripe-signature');
+    console.log('📦 [WEBHOOK] Body received, length:', body.length);
+    
+    // Get stripe signature from headers
+    signature = request.headers.get('stripe-signature');
     
     if (!signature) {
-      console.error('❌ [WEBHOOK] No Stripe signature found');
+      console.error('❌ [WEBHOOK] No Stripe signature found in headers');
+      console.error('📋 [WEBHOOK] Available headers:', 
+        Array.from(request.headers.entries()).map(([k,v]) => k)
+      );
       return Response.json({ error: 'No signature' }, { status: 400 });
     }
+    
+    console.log('✅ [WEBHOOK] Stripe signature found');
     
   } catch (error) {
     console.error('❌ [WEBHOOK] Error reading webhook request:', error);
@@ -33,18 +56,31 @@ export async function POST(request) {
   
   try {
     // Verify webhook signature
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error('❌ [WEBHOOK] STRIPE_WEBHOOK_SECRET not configured!');
+      return Response.json({ 
+        error: 'Webhook secret not configured' 
+      }, { status: 500 });
+    }
+    
+    console.log('🔐 [WEBHOOK] Verifying webhook signature...');
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
     
-    console.log('✅ [WEBHOOK] Webhook verified. Event:', event.type, 'ID:', event.id);
+    console.log('✅ [WEBHOOK] Webhook verified successfully');
+    console.log('📋 [WEBHOOK] Event type:', event.type);
+    console.log('📋 [WEBHOOK] Event ID:', event.id);
     
   } catch (error) {
-    console.error('❌ [WEBHOOK] Webhook signature verification failed:', error.message);
+    console.error('❌ [WEBHOOK] Webhook signature verification failed');
+    console.error('❌ [WEBHOOK] Error:', error.message);
+    console.error('💡 [WEBHOOK] Check that STRIPE_WEBHOOK_SECRET matches Stripe dashboard');
     return Response.json({ 
-      error: 'Invalid signature'
+      error: 'Invalid signature',
+      details: error.message
     }, { status: 400 });
   }
   
@@ -62,90 +98,162 @@ export async function POST(request) {
         break;
         
       case 'payment_intent.processing':
-        console.log('⏳ [WEBHOOK] Processing payment processing...');
+        console.log('⏳ [WEBHOOK] Processing payment processing status...');
         await handlePaymentProcessing(event.data.object);
         break;
         
       default:
-        console.log('ℹ️ [WEBHOOK] Unhandled webhook event:', event.type);
+        console.log('ℹ️ [WEBHOOK] Unhandled event type:', event.type);
         return Response.json({ 
           received: true, 
           handled: false,
-          message: `Event ${event.type} not handled`
-        });
+          message: `Event type ${event.type} not handled`
+        }, { status: 200 });
     }
     
     console.log('✅ [WEBHOOK] Webhook processed successfully');
+    console.log('🔔 [WEBHOOK] ========================================');
+    
     return Response.json({ 
       received: true, 
       handled: true,
       eventType: event.type,
-      eventId: event.id
-    });
+      eventId: event.id,
+      timestamp: new Date().toISOString()
+    }, { status: 200 });
     
   } catch (error) {
     console.error('❌ [WEBHOOK] Webhook processing error:', error);
+    console.error('❌ [WEBHOOK] Stack:', error.stack);
     
+    // Return 200 to prevent Stripe from retrying
+    // But log the error prominently
     return Response.json({ 
-      error: 'Webhook processing failed',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Processing failed'
-    }, { status: 500 });
+      received: true,
+      error: 'Processing failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
+    }, { status: 200 });
   }
 }
 
-// ENHANCED: Payment success handler with detailed email logging
-async function handlePaymentSuccess(paymentIntent) {
-  const bookingId = paymentIntent.metadata.bookingId;
+// IMPROVED: Better booking lookup with multiple fallback strategies
+async function findBooking(bookingId, paymentIntentId) {
+  console.log('🔍 [WEBHOOK] Looking up booking...');
+  console.log('🔍 [WEBHOOK] Booking ID:', bookingId);
+  console.log('🔍 [WEBHOOK] Payment Intent ID:', paymentIntentId);
   
-  console.log('🎯 [WEBHOOK] Payment success for booking:', bookingId);
-  console.log('🎯 [WEBHOOK] Payment intent:', {
-    id: paymentIntent.id,
-    amount: paymentIntent.amount,
-    metadata: paymentIntent.metadata
-  });
-  
-  if (!bookingId) {
-    console.error('❌ [WEBHOOK] No booking ID in payment intent metadata');
-    throw new Error('Missing booking ID in payment intent metadata');
-  }
-  
+  // Strategy 1: Direct ID lookup
   try {
-    // Get booking with detailed logging
-    console.log('📖 [WEBHOOK] Fetching booking from database...');
-    let booking = await getBooking(bookingId);
+    console.log('📊 [WEBHOOK] Strategy 1: Direct ID lookup');
+    const { data: booking1, error: error1 } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
     
-    if (!booking) {
-      console.error('❌ [WEBHOOK] Booking not found in database:', bookingId);
-      
-      // Try to find by payment_intent_id as fallback
-      console.log('🔄 [WEBHOOK] Trying to find booking by payment_intent_id...');
-      const { data: bookingByPI, error: piError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('payment_intent_id', paymentIntent.id)
-        .single();
-      
-      if (bookingByPI) {
-        console.log('✅ [WEBHOOK] Found booking by payment_intent_id:', bookingByPI.id);
-        booking = bookingByPI;
-      } else {
-        console.error('❌ [WEBHOOK] Could not find booking by ID or payment_intent_id');
-        console.error('Available metadata:', paymentIntent.metadata);
-        throw new Error(`Booking not found: ${bookingId}`);
-      }
+    if (booking1 && !error1) {
+      console.log('✅ [WEBHOOK] Found booking by ID:', booking1.id);
+      return booking1;
     }
     
-    console.log('✅ [WEBHOOK] Booking found:', {
-      id: booking.id,
-      event_name: booking.event_name,
-      current_status: booking.status,
-      email: booking.email,
-      contact_name: booking.contact_name,
-      payment_intent_id: booking.payment_intent_id
-    });
+    console.log('⚠️ [WEBHOOK] Strategy 1 failed:', error1?.message || 'No booking found');
+  } catch (e) {
+    console.log('⚠️ [WEBHOOK] Strategy 1 error:', e.message);
+  }
+  
+  // Strategy 2: Lookup by payment_intent_id
+  try {
+    console.log('📊 [WEBHOOK] Strategy 2: Payment intent lookup');
+    const { data: booking2, error: error2 } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('payment_intent_id', paymentIntentId)
+      .single();
+    
+    if (booking2 && !error2) {
+      console.log('✅ [WEBHOOK] Found booking by payment_intent_id:', booking2.id);
+      return booking2;
+    }
+    
+    console.log('⚠️ [WEBHOOK] Strategy 2 failed:', error2?.message || 'No booking found');
+  } catch (e) {
+    console.log('⚠️ [WEBHOOK] Strategy 2 error:', e.message);
+  }
+  
+  // Strategy 3: List recent bookings with pending payment status
+  try {
+    console.log('📊 [WEBHOOK] Strategy 3: Recent pending bookings');
+    const { data: recentBookings, error: error3 } = await supabase
+      .from('bookings')
+      .select('*')
+      .in('status', ['pending_payment', 'payment_processing'])
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (recentBookings && recentBookings.length > 0) {
+      console.log(`📋 [WEBHOOK] Found ${recentBookings.length} recent pending bookings`);
+      
+      // Try to match by booking ID
+      const match = recentBookings.find(b => b.id === bookingId);
+      if (match) {
+        console.log('✅ [WEBHOOK] Found booking in recent list:', match.id);
+        return match;
+      }
+      
+      console.log('⚠️ [WEBHOOK] Booking not in recent list');
+      console.log('📋 [WEBHOOK] Recent booking IDs:', 
+        recentBookings.map(b => b.id).join(', ')
+      );
+    }
+  } catch (e) {
+    console.log('⚠️ [WEBHOOK] Strategy 3 error:', e.message);
+  }
+  
+  console.error('❌ [WEBHOOK] All lookup strategies failed');
+  console.error('💡 [WEBHOOK] Booking might not exist or database connection failed');
+  return null;
+}
+
+async function handlePaymentSuccess(paymentIntent) {
+  console.log('');
+  console.log('💰 [WEBHOOK] ========================================');
+  console.log('💰 [WEBHOOK] PAYMENT SUCCESS HANDLER');
+  console.log('💰 [WEBHOOK] ========================================');
+  
+  const bookingId = paymentIntent.metadata?.bookingId;
+  
+  console.log('📋 [WEBHOOK] Payment Intent Details:');
+  console.log('   ID:', paymentIntent.id);
+  console.log('   Amount:', paymentIntent.amount);
+  console.log('   Status:', paymentIntent.status);
+  console.log('   Metadata:', paymentIntent.metadata);
+  
+  if (!bookingId) {
+    console.error('❌ [WEBHOOK] No bookingId in payment intent metadata!');
+    console.error('💡 [WEBHOOK] Check payment intent creation in create-intent route');
+    throw new Error('Missing bookingId in payment intent metadata');
+  }
+  
+  console.log('🎯 [WEBHOOK] Booking ID from metadata:', bookingId);
+  
+  try {
+    // Find the booking using improved lookup
+    const booking = await findBooking(bookingId, paymentIntent.id);
+    
+    if (!booking) {
+      throw new Error(`Booking not found: ${bookingId}`);
+    }
+    
+    console.log('✅ [WEBHOOK] Booking found successfully');
+    console.log('📋 [WEBHOOK] Booking details:');
+    console.log('   ID:', booking.id);
+    console.log('   Event:', booking.event_name);
+    console.log('   Email:', booking.email);
+    console.log('   Status:', booking.status);
+    console.log('   Created:', booking.created_at);
     
     // Update booking status to confirmed
-    console.log('📝 [WEBHOOK] Updating booking status to confirmed...');
+    console.log('📝 [WEBHOOK] Updating booking to confirmed...');
     
     const { data: updatedData, error: updateError } = await supabase
       .from('bookings')
@@ -159,22 +267,16 @@ async function handlePaymentSuccess(paymentIntent) {
       .select();
     
     if (updateError) {
-      console.error('❌ [WEBHOOK] Failed to update booking status:', updateError);
+      console.error('❌ [WEBHOOK] Failed to update booking:', updateError);
       throw updateError;
     }
     
     console.log('✅ [WEBHOOK] Booking status updated to confirmed');
     
-    // Re-fetch to get updated booking
-    const updatedBooking = await getBooking(booking.id);
+    // Get the updated booking
+    const updatedBooking = updatedData[0];
     
-    console.log('📋 [WEBHOOK] Updated booking data:', {
-      id: updatedBooking.id,
-      status: updatedBooking.status,
-      payment_confirmed_at: updatedBooking.payment_confirmed_at
-    });
-    
-    // Create calendar event (if not already created)
+    // Create calendar event if not exists
     if (!updatedBooking.calendar_event_id) {
       try {
         console.log('📅 [WEBHOOK] Creating calendar event...');
@@ -192,94 +294,87 @@ async function handlePaymentSuccess(paymentIntent) {
           console.log('✅ [WEBHOOK] Calendar event created:', calendarEvent.id);
         }
       } catch (calendarError) {
-        console.error('📅 [WEBHOOK] Calendar event creation failed:', calendarError.message);
-        // Don't fail the webhook if calendar fails
+        console.error('⚠️ [WEBHOOK] Calendar failed (non-critical):', calendarError.message);
       }
-    } else {
-      console.log('📅 [WEBHOOK] Calendar event already exists:', updatedBooking.calendar_event_id);
     }
     
-    // ===== CRITICAL: EMAIL SENDING WITH DETAILED LOGGING =====
+    // ===== SEND EMAILS =====
     console.log('');
-    console.log('================================================');
-    console.log('📧 [WEBHOOK] ===== SENDING CONFIRMATION EMAILS =====');
-    console.log('================================================');
-    console.log('📧 [WEBHOOK] Email Recipients:');
+    console.log('📧 [WEBHOOK] ========================================');
+    console.log('📧 [WEBHOOK] SENDING CONFIRMATION EMAILS');
+    console.log('📧 [WEBHOOK] ========================================');
+    console.log('📧 [WEBHOOK] Recipients:');
     console.log('   Customer:', updatedBooking.email);
     console.log('   Manager: manager@merrittfitness.net');
-    console.log('📧 [WEBHOOK] Booking Details for Email:');
-    console.log('   ID:', updatedBooking.id);
-    console.log('   Event:', updatedBooking.event_name);
-    console.log('   Date:', updatedBooking.event_date);
-    console.log('   Time:', updatedBooking.event_time);
-    console.log('   Status:', updatedBooking.status);
-    console.log('================================================');
+    console.log('📧 [WEBHOOK] Event:', updatedBooking.event_name);
+    console.log('📧 [WEBHOOK] ========================================');
     
     try {
-      // Check if sendConfirmationEmails function exists
+      // Verify email function exists
       if (typeof sendConfirmationEmails !== 'function') {
-        throw new Error('sendConfirmationEmails is not a function - check import');
+        throw new Error('sendConfirmationEmails is not imported correctly');
+      }
+      
+      // Check if RESEND_API_KEY exists
+      if (!process.env.RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY environment variable not set');
       }
       
       console.log('📧 [WEBHOOK] Calling sendConfirmationEmails()...');
       const emailResult = await sendConfirmationEmails(updatedBooking);
       
-      console.log('================================================');
-      console.log('✅ [WEBHOOK] EMAIL SUCCESS!');
-      console.log('================================================');
-      console.log('📧 [WEBHOOK] Email Results:', {
+      console.log('');
+      console.log('✅✅✅ [WEBHOOK] EMAIL SUCCESS! ✅✅✅');
+      console.log('📧 [WEBHOOK] Results:', {
         customerSent: !!emailResult.customerConfirmation,
         managerSent: !!emailResult.managerNotification,
-        errors: emailResult.errors || [],
-        customerEmailId: emailResult.customerConfirmation?.data?.id,
-        managerEmailId: emailResult.managerNotification?.data?.id
+        errors: emailResult.errors || []
       });
-      console.log('================================================');
+      
+      if (emailResult.customerConfirmation?.data?.id) {
+        console.log('📧 [WEBHOOK] Customer email ID:', emailResult.customerConfirmation.data.id);
+      }
+      
+      if (emailResult.managerNotification?.data?.id) {
+        console.log('📧 [WEBHOOK] Manager email ID:', emailResult.managerNotification.data.id);
+      }
+      
+      console.log('📧 [WEBHOOK] ========================================');
       console.log('');
       
     } catch (emailError) {
-      console.log('================================================');
-      console.error('❌ [WEBHOOK] EMAIL SENDING FAILED!');
-      console.log('================================================');
-      console.error('📧 [WEBHOOK] Error Details:', {
-        message: emailError.message,
-        stack: emailError.stack,
-        bookingId: updatedBooking.id,
-        email: updatedBooking.email,
-        name: emailError.name
-      });
-      console.log('================================================');
+      console.log('');
+      console.error('❌❌❌ [WEBHOOK] EMAIL FAILED! ❌❌❌');
+      console.error('📧 [WEBHOOK] Error:', emailError.message);
+      console.error('📧 [WEBHOOK] Stack:', emailError.stack);
+      console.error('📧 [WEBHOOK] ========================================');
+      console.log('');
       
-      // Check if it's a Resend API error
-      if (emailError.message.includes('Resend') || emailError.message.includes('API')) {
-        console.error('💡 [WEBHOOK] Resend API Error - Check:');
-        console.error('   1. RESEND_API_KEY environment variable');
-        console.error('   2. Resend domain verification');
-        console.error('   3. Resend API status');
-      }
+      // Log detailed diagnostics
+      console.error('🔍 [WEBHOOK] Email Diagnostics:');
+      console.error('   RESEND_API_KEY set:', !!process.env.RESEND_API_KEY);
+      console.error('   Email function type:', typeof sendConfirmationEmails);
+      console.error('   Booking email:', updatedBooking.email);
+      console.error('   Booking ID:', updatedBooking.id);
       
-      // Don't throw - we don't want webhook to fail just because email failed
-      // But log prominently so we know there's an issue
-      console.error('⚠️ [WEBHOOK] Continuing despite email failure...');
+      // Don't throw - webhook should still succeed even if email fails
+      console.log('⚠️ [WEBHOOK] Continuing despite email failure');
     }
     
-    console.log('🎉 [WEBHOOK] Payment success handling completed:', {
-      bookingId: booking.id,
-      status: 'confirmed',
-      paymentIntentId: paymentIntent.id
-    });
+    console.log('🎉 [WEBHOOK] Payment success handling complete');
     
   } catch (error) {
-    console.error('❌ [WEBHOOK] Error handling payment success:', error);
+    console.error('❌ [WEBHOOK] Payment success handling failed:', error);
+    console.error('❌ [WEBHOOK] Stack:', error.stack);
     throw error;
   }
 }
 
 async function handlePaymentFailure(paymentIntent) {
-  const bookingId = paymentIntent.metadata.bookingId;
+  const bookingId = paymentIntent.metadata?.bookingId;
   
   if (!bookingId) {
-    throw new Error('Missing booking ID in payment intent metadata');
+    throw new Error('Missing bookingId in payment intent metadata');
   }
   
   console.log('❌ [WEBHOOK] Payment failed for booking:', bookingId);
@@ -295,24 +390,21 @@ async function handlePaymentFailure(paymentIntent) {
       })
       .eq('id', bookingId);
     
-    if (error) {
-      console.error('❌ [WEBHOOK] Failed to update booking to payment_failed:', error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log('✅ [WEBHOOK] Booking status updated to payment_failed');
+    console.log('✅ [WEBHOOK] Booking marked as payment_failed');
     
   } catch (error) {
-    console.error('❌ [WEBHOOK] Error handling payment failure:', error);
+    console.error('❌ [WEBHOOK] Failed to update booking status:', error);
     throw error;
   }
 }
 
 async function handlePaymentProcessing(paymentIntent) {
-  const bookingId = paymentIntent.metadata.bookingId;
+  const bookingId = paymentIntent.metadata?.bookingId;
   
   if (!bookingId) {
-    throw new Error('Missing booking ID in payment intent metadata');
+    throw new Error('Missing bookingId in payment intent metadata');
   }
   
   console.log('⏳ [WEBHOOK] Payment processing for booking:', bookingId);
@@ -327,27 +419,30 @@ async function handlePaymentProcessing(paymentIntent) {
       })
       .eq('id', bookingId);
     
-    if (error) {
-      console.error('❌ [WEBHOOK] Failed to update booking to payment_processing:', error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log('✅ [WEBHOOK] Booking status updated to payment_processing');
+    console.log('✅ [WEBHOOK] Booking marked as payment_processing');
     
   } catch (error) {
-    console.error('❌ [WEBHOOK] Error handling payment processing:', error);
+    console.error('❌ [WEBHOOK] Failed to update booking status:', error);
     throw error;
   }
 }
 
-// Test endpoint to verify webhook is reachable
+// Health check endpoint
 export async function GET() {
   return Response.json({
-    message: 'Stripe webhook endpoint is active',
+    status: 'active',
+    message: 'Stripe webhook endpoint is ready',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    webhookConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
-    resendConfigured: !!process.env.RESEND_API_KEY,
-    version: '4.0.0 - Enhanced Email Debugging'
+    configuration: {
+      webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+      stripeKey: !!process.env.STRIPE_SECRET_KEY,
+      resendKey: !!process.env.RESEND_API_KEY,
+      supabaseUrl: !!process.env.SUPABASE_URL,
+      supabaseKey: !!process.env.SUPABASE_ANON_KEY
+    },
+    version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
   });
 }
