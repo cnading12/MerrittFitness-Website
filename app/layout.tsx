@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   title: 'Merritt Fitness | Historic Wellness Space in Denver\'s Sloans Lake',
   description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Fitness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
   keywords: 'yoga studio rental Denver, meditation space Denver, sound bath venue, wellness event space, historic venue Denver, Sloans Lake',
-  // Simplified favicon declarations - Next.js will handle these automatically
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -22,16 +21,16 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Merritt Fitness | Historic Wellness Space',
+    title: 'Merritt Fitness | Historic Wellness Space in Denver',
     description: 'A beautifully restored 1905 venue for yoga, meditation, and wellness events in Denver\'s Sloans Lake neighborhood.',
     url: 'https://merrittfitness.com',
     siteName: 'Merritt Fitness',
     images: [
       {
-        url: '/images/hero/1.jpg',
+        url: 'https://merrittfitness.com/images/hero/outside3.jpg', // CHANGED: Using exterior shot
         width: 1200,
         height: 630,
-        alt: 'Merritt Fitness historic wellness space interior',
+        alt: 'Historic Merritt Fitness building exterior - 1905 church in Denver Sloans Lake',
       },
     ],
     locale: 'en_US',
@@ -39,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Merritt Fitness | Historic Wellness Space',
+    title: 'Merritt Fitness | Historic Wellness Space in Denver',
     description: 'Book your wellness event at our beautifully restored 1905 venue in Denver.',
-    images: ['/images/hero/1.jpg'],
+    images: ['https://merrittfitness.com/images/hero/outside3.jpg'], // CHANGED: Using exterior shot
   },
   alternates: {
     canonical: 'https://merrittfitness.com',
@@ -56,12 +55,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  verification: {
-    // Add these when you set up Google Search Console and other tools
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
-    // yahoo: 'your-yahoo-verification-code',
   },
   category: 'wellness',
   classification: 'business',
@@ -85,8 +78,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* REMOVED: Duplicate favicon links - Next.js handles these via metadata */}
-        
         {/* ENHANCED SEO: Additional meta tags for better search performance */}
         <meta name="author" content="Merritt Fitness" />
         <meta name="publisher" content="Merritt Fitness" />
