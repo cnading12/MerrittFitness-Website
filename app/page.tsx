@@ -220,113 +220,113 @@ export default function Home() {
         </section>
 
         {/* ABOUT SECTION - Enhanced headings and descriptions only */}
-       <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
-  <div className="max-w-7xl mx-auto px-6">
-    <div className="grid lg:grid-cols-2 gap-16 items-center">
-      {/* Left Content - Enhanced with local keywords */}
-      <div className="space-y-8">
-        <div>
-          <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Since 1905•Denver Historic Landmark
-          </span>
-          <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
-            Denver's Sacred Space
-            <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Wellness & Community</span>
-          </h2>
-          <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
-          <div className="space-y-6">
-            {/* ENHANCED: Better local SEO content */}
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Located in Denver's beloved Sloans Lake neighborhood, Merritt Fitness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
-            </p>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
-            </p>
-          </div>
-        </div>
+        <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              {/* Left Content - Enhanced with local keywords */}
+              <div className="space-y-8">
+                <div>
+                  <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Since 1905•Denver Historic Landmark
+                  </span>
+                  <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
+                    Denver's Sacred Space
+                    <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Wellness & Community</span>
+                  </h2>
+                  <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
+                  <div className="space-y-6">
+                    {/* ENHANCED: Better local SEO content */}
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Fitness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
+                    </p>
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
+                    </p>
+                  </div>
+                </div>
 
-        {/* Enhanced Stats */}
-        <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-          <div className="text-center group">
-            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
-            <div className="text-sm text-gray-500 uppercase tracking-wide">Years Serving Denver</div>
-          </div>
-          <div className="text-center group">
-            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
-            <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
-          </div>
-          <div className="text-center group">
-            <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
-            <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
-          </div>
-        </div>
+                {/* Enhanced Stats */}
+                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
+                    <div className="text-sm text-gray-500 uppercase tracking-wide">Years Serving Denver</div>
+                  </div>
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
+                    <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
+                  </div>
+                  <div className="text-center group">
+                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
+                    <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
+                  </div>
+                </div>
 
-        {/* Call-to-Action */}
-        <div className="pt-8">
-          <Link
-            href="/about"
-            className="inline-flex items-center bg-gray-900 text-white font-semibold px-8 py-4 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1 group shadow-lg hover:shadow-xl"
-          >
-            <span>Learn Our Story</span>
-            <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
-        </div>
-      </div>
+                {/* Call-to-Action */}
+                <div className="pt-8">
+                  <Link
+                    href="/about"
+                    className="inline-flex items-center bg-gray-900 text-white font-semibold px-8 py-4 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1 group shadow-lg hover:shadow-xl"
+                  >
+                    <span>Learn Our Story</span>
+                    <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
 
-      {/* Right Features Grid - Enhanced with local keywords */}
-      <div className="grid grid-cols-2 gap-6 auto-rows-fr">
-        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-          <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-            <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
+              {/* Right Features Grid - Enhanced with local keywords */}
+              <div className="grid grid-cols-2 gap-6 auto-rows-fr">
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0">Historic Denver Landmark</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                    Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
+                  </p>
+                </div>
+
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <span className="text-3xl filter group-hover:brightness-110">☀️</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0">Natural Light Studio</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                    Floor-to-ceiling windows bathe Denver's most beautiful yoga space in natural light throughout the day
+                  </p>
+                </div>
+
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <span className="text-3xl filter group-hover:brightness-110">🤝</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300 flex-shrink-0">Inclusive Wellness Haven</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                    A non-denominational sanctuary welcoming all Denver wellness practitioners, paths, and people
+                  </p>
+                </div>
+
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <span className="text-3xl filter group-hover:brightness-110">🎵</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300 flex-shrink-0">Perfect Sound Healing Acoustics</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                    Original church acoustics create Denver's most immersive sound bath and meditation experience
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0">Historic Denver Landmark</h3>
-          <p className="text-gray-600 text-sm leading-relaxed flex-1">
-            Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
-          </p>
-        </div>
+        </section>
 
-        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-            <span className="text-3xl filter group-hover:brightness-110">☀️</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0">Natural Light Studio</h3>
-          <p className="text-gray-600 text-sm leading-relaxed flex-1">
-            Floor-to-ceiling windows bathe Denver's most beautiful yoga space in natural light throughout the day
-          </p>
-        </div>
+        <EnhancedGallery />
 
-        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-            <span className="text-3xl filter group-hover:brightness-110">🤝</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300 flex-shrink-0">Inclusive Wellness Haven</h3>
-          <p className="text-gray-600 text-sm leading-relaxed flex-1">
-            A non-denominational sanctuary welcoming all Denver wellness practitioners, paths, and people
-          </p>
-        </div>
-
-        <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-            <span className="text-3xl filter group-hover:brightness-110">🎵</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300 flex-shrink-0">Perfect Sound Healing Acoustics</h3>
-          <p className="text-gray-600 text-sm leading-relaxed flex-1">
-            Original church acoustics create Denver's most immersive sound bath and meditation experience
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<EnhancedGallery />
-
-        {/* FEATURES SECTION - Enhanced with local keywords */}
+       // FEATURES SECTION - Enhanced with local keywords
         <section className="py-24 bg-white relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
@@ -362,8 +362,9 @@ export default function Home() {
               <div className="space-y-12">
                 {[
                   { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
-                  { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original 1905 church acoustics create Colorado's most powerful resonance for crystal bowls, gongs, and voice work that touches the soul." },
                   { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
+                  { emoji: "💪", title: "Fitness Events", desc: "High-energy fitness classes, bootcamps, and group training sessions energize Denver's wellness community in our expansive historic venue with professional equipment and inspiring atmosphere." },
+                  { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original 1905 church acoustics create Colorado's most powerful resonance for crystal bowls, gongs, and voice work that touches the soul." },
                   { emoji: "🥋", title: "Martial Arts Studio", desc: "24-foot ceilings and professional sprung floors support judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-6 group">
