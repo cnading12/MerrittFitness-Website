@@ -120,7 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@type": "LocalBusiness",
               "@id": "https://merrittfitness.com",
               "name": "Merritt Fitness",
-              "description": "Historic wellness and event space in Denver's Sloan's Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
+              "description": "Historic wellness and event space in Denver's Sloans Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
               "url": "https://merrittfitness.com",
               "telephone": "+1-720-357-9499",
               "email": "manager@merrittfitness.net",

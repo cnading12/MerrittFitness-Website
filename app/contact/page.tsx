@@ -52,7 +52,7 @@ export default function ContactPage() {
                 Denver, CO 80211
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Near Sloan's Lake • Historic 1905 Church
+                Near Sloans Lake • Historic 1905 Church
               </p>
             </div>
           </div>

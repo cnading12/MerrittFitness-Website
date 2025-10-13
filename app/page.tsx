@@ -14,7 +14,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": ["ExerciseGym", "LocalBusiness", "EventVenue"],
     "name": "Merritt Fitness",
-    "description": "Historic yoga studio and wellness sanctuary in Denver's Sloan's Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
+    "description": "Historic yoga studio and wellness sanctuary in Denver's Sloans Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
     "url": "https://merrittfitness.com",
     "telephone": "+1-720-357-9499",
     "email": "manager@merrittfitness.net",
@@ -80,7 +80,7 @@ export default function Home() {
       },
       {
         "@type": "Neighborhood",
-        "name": "Sloan's Lake",
+        "name": "Sloans Lake",
         "containedInPlace": "Denver, CO"
       },
       {
@@ -157,7 +157,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
           <Image
             src="/images/hero/outside3.jpg"
-            alt="Historic Merritt Fitness yoga studio exterior in Denver Sloan's Lake neighborhood - 1905 church building"
+            alt="Historic Merritt Fitness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
             className="object-cover brightness-75 scale-105 animate-slow-zoom"
             priority
@@ -179,7 +179,7 @@ export default function Home() {
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mx-auto mb-8"></div>
               {/* ENHANCED: Better local keywords in hero description */}
               <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Denver's premier historic wellness sanctuary in Sloan's Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
+                Denver's premier historic wellness sanctuary in Sloans Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
               </p>
             </div>
 
@@ -240,10 +240,10 @@ export default function Home() {
           <div className="space-y-6">
             {/* ENHANCED: Better local SEO content */}
             <p className="text-lg text-gray-600 leading-relaxed">
-              Located in Denver's beloved Sloan's Lake neighborhood, Merritt Fitness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
+              Located in Denver's beloved Sloans Lake neighborhood, Merritt Fitness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloan's Lake, Denver wellness seekers find their home here.
+              Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
             </p>
           </div>
         </div>
@@ -286,7 +286,7 @@ export default function Home() {
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0">Historic Denver Landmark</h3>
           <p className="text-gray-600 text-sm leading-relaxed flex-1">
-            Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloan's Lake
+            Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
           </p>
         </div>
 
@@ -363,7 +363,7 @@ export default function Home() {
                 {[
                   { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
                   { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original 1905 church acoustics create Colorado's most powerful resonance for crystal bowls, gongs, and voice work that touches the soul." },
-                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloan's Lake sanctuary of inspiration." },
+                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
                   { emoji: "🥋", title: "Martial Arts Studio", desc: "24-foot ceilings and professional sprung floors support judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-6 group">
@@ -403,7 +403,7 @@ export default function Home() {
               </span>
               <h2 className="text-4xl md:text-6xl font-light text-white mb-8">
                 Reserve Your
-                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Sloan's Lake Sanctuary</span>
+                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Sloans Lake Sanctuary</span>
               </h2>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12">
                 Join Denver's vibrant wellness community or create your own transformative experience in Colorado's most inspiring historic yoga and meditation space
@@ -415,7 +415,7 @@ export default function Home() {
               <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
                 <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Denver Wellness Events Calendar</h3>
-                  <p className="text-gray-600">Discover upcoming yoga classes, sound baths, and workshops at our Sloan's Lake sanctuary</p>
+                  <p className="text-gray-600">Discover upcoming yoga classes, sound baths, and workshops at our Sloans Lake sanctuary</p>
                 </div>
 
                 {/* Calendar with improved loading */}
@@ -515,7 +515,7 @@ export default function Home() {
                       <p className="text-gray-600 text-lg leading-relaxed">
                         2246 Irving Street<br />
                         Denver, Colorado 80211<br />
-                        <span className="text-sm text-gray-500">Heart of Sloan's Lake Neighborhood</span>
+                        <span className="text-sm text-gray-500">Heart of Sloans Lake Neighborhood</span>
                       </p>
                     </div>
                   </div>
@@ -574,7 +574,7 @@ export default function Home() {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Find Merritt Fitness - Historic yoga and wellness studio in Denver's Sloan's Lake neighborhood"
+                    title="Find Merritt Fitness - Historic yoga and wellness studio in Denver's Sloans Lake neighborhood"
                     className="grayscale hover:grayscale-0 transition-all duration-500"
                   />
                 </div>

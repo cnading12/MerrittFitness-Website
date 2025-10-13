@@ -14,7 +14,7 @@ export default function AboutPage() {
               <span className="italic text-emerald-700">Meets Healing</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              In the heart of Denver's Sloan's Lake neighborhood stands a sacred space where community has gathered for over a century. Today, this beautifully restored 1905 landmark opens its doors as Merritt Fitness—a sanctuary for modern wellness.
+              In the heart of Denver's Sloans Lake neighborhood stands a sacred space where community has gathered for over a century. Today, this beautifully restored 1905 landmark opens its doors as Merritt Fitness—a sanctuary for modern wellness.
             </p>
             <div className="flex items-center gap-4 text-gray-500 text-sm">
               <div className="flex items-center gap-2">
@@ -24,7 +24,7 @@ export default function AboutPage() {
               <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
               <span>Historic Landmark</span>
               <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-              <span>Sloan's Lake</span>
+              <span>Sloans Lake</span>
             </div>
           </div>
           
