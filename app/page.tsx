@@ -362,9 +362,8 @@ export default function Home() {
               <div className="space-y-12">
                 {[
                   { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
-                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
                   { emoji: "💪", title: "Fitness Events", desc: "High-energy fitness classes, bootcamps, and group training sessions energize Denver's wellness community in our expansive historic venue with professional equipment and inspiring atmosphere." },
-                  { emoji: "🔔", title: "Sound Baths & Healing", desc: "Our original 1905 church acoustics create Colorado's most powerful resonance for crystal bowls, gongs, and voice work that touches the soul." },
+                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
                   { emoji: "🥋", title: "Martial Arts Studio", desc: "24-foot ceilings and professional sprung floors support judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-6 group">
