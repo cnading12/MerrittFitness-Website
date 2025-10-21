@@ -1,5 +1,5 @@
 // app/api/booking-request/route.js
-// FIXED VERSION - Proper booking creation with calendar integration
+// UPDATED VERSION - Includes home address and setup/teardown fees
 
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
@@ -13,7 +13,7 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// FIXED: Updated validation schema
+// UPDATED: Enhanced validation schema with setup/teardown and home address
 const IndividualBookingSchema = z.object({
   id: z.number(),
   eventName: z.string()
@@ -44,7 +44,10 @@ const IndividualBookingSchema = z.object({
   specialRequests: z.string()
     .max(500, 'Special requests too long')
     .optional()
-    .default('')
+    .default(''),
+
+  needsSetupHelp: z.boolean().default(false),
+  needsTeardownHelp: z.boolean().default(false)
 });
 
 const ContactInfoSchema = z.object({
@@ -61,6 +64,10 @@ const ContactInfoSchema = z.object({
     .max(20, 'Phone number too long')
     .optional()
     .default(''),
+
+  homeAddress: z.string()
+    .min(10, 'Please enter a complete address')
+    .max(200, 'Address too long'),
 
   businessName: z.string()
     .max(100, 'Business name too long')
@@ -80,9 +87,12 @@ const ContactInfoSchema = z.object({
 const PricingSchema = z.object({
   totalHours: z.number(),
   totalBookings: z.number(),
+  baseAmount: z.number(),
+  saturdayCharges: z.number().optional().default(0),
+  setupTeardownFees: z.number().optional().default(0),
   subtotal: z.number(),
-  total: z.number(),
-  stripeFee: z.number().optional().default(0)
+  stripeFee: z.number().optional().default(0),
+  total: z.number()
 });
 
 const MultipleBookingSchema = z.object({
@@ -93,41 +103,71 @@ const MultipleBookingSchema = z.object({
   pricing: PricingSchema
 });
 
-// Calculate accurate pricing with fees
+// Helper function to check if date is Saturday
+function isSaturday(dateString) {
+  const date = new Date(dateString);
+  return date.getDay() === 6;
+}
+
+// Helper function to check if time is after 4 PM
+function isAfter4PM(timeString) {
+  const [time, period] = timeString.split(' ');
+  const [hours] = time.split(':').map(Number);
+  
+  if (period === 'PM' && hours !== 12) {
+    return hours >= 4;
+  }
+  return false;
+}
+
+// Calculate accurate pricing with Saturday rates and fees
 function calculateAccuratePricing(bookings, contactInfo) {
   const HOURLY_RATE = 95;
+  const SATURDAY_EVENING_SURCHARGE = 35;
+  const SATURDAY_ALL_DAY_RATE = 200;
+  const SETUP_TEARDOWN_FEE = 50;
   const STRIPE_FEE_PERCENTAGE = 3;
 
   let totalHours = 0;
   let totalBookings = 0;
+  let saturdayCharges = 0;
+  let setupTeardownFees = 0;
 
   bookings.forEach(booking => {
     let hours = parseFloat(booking.hoursRequested) || 0;
+    const isSat = isSaturday(booking.selectedDate);
+    const afterFour = isAfter4PM(booking.selectedTime);
 
-    // Apply minimums per booking
-    const hasRecurringMultiple = contactInfo.isRecurring &&
-      contactInfo.recurringDetails?.includes('multiple');
-
+    // Apply minimums
     if (!contactInfo.isRecurring && hours < 4) {
       hours = 4; // Single event: 4-hour minimum
-    } else if (contactInfo.isRecurring && hasRecurringMultiple && hours < 2) {
-      hours = 2; // Multiple events per week: 2-hour minimum
+    }
+
+    // Calculate Saturday charges
+    if (isSat) {
+      if (afterFour) {
+        // Saturday evening: base + surcharge
+        saturdayCharges += hours * SATURDAY_EVENING_SURCHARGE;
+      } else if (hours >= 8) {
+        // Saturday all-day: special rate (replaces base)
+        saturdayCharges += hours * (SATURDAY_ALL_DAY_RATE - HOURLY_RATE);
+      }
+    }
+
+    // Calculate setup/teardown fees
+    if (booking.needsSetupHelp) {
+      setupTeardownFees += SETUP_TEARDOWN_FEE;
+    }
+    if (booking.needsTeardownHelp) {
+      setupTeardownFees += SETUP_TEARDOWN_FEE;
     }
 
     totalHours += hours;
     totalBookings++;
   });
 
-  // Apply discounts
-  let discount = 0;
-  let savings = 0;
-
-  if (contactInfo.isRecurring && contactInfo.recurringDetails?.includes('multiple')) {
-    discount = 5; // 5% discount for multiple weekly bookings
-    savings = (totalHours * HOURLY_RATE * discount) / 100;
-  }
-
-  const subtotal = totalHours * HOURLY_RATE - savings;
+  const baseAmount = totalHours * HOURLY_RATE;
+  const subtotal = baseAmount + saturdayCharges + setupTeardownFees;
   const stripeFee = contactInfo.paymentMethod === 'card'
     ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
     : 0;
@@ -137,16 +177,17 @@ function calculateAccuratePricing(bookings, contactInfo) {
     totalHours,
     totalBookings,
     hourlyRate: HOURLY_RATE,
+    baseAmount,
+    saturdayCharges,
+    setupTeardownFees,
     subtotal,
-    discount,
-    savings,
     stripeFee,
     total,
     paymentMethod: contactInfo.paymentMethod
   };
 }
 
-// FIXED: Create booking in database with proper field mapping
+// Create booking in database with enhanced fields
 async function createBooking(bookingData) {
   try {
     const { data, error } = await supabase
@@ -163,13 +204,18 @@ async function createBooking(bookingData) {
           contact_name: bookingData.contactName,
           email: bookingData.email,
           phone: bookingData.phone || '',
+          home_address: bookingData.homeAddress,
           business_name: bookingData.businessName || '',
           website_url: bookingData.websiteUrl || '',
           special_requests: bookingData.specialRequests || '',
+          needs_setup_help: bookingData.needsSetupHelp || false,
+          needs_teardown_help: bookingData.needsTeardownHelp || false,
           payment_method: bookingData.paymentMethod,
           total_amount: parseFloat(bookingData.total),
           subtotal: parseFloat(bookingData.subtotal),
           stripe_fee: parseFloat(bookingData.stripeFee || 0),
+          saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
+          setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
           status: bookingData.status,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -188,9 +234,6 @@ async function createBooking(bookingData) {
     throw error;
   }
 }
-
-// Around line 200, in the bookingHandler function
-// BEFORE creating payment intent, make sure booking exists in database
 
 async function bookingHandler(request) {
   try {
@@ -223,7 +266,7 @@ async function bookingHandler(request) {
     const createdBookings = [];
     let bookingErrors = [];
 
-    // CRITICAL: Create ALL bookings in database FIRST
+    // Create ALL bookings in database FIRST
     for (const booking of validatedData.bookings) {
       try {
         const individualBookingId = uuidv4();
@@ -237,18 +280,23 @@ async function bookingHandler(request) {
           selectedTime: booking.selectedTime,
           hoursRequested: booking.hoursRequested,
           specialRequests: booking.specialRequests,
+          needsSetupHelp: booking.needsSetupHelp,
+          needsTeardownHelp: booking.needsTeardownHelp,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
           phone: validatedData.contactInfo.phone,
+          homeAddress: validatedData.contactInfo.homeAddress,
           businessName: validatedData.contactInfo.businessName,
           websiteUrl: validatedData.contactInfo.websiteUrl,
           paymentMethod: validatedData.contactInfo.paymentMethod,
           total: accuratePricing.total,
           subtotal: accuratePricing.subtotal,
           stripeFee: accuratePricing.stripeFee,
+          saturdayCharges: accuratePricing.saturdayCharges,
+          setupTeardownFees: accuratePricing.setupTeardownFees,
           status: validatedData.contactInfo.paymentMethod === 'pay-later'
             ? 'confirmed_pay_later'
-            : 'pending_payment'  // CRITICAL: This status for card payments
+            : 'pending_payment'
         };
 
         // Create booking in database
@@ -260,7 +308,6 @@ async function bookingHandler(request) {
           const calendarEvent = await createCalendarEvent(createdBooking);
 
           if (calendarEvent && calendarEvent.id) {
-            // Update booking with calendar event ID
             await supabase
               .from('bookings')
               .update({
@@ -273,7 +320,6 @@ async function bookingHandler(request) {
           }
         } catch (calendarError) {
           console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-          // Continue with booking even if calendar fails
         }
 
         console.log('✅ Booking created in DB:', {
@@ -302,7 +348,6 @@ async function bookingHandler(request) {
             console.warn('⚠️ Calendar event creation failed:', calendarError.message);
           }
         }
-        // For card payments, calendar event will be created after payment success
 
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
@@ -337,10 +382,8 @@ async function bookingHandler(request) {
     // Prepare success response
     const response = {
       success: true,
-      // CRITICAL FIX: Return the FIRST booking's ID, not masterBookingId
-      // This is what gets passed to payment and webhook
-      id: createdBookings[0].id,  // <-- CHANGED FROM masterBookingId
-      masterBookingId: masterBookingId,  // Keep this for reference
+      id: createdBookings[0].id,
+      masterBookingId: masterBookingId,
       bookings: createdBookings.map(b => ({
         id: b.id,
         eventName: b.event_name,
@@ -381,7 +424,7 @@ async function bookingHandler(request) {
       code: 'INTERNAL_ERROR'
     }, { status: 500 });
   }
-}// <-- ADDED THIS MISSING CLOSING BRACE
+}
 
 // Export the handler
 export async function POST(request) {
@@ -420,7 +463,7 @@ export async function POST(request) {
     );
   }
 }
-//dont break
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,

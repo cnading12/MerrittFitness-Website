@@ -17,18 +17,21 @@ export default function BookingPage() {
     selectedDate: '',
     selectedTime: '',
     hoursRequested: '',
-    specialRequests: ''
+    specialRequests: '',
+    needsSetupHelp: false,
+    needsTeardownHelp: false
   }]);
 
   const [formData, setFormData] = useState({
     contactName: '',
     email: '',
     phone: '',
+    homeAddress: '', // NEW: Added home address
     businessName: '',
     websiteUrl: '',
     isRecurring: false,
     recurringDetails: '',
-    paymentMethod: 'card' // 'card' or 'pay-later'
+    paymentMethod: 'card'
   });
 
   // Business-focused event types
@@ -97,6 +100,25 @@ export default function BookingPage() {
     '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
+  // ENHANCED: Check if date is Saturday
+  const isSaturday = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    return date.getDay() === 6;
+  };
+
+  // ENHANCED: Check if time is after 4 PM
+  const isAfter4PM = (timeString) => {
+    if (!timeString) return false;
+    const [time, period] = timeString.split(' ');
+    const [hours] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) {
+      return hours >= 4;
+    }
+    return false;
+  };
+
   // FIXED: Enhanced email validation
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -115,7 +137,7 @@ export default function BookingPage() {
     if (!date) return;
 
     setIsCheckingAvailability(true);
-    setAvailableSlots({}); // Clear previous slots
+    setAvailableSlots({});
 
     try {
       console.log('🔍 Checking availability for:', date);
@@ -126,14 +148,12 @@ export default function BookingPage() {
         setAvailableSlots(data.availability);
         console.log('✅ Availability loaded:', data.availability);
 
-        // Clear any previous calendar errors
         const newErrors = { ...validationErrors };
         delete newErrors.calendar;
         setValidationErrors(newErrors);
       } else {
-        // CRITICAL: If calendar check fails, don't allow any bookings
         console.error('Calendar availability check failed:', data);
-        setAvailableSlots({}); // No slots available if check fails
+        setAvailableSlots({});
         setValidationErrors(prev => ({
           ...prev,
           calendar: data.message || 'Unable to check availability. Please try a different date or contact us.'
@@ -141,7 +161,7 @@ export default function BookingPage() {
       }
     } catch (error) {
       console.error('Error checking availability:', error);
-      setAvailableSlots({}); // No slots available on error
+      setAvailableSlots({});
       setValidationErrors(prev => ({
         ...prev,
         calendar: 'Calendar service temporarily unavailable. Please try again later.'
@@ -151,7 +171,7 @@ export default function BookingPage() {
     }
   };
 
-  // FIXED: Comprehensive form validation with availability checking
+  // ENHANCED: Comprehensive form validation
   const validateForm = () => {
     const errors = {};
 
@@ -172,6 +192,13 @@ export default function BookingPage() {
       errors.phone = 'Please enter a valid phone number';
     }
 
+    // NEW: Validate home address
+    if (!formData.homeAddress.trim()) {
+      errors.homeAddress = 'Home address is required';
+    } else if (formData.homeAddress.trim().length < 10) {
+      errors.homeAddress = 'Please enter a complete address';
+    }
+
     // Validate at least one complete booking
     const validBookings = bookings.filter(booking =>
       booking.eventName.trim() &&
@@ -188,7 +215,6 @@ export default function BookingPage() {
     // Validate individual bookings
     bookings.forEach((booking, index) => {
       if (booking.eventName.trim() || booking.eventType || booking.selectedDate) {
-        // If any field is filled, all required fields should be filled
         if (!booking.eventName.trim()) {
           errors[`booking_${index}_eventName`] = 'Event name is required';
         }
@@ -198,7 +224,6 @@ export default function BookingPage() {
         if (!booking.selectedDate) {
           errors[`booking_${index}_selectedDate`] = 'Date is required';
         } else {
-          // Validate date is not in the past
           const selectedDate = new Date(booking.selectedDate);
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -209,7 +234,6 @@ export default function BookingPage() {
         if (!booking.selectedTime) {
           errors[`booking_${index}_selectedTime`] = 'Time is required';
         } else {
-          // CRITICAL: Validate that selected times are actually available
           const isAvailable = availableSlots[booking.selectedTime] !== false;
           const hasAvailabilityData = Object.keys(availableSlots).length > 0;
 
@@ -224,6 +248,16 @@ export default function BookingPage() {
         } else if (parseFloat(booking.hoursRequested) < 0.5) {
           errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
         }
+        
+        // NEW: Validate Saturday special requirements
+        if (isSaturday(booking.selectedDate)) {
+          const hours = parseFloat(booking.hoursRequested) || 0;
+          const afterFour = isAfter4PM(booking.selectedTime);
+          
+          if (!afterFour && hours < 8) {
+            errors[`booking_${index}_hoursRequested`] = 'Saturday all-day events (before 4 PM) require minimum 8 hours';
+          }
+        }
       }
     });
 
@@ -231,29 +265,49 @@ export default function BookingPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // Pricing calculations with transparent fee structure
+  // ENHANCED: Pricing calculations with Saturday rates and setup/teardown
   const HOURLY_RATE = 95;
-  const STRIPE_FEE_PERCENTAGE = 3; // Clear 3% fee for transparency
+  const SATURDAY_EVENING_SURCHARGE = 35; // After 4 PM
+  const SATURDAY_ALL_DAY_RATE = 200; // Before 4 PM, 8+ hours
+  const SETUP_TEARDOWN_FEE = 50; // Per service
+  const STRIPE_FEE_PERCENTAGE = 3;
 
   const calculatePricing = () => {
     let totalHours = 0;
     let totalBookings = 0;
     let minimumApplied = false;
+    let saturdayCharges = 0;
+    let setupTeardownFees = 0;
 
-    // Calculate total hours across all bookings with minimums
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
         let hours = parseFloat(booking.hoursRequested) || 0;
+        const isSat = isSaturday(booking.selectedDate);
+        const afterFour = isAfter4PM(booking.selectedTime);
 
-        // Apply minimums per booking based on type
-        const hasRecurringMultiple = formData.isRecurring && formData.recurringDetails.includes('multiple');
-
+        // Apply minimums per booking
         if (!formData.isRecurring && hours < 4) {
-          hours = 4; // Single event: 4-hour minimum
+          hours = 4;
           minimumApplied = true;
-        } else if (formData.isRecurring && hasRecurringMultiple && hours < 2) {
-          hours = 2; // Regular partnership: 2-hour minimum
-          minimumApplied = true;
+        }
+
+        // Calculate Saturday charges
+        if (isSat) {
+          if (afterFour) {
+            // Saturday evening: $95 + $35/hr
+            saturdayCharges += hours * SATURDAY_EVENING_SURCHARGE;
+          } else if (hours >= 8) {
+            // Saturday all-day: $200/hr (replaces base rate)
+            saturdayCharges += hours * (SATURDAY_ALL_DAY_RATE - HOURLY_RATE);
+          }
+        }
+
+        // Calculate setup/teardown fees
+        if (booking.needsSetupHelp) {
+          setupTeardownFees += SETUP_TEARDOWN_FEE;
+        }
+        if (booking.needsTeardownHelp) {
+          setupTeardownFees += SETUP_TEARDOWN_FEE;
         }
 
         totalHours += hours;
@@ -261,16 +315,8 @@ export default function BookingPage() {
       }
     });
 
-    // Apply partnership discounts
-    let discount = 0;
-    let savings = 0;
-
-    if (formData.isRecurring && formData.recurringDetails.includes('multiple')) {
-      discount = 5; // 5% discount for multiple weekly bookings
-      savings = (totalHours * HOURLY_RATE * discount) / 100;
-    }
-
-    const subtotal = totalHours * HOURLY_RATE - savings;
+    const baseAmount = totalHours * HOURLY_RATE;
+    const subtotal = baseAmount + saturdayCharges + setupTeardownFees;
     const stripeFee = formData.paymentMethod === 'card'
       ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
       : 0;
@@ -280,9 +326,10 @@ export default function BookingPage() {
       totalHours,
       totalBookings,
       hourlyRate: HOURLY_RATE,
+      baseAmount,
+      saturdayCharges,
+      setupTeardownFees,
       subtotal,
-      discount,
-      savings,
       stripeFee,
       total,
       minimumApplied,
@@ -300,14 +347,15 @@ export default function BookingPage() {
       selectedDate: '',
       selectedTime: '',
       hoursRequested: '',
-      specialRequests: ''
+      specialRequests: '',
+      needsSetupHelp: false,
+      needsTeardownHelp: false
     }]);
   };
 
   const removeBooking = (id) => {
     if (bookings.length > 1) {
       setBookings(bookings.filter(b => b.id !== id));
-      // Clear related validation errors
       const newErrors = { ...validationErrors };
       const bookingIndex = bookings.findIndex(b => b.id === id);
       Object.keys(newErrors).forEach(key => {
@@ -319,13 +367,11 @@ export default function BookingPage() {
     }
   };
 
-  // CRITICAL: Enhanced updateBooking with availability checking
   const updateBooking = (id, field, value) => {
     setBookings(bookings.map(booking =>
       booking.id === id ? { ...booking, [field]: value } : booking
     ));
 
-    // Clear validation error for this field
     const bookingIndex = bookings.findIndex(b => b.id === id);
     const errorKey = `booking_${bookingIndex}_${field}`;
     if (validationErrors[errorKey]) {
@@ -334,12 +380,10 @@ export default function BookingPage() {
       setValidationErrors(newErrors);
     }
 
-    // CRITICAL: Check availability when date changes
     if (field === 'selectedDate' && value) {
       checkAvailability(value);
     }
 
-    // CRITICAL: Validate time selection against availability
     if (field === 'selectedTime' && value) {
       const isAvailable = availableSlots[value] !== false;
       const hasAvailabilityData = Object.keys(availableSlots).length > 0;
@@ -349,7 +393,7 @@ export default function BookingPage() {
           ...prev,
           [`booking_${bookingIndex}_selectedTime`]: 'This time slot is no longer available. Please choose another time.'
         }));
-        return; // Don't update if slot is unavailable
+        return;
       }
     }
   };
@@ -357,7 +401,6 @@ export default function BookingPage() {
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
 
-    // Clear validation error for this field
     if (validationErrors[field]) {
       const newErrors = { ...validationErrors };
       delete newErrors[field];
@@ -367,21 +410,23 @@ export default function BookingPage() {
 
   const pricing = calculatePricing();
 
-  // FIXED: Enhanced form validation
-  const isFormValid = () => {
-    return validateForm();
+  const getFieldError = (fieldName) => {
+    return validationErrors[fieldName];
   };
 
-  // FIXED: Enhanced submission with better error handling
+  const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-lg transition-colors") => {
+    const hasError = validationErrors[fieldName];
+    return hasError
+      ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500`
+      : `${baseClassName} border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`;
+  };
+
   const handleSubmit = async () => {
-    // Clear previous messages
     setSubmitMessage('');
     setValidationErrors({});
 
-    // Validate form first
     if (!validateForm()) {
       setSubmitMessage('❌ Please fix the errors below');
-      // Scroll to first error
       setTimeout(() => {
         const firstError = document.querySelector('.border-red-500, .text-red-600');
         if (firstError) {
@@ -394,7 +439,6 @@ export default function BookingPage() {
     setIsSubmitting(true);
 
     try {
-      // Filter out incomplete bookings
       const validBookings = bookings.filter(booking =>
         booking.eventName.trim() &&
         booking.eventType &&
@@ -433,10 +477,8 @@ export default function BookingPage() {
         console.log('✅ Booking created successfully:', bookingResult);
 
         if (formData.paymentMethod === 'pay-later') {
-          // Redirect to success page for pay-later bookings
           window.location.href = `/booking/success?booking_id=${bookingResult.id}`;
         } else {
-          // Redirect to payment page for card payments
           window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
         }
       } else {
@@ -446,7 +488,6 @@ export default function BookingPage() {
       console.error('❌ Booking submission error:', error);
       setSubmitMessage(`❌ ${error.message}`);
 
-      // Scroll to error message
       setTimeout(() => {
         const errorElement = document.querySelector('[role="alert"]');
         if (errorElement) {
@@ -458,18 +499,6 @@ export default function BookingPage() {
     }
   };
 
-  // FIXED: Display helper function for validation errors
-  const getFieldError = (fieldName) => {
-    return validationErrors[fieldName];
-  };
-
-  const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-lg transition-colors") => {
-    const hasError = validationErrors[fieldName];
-    return hasError
-      ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500`
-      : `${baseClassName} border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`;
-  };
-
   return (
     <main className="pt-24 pb-20 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
@@ -478,11 +507,39 @@ export default function BookingPage() {
           <h1 className="text-4xl lg:text-5xl font-light mb-4 text-gray-900">Reserve Your Sacred Space</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
-            <span className="font-semibold text-emerald-700"> $95/hour • Partnership discounts available</span>
+            <span className="font-semibold text-emerald-700"> $95/hour • Flexible pricing for partners</span>
           </p>
         </div>
 
-        {/* FIXED: Error Summary Display */}
+        {/* NEW: Important Rental Information */}
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-8">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="text-amber-600 mt-1 flex-shrink-0" size={24} />
+            <div>
+              <h3 className="text-lg font-semibold text-amber-900 mb-3">Important Rental Information</h3>
+              <ul className="space-y-2 text-amber-800">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Setup & Cleanup:</strong> All rental times must include your own setup and cleanup. Space must be returned in the condition you found it.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Assistance Available:</strong> Need help? Setup and/or teardown assistance available for $50 each (1 hour per service) or $100 for both.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Saturday Rentals:</strong> Evening events (after 4 PM) are $130/hr ($95 + $35/hr supervision). All-day Saturday events (before 4 PM) require 8+ hours at $200/hr.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Summary Display */}
         {Object.keys(validationErrors).length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8" role="alert">
             <div className="flex items-center gap-3 mb-4">
@@ -510,18 +567,6 @@ export default function BookingPage() {
           </div>
         )}
 
-        {/* Business Partnership Focus */}
-        <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-6 mb-8 border border-emerald-100">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <TrendingUp className="text-emerald-600" size={24} />
-            <h2 className="text-xl font-semibold text-gray-900">Building Our Wellness Community</h2>
-          </div>
-          <p className="text-center text-gray-700 max-w-4xl mx-auto">
-            We're seeking <span className="font-semibold">7-10 dedicated wellness partners</span> to call Merritt Fitness home.
-            Our 2,400 sq ft sanctuary with 24-foot ceilings and perfect acoustics awaits your practice.
-          </p>
-        </div>
-
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Booking Form */}
           <div className="lg:col-span-2">
@@ -537,7 +582,6 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              {/* Public Google Calendar - Anyone can view */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe
                   src="https://calendar.google.com/calendar/embed?src=c_3b551f029c24c4bae5c74fd94ba5f8bbfae09ddf059090837f29c284fca7bf9f%40group.calendar.google.com&ctz=America%2FDenver"
@@ -643,6 +687,13 @@ export default function BookingPage() {
                       {getFieldError(`booking_${index}_selectedDate`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedDate`)}</p>
                       )}
+                      {/* NEW: Saturday notice */}
+                      {isSaturday(booking.selectedDate) && (
+                        <p className="text-blue-600 text-sm mt-1 flex items-center gap-1">
+                          <Info size={14} />
+                          Saturday: Special rates apply
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -698,7 +749,7 @@ export default function BookingPage() {
                         className={getInputClassName(`booking_${index}_hoursRequested`)}
                       >
                         <option value="">Select duration...</option>
-                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8].map(hours => (
+                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12].map(hours => (
                           <option key={hours} value={hours}>
                             {hours === 0.5 ? '30 minutes' : hours === 1 ? '1 hour' : `${hours} hours`}
                           </option>
@@ -707,6 +758,36 @@ export default function BookingPage() {
                       {getFieldError(`booking_${index}_hoursRequested`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_hoursRequested`)}</p>
                       )}
+                    </div>
+
+                    {/* NEW: Setup/Teardown Options */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Setup & Teardown Assistance
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={booking.needsSetupHelp}
+                            onChange={(e) => updateBooking(booking.id, 'needsSetupHelp', e.target.checked)}
+                            className="mr-3 text-emerald-600"
+                          />
+                          <span>Setup assistance needed (+$50)</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={booking.needsTeardownHelp}
+                            onChange={(e) => updateBooking(booking.id, 'needsTeardownHelp', e.target.checked)}
+                            className="mr-3 text-emerald-600"
+                          />
+                          <span>Teardown assistance needed (+$50)</span>
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Each service includes 1 hour of assistance. By default, you're responsible for your own setup/cleanup.
+                      </p>
                     </div>
 
                     <div className="md:col-span-2">
@@ -726,7 +807,6 @@ export default function BookingPage() {
                 </div>
               ))}
 
-              {/* Add more classes prompt */}
               {bookings.length < 10 && (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
                   <div className="text-gray-500 mb-2">Planning multiple classes?</div>
@@ -750,7 +830,6 @@ export default function BookingPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Contact Information */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -803,6 +882,24 @@ export default function BookingPage() {
                     )}
                   </div>
 
+                  {/* NEW: Home Address Field */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Home Address *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.homeAddress}
+                      onChange={(e) => handleInputChange('homeAddress', e.target.value)}
+                      placeholder="123 Main St, Denver, CO 80202"
+                      className={getInputClassName('homeAddress')}
+                      maxLength={200}
+                    />
+                    {getFieldError('homeAddress') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('homeAddress')}</p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Business Name (Optional)
@@ -818,38 +915,16 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                {/* Partnership Options */}
+                {/* REMOVED: Partnership discount section - replaced with informational text */}
                 <div className="border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Partnership Type</h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.isRecurring}
-                        onChange={(e) => {
-                          handleInputChange('isRecurring', e.target.checked);
-                          if (!e.target.checked) {
-                            handleInputChange('recurringDetails', '');
-                          }
-                        }}
-                        className="mr-3 text-emerald-600"
-                      />
-                      <span className="font-medium">Regular Partnership (2-hour minimums + 5% discount)</span>
-                    </label>
-
-                    {formData.isRecurring && (
-                      <select
-                        value={formData.recurringDetails}
-                        onChange={(e) => handleInputChange('recurringDetails', e.target.value)}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ml-6"
-                      >
-                        <option value="">Select frequency...</option>
-                        <option value="weekly">Weekly classes</option>
-                        <option value="multiple">Multiple classes per week</option>
-                        <option value="monthly">Monthly workshops</option>
-                        <option value="custom">Custom arrangement</option>
-                      </select>
-                    )}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">Partnership Pricing Available</h3>
+                    <p className="text-blue-800 text-sm mb-2">
+                      Regular partners booking 2+ hours per week can benefit from flexible pricing. We can start at a reduced rate and grow with your program to the full rate.
+                    </p>
+                    <p className="text-blue-800 text-sm font-medium">
+                      📞 Call (720) 357-9499 for partnership pricing details
+                    </p>
                   </div>
                 </div>
 
@@ -857,7 +932,6 @@ export default function BookingPage() {
                 <div className="border-t border-gray-100 pt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {/* Card Payment Option */}
                     <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
                         ? 'border-emerald-500 bg-emerald-50'
                         : 'border-gray-200 hover:border-emerald-300'
@@ -892,7 +966,6 @@ export default function BookingPage() {
                       </div>
                     </label>
 
-                    {/* Pay Later Option */}
                     <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-blue-300'
@@ -937,7 +1010,6 @@ export default function BookingPage() {
             {/* Submit Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex flex-col items-center">
-                {/* Submit Message */}
                 {submitMessage && (
                   <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${submitMessage.includes('✅')
                       ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
@@ -947,7 +1019,6 @@ export default function BookingPage() {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <button
                   type="button"
                   onClick={handleSubmit}
@@ -977,7 +1048,6 @@ export default function BookingPage() {
                   )}
                 </button>
 
-                {/* Submit Help Text */}
                 <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
                   {formData.paymentMethod === 'pay-later'
                     ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
@@ -990,43 +1060,48 @@ export default function BookingPage() {
 
           {/* Enhanced Sidebar */}
           <div className="lg:col-span-1">
-            {/* Pricing Summary with Fee Transparency */}
+            {/* Pricing Summary */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <DollarSign className="mr-2" size={20} />
                 Pricing Summary
               </h3>
 
-              {/* Booking Count */}
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-blue-900">Total Classes</span>
                   <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
                 </div>
                 <p className="text-sm text-blue-700 mt-1">
-                  {pricing.totalHours} total hours • $95/hour
+                  {pricing.totalHours} total hours • $95/hour base
                 </p>
               </div>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal ({pricing.totalHours} hrs × $95)</span>
-                  <span className="font-medium">${(pricing.totalHours * 95).toFixed(2)}</span>
+                  <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
+                  <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
                 </div>
 
-                {pricing.savings > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Partnership Discount ({pricing.discount}%)</span>
-                    <span>-${pricing.savings.toFixed(2)}</span>
+                {pricing.saturdayCharges > 0 && (
+                  <div className="flex justify-between text-amber-600">
+                    <span>Saturday Charges</span>
+                    <span>+${pricing.saturdayCharges.toFixed(2)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between">
-                  <span>Subtotal after discounts</span>
-                  <span className="font-medium">${pricing.subtotal.toFixed(2)}</span>
+                {pricing.setupTeardownFees > 0 && (
+                  <div className="flex justify-between text-purple-600">
+                    <span>Setup/Teardown Assistance</span>
+                    <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between font-medium border-t pt-2">
+                  <span>Subtotal</span>
+                  <span>${pricing.subtotal.toFixed(2)}</span>
                 </div>
 
-                {/* Transparent Fee Display */}
                 {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
                   <div className="flex justify-between text-orange-600 border-t pt-2">
                     <span>Processing Fee (3% - Stripe)</span>
@@ -1042,7 +1117,6 @@ export default function BookingPage() {
                 </span>
               </div>
 
-              {/* Payment Method Notice */}
               <div className="mt-3 text-xs">
                 {formData.paymentMethod === 'card' ? (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
@@ -1062,15 +1136,10 @@ export default function BookingPage() {
                 )}
               </div>
 
-              {/* Minimums Applied Notice */}
               {pricing.minimumApplied && (
                 <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-blue-800">
-                    <strong>ℹ️ Minimums Applied:</strong> {
-                      formData.isRecurring && formData.recurringDetails.includes('multiple')
-                        ? '2-hour minimum per class (Partnership rate)'
-                        : '4-hour minimum per single event'
-                    }
+                    <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
                   </p>
                 </div>
               )}
@@ -1116,7 +1185,7 @@ export default function BookingPage() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
-                💡 Call for bulk discounts on 10+ classes!
+                💡 Call for partnership pricing & bulk discounts!
               </p>
             </div>
           </div>

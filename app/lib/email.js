@@ -1,18 +1,17 @@
 // app/lib/email.js
-// FIXED VERSION - Updated for manager@merrittfitness.net and improved error handling
+// UPDATED VERSION - Includes home address in manager notification
 
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// UPDATED: Email configuration for new domain
 const EMAIL_CONFIG = {
   from: 'Merritt Fitness <bookings@merrittfitness.net>',
-  replyTo: 'manager@merrittfitness.net',  // UPDATED: New Google Workspace email
-  managerEmail: 'manager@merrittfitness.net'  // UPDATED: New Google Workspace email
+  replyTo: 'manager@merrittfitness.net',
+  managerEmail: 'manager@merrittfitness.net'
 };
 
-// Enhanced email templates with new branding
+// Enhanced email templates
 const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking) => ({
     subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}`,
@@ -56,25 +55,31 @@ const EMAIL_TEMPLATES = {
             </table>
           </div>
 
-          <!-- Contact Information -->
+          ${booking.needs_setup_help || booking.needs_teardown_help ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">📋 Your Information</h3>
-            <p style="margin: 5px 0; color: #451a03;"><strong>Name:</strong> ${booking.contact_name}</p>
-            <p style="margin: 5px 0; color: #451a03;"><strong>Email:</strong> ${booking.email}</p>
-            <p style="margin: 5px 0; color: #451a03;"><strong>Phone:</strong> ${booking.phone || 'Not provided'}</p>
-            ${booking.special_requests ? `<p style="margin: 5px 0; color: #451a03;"><strong>Special Requests:</strong> ${booking.special_requests}</p>` : ''}
+            <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 18px;">🤝 Assistance Services</h3>
+            ${booking.needs_setup_help ? '<p style="margin: 5px 0; color: #451a03;">✓ Setup assistance included</p>' : ''}
+            ${booking.needs_teardown_help ? '<p style="margin: 5px 0; color: #451a03;">✓ Teardown assistance included</p>' : ''}
           </div>
+          ` : ''}
 
-          <!-- What's Next -->
-          <div style="border-left: 4px solid #10b981; padding-left: 20px; margin: 30px 0;">
-            <h3 style="color: #059669; margin: 0 0 10px 0;">What's Next?</h3>
-            <ul style="color: #374151; margin: 0; padding-left: 20px;">
-              <li>A calendar invitation has been sent to your email</li>
-              <li>You'll receive a reminder 24 hours before your event</li>
-              <li>Please arrive 15 minutes early for setup</li>
-              <li>Contact us if you need to make any changes</li>
+          <!-- Important Reminders -->
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">📋 Important Reminders</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #451a03;">
+              <li style="margin-bottom: 8px;">Please include setup and cleanup time in your rental period</li>
+              <li style="margin-bottom: 8px;">Return the space in the condition you found it</li>
+              <li style="margin-bottom: 8px;">Arrive 15 minutes early for access</li>
+              <li style="margin-bottom: 8px;">Contact us if you need to make any changes</li>
             </ul>
           </div>
+
+          ${booking.special_requests ? `
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">💬 Your Special Requests</h3>
+            <p style="margin: 0; color: #451a03;">${booking.special_requests}</p>
+          </div>
+          ` : ''}
 
           <!-- Contact Info -->
           <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
@@ -135,6 +140,15 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #111827;">$${booking.total_amount}</td>
             </tr>
           </table>
+
+          ${booking.needs_setup_help || booking.needs_teardown_help ? `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
+              <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Assistance Requested:</p>
+              ${booking.needs_setup_help ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Setup assistance (+$50)</p>' : ''}
+              ${booking.needs_teardown_help ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Teardown assistance (+$50)</p>' : ''}
+            </div>
+          ` : ''}
+
           ${booking.special_requests ? `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
               <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Special Requests:</p>
@@ -147,7 +161,7 @@ const EMAIL_TEMPLATES = {
           <h3 style="color: #059669; margin: 0 0 15px 0;">Customer Information:</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 80px;">Name:</td>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 120px;">Name:</td>
               <td style="padding: 8px 0; color: #111827;">${booking.contact_name}</td>
             </tr>
             <tr>
@@ -161,6 +175,10 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #111827;">
                 ${booking.phone ? `<a href="tel:${booking.phone}" style="color: #059669; text-decoration: none;">${booking.phone}</a>` : 'Not provided'}
               </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td>
+              <td style="padding: 8px 0; color: #111827;">${booking.home_address || 'Not provided'}</td>
             </tr>
             ${booking.business_name ? `
             <tr>
@@ -190,7 +208,7 @@ const EMAIL_TEMPLATES = {
   })
 };
 
-// ENHANCED: Email sending functions with better error handling
+// Email sending functions
 export async function sendBookingConfirmation(booking) {
   try {
     console.log('📧 Sending booking confirmation to:', booking.email);
@@ -221,7 +239,7 @@ export async function sendManagerNotification(booking) {
     const result = await resend.emails.send({
       from: EMAIL_CONFIG.from,
       to: [EMAIL_CONFIG.managerEmail],
-      replyTo: booking.email, // Customer can reply directly to manager
+      replyTo: booking.email,
       ...template
     });
 
@@ -233,7 +251,6 @@ export async function sendManagerNotification(booking) {
   }
 }
 
-// ENHANCED: Combined email function with rollback capability
 export async function sendConfirmationEmails(booking) {
   const emailResults = {
     customerConfirmation: null,
@@ -245,21 +262,18 @@ export async function sendConfirmationEmails(booking) {
   try {
     console.log('📧 Sending confirmation emails for booking:', booking.id);
     
-    // Send customer confirmation
     try {
       emailResults.customerConfirmation = await sendBookingConfirmation(booking);
     } catch (error) {
       emailResults.errors.push(`Customer email failed: ${error.message}`);
     }
     
-    // Send manager notification
     try {
       emailResults.managerNotification = await sendManagerNotification(booking);
     } catch (error) {
       emailResults.errors.push(`Manager email failed: ${error.message}`);
     }
     
-    // Check if at least one email succeeded
     if (emailResults.customerConfirmation || emailResults.managerNotification) {
       emailResults.success = true;
       console.log('✅ Email sending completed with results:', {
@@ -277,61 +291,5 @@ export async function sendConfirmationEmails(booking) {
     console.error('❌ Email sending process failed:', error);
     emailResults.errors.push(error.message);
     throw new Error(`Email process failed: ${emailResults.errors.join(', ')}`);
-  }
-}
-
-// ENHANCED: Test email function for the new domain
-export async function sendTestEmail(recipientEmail = 'manager@merrittfitness.net') {
-  try {
-    console.log('📧 Sending test email to:', recipientEmail);
-    
-    const result = await resend.emails.send({
-      from: EMAIL_CONFIG.from,
-      to: [recipientEmail],
-      replyTo: EMAIL_CONFIG.replyTo,
-      subject: '✅ Merritt Fitness Email System Test - NEW DOMAIN',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #10b981;">🎉 Email System Working!</h1>
-          <p>Your NEW Google Workspace email setup is complete:</p>
-          
-          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #059669;">✅ Updated Configuration:</h3>
-            <ul style="color: #047857;">
-              <li><strong>Sending from:</strong> bookings@merrittfitness.net</li>
-              <li><strong>Replies go to:</strong> manager@merrittfitness.net</li>
-              <li><strong>Domain:</strong> merrittfitness.net (Google Workspace)</li>
-              <li><strong>Templates:</strong> Professional & responsive</li>
-            </ul>
-          </div>
-          
-          <p><strong>How it works:</strong></p>
-          <ol>
-            <li>Customers see professional sending address</li>
-            <li>When they reply, it goes to your Google Workspace</li>
-            <li>You manage everything from manager@merrittfitness.net</li>
-            <li>Professional domain + workspace benefits! 🚀</li>
-          </ol>
-          
-          <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="color: #1e40af; margin: 0;">
-              <strong>💡 Pro tip:</strong> Reply to this email to test the reply-to functionality!
-            </p>
-          </div>
-
-          <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="color: #059669; margin: 0;">
-              <strong>🎯 Next step:</strong> Test a booking to make sure customers receive confirmations!
-            </p>
-          </div>
-        </div>
-      `
-    });
-
-    console.log('✅ Test email sent successfully:', result.data?.id);
-    return result;
-  } catch (error) {
-    console.error('❌ Failed to send test email:', error);
-    throw new Error(`Test email failed: ${error.message}`);
   }
 }
