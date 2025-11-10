@@ -14,7 +14,7 @@ export default function AboutPage() {
               <span className="italic text-emerald-700">Meets Healing</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              In the heart of Denver's Sloans Lake neighborhood stands a sacred space where community has gathered for over a century. Today, this beautifully restored 1905 landmark opens its doors as Merritt Fitness—a sanctuary for modern wellness.
+              In the heart of Denver's Sloans Lake neighborhood stands a sacred space where community has gathered for over a century. Today, this beautifully restored 1905 landmark opens its doors as Merritt Wellness—a sanctuary for modern wellness.
             </p>
             <div className="flex items-center gap-4 text-gray-500 text-sm">
               <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function AboutPage() {
             <div className="relative">
               <Image
                 src="/images/hero/outside3.jpg"
-                alt="Historic Merritt Fitness building exterior showing 1905 church architecture"
+                alt="Historic Merritt Wellness building exterior showing 1905 church architecture"
                 width={600}
                 height={400}
                 className="rounded-2xl shadow-2xl"
@@ -127,7 +127,7 @@ export default function AboutPage() {
             <div className="bg-white border border-gray-100 rounded-2xl p-8 hover:shadow-lg transition-shadow">
               <h3 className="text-xl font-semibold mb-4 text-gray-900">For Event Hosts</h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Create unforgettable experiences in our inspiring venue. With its stunning architecture and peaceful ambiance, Merritt Fitness provides the perfect backdrop for workshops, retreats, and special events.
+                Create unforgettable experiences in our inspiring venue. With its stunning architecture and peaceful ambiance, Merritt Wellness provides the perfect backdrop for workshops, retreats, and special events.
               </p>
               <ul className="text-gray-600 space-y-2">
                 <li>• Intimate workshop space</li>
@@ -148,7 +148,7 @@ export default function AboutPage() {
             <span className="text-sm font-medium uppercase tracking-wide">Our Heritage</span>
           </div>
           <p className="text-lg leading-relaxed text-gray-300">
-            Every visit to Merritt Fitness is a step into living history. As you practice in our sanctuary, you join a continuum of community, growth, and connection that spans more than a century. This building has witnessed countless moments of joy, reflection, and transformation—and now it's ready to witness yours.
+            Every visit to Merritt Wellness is a step into living history. As you practice in our sanctuary, you join a continuum of community, growth, and connection that spans more than a century. This building has witnessed countless moments of joy, reflection, and transformation—and now it's ready to witness yours.
           </p>
         </div>
       </section>

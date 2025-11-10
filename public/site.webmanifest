@@ -1,6 +1,6 @@
 {
-  "name": "Merritt Fitness",
-  "short_name": "Merritt Fitness",
+  "name": "Merritt Wellness",
+  "short_name": "Merritt Wellness",
   "description": "Historic wellness sanctuary in Denver's Sloans Lake neighborhood for yoga, meditation, and mindful movement",
   "start_url": "/",
   "display": "standalone",
@@ -53,7 +53,7 @@
     {
       "name": "Contact Us",
       "short_name": "Contact",
-      "description": "Get in touch with Merritt Fitness",
+      "description": "Get in touch with Merritt Wellness",
       "url": "/contact",
       "icons": [
         {

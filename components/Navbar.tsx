@@ -69,7 +69,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center shrink-0 z-50 group" tabIndex={0}>
             <Image
               src="/images/hero/logo.png"
-              alt="Merritt Fitness Logo"
+              alt="Merritt Wellness Logo"
               width={160}
               height={70}
               className="transition-transform duration-200 group-hover:scale-105"
@@ -150,7 +150,7 @@ export default function Navbar() {
             >
               <Image
                 src="/images/hero/logo.png"
-                alt="Merritt Fitness Logo"
+                alt="Merritt Wellness Logo"
                 width={140}
                 height={60}
                 priority

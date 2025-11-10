@@ -458,7 +458,7 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
           options={{
             layout: 'tabs',
             business: {
-              name: 'Merritt Fitness'
+              name: 'Merritt Wellness'
             }
           }}
         />
@@ -514,8 +514,8 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
           <a href="tel:720-357-9499" className="text-emerald-600 hover:text-emerald-700">
             (720) 357-9499
           </a>
-          <a href="mailto:manager@merrittfitness.net" className="text-emerald-600 hover:text-emerald-700">
-            manager@merrittfitness.net
+          <a href="mailto:manager@merrittwellness.net" className="text-emerald-600 hover:text-emerald-700">
+            manager@merrittwellness.net
           </a>
         </div>
       </div>

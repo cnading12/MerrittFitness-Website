@@ -28,13 +28,13 @@ export default function ContactPage() {
               <span className="font-medium">(720) 357-9499</span>
             </a>
             <a
-              href="mailto:manager@merrittfitness.net"
+              href="mailto:manager@merrittwellness.net"
               className="flex items-center gap-3 text-gray-700 hover:text-rose-600 transition-colors group"
             >
               <div className="p-2 bg-rose-50 rounded-lg group-hover:bg-rose-100 transition-colors">
                 <Mail size={18} />
               </div>
-              <span className="font-medium">manager@merrittfitness.net</span>
+              <span className="font-medium">manager@merrittwellness.net</span>
             </a>
           </div>
         </div>

@@ -113,7 +113,7 @@ function PaymentCompleteContent() {
               Your wellness experience is confirmed
             </p>
             <p className="text-gray-500">
-              Welcome to the Merritt Fitness community!
+              Welcome to the Merritt Wellness community!
             </p>
 
             {/* Sandbox Mode Indicator */}
@@ -244,9 +244,9 @@ function PaymentCompleteContent() {
                 <Phone size={16} />
                 (720) 357-9499
               </a>
-              <a href="mailto:manager@merrittfitness.net" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
+              <a href="mailto:manager@merrittwellness.net" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
                 <Mail size={16} />
-                manager@merrittfitness.net
+                manager@merrittwellness.net
               </a>
             </div>
           </div>

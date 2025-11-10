@@ -584,7 +584,7 @@ export default function BookingPage() {
 
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <iframe
-                  src="https://calendar.google.com/calendar/embed?src=c_3b551f029c24c4bae5c74fd94ba5f8bbfae09ddf059090837f29c284fca7bf9f%40group.calendar.google.com&ctz=America%2FDenver"
+                  src="https://calendar.google.com/calendar/embed?src=c_002ae67fc0cd95665a26d4183a61597bd74447d4760b239bd5135518cf978704%40group.calendar.google.com&ctz=America%2FDenver"
                   className="w-full h-96"
                   title="Public Live Availability Calendar"
                 />
@@ -1181,7 +1181,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Mail size={14} />
-                  <span>manager@merrittfitness.net</span>
+                  <span>manager@merrittwellness.net</span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">

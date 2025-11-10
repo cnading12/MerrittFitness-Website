@@ -5,8 +5,8 @@ import Footer from "@/components/Footer";
 import "./globals-ios.css";
 
 export const metadata: Metadata = {
-  title: 'Merritt Fitness | Historic Wellness Space in Denver\'s Sloans Lake',
-  description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Fitness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
+  title: 'Merritt Wellness | Historic Wellness Space in Denver\'s Sloans Lake',
+  description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Wellness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
   keywords: 'yoga studio rental Denver, meditation space Denver, sound bath venue, wellness event space, historic venue Denver, Sloans Lake',
   icons: {
     icon: [
@@ -21,16 +21,16 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Merritt Fitness | Historic Wellness Space in Denver',
+    title: 'Merritt Wellness | Historic Wellness Space in Denver',
     description: 'A beautifully restored 1905 venue for yoga, meditation, and wellness events in Denver\'s Sloans Lake neighborhood.',
     url: 'https://merrittfitness.com',
-    siteName: 'Merritt Fitness',
+    siteName: 'Merritt Wellness',
     images: [
       {
         url: 'https://merrittfitness.com/images/hero/outside3.jpg', // CHANGED: Using exterior shot
         width: 1200,
         height: 630,
-        alt: 'Historic Merritt Fitness building exterior - 1905 church in Denver Sloans Lake',
+        alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
       },
     ],
     locale: 'en_US',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Merritt Fitness | Historic Wellness Space in Denver',
+    title: 'Merritt Wellness | Historic Wellness Space in Denver',
     description: 'Book your wellness event at our beautifully restored 1905 venue in Denver.',
     images: ['https://merrittfitness.com/images/hero/outside3.jpg'], // CHANGED: Using exterior shot
   },
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   category: 'wellness',
   classification: 'business',
   other: {
-    'application-name': 'Merritt Fitness',
+    'application-name': 'Merritt Wellness',
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
@@ -79,9 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         {/* ENHANCED SEO: Additional meta tags for better search performance */}
-        <meta name="author" content="Merritt Fitness" />
-        <meta name="publisher" content="Merritt Fitness" />
-        <meta name="copyright" content="© 2024 Merritt Fitness. All rights reserved." />
+        <meta name="author" content="Merritt Wellness" />
+        <meta name="publisher" content="Merritt Wellness" />
+        <meta name="copyright" content="© 2024 Merritt Wellness. All rights reserved." />
         <meta name="language" content="en-US" />
         <meta name="revisit-after" content="7 days" />
         <meta name="distribution" content="global" />
@@ -98,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="business:type" content="wellness center" />
         <meta name="business:hours" content="Mo-Su 06:00-22:00" />
         <meta name="business:phone" content="+1-720-357-9499" />
-        <meta name="business:email" content="manager@merrittfitness.net" />
+        <meta name="business:email" content="manager@merrittwellness.net" />
         <meta name="business:address" content="2246 Irving St, Denver, CO 80211" />
         
         {/* ENHANCED SEO: Preconnect to external domains for performance */}
@@ -119,11 +119,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
               "@id": "https://merrittfitness.com",
-              "name": "Merritt Fitness",
+              "name": "Merritt Wellness",
               "description": "Historic wellness and event space in Denver's Sloans Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
               "url": "https://merrittfitness.com",
               "telephone": "+1-720-357-9499",
-              "email": "manager@merrittfitness.net",
+              "email": "manager@merrittwellness.net",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "2246 Irving St",

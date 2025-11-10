@@ -7,7 +7,7 @@ export async function GET(request) {
   
   const results = {
     timestamp: new Date().toISOString(),
-    system: 'Merritt Fitness Booking System',
+    system: 'Merritt Wellness Booking System',
     checks: {}
   };
 

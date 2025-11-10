@@ -6,9 +6,9 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_CONFIG = {
-  from: 'Merritt Fitness <bookings@merrittfitness.net>',
-  replyTo: 'manager@merrittfitness.net',
-  managerEmail: 'manager@merrittfitness.net'
+  from: 'Merritt Wellness <bookings@merrittwellness.net>',
+  replyTo: 'manager@merrittwellness.net',
+  managerEmail: 'manager@merrittwellness.net'
 };
 
 // Enhanced email templates
@@ -21,7 +21,7 @@ const EMAIL_TEMPLATES = {
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #10b981; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
-            <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Fitness Historic Sanctuary</p>
+            <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
           </div>
 
           <!-- Booking Details -->
@@ -85,7 +85,7 @@ const EMAIL_TEMPLATES = {
           <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; margin: 0;">Questions? Contact us:</p>
             <p style="color: #374151; margin: 5px 0;">📞 (720) 357-9499</p>
-            <p style="color: #374151; margin: 5px 0;">📧 manager@merrittfitness.net</p>
+            <p style="color: #374151; margin: 5px 0;">📧 manager@merrittwellness.net</p>
             <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
               (Simply reply to this email to reach us directly)
             </p>
@@ -95,7 +95,7 @@ const EMAIL_TEMPLATES = {
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
               Booking ID: <strong>${booking.id}</strong><br>
-              Historic Merritt Fitness - Where Sacred Architecture Meets Modern Wellness
+              Historic Merritt Wellness - Where Sacred Architecture Meets Modern Wellness
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ const EMAIL_TEMPLATES = {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
           <h2 style="color: #1e40af; margin: 0 0 15px 0;">🆕 New Booking Request</h2>
-          <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Fitness!</p>
+          <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
         </div>
         
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">

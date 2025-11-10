@@ -335,18 +335,18 @@ class ProductionLogger {
       const resend = new Resend(process.env.RESEND_API_KEY);
 
       const emailContent = `
-        <h2>🚨 Security Alert - Merritt Fitness</h2>
+        <h2>🚨 Security Alert - Merritt Wellness</h2>
         <p><strong>Event:</strong> ${event}</p>
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
         <p><strong>Environment:</strong> ${process.env.NODE_ENV}</p>
         <hr>
         <pre>${JSON.stringify(details, null, 2)}</pre>
         <hr>
-        <p><em>This is an automated security alert from Merritt Fitness API.</em></p>
+        <p><em>This is an automated security alert from Merritt Wellness API.</em></p>
       `;
 
       await resend.emails.send({
-        from: 'Security Alerts <security@merrittfitness.net>',
+        from: 'Security Alerts <security@merrittwellness.net>',
         to: [process.env.SECURITY_EMAIL || 'merrittfitnessmanager@gmail.com'],
         subject: `🚨 Security Alert: ${event}`,
         html: emailContent,

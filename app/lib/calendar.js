@@ -250,7 +250,7 @@ ${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
 ${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
 
 Booking ID: ${booking.id}
-Contact manager@merrittfitness.net for changes.
+Contact manager@merrittwellness.net for changes.
       `.trim(),
       start: {
         dateTime: startDateTimeString,
@@ -260,7 +260,7 @@ Contact manager@merrittfitness.net for changes.
         dateTime: endDateTimeString,
         timeZone: 'America/Denver',
       },
-      location: 'Merritt Fitness, 2246 Irving St, Denver, CO 80211',
+      location: 'Merritt Wellness, 2246 Irving St, Denver, CO 80211',
       colorId: '11',
       transparency: 'opaque',
       visibility: 'public'

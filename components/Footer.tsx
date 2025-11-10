@@ -27,14 +27,14 @@ export default function Footer() {
             <Phone size={18} /> (720) 357-9499
           </a>
           <a
-            href="mailto:manager@merrittfitness.net"
+            href="mailto:manager@merrittwellness.net"
             className="flex items-center gap-1 hover:text-rose-700 transition"
           >
-            <Mail size={18} /> manager@merrittfitness.net
+            <Mail size={18} /> manager@merrittwellness.net
           </a>
         </div>
         <div className="text-gray-400 text-xs text-center mt-2">
-          © {new Date().getFullYear()} Merritt Fitness. All rights reserved.
+          © {new Date().getFullYear()} Merritt Wellness. All rights reserved.
         </div>
       </div>
     </footer>

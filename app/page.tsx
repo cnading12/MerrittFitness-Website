@@ -13,11 +13,11 @@ export default function Home() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": ["ExerciseGym", "LocalBusiness", "EventVenue"],
-    "name": "Merritt Fitness",
+    "name": "Merritt Wellness",
     "description": "Historic yoga studio and wellness sanctuary in Denver's Sloans Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
     "url": "https://merrittfitness.com",
     "telephone": "+1-720-357-9499",
-    "email": "manager@merrittfitness.net",
+    "email": "manager@merrittwellness.net",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "2246 Irving St",
@@ -157,7 +157,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
           <Image
             src="/images/hero/outside3.jpg"
-            alt="Historic Merritt Fitness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
+            alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
             className="object-cover brightness-75 scale-105 animate-slow-zoom"
             priority
@@ -240,7 +240,7 @@ export default function Home() {
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-gray-600 leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Fitness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
                     </p>
                     <p className="text-lg text-gray-600 leading-relaxed">
                       Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
@@ -386,7 +386,7 @@ export default function Home() {
           <div className="absolute inset-0">
             <Image
               src="/images/hero/1.jpg"
-              alt="Merritt Fitness Denver yoga studio interior booking background"
+              alt="Merritt Wellness Denver yoga studio interior booking background"
               fill
               className="object-cover opacity-10"
             />
@@ -430,9 +430,9 @@ export default function Home() {
                   )}
 
                   <iframe
-                    src="https://calendar.google.com/calendar/embed?src=c_3b551f029c24c4bae5c74fd94ba5f8bbfae09ddf059090837f29c284fca7bf9f%40group.calendar.google.com&ctz=America%2FDenver"
+                    src="https://calendar.google.com/calendar/embed?src=c_002ae67fc0cd95665a26d4183a61597bd74447d4760b239bd5135518cf978704%40group.calendar.google.com&ctz=America%2FDenver"
                     className="w-full h-full border-0"
-                    title="Merritt Fitness Denver Events Calendar - Yoga, Meditation, Sound Healing"
+                    title="Merritt Wellness Denver Events Calendar - Yoga, Meditation, Sound Healing"
                     onLoad={() => setCalendarLoaded(true)}
                     style={{ display: calendarLoaded ? 'block' : 'none' }}
                   />
@@ -499,7 +499,7 @@ export default function Home() {
                 </span>
                 <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-8">
                   Find Your Way to
-                  <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Fitness Denver</span>
+                  <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Wellness Denver</span>
                 </h2>
 
                 <div className="space-y-8 mb-12">
@@ -546,7 +546,7 @@ export default function Home() {
                       <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors duration-300">Connect with Us</h3>
                       <p className="text-gray-600 text-lg leading-relaxed">
                         Ready to answer your call<br />
-                        <span className="text-sm text-gray-500">(720) 357-9499 • manager@merrittfitness.net</span>
+                        <span className="text-sm text-gray-500">(720) 357-9499 • manager@merrittwellness.net</span>
                       </p>
                     </div>
                   </div>
@@ -574,7 +574,7 @@ export default function Home() {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Find Merritt Fitness - Historic yoga and wellness studio in Denver's Sloans Lake neighborhood"
+                    title="Find Merritt Wellness - Historic yoga and wellness studio in Denver's Sloans Lake neighborhood"
                     className="grayscale hover:grayscale-0 transition-all duration-500"
                   />
                 </div>
@@ -589,7 +589,7 @@ export default function Home() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900">Merritt Fitness Denver</div>
+                      <div className="font-bold text-gray-900">Merritt Wellness Denver</div>
                       <div className="text-sm text-gray-600">Historic Wellness Sanctuary</div>
                     </div>
                   </div>

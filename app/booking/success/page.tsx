@@ -71,7 +71,7 @@ function SuccessPageContent() {
             Your wellness experience is confirmed
           </p>
           <p className="text-gray-500">
-            Welcome to the Merritt Fitness community
+            Welcome to the Merritt Wellness community
           </p>
         </div>
 
