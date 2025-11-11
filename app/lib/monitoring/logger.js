@@ -347,7 +347,7 @@ class ProductionLogger {
 
       await resend.emails.send({
         from: 'Security Alerts <security@merrittwellness.net>',
-        to: [process.env.SECURITY_EMAIL || 'merrittfitnessmanager@gmail.com'],
+        to: [process.env.SECURITY_EMAIL || 'manager@merrittwellness.net'],
         subject: `🚨 Security Alert: ${event}`,
         html: emailContent,
       });

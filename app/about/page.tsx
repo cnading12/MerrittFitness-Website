@@ -91,7 +91,7 @@ export default function AboutPage() {
 
           <div className="bg-white rounded-2xl p-8 shadow-sm">
             <p className="text-lg text-gray-700 leading-relaxed mb-6">
-              Step inside and feel the energy that flows through these walls—soaring ceilings that seem to lift your spirit, original architecture that tells stories of decades past, and abundant natural light that bathes every corner in warmth. This isn't just a fitness studio; it's a sanctuary where history and healing converge.
+              Step inside and feel the energy that flows through these walls—soaring ceilings that seem to lift your spirit, original architecture that tells stories of decades past, and abundant natural light that bathes every corner in warmth. This isn't just a Wellness studio; it's a sanctuary where history and healing converge.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
               We've honored every beam, preserved every detail that made this space special, while creating something entirely new. Here, surrounded by the echoes of community gatherings past, you'll find your own path to wellness, creativity, and connection.

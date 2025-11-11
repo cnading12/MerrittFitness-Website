@@ -190,9 +190,9 @@ function SuccessPageContent() {
               <Phone size={16} />
               (720) 357-9499
             </a>
-            <a href="mailto:merrittfitnessmanager@gmail.com" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
+            <a href="mailto:manager@merrittwellness.net" className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
               <Mail size={16} />
-              merrittfitnessmanager@gmail.com
+              manager@merrittwellness.net
             </a>
           </div>
         </div>

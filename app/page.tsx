@@ -15,7 +15,7 @@ export default function Home() {
     "@type": ["ExerciseGym", "LocalBusiness", "EventVenue"],
     "name": "Merritt Wellness",
     "description": "Historic yoga studio and wellness sanctuary in Denver's Sloans Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
-    "url": "https://merrittfitness.com",
+    "url": "https://merrittwellness.net",
     "telephone": "+1-720-357-9499",
     "email": "manager@merrittwellness.net",
     "address": {
@@ -37,9 +37,9 @@ export default function Home() {
     "priceRange": "$95/hour",
     "paymentAccepted": ["Credit Card", "Cash", "Check", "Venmo", "Zelle"],
     "image": [
-      "https://merrittfitness.com/images/hero/outside3.jpg",
-      "https://merrittfitness.com/images/hero/1.jpg",
-      "https://merrittfitness.com/images/events/2.JPEG"
+      "https://merrittwellness.net/images/hero/outside3.jpg",
+      "https://merrittwellness.net/images/hero/1.jpg",
+      "https://merrittwellness.net/images/events/2.JPEG"
     ],
     "sameAs": [
       "https://www.instagram.com/merritt.fitness",
@@ -174,7 +174,7 @@ export default function Home() {
             <div className="mb-8 animate-fade-in-up">
               <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none">
                 <span className="block font-thin drop-shadow-lg">Merritt</span>
-                <span className="block font-bold bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent drop-shadow-lg">Fitness</span>
+                <span className="block font-bold bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent drop-shadow-lg">Wellness</span>
               </h1>
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mx-auto mb-8"></div>
               {/* ENHANCED: Better local keywords in hero description */}

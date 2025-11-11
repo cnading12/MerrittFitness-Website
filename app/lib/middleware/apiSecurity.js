@@ -17,7 +17,7 @@ const RATE_LIMITS = {
 // CORS configuration
 const CORS_CONFIG = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://merrittfitness.com', 'https://www.merrittfitness.com']
+    ? ['https://merrittwellness.net', 'https://www.merrittwellness.net']
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature'],

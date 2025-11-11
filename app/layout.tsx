@@ -23,11 +23,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Merritt Wellness | Historic Wellness Space in Denver',
     description: 'A beautifully restored 1905 venue for yoga, meditation, and wellness events in Denver\'s Sloans Lake neighborhood.',
-    url: 'https://merrittfitness.com',
+    url: 'https://merrittwellness.net',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittfitness.com/images/hero/outside3.jpg', // CHANGED: Using exterior shot
+        url: 'https://merrittwellness.net/images/hero/outside3.jpg', // CHANGED: Using exterior shot
         width: 1200,
         height: 630,
         alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
@@ -40,10 +40,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Merritt Wellness | Historic Wellness Space in Denver',
     description: 'Book your wellness event at our beautifully restored 1905 venue in Denver.',
-    images: ['https://merrittfitness.com/images/hero/outside3.jpg'], // CHANGED: Using exterior shot
+    images: ['https://merrittwellness.net/images/hero/outside3.jpg'], // CHANGED: Using exterior shot
   },
   alternates: {
-    canonical: 'https://merrittfitness.com',
+    canonical: 'https://merrittwellness.net',
   },
   robots: {
     index: true,
@@ -118,10 +118,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
-              "@id": "https://merrittfitness.com",
+              "@id": "https://merrittwellness.net",
               "name": "Merritt Wellness",
               "description": "Historic wellness and event space in Denver's Sloans Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
-              "url": "https://merrittfitness.com",
+              "url": "https://merrittwellness.net",
               "telephone": "+1-720-357-9499",
               "email": "manager@merrittwellness.net",
               "address": {
@@ -140,8 +140,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "openingHours": ["Mo-Su 06:00-22:00"],
               "priceRange": "$$",
               "image": [
-                "https://merrittfitness.com/images/hero/outside3.jpg",
-                "https://merrittfitness.com/images/hero/1.jpg"
+                "https://merrittwellness.net/images/hero/outside3.jpg",
+                "https://merrittwellness.net/images/hero/1.jpg"
               ],
               "sameAs": [
                 "https://www.instagram.com/merritt.fitness",
