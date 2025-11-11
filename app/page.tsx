@@ -325,8 +325,6 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-
-       // FEATURES SECTION - Enhanced with local keywords
         <section className="py-24 bg-white relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">

@@ -500,7 +500,7 @@ export default function BookingPage() {
   };
 
   return (
-    <main className="pt-24 pb-20 bg-gray-50 min-h-screen">
+    <main className="pt-32 pb-20 bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
