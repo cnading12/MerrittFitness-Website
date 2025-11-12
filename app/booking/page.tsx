@@ -26,12 +26,13 @@ export default function BookingPage() {
     contactName: '',
     email: '',
     phone: '',
-    homeAddress: '', // NEW: Added home address
+    homeAddress: '',
     businessName: '',
     websiteUrl: '',
     isRecurring: false,
     recurringDetails: '',
-    paymentMethod: 'card'
+    paymentMethod: 'card',
+    agreedToTerms: false // NEW: Terms agreement
   });
 
   // Business-focused event types
@@ -112,7 +113,7 @@ export default function BookingPage() {
     if (!timeString) return false;
     const [time, period] = timeString.split(' ');
     const [hours] = time.split(':').map(Number);
-    
+
     if (period === 'PM' && hours !== 12) {
       return hours >= 4;
     }
@@ -192,6 +193,11 @@ export default function BookingPage() {
       errors.phone = 'Please enter a valid phone number';
     }
 
+    // Validate terms agreement
+    if (!formData.agreedToTerms) {
+      errors.agreedToTerms = 'You must agree to the Terms and Conditions to proceed';
+    }
+
     // NEW: Validate home address
     if (!formData.homeAddress.trim()) {
       errors.homeAddress = 'Home address is required';
@@ -248,12 +254,12 @@ export default function BookingPage() {
         } else if (parseFloat(booking.hoursRequested) < 0.5) {
           errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
         }
-        
+
         // NEW: Validate Saturday special requirements
         if (isSaturday(booking.selectedDate)) {
           const hours = parseFloat(booking.hoursRequested) || 0;
           const afterFour = isAfter4PM(booking.selectedTime);
-          
+
           if (!afterFour && hours < 8) {
             errors[`booking_${index}_hoursRequested`] = 'Saturday all-day events (before 4 PM) require minimum 8 hours';
           }
@@ -487,7 +493,6 @@ export default function BookingPage() {
     } catch (error) {
       console.error('❌ Booking submission error:', error);
       setSubmitMessage(`❌ ${error.message}`);
-
       setTimeout(() => {
         const errorElement = document.querySelector('[role="alert"]');
         if (errorElement) {
@@ -933,8 +938,8 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-gray-200 hover:border-emerald-300'
+                      ? 'border-emerald-500 bg-emerald-50'
+                      : 'border-gray-200 hover:border-emerald-300'
                       }`}>
                       <input
                         type="radio"
@@ -967,8 +972,8 @@ export default function BookingPage() {
                     </label>
 
                     <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300'
                       }`}>
                       <input
                         type="radio"
@@ -1007,13 +1012,195 @@ export default function BookingPage() {
               </div>
             </div>
 
+            {/* Terms and Conditions Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertCircle className="text-red-700" size={20} />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Terms and Conditions</h2>
+                <div className="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
+                  Required
+                </div>
+              </div>
+
+              <div className="border-2 border-gray-200 rounded-xl p-6 bg-gray-50 max-h-96 overflow-y-auto mb-4">
+                <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Facility Information & Booking Terms</h3>
+
+                  <p>
+                    <strong>Facility Specifications:</strong> 2,000 square feet space with seating for 100, accommodates up to 130 standing room.
+                    Due to the historical age and nature of our building and its historical value, accessibility, decorations, types of events,
+                    and hours of operations will be handled on a case-by-case basis.
+                  </p>
+
+                  <p>
+                    <strong>Booking Timeline:</strong> 60 days out for guaranteed booking. The balance of your space rental fee is due sixty (60)
+                    days prior to your event. A copy of your Special Event Liability Insurance (see Insurance Section below) is due no later than
+                    ten (10) days prior to your event. Otherwise, the credit card on file will be held for damages should they occur.
+                  </p>
+
+                  <p>
+                    <strong>Alcohol Service:</strong> Alcohol service is permitted with the proper general liability insurance certificate provided
+                    by you the client. The alcohol must be served by TIPS certified bartenders and servers.
+                  </p>
+
+                  <p>
+                    <strong>Event Hours:</strong> The City of Denver registered Neighborhood Organization does not allow events to go past 10 P.M.
+                    However, there may be some exceptions depending on the type of event.
+                  </p>
+
+                  <p>
+                    <strong>Cancellation Policy:</strong> Neither the reservation deposit nor the final guaranteed booking payment is refundable.
+                    Any cancellations may cause the loss of additional bookings or business on that previously reserved date by you. If circumstances
+                    beyond the control of Merritt Wellness force us to cancel your reservation, Merritt Wellness will refund all sums paid. If the
+                    full rental payment is not received 60 days prior to your event, Merritt Wellness reserves the right to cancel your reservation
+                    without a deposit refund.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Insurance Requirements</h3>
+
+                  <p>
+                    <strong>Special Event Liability Insurance:</strong> Required of ALL clients and is due no later than ten (10) days prior to your
+                    event. The insurance must, at client's sole expense, provide and maintain public liability and personal property damage insurance,
+                    insuring Merritt Wellness LLC and Merritt Wellness employees, contractors and contracted vendors against all bodily injury,
+                    property damage, personal injury and other loss arising out of client's use and occupancy of the premises, or any other occupant
+                    on the premises, including appurtenances to the premises and sidewalks.
+                  </p>
+
+                  <p>
+                    The insurance required hereunder shall have a single limit liability of no less than <strong>$1 Million</strong>, and general
+                    aggregate liability of not less than <strong>$2 Million</strong>. Merritt Wellness LLC shall be named as an additional insured
+                    of said policy.
+                  </p>
+
+                  <p>
+                    Any caterers and/or outside vendors, companies, and/or institutions MUST provide a copy of their Certificate and Catering License
+                    to Merritt Wellness at least one month prior to the event.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Facility Rules & Safety</h3>
+
+                  <p>
+                    <strong>Smoke-Free Facility:</strong> Merritt Wellness is a smoke-free facility. Although the building is equipped with fire
+                    sprinklers, the premises is located in a potentially flammable historic building. There is no open flame or frying allowed on
+                    site or any cooking that will create a large amount of smoke as our facility is not ventilated. No smoking in any restroom.
+                    If smoking materials are discarded in planters, sidewalks or grounds, an extra cleanup charge will be imposed. Any guests
+                    violating the smoking restrictions will be asked to leave the premises by the event staff.
+                  </p>
+
+                  <p>
+                    <strong>Drug-Free Environment:</strong> There is absolutely no drug use or smoking of any kind tolerated on premises or within
+                    25 feet of the building including loitering or congregating outside on the sidewalk at any time during the event.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Legal & Liability</h3>
+
+                  <p>
+                    <strong>Attorney Fees:</strong> In the event Merritt Wellness retains the services of an attorney to represent its interests
+                    in regard to the lease or to bring an action for the recovery of damages or other charges, the Client agrees to pay a reasonable
+                    attorney fee of not less than $500.00 or 20% of the sum sued for, whichever is greater, plus the costs of any legal action.
+                  </p>
+
+                  <p>
+                    <strong>Lost and Found:</strong> Merritt Wellness takes no responsibility for personal effects and possessions left on premises
+                    during or after any event. We do, however, maintain a lost and found and will hold recovered items up to 30 days.
+                  </p>
+
+                  <p>
+                    <strong>City, County, State and Federal Laws:</strong> Renter agrees to comply with all applicable city, county, State, and
+                    Federal laws and shall conduct no illegal act on the premises. This is a drug free and non-smoking facility at all times,
+                    NO EXCEPTIONS. Client shall not sell alcohol on premises at any time. Client may not serve alcohol to minors on the premises
+                    at any time. Client agrees, for everyone's safety, to ensure alcoholic beverages are consumed in a responsible manner.
+                  </p>
+
+                  <p>
+                    Merritt Wellness reserves the right, in its exclusive discretion, to expel anyone who in its judgment is intoxicated or under
+                    the influence of alcohol or drugs, or who shall in any manner do or participate in any act jeopardizing the rights, use permit,
+                    or insurability of Merritt Wellness or the safety of its staff, guests, or building contents.
+                  </p>
+
+                  <p>
+                    <strong>Liability:</strong> Renter agrees to indemnify, defend, and hold Merritt Wellness LLC, its landlord, building owners,
+                    officers, employees, and agents harmless of and from any liabilities, costs, penalties, or expenses arising out of and/or
+                    resulting from the rental and use of the premises, including but not limited to, the personal guarantee of provision, service,
+                    and dispensing of payment by client, its employees, and agents of alcoholic beverages at Merritt Wellness LLC.
+                  </p>
+
+                  <p>
+                    <strong>Conduct:</strong> Disparaging remarks or any type of physical violence will not be tolerated and will be cause for
+                    immediate expulsion. Client and guests shall use the premises in a considerate manner at all times. Conduct deemed disorderly
+                    at the sole discretion of Merritt Wellness LLC staff shall be grounds for immediate expulsion from the premises and conclusion
+                    of the rental period. In such cases no refund of the rental fee shall be made.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Catering, Cleaning & Decorations</h3>
+
+                  <p>
+                    <strong>Promotions and Copyright:</strong> Should Merritt Wellness LLC be engaged in the promotion or co-production of your
+                    event, it is imperative that we see and approve all marketing messages and communications 30 days prior to the event. We are
+                    happy to provide professionally created images and logos of Merritt Wellness for promotional needs. We also reserve the right
+                    to take pictures of your event and use them for our marketing and promotional purposes.
+                  </p>
+
+                  <p>
+                    <strong>Catering, Cleaning, Trash and Equipment Removal:</strong> Merritt Wellness will be in a clean condition prior to your
+                    event. Upon additional planning with Merritt Wellness, you will need to incorporate your set-up time and clean up time into the
+                    rental agreement. You are required to return the space to the same clean condition in which it was found, unless payment for
+                    clean-up was made. Otherwise, all trash must be collected, properly bagged and removed by the renter or the caterer and the
+                    furniture must be rearranged. All rental equipment must be removed that night unless approved otherwise by Merritt Wellness.
+                  </p>
+
+                  <p>
+                    <strong>Site Decoration:</strong> Merritt Wellness wants to make every event here a special and welcome experience. Therefore
+                    every effort will be made to allow renter to prepare decorations reflecting their creative requirements. We ask that only the
+                    staff of Merritt Wellness assist with rearranging and moving any furnishings, including artwork, lighting, antiques or seating.
+                    No nails, screws, staples or penetrating items should be used on our walls, brick or fine wood. Any tape or gummed backing
+                    materials must be properly removed and in an extreme case of any wall damage, the card on file will be charged.
+                  </p>
+
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mt-6">
+                    <p className="text-sm text-blue-900">
+                      <strong>Contact Information:</strong><br />
+                      Merritt Wellness<br />
+                      2246 Irving St, Denver, CO 80211<br />
+                      Phone: (720) 357-9499<br />
+                      Email: Manager@merrittwellness.net<br />
+                      Web: MerrittWellness.net
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Agreement Checkbox */}
+              <div className={`border-2 rounded-xl p-4 ${validationErrors.agreedToTerms ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white'
+                }`}>
+                <label className="flex items-start cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.agreedToTerms}
+                    onChange={(e) => handleInputChange('agreedToTerms', e.target.checked)}
+                    className="mt-1 mr-3 text-emerald-600 w-5 h-5"
+                  />
+                  <span className="text-sm text-gray-700">
+                    I have read and agree to the <strong>Terms and Conditions</strong> outlined above. I understand the booking timeline,
+                    insurance requirements, cancellation policy, and all facility rules. I agree to comply with all policies and acknowledge
+                    my responsibilities as outlined in this agreement.
+                  </span>
+                </label>
+                {validationErrors.agreedToTerms && (
+                  <p className="text-red-600 text-sm mt-2 ml-8">{validationErrors.agreedToTerms}</p>
+                )}
+              </div>
+            </div>
+
             {/* Submit Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex flex-col items-center">
                 {submitMessage && (
                   <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${submitMessage.includes('✅')
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-red-50 text-red-800 border border-red-200'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-red-50 text-red-800 border border-red-200'
                     }`} role="alert">
                     <p className="text-sm font-medium">{submitMessage}</p>
                   </div>
@@ -1022,10 +1209,10 @@ export default function BookingPage() {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${!isSubmitting
-                      ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  disabled={isSubmitting || !formData.agreedToTerms}
+                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${!isSubmitting && formData.agreedToTerms
+                    ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                 >
                   {isSubmitting ? (
@@ -1048,6 +1235,12 @@ export default function BookingPage() {
                   )}
                 </button>
 
+                {!formData.agreedToTerms && (
+                  <p className="text-sm text-red-600 mt-3 text-center font-medium">
+                    Please agree to the Terms and Conditions to continue
+                  </p>
+                )}
+
                 <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
                   {formData.paymentMethod === 'pay-later'
                     ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
@@ -1056,141 +1249,140 @@ export default function BookingPage() {
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Enhanced Sidebar */}
-          <div className="lg:col-span-1">
-            {/* Pricing Summary */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <DollarSign className="mr-2" size={20} />
-                Pricing Summary
-              </h3>
+            {/* Enhanced Sidebar */}
+            <div className="lg:col-span-1">
+              {/* Pricing Summary */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <DollarSign className="mr-2" size={20} />
+                  Pricing Summary
+                </h3>
 
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-blue-900">Total Classes</span>
-                  <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
-                </div>
-                <p className="text-sm text-blue-700 mt-1">
-                  {pricing.totalHours} total hours • $95/hour base
-                </p>
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
-                  <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
-                </div>
-
-                {pricing.saturdayCharges > 0 && (
-                  <div className="flex justify-between text-amber-600">
-                    <span>Saturday Charges</span>
-                    <span>+${pricing.saturdayCharges.toFixed(2)}</span>
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-blue-900">Total Classes</span>
+                    <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
                   </div>
-                )}
-
-                {pricing.setupTeardownFees > 0 && (
-                  <div className="flex justify-between text-purple-600">
-                    <span>Setup/Teardown Assistance</span>
-                    <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between font-medium border-t pt-2">
-                  <span>Subtotal</span>
-                  <span>${pricing.subtotal.toFixed(2)}</span>
-                </div>
-
-                {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
-                  <div className="flex justify-between text-orange-600 border-t pt-2">
-                    <span>Processing Fee (3% - Stripe)</span>
-                    <span>+${pricing.stripeFee.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                <span className="font-medium text-gray-900">Total Amount</span>
-                <span className="text-xl font-bold text-gray-900">
-                  ${pricing.total.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="mt-3 text-xs">
-                {formData.paymentMethod === 'card' ? (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <p className="text-orange-800">
-                      <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
-                      Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-green-800">
-                      <strong>💰 Pay Later - No Fees!</strong>
-                      Alternative payment methods available.
-                      Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {pricing.minimumApplied && (
-                <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-blue-800">
-                    <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
+                  <p className="text-sm text-blue-700 mt-1">
+                    {pricing.totalHours} total hours • $95/hour base
                   </p>
                 </div>
-              )}
-            </div>
 
-            {/* Security & Trust */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
-              <div className="space-y-3 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">🔒</span>
-                  <span>SSL encrypted & PCI compliant</span>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
+                    <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
+                  </div>
+
+                  {pricing.saturdayCharges > 0 && (
+                    <div className="flex justify-between text-amber-600">
+                      <span>Saturday Charges</span>
+                      <span>+${pricing.saturdayCharges.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {pricing.setupTeardownFees > 0 && (
+                    <div className="flex justify-between text-purple-600">
+                      <span>Setup/Teardown Assistance</span>
+                      <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between font-medium border-t pt-2">
+                    <span>Subtotal</span>
+                    <span>${pricing.subtotal.toFixed(2)}</span>
+                  </div>
+
+                  {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
+                    <div className="flex justify-between text-orange-600 border-t pt-2">
+                      <span>Processing Fee (3% - Stripe)</span>
+                      <span>+${pricing.stripeFee.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-600">🛡️</span>
-                  <span>Stripe-powered security</span>
+
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                  <span className="font-medium text-gray-900">Total Amount</span>
+                  <span className="text-xl font-bold text-gray-900">
+                    ${pricing.total.toFixed(2)}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-600">📱</span>
-                  <span>Multiple payment options</span>
+
+                <div className="mt-3 text-xs">
+                  {formData.paymentMethod === 'card' ? (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <p className="text-orange-800">
+                        <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
+                        Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-green-800">
+                        <strong>💰 Pay Later - No Fees!</strong>
+                        Alternative payment methods available.
+                        Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-600">👥</span>
-                  <span>Trusted by 500+ professionals</span>
+
+                {pricing.minimumApplied && (
+                  <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-blue-800">
+                      <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Security & Trust */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600">🔒</span>
+                    <span>SSL encrypted & PCI compliant</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-600">🛡️</span>
+                    <span>Stripe-powered security</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-purple-600">📱</span>
+                    <span>Multiple payment options</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-orange-600">👥</span>
+                    <span>Trusted by 500+ professionals</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Contact Info */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                We're here to help create the perfect experience for your classes.
-              </p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Phone size={14} />
-                  <span>(720) 357-9499</span>
+              {/* Contact Info */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
+                <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  We're here to help create the perfect experience for your classes.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Phone size={14} />
+                    <span>(720) 357-9499</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Mail size={14} />
+                    <span>manager@merrittwellness.net</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Mail size={14} />
-                  <span>manager@merrittwellness.net</span>
-                </div>
+                <p className="text-xs text-gray-500 mt-4">
+                  💡 Call for partnership pricing & bulk discounts!
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-4">
-                💡 Call for partnership pricing & bulk discounts!
-              </p>
             </div>
           </div>
         </div>
-      </div>
     </main>
   );
 }
