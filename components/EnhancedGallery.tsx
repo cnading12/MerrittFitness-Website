@@ -337,7 +337,8 @@ const EnhancedGallery = () => {
                   alt={item.desc}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
+                {/* CAPTION OVERLAY - Hidden on mobile, visible on desktop hover */}
+                <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
                   <div className="absolute bottom-8 left-8 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                     <h3 className="text-3xl font-bold mb-2">{item.title}</h3>
                     <p className="text-gray-200 text-lg">{item.desc}</p>
@@ -445,14 +446,13 @@ const EnhancedGallery = () => {
                   className="max-w-full max-h-[80vh] object-contain rounded-lg"
                 />
                 
-                {/* Modal Info */}
-                <div className="absolute bottom-4 left-4 bg-black/70 text-white p-4 rounded-lg backdrop-blur-sm max-w-md">
-                  <h3 className="text-xl font-bold mb-1">{filteredItems[currentIndex]?.title}</h3>
-                  <p className="text-gray-200">{filteredItems[currentIndex]?.desc}</p>
+                {/* Modal Info - Much smaller on mobile */}
+                <div className="absolute bottom-2 left-2 right-2 md:bottom-4 md:left-4 md:right-auto bg-black/70 text-white p-2 md:p-4 rounded-lg backdrop-blur-sm md:max-w-md">
+                  <h3 className="text-sm md:text-xl font-bold mb-0 md:mb-1 leading-tight">{filteredItems[currentIndex]?.title}</h3>
+                  <p className="text-xs md:text-base text-gray-200 leading-snug md:leading-normal">{filteredItems[currentIndex]?.desc}</p>
                   {filteredItems[currentIndex]?.photographer && (
-                    <p className="text-gray-300 text-sm mt-2">
-                      📸 Photo by{' '}
-                      <a 
+                    <p className="text-gray-300 text-[10px] md:text-sm mt-1 md:mt-2">
+                      📸 <a 
                         href={`https://instagram.com/${filteredItems[currentIndex].photographer}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -462,8 +462,8 @@ const EnhancedGallery = () => {
                       </a>
                     </p>
                   )}
-                  <p className="text-gray-400 text-sm mt-2">
-                    {currentIndex + 1} of {filteredItems.length} • Use arrow keys to navigate
+                  <p className="text-gray-400 text-[10px] md:text-sm mt-1 md:mt-2">
+                    {currentIndex + 1} of {filteredItems.length}
                   </p>
                 </div>
               </div>
