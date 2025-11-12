@@ -152,17 +152,14 @@ export default function Home() {
       />
 
       <main className="bg-white font-sans">
-        {/* HERO - Enhanced alt text only */}
+        {/* HERO - Enhanced alt text only + MOBILE RIGHT FOCUS */}
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
           <Image
             src="/images/hero/outside3.jpg"
             alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
-            className="object-cover object-top brightness-75 scale-105 animate-slow-zoom"
-            priority
-            quality={95}
-          />
+className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom"          />
 
           {/* Enhanced floating elements */}
           <div className="absolute top-20 left-10 w-2 h-2 bg-white/40 rounded-full animate-float blur-sm"></div>
