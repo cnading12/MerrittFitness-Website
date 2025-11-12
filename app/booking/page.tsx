@@ -1320,11 +1320,21 @@ export default function BookingPage() {
                 ) : (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-green-800">
-                      <strong>💰 Pay Later - No Fees!</strong>
+                      <strong>💰 Pay Later - No Fees! </strong>
                       Alternative payment methods available.
                       Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
                     </p>
+                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-3">
+                      <div className="text-sm text-red-900">
+                        <p className="font-bold mb-1">⚠️ IMPORTANT: Payment Timeline</p>
+                        <p className="text-xs font-medium">
+                          Events within 30 days require payment within 24 hours of booking.
+                          Your date will be placed on the calendar but is NOT reserved until payment is received.
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
                 )}
               </div>
 
