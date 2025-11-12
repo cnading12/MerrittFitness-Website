@@ -1,5 +1,5 @@
 // app/api/booking-request/route.js
-// UPDATED VERSION - Includes home address and setup/teardown fees
+// FIXED VERSION - Eliminates duplicate calendar event creation
 
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
@@ -303,6 +303,13 @@ async function bookingHandler(request) {
         const createdBooking = await createBooking(bookingData);
         createdBookings.push(createdBooking);
 
+        console.log('✅ Booking created in DB:', {
+          id: individualBookingId,
+          status: createdBooking.status
+        });
+
+        // FIXED: Create calendar event ONCE for ALL bookings (both card and pay-later)
+        // This replaces the duplicate calendar creation blocks
         try {
           console.log('📅 Creating calendar event for booking:', individualBookingId);
           const calendarEvent = await createCalendarEvent(createdBooking);
@@ -320,33 +327,8 @@ async function bookingHandler(request) {
           }
         } catch (calendarError) {
           console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-        }
-
-        console.log('✅ Booking created in DB:', {
-          id: individualBookingId,
-          status: createdBooking.status
-        });
-
-        // Create calendar event for pay-later bookings
-        if (validatedData.contactInfo.paymentMethod === 'pay-later') {
-          try {
-            console.log('📅 Creating calendar event for pay-later booking');
-            const calendarEvent = await createCalendarEvent(createdBooking);
-
-            if (calendarEvent && calendarEvent.id) {
-              await supabase
-                .from('bookings')
-                .update({
-                  calendar_event_id: calendarEvent.id,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', individualBookingId);
-
-              console.log('✅ Calendar event created:', calendarEvent.id);
-            }
-          } catch (calendarError) {
-            console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-          }
+          // Don't fail the entire booking if calendar creation fails
+          // The booking is still valid, just without a calendar entry
         }
 
       } catch (error) {
