@@ -1249,140 +1249,140 @@ export default function BookingPage() {
                 </p>
               </div>
             </div>
+          </div>
+          {/* Enhanced Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Pricing Summary */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <DollarSign className="mr-2" size={20} />
+                Pricing Summary
+              </h3>
 
-            {/* Enhanced Sidebar */}
-            <div className="lg:col-span-1">
-              {/* Pricing Summary */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <DollarSign className="mr-2" size={20} />
-                  Pricing Summary
-                </h3>
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-blue-900">Total Classes</span>
+                  <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
+                </div>
+                <p className="text-sm text-blue-700 mt-1">
+                  {pricing.totalHours} total hours • $95/hour base
+                </p>
+              </div>
 
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-blue-900">Total Classes</span>
-                    <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
+                  <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
+                </div>
+
+                {pricing.saturdayCharges > 0 && (
+                  <div className="flex justify-between text-amber-600">
+                    <span>Saturday Charges</span>
+                    <span>+${pricing.saturdayCharges.toFixed(2)}</span>
                   </div>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {pricing.totalHours} total hours • $95/hour base
-                  </p>
-                </div>
+                )}
 
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
-                    <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
+                {pricing.setupTeardownFees > 0 && (
+                  <div className="flex justify-between text-purple-600">
+                    <span>Setup/Teardown Assistance</span>
+                    <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
                   </div>
+                )}
 
-                  {pricing.saturdayCharges > 0 && (
-                    <div className="flex justify-between text-amber-600">
-                      <span>Saturday Charges</span>
-                      <span>+${pricing.saturdayCharges.toFixed(2)}</span>
-                    </div>
-                  )}
+                <div className="flex justify-between font-medium border-t pt-2">
+                  <span>Subtotal</span>
+                  <span>${pricing.subtotal.toFixed(2)}</span>
+                </div>
 
-                  {pricing.setupTeardownFees > 0 && (
-                    <div className="flex justify-between text-purple-600">
-                      <span>Setup/Teardown Assistance</span>
-                      <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between font-medium border-t pt-2">
-                    <span>Subtotal</span>
-                    <span>${pricing.subtotal.toFixed(2)}</span>
+                {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
+                  <div className="flex justify-between text-orange-600 border-t pt-2">
+                    <span>Processing Fee (3% - Stripe)</span>
+                    <span>+${pricing.stripeFee.toFixed(2)}</span>
                   </div>
+                )}
+              </div>
 
-                  {formData.paymentMethod === 'card' && pricing.stripeFee > 0 && (
-                    <div className="flex justify-between text-orange-600 border-t pt-2">
-                      <span>Processing Fee (3% - Stripe)</span>
-                      <span>+${pricing.stripeFee.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                <span className="font-medium text-gray-900">Total Amount</span>
+                <span className="text-xl font-bold text-gray-900">
+                  ${pricing.total.toFixed(2)}
+                </span>
+              </div>
 
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                  <span className="font-medium text-gray-900">Total Amount</span>
-                  <span className="text-xl font-bold text-gray-900">
-                    ${pricing.total.toFixed(2)}
-                  </span>
-                </div>
-
-                <div className="mt-3 text-xs">
-                  {formData.paymentMethod === 'card' ? (
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                      <p className="text-orange-800">
-                        <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
-                        Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-green-800">
-                        <strong>💰 Pay Later - No Fees!</strong>
-                        Alternative payment methods available.
-                        Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {pricing.minimumApplied && (
-                  <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-blue-800">
-                      <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
+              <div className="mt-3 text-xs">
+                {formData.paymentMethod === 'card' ? (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p className="text-orange-800">
+                      <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
+                      Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-green-800">
+                      <strong>💰 Pay Later - No Fees!</strong>
+                      Alternative payment methods available.
+                      Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Security & Trust */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-600">🔒</span>
-                    <span>SSL encrypted & PCI compliant</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-600">🛡️</span>
-                    <span>Stripe-powered security</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-purple-600">📱</span>
-                    <span>Multiple payment options</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-orange-600">👥</span>
-                    <span>Trusted by 500+ professionals</span>
-                  </div>
+              {pricing.minimumApplied && (
+                <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-blue-800">
+                    <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
+                  </p>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Contact Info */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  We're here to help create the perfect experience for your classes.
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Phone size={14} />
-                    <span>(720) 357-9499</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Mail size={14} />
-                    <span>manager@merrittwellness.net</span>
-                  </div>
+            {/* Security & Trust */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">🔒</span>
+                  <span>SSL encrypted & PCI compliant</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-4">
-                  💡 Call for partnership pricing & bulk discounts!
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">🛡️</span>
+                  <span>Stripe-powered security</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-600">📱</span>
+                  <span>Multiple payment options</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-orange-600">👥</span>
+                  <span>Trusted by 500+ professionals</span>
+                </div>
               </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
+              <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                We're here to help create the perfect experience for your classes.
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Phone size={14} />
+                  <span>(720) 357-9499</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Mail size={14} />
+                  <span>manager@merrittwellness.net</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">
+                💡 Call for partnership pricing & bulk discounts!
+              </p>
             </div>
           </div>
         </div>
+      </div>
     </main>
   );
 }
