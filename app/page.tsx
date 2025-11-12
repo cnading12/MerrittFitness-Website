@@ -159,7 +159,7 @@ export default function Home() {
             src="/images/hero/outside3.jpg"
             alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
-            className="object-cover brightness-75 scale-105 animate-slow-zoom"
+            className="object-cover object-top brightness-75 scale-105 animate-slow-zoom"
             priority
             quality={95}
           />
@@ -345,7 +345,7 @@ export default function Home() {
               <div className="relative group">
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <Image
-                    src="/images/events/2.JPEG"
+                    src="/images/events/katrina/3.jpg"
                     alt="Dynamic yoga and movement arts classes in Denver's most spacious historic wellness venue"
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -360,20 +360,19 @@ export default function Home() {
               <div className="space-y-12">
                 {[
                   { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
-                  { emoji: "💪", title: "Fitness Events", desc: "High-energy fitness classes, bootcamps, and group training sessions energize Denver's wellness community in our expansive historic venue with professional equipment and inspiring atmosphere." },
+                  { emoji: "🎵", title: "Live Music & Sound Wellness", desc: "Sound baths, live acoustic performances, DJ sets, and ecstatic dance gatherings transform our historic venue into Denver's premier destination for sonic healing and conscious celebration." },
                   { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
-                  { emoji: "🥋", title: "Martial Arts Studio", desc: "24-foot ceilings and professional sprung floors support judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start space-x-6 group">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
+                  { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and professional sprung floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
+                    <div key={index} className="flex items-start space-x-6 group">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors duration-300">{item.title}</h3>
+                        <p className="text-gray-600 leading-relaxed text-lg">{item.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors duration-300">{item.title}</h3>
-                      <p className="text-gray-600 leading-relaxed text-lg">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
