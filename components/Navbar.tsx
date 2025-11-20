@@ -61,8 +61,8 @@ export default function Navbar() {
       {/* Desktop Navbar */}
       <div className={`w-full transition-all duration-300 ${
         scrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
-          : 'bg-white/80 backdrop-blur-sm'
+          ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20' 
+          : 'bg-[#f2eee9]/80 backdrop-blur-sm'
       }`}>
         <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           {/* Logo - Made Bigger */}
@@ -83,17 +83,17 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="relative font-medium text-gray-700 hover:text-gray-900 transition-colors duration-200 py-2 group"
+                className="relative font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2 group"
               >
                 {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-300 group-hover:w-full"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#735e59] transition-all duration-300 group-hover:w-full"></span>
               </Link>
             ))}
             
             {/* Book Now CTA */}
             <Link
               href="/booking"
-              className="inline-flex items-center gap-2 bg-gray-900 text-white font-medium px-5 py-2.5 rounded-full hover:bg-gray-800 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-medium px-5 py-2.5 rounded-full hover:bg-[#5a4a46] transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
             >
               <Calendar size={16} />
               Book Now
@@ -102,7 +102,7 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden text-gray-700 hover:text-gray-900 z-50 relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+            className="md:hidden text-[#735e59] hover:text-[#5a4a46] z-50 relative p-2 rounded-full hover:bg-[#735e59]/10 transition-colors duration-200"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
@@ -121,27 +121,27 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Mobile Drawer - FIXED WITH SOLID WHITE BACKGROUND */}
+      {/* Mobile Drawer */}
       <div className={`
         md:hidden fixed inset-0 z-40 transition-all duration-300 ease-in-out
         ${menuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
       `}>
         {/* Backdrop */}
         <div 
-          className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-[#735e59]/20 backdrop-blur-sm transition-opacity duration-300 ${
             menuOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setMenuOpen(false)}
         ></div>
         
-        {/* Drawer - NOW WITH SOLID WHITE BACKGROUND */}
+        {/* Drawer */}
         <div className={`
-          absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl
+          absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-[#f2eee9] shadow-2xl
           transition-transform duration-300 ease-out
           ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 bg-white">
+          <div className="flex items-center justify-between px-6 py-6 border-b border-[#735e59]/20 bg-[#f2eee9]">
             <Link
               href="/"
               className="flex items-center shrink-0"
@@ -159,20 +159,20 @@ export default function Navbar() {
             <button
               aria-label="Close menu"
               onClick={() => setMenuOpen(false)}
-              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+              className="text-[#735e59]/70 hover:text-[#735e59] p-2 rounded-full hover:bg-[#735e59]/10 transition-colors duration-200"
             >
               <X size={24} />
             </button>
           </div>
 
-          {/* Navigation - WITH WHITE BACKGROUND */}
-          <nav className="p-6 bg-white">
+          {/* Navigation */}
+          <nav className="p-6 bg-[#f2eee9]">
             <div className="space-y-1">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
+                  className="block text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
                   onClick={() => setMenuOpen(false)}
                 >
                   {item.label}
@@ -180,17 +180,17 @@ export default function Navbar() {
               ))}
             </div>
             
-            {/* Mobile Book CTA - WITH WHITE BACKGROUND */}
-            <div className="mt-8 pt-6 border-t border-gray-100 bg-white">
+            {/* Mobile Book CTA */}
+            <div className="mt-8 pt-6 border-t border-[#735e59]/20 bg-[#f2eee9]">
               <Link
                 href="/booking"
-                className="flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold py-4 px-6 rounded-2xl hover:bg-gray-800 transition-all duration-200 hover:scale-105 shadow-lg"
+                className="flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold py-4 px-6 rounded-2xl hover:bg-[#5a4a46] transition-all duration-200 hover:scale-105 shadow-lg"
                 onClick={() => setMenuOpen(false)}
               >
                 <Calendar size={20} />
                 Book Your Class
               </Link>
-              <p className="text-center text-sm text-gray-500 mt-3">
+              <p className="text-center text-sm text-[#735e59]/70 mt-3">
                 Ready to begin your journey?
               </p>
             </div>
