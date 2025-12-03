@@ -6,36 +6,24 @@ import Image from "next/image";
 export default function ContactPage() {
   return (
     <>
-      <main className="bg-[#faf8f5] font-sans">
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-16 bg-gradient-to-b from-[#735e59] via-[#735e59]/95 to-[#faf8f5] overflow-hidden">
-          {/* Background decorative elements */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/40 rounded-full animate-float blur-sm"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-[#f2eee9]/30 rounded-full animate-float-delay blur-sm"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#f2eee9]/35 rounded-full animate-float-slow blur-sm"></div>
-
-          <div className="max-w-4xl mx-auto px-6 text-center animate-fade-in-up">
-            <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Get In Touch
-            </span>
-            <h1 className="text-5xl lg:text-7xl font-light mb-6 text-[#f2eee9] leading-tight font-serif">
-              <span className="block font-thin drop-shadow-lg">Let's</span>
-              <span className="block font-bold drop-shadow-lg">Connect</span>
+      <main className="bg-[#faf8f5] font-sans min-h-screen">
+        {/* Simple Header */}
+        <section className="pt-32 pb-12 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-5xl md:text-6xl font-light text-[#4a3f3c] leading-tight font-serif mb-4">
+              Let's <span className="font-bold text-[#735e59]">Connect</span>
             </h1>
-            <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
-            <p className="text-xl text-[#f2eee9]/90 leading-relaxed max-w-2xl mx-auto drop-shadow-md">
+            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-6"></div>
+            <p className="text-xl text-[#6b5f5b] leading-relaxed max-w-2xl mx-auto">
               Step into our sacred space where wellness meets community. Whether you're ready to begin your journey or curious about what we offer, we're here to welcome you home.
             </p>
           </div>
         </section>
 
         {/* Contact Cards Section */}
-        <section className="py-16 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5]">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <section className="py-12 px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
               {/* Primary Contact */}
               <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -100,44 +88,40 @@ export default function ContactPage() {
             </div>
 
             {/* Social & Tour Section */}
-            <div className="bg-white rounded-3xl p-10 shadow-xl border border-[#735e59]/10 mb-16">
-              <div className="text-center mb-10">
-                <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Follow Along
-                </span>
-                <h3 className="text-2xl font-bold mb-6 text-[#4a3f3c] font-serif">Stay Connected</h3>
-                <div className="flex justify-center gap-4">
-                  <Link
-                    href="https://www.instagram.com/merritt.fitness"
-                    className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
-                    target="_blank"
-                    rel="noopener"
-                    aria-label="Follow us on Instagram"
-                  >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                    </svg>
-                  </Link>
-                  <Link
-                    href="https://www.facebook.com/merritt.fitness"
-                    className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
-                    target="_blank"
-                    rel="noopener"
-                    aria-label="Follow us on Facebook"
-                  >
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                  </Link>
+            <div className="bg-white rounded-3xl p-10 shadow-lg border border-[#735e59]/10">
+              <div className="grid md:grid-cols-2 gap-10 items-center">
+                {/* Social */}
+                <div className="text-center md:text-left">
+                  <h3 className="text-xl font-bold mb-4 text-[#4a3f3c] font-serif">Stay Connected</h3>
+                  <div className="flex justify-center md:justify-start gap-4">
+                    <Link
+                      href="https://www.instagram.com/merritt.fitness"
+                      className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
+                      target="_blank"
+                      rel="noopener"
+                      aria-label="Follow us on Instagram"
+                    >
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                    </Link>
+                    <Link
+                      href="https://www.facebook.com/merritt.fitness"
+                      className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
+                      target="_blank"
+                      rel="noopener"
+                      aria-label="Follow us on Facebook"
+                    >
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
-              </div>
 
-              <div className="border-t border-[#735e59]/10 pt-10">
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 text-[#735e59] mb-4">
+                {/* Tours */}
+                <div className="text-center md:text-left md:border-l md:border-[#735e59]/10 md:pl-10">
+                  <div className="inline-flex items-center gap-2 text-[#735e59] mb-3">
                     <div className="p-2 bg-amber-100/50 rounded-lg">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -145,7 +129,7 @@ export default function ContactPage() {
                     </div>
                     <span className="font-semibold text-lg">Private Tours Available</span>
                   </div>
-                  <p className="text-[#6b5f5b] mb-6 max-w-md mx-auto leading-relaxed">
+                  <p className="text-[#6b5f5b] leading-relaxed">
                     Experience the energy of our historic space before your first class. Call or email to schedule your personal walkthrough.
                   </p>
                 </div>
@@ -155,40 +139,16 @@ export default function ContactPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="relative py-24 bg-[#735e59] overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              src="/images/hero/1.jpg"
-              alt="Merritt Wellness interior"
-              fill
-              className="object-cover opacity-10"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
-          </div>
-
-          {/* Floating elements */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/20 rounded-full animate-float blur-sm"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-[#f2eee9]/15 rounded-full animate-float-delay blur-sm"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#f2eee9]/20 rounded-full animate-float-slow blur-sm"></div>
-
-          <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-            <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-8">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Start Your Journey
-            </span>
-            <h2 className="text-4xl md:text-5xl font-light text-[#f2eee9] mb-6 font-serif">
-              Ready to Begin Your
-              <span className="block font-bold">Wellness Journey?</span>
-            </h2>
-            <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/60 to-transparent mx-auto mb-8"></div>
-
+        <section className="py-16 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="text-lg text-[#6b5f5b] mb-6">
+              Ready to begin your wellness journey?
+            </p>
             <Link
               href="/booking"
-              className="group inline-flex items-center gap-3 bg-[#f2eee9] text-[#735e59] font-bold px-10 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 mb-6"
+              className="group inline-flex items-center gap-3 bg-[#735e59] text-[#f2eee9] font-bold px-10 py-5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-[#5a4a46]"
             >
-              <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               Book Your Class
@@ -196,55 +156,12 @@ export default function ContactPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-            <p className="text-[#f2eee9]/70 text-lg">
+            <p className="text-sm text-[#a08b84] mt-4">
               New to our space? Your first class is just the beginning.
             </p>
           </div>
         </section>
       </main>
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-
-        @keyframes float-delay {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-
-        @keyframes fade-in-up {
-          0% { opacity: 0; transform: translateY(30px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .animate-float-delay {
-          animation: float-delay 8s ease-in-out infinite;
-        }
-
-        .animate-float-slow {
-          animation: float-slow 10s ease-in-out infinite;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 1s ease-out 0.3s both;
-        }
-
-        .shadow-3xl {
-          box-shadow: 0 35px 60px -12px rgba(115, 94, 89, 0.25);
-        }
-      `}</style>
     </>
   );
 }
