@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.jpg', // CHANGED: Using exterior shot
+        url: 'https://merrittwellness.net/images/hero/outside3.jpg',
         width: 1200,
         height: 630,
         alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Merritt Wellness | Historic Wellness Space in Denver',
     description: 'Book your wellness event at our beautifully restored 1905 venue in Denver.',
-    images: ['https://merrittwellness.net/images/hero/outside3.jpg'], // CHANGED: Using exterior shot
+    images: ['https://merrittwellness.net/images/hero/outside3.jpg'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net',
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: '#10b981',
+  themeColor: '#735e59',
   colorScheme: 'light',
 };
 
@@ -78,7 +78,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* ENHANCED SEO: Additional meta tags for better search performance */}
+        {/* Google Fonts - Cormorant Garamond (serif) + Jost (sans) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" 
+          rel="stylesheet" 
+        />
+        
+        {/* SEO meta tags */}
         <meta name="author" content="Merritt Wellness" />
         <meta name="publisher" content="Merritt Wellness" />
         <meta name="copyright" content="© 2024 Merritt Wellness. All rights reserved." />
@@ -88,30 +96,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="rating" content="general" />
         <meta name="referrer" content="origin-when-cross-origin" />
         
-        {/* ENHANCED SEO: Geographic and local business info */}
+        {/* Geographic and local business info */}
         <meta name="geo.region" content="US-CO" />
         <meta name="geo.placename" content="Denver" />
         <meta name="geo.position" content="39.750982;-105.032254" />
         <meta name="ICBM" content="39.750982, -105.032254" />
         
-        {/* ENHANCED SEO: Business-specific meta tags */}
+        {/* Business-specific meta tags */}
         <meta name="business:type" content="wellness center" />
         <meta name="business:hours" content="Mo-Su 06:00-22:00" />
         <meta name="business:phone" content="+1-720-357-9499" />
         <meta name="business:email" content="manager@merrittwellness.net" />
         <meta name="business:address" content="2246 Irving St, Denver, CO 80211" />
         
-        {/* ENHANCED SEO: Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://www.google.com" />
         <link rel="preconnect" href="https://calendar.google.com" />
         
-        {/* ENHANCED SEO: DNS prefetch for faster loading */}
+        {/* DNS prefetch */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//www.google.com" />
         <link rel="dns-prefetch" href="//calendar.google.com" />
         
-        {/* ENHANCED SEO: Structured data for rich snippets */}
+        {/* Structured data for rich snippets */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -190,7 +197,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="ios-fix font-helvetica text-black bg-white flex flex-col min-h-screen">
+      <body className="ios-fix text-[#4a3f3c] bg-[#faf8f5] flex flex-col min-h-screen">
         <Navbar />
         <div className="flex-1">{children}</div>
         <Footer />

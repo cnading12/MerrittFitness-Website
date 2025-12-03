@@ -3,25 +3,58 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Brand Colors - derived from logo */
+  --brand-primary: #735e59;      /* Warm taupe from logo text */
+  --brand-primary-dark: #5a4a46; /* Darker shade for hover states */
+  --brand-primary-light: #8a7571; /* Lighter shade */
+  --brand-cream: #f2eee9;        /* Warm cream background */
+  --brand-cream-dark: #e8e2db;   /* Slightly darker cream */
+  --brand-warm-white: #faf8f5;   /* Warmest white */
+  --brand-text: #4a3f3c;         /* Dark brown for body text */
+  --brand-text-light: #6b5f5b;   /* Lighter text */
+  --brand-accent: #a08b84;       /* Soft accent */
+  
+  --background: var(--brand-warm-white);
+  --foreground: var(--brand-text);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Helvetica, sans-serif;
-  font-weight: normal; /* ✅ Reset default weight */
-  @apply font-helvetica text-black bg-white;
-  /* app/globals.css */
+  font-family: 'Jost', Helvetica, sans-serif;
+  font-weight: 400;
   margin: 0;
   padding: 0;
 }
 
+/* Elegant heading typography to match logo serif */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Utility classes for brand colors */
+.text-brand { color: var(--brand-primary); }
+.text-brand-dark { color: var(--brand-primary-dark); }
+.bg-brand { background-color: var(--brand-primary); }
+.bg-brand-cream { background-color: var(--brand-cream); }
+.bg-brand-warm { background-color: var(--brand-warm-white); }
+.border-brand { border-color: var(--brand-primary); }
+
+/* Font family utilities */
+.font-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+.font-sans { font-family: 'Jost', Helvetica, sans-serif; }
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color matching brand */
+::selection {
+  background-color: var(--brand-primary);
+  color: var(--brand-cream);
+}
+
+.gallery-modal-open header {
+  display: none !important;
+}

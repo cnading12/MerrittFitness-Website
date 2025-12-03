@@ -151,10 +151,10 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <main className="bg-white font-sans">
+      <main className="bg-[#faf8f5] font-sans">
         {/* HERO - Enhanced alt text only + MOBILE RIGHT FOCUS */}
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
           <Image
             src="/images/hero/outside5.PNG"
             alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
@@ -162,18 +162,18 @@ export default function Home() {
             className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom" />
 
           {/* Enhanced floating elements */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-white/40 rounded-full animate-float blur-sm"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-white/30 rounded-full animate-float-delay blur-sm"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-white/35 rounded-full animate-float-slow blur-sm"></div>
-          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/25 rounded-full animate-float blur-sm"></div>
+          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/40 rounded-full animate-float blur-sm"></div>
+          <div className="absolute top-40 right-20 w-1 h-1 bg-[#f2eee9]/30 rounded-full animate-float-delay blur-sm"></div>
+          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#f2eee9]/35 rounded-full animate-float-slow blur-sm"></div>
+          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-[#f2eee9]/25 rounded-full animate-float blur-sm"></div>
 
-          <div className="relative z-20 text-center text-white px-6 max-w-5xl mx-auto">
+          <div className="relative z-20 text-center text-[#f2eee9] px-6 max-w-5xl mx-auto">
             <div className="mb-8 animate-fade-in-up">
-              <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none">
+              <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none font-serif">
                 <span className="block font-thin drop-shadow-lg">Merritt</span>
-                <span className="block font-bold bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent drop-shadow-lg">Wellness</span>
+                <span className="block font-bold drop-shadow-lg">Wellness</span>
               </h1>
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mx-auto mb-8"></div>
+              <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
               {/* ENHANCED: Better local keywords in hero description */}
               <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
                 Denver's premier historic wellness sanctuary in Sloans Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
@@ -184,7 +184,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
               <Link
                 href="#booking"
-                className="group relative bg-white text-black font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
+                className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
               >
                 <span className="relative z-10 flex items-center">
                   <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,11 +192,11 @@ export default function Home() {
                   </svg>
                   Reserve Your Experience
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
               <Link
                 href="/about"
-                className="group border-2 border-white/70 text-white font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white"
+                className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
               >
                 <span className="flex items-center">
                   Discover the Space
@@ -210,54 +210,54 @@ export default function Home() {
 
           {/* Enhanced scroll indicator */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-white/70 rounded-full flex justify-center backdrop-blur-sm">
-              <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+            <div className="w-6 h-10 border-2 border-[#f2eee9]/70 rounded-full flex justify-center backdrop-blur-sm">
+              <div className="w-1 h-3 bg-[#f2eee9]/70 rounded-full mt-2 animate-pulse"></div>
             </div>
           </div>
         </section>
 
         {/* ABOUT SECTION - Enhanced headings and descriptions only */}
-        <section id="about" className="relative py-24 bg-gradient-to-b from-white via-gray-50/50 to-white">
+        <section id="about" className="relative py-24 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5]">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div className="space-y-8">
                 <div>
-                  <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                  <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Since 1905•Denver Historic Landmark
                   </span>
-                  <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
+                  <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
                     Denver's Sacred Space
-                    <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">for Wellness & Community</span>
+                    <span className="block font-bold text-[#735e59]">for Wellness & Community</span>
                   </h2>
-                  <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mb-8"></div>
+                  <div className="w-16 h-0.5 bg-gradient-to-r from-[#735e59] to-transparent mb-8"></div>
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
-                    <p className="text-lg text-gray-600 leading-relaxed">
+                    <p className="text-lg text-[#6b5f5b] leading-relaxed">
                       Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
                     </p>
-                    <p className="text-lg text-gray-600 leading-relaxed">
+                    <p className="text-lg text-[#6b5f5b] leading-relaxed">
                       Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
                     </p>
                   </div>
                 </div>
 
                 {/* Enhanced Stats */}
-                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[#735e59]/20">
                   <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">119</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Years Serving Denver</div>
+                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">119</div>
+                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Years Serving Denver</div>
                   </div>
                   <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">24ft</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Cathedral Ceilings</div>
+                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">24ft</div>
+                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Cathedral Ceilings</div>
                   </div>
                   <div className="text-center group">
-                    <div className="text-3xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors duration-300">2,400</div>
-                    <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
+                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">2,400</div>
+                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Square Feet</div>
                   </div>
                 </div>
 
@@ -265,7 +265,7 @@ export default function Home() {
                 <div className="pt-8">
                   <Link
                     href="/about"
-                    className="inline-flex items-center bg-gray-900 text-white font-semibold px-8 py-4 rounded-xl hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1 group shadow-lg hover:shadow-xl"
+                    className="inline-flex items-center bg-[#735e59] text-[#f2eee9] font-semibold px-8 py-4 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-1 group shadow-lg hover:shadow-xl"
                   >
                     <span>Learn Our Story</span>
                     <svg className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,42 +277,42 @@ export default function Home() {
 
               {/* Right Features Grid - Enhanced with local keywords */}
               <div className="grid grid-cols-2 gap-6 auto-rows-fr">
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                     <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0">Historic Denver Landmark</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0 font-serif">Historic Denver Landmark</h3>
+                  <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
                     Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
                   </p>
                 </div>
 
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
                   <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                     <span className="text-3xl filter group-hover:brightness-110">☀️</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0">Natural Light Studio</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0 font-serif">Natural Light Studio</h3>
+                  <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
                     Floor-to-ceiling windows bathe Denver's most beautiful yoga space in natural light throughout the day
                   </p>
                 </div>
 
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                     <span className="text-3xl filter group-hover:brightness-110">🤝</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300 flex-shrink-0">Inclusive Wellness Haven</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Inclusive Wellness Haven</h3>
+                  <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
                     A non-denominational sanctuary welcoming all Denver wellness practitioners, paths, and people
                   </p>
                 </div>
 
-                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#a08b84]/30 to-[#a08b84]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                     <span className="text-3xl filter group-hover:brightness-110">🎵</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300 flex-shrink-0">Perfect Sound Healing Acoustics</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-1">
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Perfect Sound Healing Acoustics</h3>
+                  <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
                     Original church acoustics create Denver's most immersive sound bath and meditation experience
                   </p>
                 </div>
@@ -322,20 +322,20 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-        <section className="py-24 bg-white relative">
+        <section className="py-24 bg-[#faf8f5] relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 Denver's Premier Wellness Venue
               </span>
-              <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-6">
+              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
                 Perfect for Every
-                <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Denver Wellness Practice</span>
+                <span className="block font-bold text-[#735e59]">Denver Wellness Practice</span>
               </h2>
-              <div className="w-24 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent mx-auto"></div>
+              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto"></div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
@@ -348,9 +348,9 @@ export default function Home() {
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
-                <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-gray-100">
-                  <div className="text-3xl font-bold text-gray-900">2,400</div>
-                  <div className="text-sm text-gray-500 uppercase tracking-wide">Square Feet</div>
+                <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
+                  <div className="text-3xl font-bold text-[#4a3f3c] font-serif">2,400</div>
+                  <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Square Feet</div>
                 </div>
               </div>
 
@@ -361,12 +361,12 @@ export default function Home() {
                   { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
                   { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and professional sprung floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
                     <div key={index} className="flex items-start space-x-6 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/15 to-[#735e59]/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                         <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors duration-300">{item.title}</h3>
-                        <p className="text-gray-600 leading-relaxed text-lg">{item.desc}</p>
+                        <h3 className="text-2xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 font-serif">{item.title}</h3>
+                        <p className="text-[#6b5f5b] leading-relaxed text-lg">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -376,7 +376,7 @@ export default function Home() {
         </section>
 
         {/* BOOKING SECTION - Enhanced with local keywords */}
-        <section id="booking" className="py-24 bg-gray-900 relative overflow-hidden">
+        <section id="booking" className="py-24 bg-[#735e59] relative overflow-hidden">
           <div className="absolute inset-0">
             <Image
               src="/images/hero/1.jpg"
@@ -384,40 +384,40 @@ export default function Home() {
               fill
               className="object-cover opacity-10"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-gray-900/95"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
           </div>
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">
-              <span className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm text-gray-300 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                 </svg>
                 Book Your Denver Wellness Experience
               </span>
-              <h2 className="text-4xl md:text-6xl font-light text-white mb-8">
+              <h2 className="text-4xl md:text-6xl font-light text-[#f2eee9] mb-8 font-serif">
                 Reserve Your
-                <span className="block font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Sloans Lake Sanctuary</span>
+                <span className="block font-bold">Sloans Lake Sanctuary</span>
               </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12">
+              <p className="text-xl text-[#f2eee9]/80 max-w-3xl mx-auto leading-relaxed mb-12">
                 Join Denver's vibrant wellness community or create your own transformative experience in Colorado's most inspiring historic yoga and meditation space
               </p>
             </div>
 
             {/* Enhanced Calendar Section */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 mb-12">
-              <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
-                <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Denver Wellness Events Calendar</h3>
-                  <p className="text-gray-600">Discover upcoming yoga classes, sound baths, and workshops at our Sloans Lake sanctuary</p>
+            <div className="bg-[#f2eee9]/5 backdrop-blur-sm rounded-3xl p-8 border border-[#f2eee9]/10 mb-12">
+              <div className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-2xl">
+                <div className="p-6 bg-gradient-to-r from-[#f2eee9] to-[#faf8f5] border-b border-[#735e59]/10">
+                  <h3 className="text-2xl font-bold text-[#4a3f3c] mb-2 font-serif">Denver Wellness Events Calendar</h3>
+                  <p className="text-[#6b5f5b]">Discover upcoming yoga classes, sound baths, and workshops at our Sloans Lake sanctuary</p>
                 </div>
 
                 {/* Calendar with improved loading */}
-                <div className="relative h-96 bg-gray-50">
+                <div className="relative h-96 bg-[#f2eee9]/50">
                   {!calendarLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                      <div className="text-gray-400 text-center">
-                        <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mb-4 mx-auto"></div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#f2eee9]/50">
+                      <div className="text-[#6b5f5b] text-center">
+                        <div className="w-12 h-12 border-4 border-[#a08b84] border-t-[#735e59] rounded-full animate-spin mb-4 mx-auto"></div>
                         <p className="text-lg font-medium">Loading Denver wellness schedule...</p>
                       </div>
                     </div>
@@ -438,7 +438,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <Link
                 href="/booking"
-                className="group relative bg-gradient-to-r from-white to-gray-100 text-black font-bold px-16 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
+                className="group relative bg-[#f2eee9] text-[#735e59] font-bold px-16 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center text-lg">
                   <svg className="w-6 h-6 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -446,12 +446,12 @@ export default function Home() {
                   </svg>
                   Reserve Your Denver Space
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
 
               <Link
                 href="/contact"
-                className="group border-2 border-white/70 text-white font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-500 hover:border-white text-lg"
+                className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9] text-lg"
               >
                 <span className="flex items-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,8 +471,8 @@ export default function Home() {
                 { number: "119", label: "Years in Denver" }
               ].map((item, index) => (
                 <div key={index} className="group">
-                  <div className="text-3xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors duration-300">{item.number}</div>
-                  <div className="text-gray-400 text-sm uppercase tracking-wide">{item.label}</div>
+                  <div className="text-3xl font-bold text-[#f2eee9] mb-2 group-hover:text-white transition-colors duration-300 font-serif">{item.number}</div>
+                  <div className="text-[#f2eee9]/70 text-sm uppercase tracking-wide">{item.label}</div>
                 </div>
               ))}
             </div>
@@ -480,67 +480,67 @@ export default function Home() {
         </section>
 
         {/* CONTACT SECTION - Enhanced with local keywords */}
-        <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative">
+        <section className="py-20 bg-gradient-to-b from-[#f2eee9] to-[#faf8f5] relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div>
-                <span className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   </svg>
                   Visit Denver's Premier Wellness Sanctuary
                 </span>
-                <h2 className="text-4xl md:text-5xl font-light leading-tight text-gray-900 mb-8">
+                <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-8 font-serif">
                   Find Your Way to
-                  <span className="block font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">Merritt Wellness Denver</span>
+                  <span className="block font-bold text-[#735e59]">Merritt Wellness Denver</span>
                 </h2>
 
                 <div className="space-y-8 mb-12">
                   <div className="flex items-start space-x-4 group">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors duration-300">
-                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 bg-[#735e59]/10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#735e59]/20 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-[#735e59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-700 transition-colors duration-300">Our Denver Location</h3>
-                      <p className="text-gray-600 text-lg leading-relaxed">
+                      <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Our Denver Location</h3>
+                      <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         2246 Irving Street<br />
                         Denver, Colorado 80211<br />
-                        <span className="text-sm text-gray-500">Heart of Sloans Lake Neighborhood</span>
+                        <span className="text-sm text-[#a08b84]">Heart of Sloans Lake Neighborhood</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4 group">
-                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors duration-300">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 bg-[#a08b84]/20 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#a08b84]/30 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-[#735e59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">Denver Studio Hours</h3>
-                      <p className="text-gray-600 text-lg leading-relaxed">
+                      <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Denver Studio Hours</h3>
+                      <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Available for bookings<br />
                         Monday - Sunday<br />
-                        <span className="text-sm text-gray-500">6:00 AM - 10:00 PM Mountain Time</span>
+                        <span className="text-sm text-[#a08b84]">6:00 AM - 10:00 PM Mountain Time</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start space-x-4 group">
-                    <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition-colors duration-300">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 bg-[#735e59]/10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#735e59]/20 transition-colors duration-300">
+                      <svg className="w-6 h-6 text-[#735e59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors duration-300">Connect with Us</h3>
-                      <p className="text-gray-600 text-lg leading-relaxed">
+                      <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Connect with Us</h3>
+                      <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Ready to answer your call<br />
-                        <span className="text-sm text-gray-500">(720) 357-9499 • manager@merrittwellness.net</span>
+                        <span className="text-sm text-[#a08b84]">(720) 357-9499 • manager@merrittwellness.net</span>
                       </p>
                     </div>
                   </div>
@@ -548,7 +548,7 @@ export default function Home() {
 
                 <Link
                   href="/contact"
-                  className="inline-flex items-center bg-black text-white font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
+                  className="inline-flex items-center bg-[#735e59] text-[#f2eee9] font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-[#5a4a46] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
                 >
                   <svg className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -569,22 +569,22 @@ export default function Home() {
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Find Merritt Wellness - Historic yoga and wellness studio in Denver's Sloans Lake neighborhood"
-                    className="grayscale hover:grayscale-0 transition-all duration-500"
+                    className="grayscale-[30%] hover:grayscale-0 transition-all duration-500"
                   />
                 </div>
 
                 {/* Enhanced Location Badge */}
-                <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/50">
+                <div className="absolute top-6 left-6 bg-[#faf8f5]/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-[#735e59]/10">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-[#735e59] rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-[#f2eee9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900">Merritt Wellness Denver</div>
-                      <div className="text-sm text-gray-600">Historic Wellness Sanctuary</div>
+                      <div className="font-bold text-[#4a3f3c] font-serif">Merritt Wellness Denver</div>
+                      <div className="text-sm text-[#6b5f5b]">Historic Wellness Sanctuary</div>
                     </div>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function Home() {
         }
         
         .shadow-3xl {
-          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 35px 60px -12px rgba(115, 94, 89, 0.25);
         }
 
         /* Improved hover effects */
