@@ -27,13 +27,6 @@ const EnhancedGallery = () => {
       category: "space"
     },
     { 
-      id: 3,
-      src: "/images/events/1.JPEG", 
-      title: "Community Gatherings", 
-      desc: "Building connections through movement",
-      category: "yoga"
-    },
-    { 
       id: 4,
       src: "/images/events/2.JPEG", 
       title: "Dynamic Movement", 
@@ -105,13 +98,6 @@ const EnhancedGallery = () => {
       src: "/images/events/judo/5.JPG", 
       title: "Judo Mastery", 
       desc: "The way of gentle force",
-      category: "events"
-    },
-    { 
-      id: 14,
-      src: "/images/events/judo/10.JPG", 
-      title: "Judo Excellence", 
-      desc: "Tradition meets modern training methods",
       category: "events"
     },
     { 
@@ -387,7 +373,7 @@ const EnhancedGallery = () => {
           {/* Thumbnail Strip */}
           <div 
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide"
+            className="flex gap-4 overflow-x-auto pb-6 scroll-smooth custom-scrollbar"
           >
             {filteredItems.map((item, index) => (
               <button
@@ -473,12 +459,23 @@ const EnhancedGallery = () => {
       </div>
 
       <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
         }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.7);
         }
       `}</style>
     </section>
