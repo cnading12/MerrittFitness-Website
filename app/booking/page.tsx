@@ -420,11 +420,11 @@ export default function BookingPage() {
     return validationErrors[fieldName];
   };
 
-  const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-lg transition-colors") => {
+  const getInputClassName = (fieldName, baseClassName = "w-full p-3 border rounded-xl transition-colors") => {
     const hasError = validationErrors[fieldName];
     return hasError
       ? `${baseClassName} border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500`
-      : `${baseClassName} border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`;
+      : `${baseClassName} border-[#735e59]/20 focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]`;
   };
 
   const handleSubmit = async () => {
@@ -505,23 +505,26 @@ export default function BookingPage() {
   };
 
   return (
-    <main className="pt-32 pb-20 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4">
+    <main className="pt-32 pb-20 bg-[#faf8f5] min-h-screen font-sans">
+      <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl lg:text-5xl font-light mb-4 text-gray-900">Reserve Your Sacred Space</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl lg:text-5xl font-light mb-4 text-[#4a3f3c] font-serif">
+            Reserve Your <span className="font-bold text-[#735e59]">Sacred Space</span>
+          </h1>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-6"></div>
+          <p className="text-xl text-[#6b5f5b] max-w-3xl mx-auto">
             Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
-            <span className="font-semibold text-emerald-700"> $95/hour • Flexible pricing for partners</span>
+            <span className="font-semibold text-[#735e59]"> $95/hour • Flexible pricing for partners</span>
           </p>
         </div>
 
         {/* NEW: Important Rental Information */}
-        <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-8">
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <AlertCircle className="text-amber-600 mt-1 flex-shrink-0" size={24} />
             <div>
-              <h3 className="text-lg font-semibold text-amber-900 mb-3">Important Rental Information</h3>
+              <h3 className="text-lg font-semibold text-amber-900 mb-3 font-serif">Important Rental Information</h3>
               <ul className="space-y-2 text-amber-800">
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -576,18 +579,18 @@ export default function BookingPage() {
           {/* Main Booking Form */}
           <div className="lg:col-span-2">
             {/* Public Calendar Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <Calendar className="text-emerald-700" size={20} />
+                <div className="p-2 bg-[#735e59]/10 rounded-xl">
+                  <Calendar className="text-[#735e59]" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Live Availability Calendar</h2>
-                <div className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Live Availability Calendar</h2>
+                <div className="bg-[#735e59]/10 text-[#735e59] text-xs font-medium px-3 py-1 rounded-full">
                   Public Access
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+              <div className="bg-white rounded-2xl border border-[#735e59]/10 overflow-hidden mb-6">
                 <iframe
                   src="https://calendar.google.com/calendar/embed?src=c_002ae67fc0cd95665a26d4183a61597bd74447d4760b239bd5135518cf978704%40group.calendar.google.com&ctz=America%2FDenver"
                   className="w-full h-96"
@@ -597,22 +600,22 @@ export default function BookingPage() {
             </div>
 
             {/* Multiple Bookings Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="text-blue-700" size={20} />
+                  <div className="p-2 bg-[#a08b84]/20 rounded-xl">
+                    <Users className="text-[#735e59]" size={20} />
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Your Booking(s)</h2>
+                  <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Your Booking(s)</h2>
                   {bookings.length > 1 && (
-                    <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                    <div className="bg-[#735e59]/10 text-[#735e59] text-xs font-medium px-3 py-1 rounded-full">
                       {bookings.length} Classes
                     </div>
                   )}
                 </div>
                 <button
                   onClick={addBooking}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#735e59] text-[#f2eee9] rounded-xl hover:bg-[#5a4a46] transition-colors"
                   disabled={bookings.length >= 10}
                 >
                   <Plus size={16} />
@@ -622,9 +625,9 @@ export default function BookingPage() {
 
               {/* Individual Bookings */}
               {bookings.map((booking, index) => (
-                <div key={booking.id} className="border border-gray-200 rounded-xl p-6 mb-6 last:mb-0">
+                <div key={booking.id} className="border border-[#735e59]/10 rounded-2xl p-6 mb-6 last:mb-0 bg-[#faf8f5]/50">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Class #{index + 1}</h3>
+                    <h3 className="text-lg font-semibold text-[#4a3f3c] font-serif">Class #{index + 1}</h3>
                     {bookings.length > 1 && (
                       <button
                         onClick={() => removeBooking(booking.id)}
@@ -638,7 +641,7 @@ export default function BookingPage() {
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Class/Event Name *
                       </label>
                       <input
@@ -655,7 +658,7 @@ export default function BookingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Practice Type *
                       </label>
                       <select
@@ -677,7 +680,7 @@ export default function BookingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Date *
                       </label>
                       <input
@@ -702,7 +705,7 @@ export default function BookingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Start Time *
                         {isCheckingAvailability && (
                           <span className="text-sm text-blue-600 ml-2">
@@ -745,7 +748,7 @@ export default function BookingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Duration *
                       </label>
                       <select
@@ -776,7 +779,7 @@ export default function BookingPage() {
                             type="checkbox"
                             checked={booking.needsSetupHelp}
                             onChange={(e) => updateBooking(booking.id, 'needsSetupHelp', e.target.checked)}
-                            className="mr-3 text-emerald-600"
+                            className="mr-3 text-[#735e59]"
                           />
                           <span>Setup assistance needed (+$50)</span>
                         </label>
@@ -785,7 +788,7 @@ export default function BookingPage() {
                             type="checkbox"
                             checked={booking.needsTeardownHelp}
                             onChange={(e) => updateBooking(booking.id, 'needsTeardownHelp', e.target.checked)}
-                            className="mr-3 text-emerald-600"
+                            className="mr-3 text-[#735e59]"
                           />
                           <span>Teardown assistance needed (+$50)</span>
                         </label>
@@ -796,7 +799,7 @@ export default function BookingPage() {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Special Notes for This Class
                       </label>
                       <textarea
@@ -804,7 +807,7 @@ export default function BookingPage() {
                         onChange={(e) => updateBooking(booking.id, 'specialRequests', e.target.value)}
                         rows={3}
                         placeholder="Equipment needs, setup requirements, etc."
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+                        className="w-full p-3 border border-[#735e59]/20 rounded-xl focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59] transition-colors resize-none"
                         maxLength={500}
                       />
                     </div>
@@ -813,11 +816,11 @@ export default function BookingPage() {
               ))}
 
               {bookings.length < 10 && (
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
-                  <div className="text-gray-500 mb-2">Planning multiple classes?</div>
+                <div className="border-2 border-dashed border-[#735e59]/20 rounded-2xl p-6 text-center">
+                  <div className="text-[#6b5f5b] mb-2">Planning multiple classes?</div>
                   <button
                     onClick={addBooking}
-                    className="text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="text-[#735e59] hover:text-[#5a4a46] font-medium"
                   >
                     + Add another class to save time
                   </button>
@@ -826,18 +829,18 @@ export default function BookingPage() {
             </div>
 
             {/* Contact & Payment Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Mail className="text-purple-700" size={20} />
+                <div className="p-2 bg-[#735e59]/10 rounded-xl">
+                  <Mail className="text-[#735e59]" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Contact Information</h2>
               </div>
 
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                       Full Name *
                     </label>
                     <input
@@ -854,7 +857,7 @@ export default function BookingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                       Email Address *
                     </label>
                     <input
@@ -871,7 +874,7 @@ export default function BookingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                       Phone (Optional)
                     </label>
                     <input
@@ -889,7 +892,7 @@ export default function BookingPage() {
 
                   {/* NEW: Home Address Field */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                       Home Address *
                     </label>
                     <input
@@ -906,7 +909,7 @@ export default function BookingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                       Business Name (Optional)
                     </label>
                     <input
@@ -934,12 +937,12 @@ export default function BookingPage() {
                 </div>
 
                 {/* Enhanced Payment Method Selection */}
-                <div className="border-t border-gray-100 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
+                <div className="border-t border-[#735e59]/10 pt-6">
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-4 font-serif">Payment Method</h3>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:border-emerald-300'
+                    <label className={`flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
+                      ? 'border-[#735e59] bg-[#735e59]/5'
+                      : 'border-[#735e59]/20 hover:border-[#735e59]/50'
                       }`}>
                       <input
                         type="radio"
@@ -947,11 +950,11 @@ export default function BookingPage() {
                         value="card"
                         checked={formData.paymentMethod === 'card'}
                         onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-emerald-600"
+                        className="mt-1 mr-3 text-[#735e59]"
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <CreditCard className="text-emerald-600" size={20} />
+                          <CreditCard className="text-[#735e59]" size={20} />
                           <span className="font-medium">Pay Online Now</span>
                         </div>
                         <p className="text-sm text-gray-600 mb-3">
@@ -971,9 +974,9 @@ export default function BookingPage() {
                       </div>
                     </label>
 
-                    <label className={`flex items-start p-4 border-2 rounded-xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
+                    <label className={`flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
+                      ? 'border-[#a08b84] bg-[#a08b84]/10'
+                      : 'border-[#735e59]/20 hover:border-[#a08b84]/50'
                       }`}>
                       <input
                         type="radio"
@@ -981,11 +984,11 @@ export default function BookingPage() {
                         value="pay-later"
                         checked={formData.paymentMethod === 'pay-later'}
                         onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-blue-600"
+                        className="mt-1 mr-3 text-[#735e59]"
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Phone className="text-blue-600" size={20} />
+                          <Phone className="text-[#735e59]" size={20} />
                           <span className="font-medium">Pay Later</span>
                           <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
                             NO FEES
@@ -1013,20 +1016,20 @@ export default function BookingPage() {
             </div>
 
             {/* Terms and Conditions Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-red-100 rounded-lg">
+                <div className="p-2 bg-red-100 rounded-xl">
                   <AlertCircle className="text-red-700" size={20} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Terms and Conditions</h2>
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Terms and Conditions</h2>
                 <div className="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
                   Required
                 </div>
               </div>
 
-              <div className="border-2 border-gray-200 rounded-xl p-6 bg-gray-50 max-h-96 overflow-y-auto mb-4">
-                <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Facility Information & Booking Terms</h3>
+              <div className="border-2 border-[#735e59]/10 rounded-2xl p-6 bg-[#faf8f5] max-h-96 overflow-y-auto mb-4">
+                <div className="prose prose-sm max-w-none text-[#6b5f5b] space-y-4">
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif">Facility Information & Booking Terms</h3>
 
                   <p>
                     <strong>Facility Specifications:</strong> 2,000 square feet space with seating for 100, accommodates up to 130 standing room.
@@ -1058,7 +1061,7 @@ export default function BookingPage() {
                     without a deposit refund.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Insurance Requirements</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance Requirements</h3>
 
                   <p>
                     <strong>Special Event Liability Insurance:</strong> Required of ALL clients and is due no later than ten (10) days prior to your
@@ -1079,7 +1082,7 @@ export default function BookingPage() {
                     to Merritt Wellness at least one month prior to the event.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Facility Rules & Safety</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Facility Rules & Safety</h3>
 
                   <p>
                     <strong>Smoke-Free Facility:</strong> Merritt Wellness is a smoke-free facility. Although the building is equipped with fire
@@ -1094,7 +1097,7 @@ export default function BookingPage() {
                     25 feet of the building including loitering or congregating outside on the sidewalk at any time during the event.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Legal & Liability</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Legal & Liability</h3>
 
                   <p>
                     <strong>Attorney Fees:</strong> In the event Merritt Wellness retains the services of an attorney to represent its interests
@@ -1134,7 +1137,7 @@ export default function BookingPage() {
                     of the rental period. In such cases no refund of the rental fee shall be made.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Catering, Cleaning & Decorations</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Catering, Cleaning & Decorations</h3>
 
                   <p>
                     <strong>Promotions and Copyright:</strong> Should Merritt Wellness LLC be engaged in the promotion or co-production of your
@@ -1173,16 +1176,16 @@ export default function BookingPage() {
               </div>
 
               {/* Agreement Checkbox */}
-              <div className={`border-2 rounded-xl p-4 ${validationErrors.agreedToTerms ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white'
+              <div className={`border-2 rounded-2xl p-4 ${validationErrors.agreedToTerms ? 'border-red-500 bg-red-50' : 'border-[#735e59]/20 bg-white'
                 }`}>
                 <label className="flex items-start cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.agreedToTerms}
                     onChange={(e) => handleInputChange('agreedToTerms', e.target.checked)}
-                    className="mt-1 mr-3 text-emerald-600 w-5 h-5"
+                    className="mt-1 mr-3 text-[#735e59] w-5 h-5"
                   />
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-[#6b5f5b]">
                     I have read and agree to the <strong>Terms and Conditions</strong> outlined above. I understand the booking timeline,
                     insurance requirements, cancellation policy, and all facility rules. I agree to comply with all policies and acknowledge
                     my responsibilities as outlined in this agreement.
@@ -1195,7 +1198,7 @@ export default function BookingPage() {
             </div>
 
             {/* Submit Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6">
               <div className="flex flex-col items-center">
                 {submitMessage && (
                   <div className={`mb-4 p-4 rounded-xl text-center max-w-md ${submitMessage.includes('✅')
@@ -1210,8 +1213,8 @@ export default function BookingPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !formData.agreedToTerms}
-                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-200 ${!isSubmitting && formData.agreedToTerms
-                    ? 'bg-gray-900 text-white hover:bg-gray-800 hover:scale-105 shadow-lg hover:shadow-xl'
+                  className={`inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold transition-all duration-300 ${!isSubmitting && formData.agreedToTerms
+                    ? 'bg-[#735e59] text-[#f2eee9] hover:bg-[#5a4a46] hover:scale-105 shadow-lg hover:shadow-xl'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                 >
@@ -1253,18 +1256,18 @@ export default function BookingPage() {
           {/* Enhanced Sidebar */}
           <div className="lg:col-span-1">
             {/* Pricing Summary */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-24">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <DollarSign className="mr-2" size={20} />
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-6 sticky top-24">
+              <h3 className="text-lg font-bold text-[#4a3f3c] mb-4 flex items-center font-serif">
+                <DollarSign className="mr-2 text-[#735e59]" size={20} />
                 Pricing Summary
               </h3>
 
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <div className="mb-4 p-3 bg-[#735e59]/10 rounded-xl">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-blue-900">Total Classes</span>
-                  <span className="text-xl font-bold text-blue-900">{pricing.totalBookings}</span>
+                  <span className="font-medium text-[#4a3f3c]">Total Classes</span>
+                  <span className="text-xl font-bold text-[#735e59]">{pricing.totalBookings}</span>
                 </div>
-                <p className="text-sm text-blue-700 mt-1">
+                <p className="text-sm text-[#6b5f5b] mt-1">
                   {pricing.totalHours} total hours • $95/hour base
                 </p>
               </div>
@@ -1302,9 +1305,9 @@ export default function BookingPage() {
                 )}
               </div>
 
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                <span className="font-medium text-gray-900">Total Amount</span>
-                <span className="text-xl font-bold text-gray-900">
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#735e59]/10">
+                <span className="font-medium text-[#4a3f3c]">Total Amount</span>
+                <span className="text-xl font-bold text-[#735e59]">
                   ${pricing.total.toFixed(2)}
                 </span>
               </div>
@@ -1348,9 +1351,9 @@ export default function BookingPage() {
             </div>
 
             {/* Security & Trust */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Security & Trust</h3>
-              <div className="space-y-3 text-sm text-gray-600">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-6">
+              <h3 className="font-bold text-[#4a3f3c] mb-4 font-serif">Security & Trust</h3>
+              <div className="space-y-3 text-sm text-[#6b5f5b]">
                 <div className="flex items-center gap-2">
                   <span className="text-green-600">🔒</span>
                   <span>SSL encrypted & PCI compliant</span>
@@ -1371,22 +1374,22 @@ export default function BookingPage() {
             </div>
 
             {/* Contact Info */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Questions?</h3>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="bg-gradient-to-br from-[#f2eee9] to-[#faf8f5] rounded-3xl p-6 border border-[#735e59]/10">
+              <h3 className="font-bold text-[#4a3f3c] mb-3 font-serif">Questions?</h3>
+              <p className="text-sm text-[#6b5f5b] mb-4">
                 We're here to help create the perfect experience for your classes.
               </p>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Phone size={14} />
+                <div className="flex items-center gap-2 text-[#4a3f3c]">
+                  <Phone size={14} className="text-[#735e59]" />
                   <span>(720) 357-9499</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Mail size={14} />
+                <div className="flex items-center gap-2 text-[#4a3f3c]">
+                  <Mail size={14} className="text-[#735e59]" />
                   <span>manager@merrittwellness.net</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-[#a08b84] mt-4">
                 💡 Call for partnership pricing & bulk discounts!
               </p>
             </div>
