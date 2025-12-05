@@ -1,0 +1,29 @@
+# Robots.txt for Merritt Wellness
+# https://merrittwellness.net
+
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://merrittwellness.net/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Specific bot instructions
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Disallow API routes and internal pages
+Disallow: /api/
+Disallow: /booking/payment
+Disallow: /booking/success
+
+# Allow important assets
+Allow: /images/
+Allow: /*.js$
+Allow: /*.css$

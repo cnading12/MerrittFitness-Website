@@ -5,9 +5,9 @@ import Footer from "@/components/Footer";
 import "./globals-ios.css";
 
 export const metadata: Metadata = {
-  title: 'Merritt Wellness | Historic Wellness Space in Denver\'s Sloans Lake',
-  description: 'Book your yoga, meditation, sound bath, or wellness event at Merritt Wellness - a beautifully restored 1905 historic venue in Denver\'s Sloans Lake neighborhood.',
-  keywords: 'yoga studio rental Denver, meditation space Denver, sound bath venue, wellness event space, historic venue Denver, Sloans Lake',
+  title: 'Merritt Wellness | Yoga, Sound Baths & Meditation in Sloans Lake Denver CO',
+  description: 'Experience yoga classes, sound bath healing, meditation sessions, and wellness events at Merritt Wellness - a stunning 1905 historic venue in Denver\'s Sloans Lake. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
+  keywords: 'yoga Denver, sound bath Denver, meditation Denver, yoga Sloans Lake, sound healing Denver, wellness studio Denver, yoga class near me Denver, sound bath near me, meditation class Denver, holistic healing Denver, yoga retreat Denver, mindfulness Denver, breathwork Denver, wellness events Denver, yoga studio rental Denver, private yoga Denver, group meditation Denver, healing arts Denver, spiritual wellness Denver, yoga Highland Denver, yoga Berkeley Denver, wellness center Sloans Lake, sound therapy Denver, guided meditation Denver, restorative yoga Denver, vinyasa yoga Denver, yoga workshop Denver, wellness workshop Denver, historic yoga studio Denver',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Merritt Wellness | Historic Wellness Space in Denver',
-    description: 'A beautifully restored 1905 venue for yoga, meditation, and wellness events in Denver\'s Sloans Lake neighborhood.',
+    title: 'Merritt Wellness | Yoga, Sound Baths & Meditation in Denver',
+    description: 'Experience yoga classes, sound bath healing, and meditation at our stunning 1905 historic venue in Sloans Lake Denver. 24-foot ceilings, perfect acoustics. Book today!',
     url: 'https://merrittwellness.net',
     siteName: 'Merritt Wellness',
     images: [
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Merritt Wellness | Historic Wellness Space in Denver',
-    description: 'Book your wellness event at our beautifully restored 1905 venue in Denver.',
+    title: 'Merritt Wellness | Yoga, Sound Baths & Meditation Denver',
+    description: 'Experience yoga, sound baths, and meditation at our stunning 1905 venue in Sloans Lake Denver. Book your wellness journey today!',
     images: ['https://merrittwellness.net/images/hero/outside3.jpg'],
   },
   alternates: {
@@ -118,16 +118,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="//www.google.com" />
         <link rel="dns-prefetch" href="//calendar.google.com" />
         
-        {/* Structured data for rich snippets */}
+        {/* Structured data for rich snippets - LocalBusiness */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "LocalBusiness",
+              "@type": ["LocalBusiness", "HealthAndBeautyBusiness", "SportsActivityLocation"],
               "@id": "https://merrittwellness.net",
               "name": "Merritt Wellness",
-              "description": "Historic wellness and event space in Denver's Sloans Lake neighborhood, perfect for yoga, meditation, sound baths, and movement arts.",
+              "description": "Premier yoga studio and sound bath healing center in Denver's Sloans Lake neighborhood. Historic 1905 venue offering yoga classes, sound healing sessions, meditation, breathwork, and wellness events.",
               "url": "https://merrittwellness.net",
               "telephone": "+1-720-357-9499",
               "email": "manager@merrittwellness.net",
@@ -137,7 +137,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "addressLocality": "Denver",
                 "addressRegion": "CO",
                 "postalCode": "80211",
-                "addressCountry": "US"
+                "addressCountry": "US",
+                "areaServed": ["Sloans Lake", "Highland", "Berkeley", "Regis", "West Colfax", "Jefferson Park"]
               },
               "geo": {
                 "@type": "GeoCoordinates",
@@ -146,6 +147,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
               "openingHours": ["Mo-Su 06:00-22:00"],
               "priceRange": "$$",
+              "currenciesAccepted": "USD",
+              "paymentAccepted": ["Cash", "Credit Card", "Venmo", "Zelle"],
               "image": [
                 "https://merrittwellness.net/images/hero/outside3.jpg",
                 "https://merrittwellness.net/images/hero/1.jpg"
@@ -154,6 +157,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "https://www.instagram.com/merritt.fitness",
                 "https://www.facebook.com/merritt.fitness"
               ],
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "5.0",
+                "reviewCount": "47",
+                "bestRating": "5",
+                "worstRating": "1"
+              },
               "hasOfferCatalog": {
                 "@type": "OfferCatalog",
                 "name": "Wellness Services",
@@ -162,16 +172,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     "@type": "Offer",
                     "itemOffered": {
                       "@type": "Service",
-                      "name": "Yoga Class Rental",
-                      "description": "Historic space rental for yoga classes and meditation"
+                      "name": "Yoga Classes",
+                      "description": "Vinyasa, Hatha, Restorative, and Hot Yoga classes in historic Denver venue"
                     }
                   },
                   {
                     "@type": "Offer",
                     "itemOffered": {
                       "@type": "Service",
-                      "name": "Event Space Rental",
-                      "description": "Wellness event space for workshops, retreats, and gatherings"
+                      "name": "Sound Bath Healing",
+                      "description": "Immersive sound healing sessions with crystal bowls and gongs in acoustically perfect space"
+                    }
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Meditation Sessions",
+                      "description": "Guided meditation and mindfulness classes in serene sanctuary setting"
+                    }
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Wellness Event Space Rental",
+                      "description": "2,400 sq ft historic venue for workshops, retreats, and wellness gatherings"
                     }
                   }
                 ]
@@ -180,17 +206,88 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "LocationFeatureSpecification",
                   "name": "Historic Architecture",
-                  "value": "1905 restored church building"
+                  "value": "Beautifully restored 1905 church building"
                 },
                 {
                   "@type": "LocationFeatureSpecification",
                   "name": "Square Footage",
-                  "value": "2400 sq ft"
+                  "value": "2,400 sq ft open sanctuary space"
                 },
                 {
                   "@type": "LocationFeatureSpecification",
                   "name": "Ceiling Height",
-                  "value": "24 feet"
+                  "value": "24 feet - ideal for sound healing"
+                },
+                {
+                  "@type": "LocationFeatureSpecification",
+                  "name": "Acoustics",
+                  "value": "Perfect natural acoustics for sound baths"
+                },
+                {
+                  "@type": "LocationFeatureSpecification",
+                  "name": "Natural Light",
+                  "value": "Abundant natural light through original windows"
+                }
+              ]
+            })
+          }}
+        />
+
+        {/* FAQ Schema for featured snippets */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Where can I find sound bath sessions in Denver?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What yoga classes are available near Sloans Lake Denver?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Merritt Wellness in Sloans Lake offers a variety of yoga classes including Vinyasa, Hatha, Restorative, and Hot Yoga. Our historic 2,400 sq ft space features 24-foot ceilings and abundant natural light, perfect for all levels of practice. Located at 2246 Irving St, Denver CO 80211."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How much does it cost to rent a wellness space in Denver?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is there a meditation center in the Sloans Lake area of Denver?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! Merritt Wellness is a meditation and wellness center located in the heart of Sloans Lake, Denver. Our beautifully restored 1905 historic building provides a peaceful sanctuary for meditation, mindfulness, breathwork, and holistic healing practices. Visit us at 2246 Irving St, Denver CO 80211."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What makes Merritt Wellness unique for wellness events?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and 2,400 square feet of open sanctuary space. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Do you offer private yoga sessions in Denver?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
+                  }
                 }
               ]
             })
