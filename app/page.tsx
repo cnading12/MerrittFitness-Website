@@ -376,16 +376,15 @@ export default function Home() {
         </section>
 
         {/* BOOKING SECTION - Enhanced with local keywords */}
-        <section id="booking" className="py-24 bg-[#735e59] relative overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              src="/images/hero/1.jpg"
-              alt="Merritt Wellness Denver yoga studio interior booking background"
-              fill
-              className="object-cover opacity-10"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
-          </div>
+        <section id="booking" className="py-24 bg-[#735e59] relative overflow-hidden texture-dark">          <div className="absolute inset-0">
+          <Image
+            src="/images/hero/1.jpg"
+            alt="Merritt Wellness Denver yoga studio interior booking background"
+            fill
+            className="object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
+        </div>
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">

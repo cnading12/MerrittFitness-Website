@@ -58,3 +58,27 @@ html {
 .gallery-modal-open header {
   display: none !important;
 }
+
+/* Texture overlay for dark sections */
+.texture-dark {
+  position: relative;
+}
+
+.texture-dark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/hero/texture-overlay.PNG');
+  background-size: 1900px 1900px;
+  background-repeat: repeat;
+  background-position: center;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+
+.texture-dark > * {
+  position: relative;
+  z-index: 2;
+}
