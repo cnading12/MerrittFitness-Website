@@ -27,6 +27,55 @@ const EnhancedGallery = () => {
       category: "space"
     },
     { 
+      id: 17,
+      src: "/images/hero/Glass-1.png", 
+      title: "Stained Glass Heritage", 
+      desc: "Original 1905 windows fill the space with sacred light",
+      category: "space"
+    },
+    { 
+      id: 18,
+      src: "/images/hero/Glass-Group.png", 
+      title: "Community Connection", 
+      desc: "Gathering beneath century-old stained glass",
+      category: "events"
+    },
+    { 
+      id: 19,
+      src: "/images/hero/Sound-event.JPG", 
+      title: "Sound Bath Ceremony", 
+      desc: "Healing vibrations in sacred acoustics",
+      category: "events"
+    },
+    { 
+      id: 20,
+      src: "/images/hero/Sound-Event2.JPG", 
+      title: "Sonic Wellness", 
+      desc: "Deep relaxation through sound meditation",
+      category: "events"
+    },
+    { 
+      id: 21,
+      src: "/images/hero/Cafe-East.png", 
+      title: "East Wing View", 
+      desc: "Natural light streams through historic windows",
+      category: "space"
+    },
+    { 
+      id: 23,
+      src: "/images/hero/Cafe-West.png", 
+      title: "West Wing View", 
+      desc: "Warm afternoon light through stained glass",
+      category: "space"
+    },
+    { 
+      id: 22,
+      src: "/images/hero/Lockers.png", 
+      title: "Guest Amenities", 
+      desc: "Secure storage for your practice essentials",
+      category: "space"
+    },
+    { 
       id: 4,
       src: "/images/events/2.JPEG", 
       title: "Dynamic Movement", 
