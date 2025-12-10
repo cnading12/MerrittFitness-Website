@@ -69,13 +69,10 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       // Statement descriptor (appears on customer's card statement)
       statement_descriptor: 'MERRITT HOUSE',
       statement_descriptor_suffix: 'EVENT',
-      
-      // FIXED: Use automatic_payment_methods with redirects allowed for Apple Pay/Google Pay
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'always', // Required for Apple Pay and Google Pay
-      },
-      
+
+      // Only allow card payments (includes Apple Pay and Google Pay via wallets)
+      payment_method_types: ['card'],
+
       // Capture method - we'll capture immediately for events
       capture_method: 'automatic',
     };
