@@ -8,7 +8,7 @@ export default function Footer() {
         {/* Social & Contact Links */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-[#6b5f5b] text-sm font-sans">
           <Link
-            href="https://www.instagram.com/merritt.fitness"
+            href="https://www.instagram.com/merrittwellnessdenver/"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
             target="_blank" 
             rel="noopener"
@@ -17,7 +17,7 @@ export default function Footer() {
             <span className="hidden sm:inline">Instagram</span>
           </Link>
           <Link
-            href="https://www.facebook.com/merritt.fitness"
+            href="https://www.facebook.com/MerrittFitnessSpace/"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
             target="_blank" 
             rel="noopener"
