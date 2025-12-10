@@ -368,7 +368,7 @@ export default function SecurePaymentFlow({ bookingId }) {
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">Complete Your Payment</h2>
             <p className="text-gray-600">
-              Enter your payment information below to confirm your booking
+              Pay securely with Apple Pay, Google Pay, or card
             </p>
           </div>
 
@@ -452,14 +452,19 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
 
   return (
     <div className="space-y-6">
-      {/* Payment Element */}
+      {/* Payment Element - Supports Card, Apple Pay, Google Pay */}
       <div className="p-4 border border-gray-200 rounded-xl">
         <PaymentElement
           options={{
             layout: 'tabs',
             business: {
               name: 'Merritt Wellness'
-            }
+            },
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto'
+            },
+            paymentMethodOrder: ['apple_pay', 'google_pay', 'card']
           }}
         />
       </div>
