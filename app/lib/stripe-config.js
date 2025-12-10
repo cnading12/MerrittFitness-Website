@@ -69,13 +69,14 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       // Statement descriptor (appears on customer's card statement)
       statement_descriptor: 'MERRITT HOUSE',
       statement_descriptor_suffix: 'EVENT',
-      
-      // FIXED: Use only automatic_payment_methods, remove confirmation_method
+
+      // Enable automatic payment methods (includes Apple Pay, Google Pay, Link, and cards)
+      // This allows Stripe to show wallet buttons prominently in the Payment Element
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: 'never', // Keep user on our site
+        allow_redirects: 'never', // Prevent redirect-based payment methods
       },
-      
+
       // Capture method - we'll capture immediately for events
       capture_method: 'automatic',
     };

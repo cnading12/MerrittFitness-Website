@@ -4,8 +4,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { createCalendarEvent } from '../../lib/calendar.js';
-import { sendConfirmationEmails } from '../../lib/email.js';
+// NOTE: Calendar events are now created in the Stripe webhook after payment completion
+// import { createCalendarEvent } from '../../lib/calendar.js';
+// NOTE: Confirmation emails are now sent in the Stripe webhook after payment completion
+// import { sendConfirmationEmails } from '../../lib/email.js';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -81,7 +83,7 @@ const ContactInfoSchema = z.object({
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
-  paymentMethod: z.enum(['card', 'pay-later']).default('card')
+  paymentMethod: z.literal('card').default('card') // Only card payments accepted
 });
 
 const PricingSchema = z.object({
@@ -294,9 +296,7 @@ async function bookingHandler(request) {
           stripeFee: accuratePricing.stripeFee,
           saturdayCharges: accuratePricing.saturdayCharges,
           setupTeardownFees: accuratePricing.setupTeardownFees,
-          status: validatedData.contactInfo.paymentMethod === 'pay-later'
-            ? 'confirmed_pay_later'
-            : 'pending_payment'
+          status: 'pending_payment' // All bookings require payment
         };
 
         // Create booking in database
@@ -308,28 +308,8 @@ async function bookingHandler(request) {
           status: createdBooking.status
         });
 
-        // FIXED: Create calendar event ONCE for ALL bookings (both card and pay-later)
-        // This replaces the duplicate calendar creation blocks
-        try {
-          console.log('📅 Creating calendar event for booking:', individualBookingId);
-          const calendarEvent = await createCalendarEvent(createdBooking);
-
-          if (calendarEvent && calendarEvent.id) {
-            await supabase
-              .from('bookings')
-              .update({
-                calendar_event_id: calendarEvent.id,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', individualBookingId);
-
-            console.log('✅ Calendar event created and linked:', calendarEvent.id);
-          }
-        } catch (calendarError) {
-          console.warn('⚠️ Calendar event creation failed:', calendarError.message);
-          // Don't fail the entire booking if calendar creation fails
-          // The booking is still valid, just without a calendar entry
-        }
+        // NOTE: Calendar events are created AFTER payment completion via Stripe webhook
+        // This ensures events only appear on the calendar for paid bookings
 
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
@@ -349,17 +329,7 @@ async function bookingHandler(request) {
       }, { status: 500 });
     }
 
-    // Send confirmation emails for pay-later bookings
-    if (validatedData.contactInfo.paymentMethod === 'pay-later') {
-      for (const booking of createdBookings) {
-        try {
-          await sendConfirmationEmails(booking);
-          console.log('✅ Confirmation emails sent for booking:', booking.id);
-        } catch (emailError) {
-          console.warn('⚠️ Email sending failed:', booking.id, emailError.message);
-        }
-      }
-    }
+    // Note: Confirmation emails are sent after successful payment via Stripe webhook
 
     // Prepare success response
     const response = {
@@ -376,9 +346,7 @@ async function bookingHandler(request) {
       totalBookings: createdBookings.length,
       paymentMethod: validatedData.contactInfo.paymentMethod,
       totalAmount: accuratePricing.total,
-      message: validatedData.contactInfo.paymentMethod === 'pay-later'
-        ? 'Bookings confirmed! Calendar updated. We\'ll contact you about payment arrangements.'
-        : 'Bookings created successfully. Proceed to payment.'
+      message: 'Bookings created successfully. Proceed to payment.'
     };
 
     if (bookingErrors.length > 0) {
