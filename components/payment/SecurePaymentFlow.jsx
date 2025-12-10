@@ -8,6 +8,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
   PaymentElement,
+  ExpressCheckoutElement,
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
@@ -393,6 +394,48 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Handle Express Checkout (Apple Pay, Google Pay, Link) button click
+  const onExpressCheckoutClick = ({ resolve }) => {
+    const options = {
+      emailRequired: true,
+    };
+    resolve(options);
+  };
+
+  // Handle Express Checkout confirmation
+  const onExpressCheckoutConfirm = async () => {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsLoading(true);
+    onDebug?.('Processing Express Checkout payment...');
+
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/booking/payment-complete?booking_id=${bookingId}`,
+          receipt_email: bookingData.email,
+        },
+        redirect: 'if_required',
+      });
+
+      if (error) {
+        onDebug?.(`❌ Express Checkout failed: ${error.message}`);
+        setMessage(error.message);
+      } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+        onDebug?.(`✅ Express Checkout succeeded: ${paymentIntent.id}`);
+        window.location.href = `/booking/payment-complete?booking_id=${bookingId}&payment_intent=${paymentIntent.id}`;
+      }
+    } catch (err) {
+      onDebug?.(`❌ Express Checkout error: ${err.message}`);
+      setMessage('Payment failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -452,7 +495,40 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
 
   return (
     <div className="space-y-6">
-      {/* Payment Element - Supports Card, Apple Pay, Google Pay */}
+      {/* Express Checkout - Apple Pay, Google Pay, Link buttons */}
+      <div className="express-checkout-container">
+        <ExpressCheckoutElement
+          onConfirm={onExpressCheckoutConfirm}
+          onClick={onExpressCheckoutClick}
+          options={{
+            buttonType: {
+              applePay: 'buy',
+              googlePay: 'buy',
+            },
+            buttonTheme: {
+              applePay: 'black',
+              googlePay: 'black',
+            },
+            buttonHeight: 50,
+            layout: {
+              maxColumns: 2,
+              maxRows: 1,
+            },
+          }}
+        />
+      </div>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-4 bg-white text-gray-500">Or pay with card</span>
+        </div>
+      </div>
+
+      {/* Payment Element - Card form */}
       <div className="p-4 border border-gray-200 rounded-xl">
         <PaymentElement
           options={{
@@ -461,10 +537,9 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
               name: 'Merritt Wellness'
             },
             wallets: {
-              applePay: 'auto',
-              googlePay: 'auto'
+              applePay: 'never',
+              googlePay: 'never'
             },
-            paymentMethodOrder: ['apple_pay', 'google_pay', 'card']
           }}
         />
       </div>
