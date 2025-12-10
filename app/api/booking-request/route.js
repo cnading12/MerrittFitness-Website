@@ -81,7 +81,7 @@ const ContactInfoSchema = z.object({
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
-  paymentMethod: z.enum(['card', 'pay-later']).default('card')
+  paymentMethod: z.literal('card').default('card') // Only card payments accepted
 });
 
 const PricingSchema = z.object({
@@ -294,9 +294,7 @@ async function bookingHandler(request) {
           stripeFee: accuratePricing.stripeFee,
           saturdayCharges: accuratePricing.saturdayCharges,
           setupTeardownFees: accuratePricing.setupTeardownFees,
-          status: validatedData.contactInfo.paymentMethod === 'pay-later'
-            ? 'confirmed_pay_later'
-            : 'pending_payment'
+          status: 'pending_payment' // All bookings require payment
         };
 
         // Create booking in database
@@ -349,17 +347,7 @@ async function bookingHandler(request) {
       }, { status: 500 });
     }
 
-    // Send confirmation emails for pay-later bookings
-    if (validatedData.contactInfo.paymentMethod === 'pay-later') {
-      for (const booking of createdBookings) {
-        try {
-          await sendConfirmationEmails(booking);
-          console.log('✅ Confirmation emails sent for booking:', booking.id);
-        } catch (emailError) {
-          console.warn('⚠️ Email sending failed:', booking.id, emailError.message);
-        }
-      }
-    }
+    // Note: Confirmation emails are sent after successful payment via Stripe webhook
 
     // Prepare success response
     const response = {
@@ -376,9 +364,7 @@ async function bookingHandler(request) {
       totalBookings: createdBookings.length,
       paymentMethod: validatedData.contactInfo.paymentMethod,
       totalAmount: accuratePricing.total,
-      message: validatedData.contactInfo.paymentMethod === 'pay-later'
-        ? 'Bookings confirmed! Calendar updated. We\'ll contact you about payment arrangements.'
-        : 'Bookings created successfully. Proceed to payment.'
+      message: 'Bookings created successfully. Proceed to payment.'
     };
 
     if (bookingErrors.length > 0) {
