@@ -481,12 +481,7 @@ export default function BookingPage() {
 
       if (bookingResponse.ok && bookingResult.success) {
         console.log('✅ Booking created successfully:', bookingResult);
-
-        if (formData.paymentMethod === 'pay-later') {
-          window.location.href = `/booking/success?booking_id=${bookingResult.id}`;
-        } else {
-          window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
-        }
+        window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
       } else {
         throw new Error(bookingResult.error || 'Failed to create booking');
       }
@@ -936,80 +931,49 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                {/* Enhanced Payment Method Selection */}
+                {/* Payment Section - Card Only */}
                 <div className="border-t border-[#735e59]/10 pt-6">
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-4 font-serif">Payment Method</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <label className={`flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-colors ${formData.paymentMethod === 'card'
-                      ? 'border-[#735e59] bg-[#735e59]/5'
-                      : 'border-[#735e59]/20 hover:border-[#735e59]/50'
-                      }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={formData.paymentMethod === 'card'}
-                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-[#735e59]"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CreditCard className="text-[#735e59]" size={20} />
-                          <span className="font-medium">Pay Online Now</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Secure card payment via Stripe • Instant confirmation
-                        </p>
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <Info className="text-orange-600 mt-0.5" size={16} />
-                            <div>
-                              <p className="text-sm text-orange-800 font-medium">3% Processing Fee</p>
-                              <p className="text-xs text-orange-700">
-                                Required by Stripe for card processing. Choose "Pay Later" to avoid this fee.
-                              </p>
-                            </div>
-                          </div>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-4 font-serif">Payment</h3>
+                  <div className="bg-[#735e59]/5 border-2 border-[#735e59] rounded-2xl p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <CreditCard className="text-[#735e59]" size={24} />
+                      <div>
+                        <span className="font-medium text-[#4a3f3c]">Secure Online Payment</span>
+                        <p className="text-sm text-gray-600">Pay securely via Stripe • Instant confirmation</p>
+                      </div>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <Info className="text-orange-600 mt-0.5" size={16} />
+                        <div>
+                          <p className="text-sm text-orange-800 font-medium">3% Processing Fee</p>
+                          <p className="text-xs text-orange-700">
+                            Required by Stripe for secure card processing.
+                          </p>
                         </div>
                       </div>
-                    </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    <label className={`flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-colors ${formData.paymentMethod === 'pay-later'
-                      ? 'border-[#a08b84] bg-[#a08b84]/10'
-                      : 'border-[#735e59]/20 hover:border-[#a08b84]/50'
-                      }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="pay-later"
-                        checked={formData.paymentMethod === 'pay-later'}
-                        onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        className="mt-1 mr-3 text-[#735e59]"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Phone className="text-[#735e59]" size={20} />
-                          <span className="font-medium">Pay Later</span>
-                          <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
-                            NO FEES
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Book now, pay with alternative methods
-                        </p>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <div className="text-sm text-blue-800">
-                            <p className="font-medium mb-1">💰 Zero Processing Fees!</p>
-                            <ul className="text-xs space-y-1">
-                              <li>• Phone: (720) 357-9499</li>
-                              <li>• Venmo/Zelle: Contact us!</li>
-                              <li>• Check payments welcome</li>
-                              <li>• Bank transfer options</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </label>
+            {/* Cancellation Policy Notice */}
+            <div className="bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-6 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-emerald-100 rounded-xl flex-shrink-0">
+                  <CheckCircle className="text-emerald-700" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-emerald-900 mb-2 font-serif">Cancellation Policy</h3>
+                  <div className="space-y-2 text-emerald-800">
+                    <p className="flex items-center gap-2">
+                      <span className="font-bold text-emerald-600">100% Refund:</span>
+                      <span>Cancellations made 60+ days in advance receive a full refund.</span>
+                    </p>
+                    <p className="text-sm text-emerald-700">
+                      For cancellations within 60 days of your event, please contact us directly at (720) 357-9499 to discuss options.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1225,14 +1189,8 @@ export default function BookingPage() {
                     </>
                   ) : (
                     <>
-                      {formData.paymentMethod === 'pay-later' ? (
-                        <CheckCircle size={20} />
-                      ) : (
-                        <CreditCard size={20} />
-                      )}
-                      {formData.paymentMethod === 'pay-later'
-                        ? 'Confirm Booking (Pay Later)'
-                        : 'Proceed to Secure Payment'}
+                      <CreditCard size={20} />
+                      Proceed to Secure Payment
                       <ArrowRight size={20} />
                     </>
                   )}
@@ -1245,10 +1203,7 @@ export default function BookingPage() {
                 )}
 
                 <p className="text-sm text-gray-500 mt-3 text-center max-w-md">
-                  {formData.paymentMethod === 'pay-later'
-                    ? 'We\'ll contact you within 24 hours about payment arrangements. No processing fees!'
-                    : 'You\'ll be redirected to our secure Stripe payment page'
-                  }
+                  You'll be redirected to our secure Stripe payment page
                 </p>
               </div>
             </div>
@@ -1313,32 +1268,12 @@ export default function BookingPage() {
               </div>
 
               <div className="mt-3 text-xs">
-                {formData.paymentMethod === 'card' ? (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <p className="text-orange-800">
-                      <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
-                      Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-green-800">
-                      <strong>💰 Pay Later - No Fees! </strong>
-                      Alternative payment methods available.
-                      Total you pay: <strong>${pricing.subtotal.toFixed(2)}</strong>
-                    </p>
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-3">
-                      <div className="text-sm text-red-900">
-                        <p className="font-bold mb-1">⚠️ IMPORTANT: Payment Timeline</p>
-                        <p className="text-xs font-medium">
-                          Events within 30 days require payment within 24 hours of booking.
-                          Your date will be placed on the calendar but is NOT reserved until payment is received.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                )}
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <p className="text-orange-800">
+                    <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
+                    Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
+                  </p>
+                </div>
               </div>
 
               {pricing.minimumApplied && (
