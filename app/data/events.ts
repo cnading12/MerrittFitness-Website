@@ -15,16 +15,15 @@ export interface Event {
 // Add your events here - events with dates in the past will be automatically filtered out
 export const events: Event[] = [
   {
-    id: "winter-solstice-sound-bath-2024",
-    title: "Winter Solstice Sound Bath",
-    date: "2025-12-21",
-    time: "7:00 PM",
-    endTime: "9:00 PM",
-    description: "Celebrate the longest night of the year with a deeply restorative sound bath experience. Crystal bowls, gongs, and ambient soundscapes will guide you through a meditative journey as we honor the return of the light.",
+    id: "monthly-neoghborhood-events-2024",
+    title: "Monthly Neighborhood Meeting",
+    date: "2025-12-16",
+    time: "4:00 PM",
+    endTime: "8:00 PM",
+    description: "Join us each month for our neighborhood association planning meeting, led by Adam Levy. This is a free, community-focused gathering where neighbors come together to discuss local updates, upcoming initiatives, and ways to strengthen our area. We’re proud to host and support our neighborhood—everyone is welcome.",
     imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "https://example.com/tickets/winter-solstice",
-    instagramHandle: "merritt.fitness",
-    practitionerName: "Sarah Mitchell"
+    practitionerName: "Adam Levy",
+    recurrence: "Third Tuesday of every month"
   },
   {
     id: "new-year-intention-setting-2026",
