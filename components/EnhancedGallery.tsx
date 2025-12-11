@@ -158,7 +158,7 @@ const EnhancedGallery = () => {
     },
     { 
       id: 16,
-      src: "/images/hero/outside3.jpg", 
+      src: "/images/hero/outside5.PNG", 
       title: "Historic Sanctuary", 
       desc: "1905 church transformed for modern wellness",
       category: "space"
