@@ -9,6 +9,7 @@ export interface Event {
   ticketUrl: string;
   instagramHandle?: string; // Without @ symbol
   practitionerName?: string;
+  recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
 }
 
 // Add your events here - events with dates in the past will be automatically filtered out
@@ -46,6 +47,7 @@ export const events: Event[] = [
     description: "Experience the transformative power of conscious breathwork in our sacred space. This evening session will guide you through powerful breathing techniques designed to release tension, expand awareness, and reconnect with your inner wisdom.",
     imageUrl: "/images/hero/1.jpg",
     ticketUrl: "https://example.com/tickets/breathwork-journey",
-    practitionerName: "David Reyes"
+    practitionerName: "David Reyes",
+    recurrence: "Third Saturday of every month"
   }
 ];

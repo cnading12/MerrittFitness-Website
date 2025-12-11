@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Repeat } from 'lucide-react';
 
 // Format date elegantly: "Saturday, December 21"
 function formatDate(dateString: string): string {
@@ -72,6 +72,14 @@ function EventCard({ event }: { event: Event }) {
             {event.endTime && ` - ${event.endTime}`}
           </span>
         </div>
+
+        {/* Recurrence badge */}
+        {event.recurrence && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#735e59]/10 text-[#735e59] text-xs font-semibold rounded-full mb-3">
+            <Repeat className="w-3 h-3" />
+            {event.recurrence}
+          </div>
+        )}
 
         {/* Title */}
         <h3 className="text-xl md:text-2xl font-bold text-[#4a3f3c] mb-3 font-serif group-hover:text-[#735e59] transition-colors duration-300 leading-tight">
