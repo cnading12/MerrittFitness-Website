@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram, Repeat } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Format date elegantly: "Saturday, December 21"
 function formatDate(dateString: string): string {
@@ -42,11 +43,12 @@ function getUpcomingEvents(allEvents: Event[]): Event[] {
 
 function EventCard({ event }: { event: Event }) {
   const { month, day } = getDateParts(event.date);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2">
+    <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col h-full">
       {/* Image with date badge */}
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden flex-shrink-0">
         <Image
           src={event.imageUrl}
           alt={event.title}
@@ -60,10 +62,17 @@ function EventCard({ event }: { event: Event }) {
           <div className="text-xs font-bold text-[#735e59] tracking-wider">{month}</div>
           <div className="text-2xl font-bold text-[#4a3f3c] leading-none font-serif">{day}</div>
         </div>
+
+        {/* Free event badge */}
+        {!event.ticketUrl && (
+          <div className="absolute top-4 right-4 bg-emerald-500/95 backdrop-blur-sm rounded-full px-3 py-1.5 text-center shadow-lg">
+            <span className="text-xs font-bold text-white tracking-wide">FREE</span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="p-6 md:p-8">
+      <div className="p-6 md:p-8 flex flex-col flex-grow">
         {/* Time */}
         <div className="flex items-center gap-2 text-[#735e59] text-sm mb-3">
           <Clock className="w-4 h-4" />
@@ -75,7 +84,7 @@ function EventCard({ event }: { event: Event }) {
 
         {/* Recurrence badge */}
         {event.recurrence && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#735e59]/10 text-[#735e59] text-xs font-semibold rounded-full mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#735e59]/10 text-[#735e59] text-xs font-semibold rounded-full mb-3 self-start">
             <Repeat className="w-3 h-3" />
             {event.recurrence}
           </div>
@@ -86,10 +95,30 @@ function EventCard({ event }: { event: Event }) {
           {event.title}
         </h3>
 
-        {/* Description */}
-        <p className="text-[#6b5f5b] leading-relaxed mb-6 line-clamp-3">
-          {event.description}
-        </p>
+        {/* Description with Read More */}
+        <div className="mb-6 flex-grow">
+          <p className={`text-[#6b5f5b] leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+            {event.description}
+          </p>
+          {event.description.length > 150 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="inline-flex items-center gap-1 text-[#735e59] text-sm font-medium mt-2 hover:text-[#5a4a46] transition-colors"
+            >
+              {isExpanded ? (
+                <>
+                  Read less
+                  <ChevronUp className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  Read more
+                  <ChevronDown className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
+        </div>
 
         {/* Practitioner info if available */}
         {event.practitionerName && (
@@ -116,17 +145,24 @@ function EventCard({ event }: { event: Event }) {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <a
-            href={event.ticketUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
-          >
-            <Ticket className="w-4 h-4" />
-            Get Tickets
-          </a>
+        {/* Actions - pushed to bottom */}
+        <div className="flex items-center gap-3 mt-auto">
+          {event.ticketUrl ? (
+            <a
+              href={event.ticketUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+            >
+              <Ticket className="w-4 h-4" />
+              Get Tickets
+            </a>
+          ) : (
+            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-xl">
+              <Calendar className="w-4 h-4" />
+              Free Event
+            </div>
+          )}
 
           {event.instagramHandle && !event.practitionerName && (
             <a
@@ -219,7 +255,7 @@ export default function EventsPage() {
                 </p>
 
                 {/* Grid */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
                   {upcomingEvents.map((event) => (
                     <EventCard key={event.id} event={event} />
                   ))}
