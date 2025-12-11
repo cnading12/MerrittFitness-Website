@@ -6,7 +6,7 @@ export interface Event {
   endTime?: string; // Optional end time
   description: string;
   imageUrl: string;
-  ticketUrl: string;
+  ticketUrl?: string; // Optional - omit for free events
   instagramHandle?: string; // Without @ symbol
   practitionerName?: string;
   recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
