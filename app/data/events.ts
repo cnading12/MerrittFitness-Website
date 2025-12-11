@@ -37,6 +37,30 @@ export const events: Event[] = [
     instagramHandle: "merritt.fitness",
     practitionerName: "Emma Chen"
   },
+    {
+    id: "new-year-intention-setting-2026",
+    title: "New Year Intention Setting Workshop",
+    date: "2026-01-05",
+    time: "10:00 AM",
+    endTime: "12:30 PM",
+    description: "Begin 2026 with clarity and purpose. This intimate workshop combines gentle yoga, guided meditation, and journaling exercises to help you craft meaningful intentions for the year ahead.",
+    imageUrl: "/images/hero/outside3.jpg",
+    ticketUrl: "https://example.com/tickets/new-year-intentions",
+    instagramHandle: "merritt.fitness",
+    practitionerName: "Emma Chen"
+  },
+    {
+    id: "new-year-intention-setting-2026",
+    title: "New Year Intention Setting Workshop",
+    date: "2026-01-06",
+    time: "10:00 AM",
+    endTime: "12:30 PM",
+    description: "Begin 2026 with clarity and purpose. This intimate workshop combines gentle yoga, guided meditation, and journaling exercises to help you craft meaningful intentions for the year ahead.",
+    imageUrl: "/images/hero/outside3.jpg",
+    ticketUrl: "https://example.com/tickets/new-year-intentions",
+    instagramHandle: "merritt.fitness",
+    practitionerName: "Emma Chen"
+  },
   {
     id: "breathwork-journey-jan-2026",
     title: "Breathwork Journey: Release & Renew",
