@@ -7,6 +7,7 @@ import { Menu, X, Calendar } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'About', href: '/about' },
+  { label: 'Events', href: '/events' },
   { label: 'Contact', href: '/contact' },
 ];
 
