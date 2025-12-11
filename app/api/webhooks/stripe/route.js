@@ -314,7 +314,7 @@ async function handlePaymentSuccess(paymentIntent) {
     console.log('📧 [WEBHOOK] ========================================');
     console.log('📧 [WEBHOOK] Recipients:');
     console.log('   Customer:', updatedBooking.email);
-    console.log('   Manager: manager@merrittwellness.net');
+    console.log('   Manager: manager@merrittwellness.net, clientservices@merrittwellness.net');
     console.log('📧 [WEBHOOK] Event:', updatedBooking.event_name);
     console.log('📧 [WEBHOOK] ========================================');
     
