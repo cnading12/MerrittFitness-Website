@@ -31,28 +31,31 @@ const EnhancedGallery = () => {
       src: "/images/hero/Glass-1.png", 
       title: "Stained Glass Heritage", 
       desc: "Original 1905 windows fill the space with sacred light",
-      category: "space"
+      category: "space",
+      orientation: "portrait"
     },
     { 
       id: 18,
       src: "/images/hero/Glass-Group.png", 
       title: "Community Connection", 
       desc: "Gathering beneath century-old stained glass",
-      category: "events"
+      category: "space"
     },
     { 
       id: 19,
       src: "/images/hero/Sound-event.JPG", 
       title: "Sound Bath Ceremony", 
       desc: "Healing vibrations in sacred acoustics",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     { 
       id: 20,
       src: "/images/hero/Sound-Event2.JPG", 
       title: "Sonic Wellness", 
       desc: "Deep relaxation through sound meditation",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     { 
       id: 21,
@@ -88,7 +91,8 @@ const EnhancedGallery = () => {
       title: "Workshop Series", 
       desc: "Learning and growing together",
       category: "yoga",
-      photographer: "Katrina_born_"
+      photographer: "Katrina_born_",
+      orientation: "portrait"
     },
     { 
       id: 6,
@@ -96,7 +100,8 @@ const EnhancedGallery = () => {
       title: "Mindful Practice", 
       desc: "Finding peace in motion",
       category: "yoga",
-      photographer: "Katrina_born_"
+      photographer: "Katrina_born_",
+      orientation: "portrait"
     },
     { 
       id: 7,
@@ -104,7 +109,8 @@ const EnhancedGallery = () => {
       title: "Group Sessions", 
       desc: "Strength in community",
       category: "yoga",
-      photographer: "Katrina_born_"
+      photographer: "Katrina_born_",
+      orientation: "portrait"
     },
     { 
       id: 8,
@@ -112,14 +118,16 @@ const EnhancedGallery = () => {
       title: "Personal Journey", 
       desc: "Individual paths to wellness",
       category: "yoga",
-      photographer: "Katrina_born_"
+      photographer: "Katrina_born_",
+      orientation: "portrait"
     },
     { 
       id: 9,
       src: "/images/events/judo/1.JPG", 
       title: "Judo Training", 
       desc: "Martial arts discipline in our sacred space",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     { 
       id: 10,
@@ -133,21 +141,24 @@ const EnhancedGallery = () => {
       src: "/images/events/judo/3.JPG", 
       title: "Judo Techniques", 
       desc: "Precision and focus in every movement",
-      category: "judo"
+      category: "judo",
+      orientation: "portrait"
     },
     { 
       id: 12,
       src: "/images/events/judo/4.JPG", 
       title: "Judo Community", 
       desc: "Learning respect and discipline together",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     { 
       id: 13,
-      src: "/images/events/judo/5.JPG", 
+      src: "/images/events/judo/5.jpg", 
       title: "Judo Mastery", 
       desc: "The way of gentle force",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     { 
       id: 15,
@@ -374,14 +385,39 @@ const EnhancedGallery = () => {
               <div
                 key={item.id}
                 className={`absolute inset-0 transition-opacity duration-500 ${
-                  index === currentIndex ? 'opacity-100' : 'opacity-0'
+                  index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
               >
-                <img
-                  src={item.src}
-                  alt={item.desc}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
+                {/* Portrait images: blurred background + centered full image */}
+                {item.orientation === 'portrait' ? (
+                  <>
+                    {/* Blurred background layer */}
+                    <div 
+                      className="absolute inset-0 scale-110"
+                      style={{
+                        backgroundImage: `url(${item.src})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(30px) brightness(0.6)',
+                      }}
+                    />
+                    {/* Centered full portrait image */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img
+                        src={item.src}
+                        alt={item.desc}
+                        className="h-full w-auto max-w-full object-contain group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  /* Landscape images: standard cover behavior */
+                  <img
+                    src={item.src}
+                    alt={item.desc}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                )}
                 {/* CAPTION OVERLAY - Hidden on mobile, visible on desktop hover */}
                 <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-[#4a3f3c]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500">
                   <div className="absolute bottom-8 left-8 text-[#f2eee9] transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
