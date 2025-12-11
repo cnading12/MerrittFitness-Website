@@ -4,7 +4,9 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+
+type DateRange = 'lastMonth' | 'thisMonth' | 'nextMonth';
 
 // Format date elegantly: "Saturday, December 21"
 function formatDate(dateString: string): string {
@@ -24,15 +26,42 @@ function getDateParts(dateString: string): { month: string; day: string } {
   return { month, day };
 }
 
-// Filter and sort events
-function getUpcomingEvents(allEvents: Event[]): Event[] {
+// Get date range boundaries
+function getDateRange(range: DateRange): { start: Date; end: Date } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const start = new Date(today);
+  const end = new Date(today);
+
+  switch (range) {
+    case 'lastMonth':
+      // 30 days ago to yesterday
+      start.setDate(today.getDate() - 30);
+      end.setDate(today.getDate() - 1);
+      break;
+    case 'thisMonth':
+      // Today to 30 days from now
+      end.setDate(today.getDate() + 30);
+      break;
+    case 'nextMonth':
+      // 31 days from now to 60 days from now
+      start.setDate(today.getDate() + 31);
+      end.setDate(today.getDate() + 60);
+      break;
+  }
+
+  return { start, end };
+}
+
+// Filter and sort events by date range
+function getFilteredEvents(allEvents: Event[], range: DateRange): Event[] {
+  const { start, end } = getDateRange(range);
 
   return allEvents
     .filter((event) => {
       const eventDate = new Date(event.date + 'T00:00:00');
-      return eventDate >= today;
+      return eventDate >= start && eventDate <= end;
     })
     .sort((a, b) => {
       const dateA = new Date(a.date + 'T00:00:00');
@@ -181,18 +210,34 @@ function EventCard({ event }: { event: Event }) {
   );
 }
 
-function EmptyState() {
+function EmptyState({ dateRange }: { dateRange: DateRange }) {
+  const messages = {
+    lastMonth: {
+      title: 'No Past Events',
+      description: 'There were no events in the past 30 days. Check out what\'s coming up!'
+    },
+    thisMonth: {
+      title: 'No Upcoming Events',
+      description: 'We\'re currently planning our next series of transformative experiences. Check back soon or follow us on Instagram for announcements.'
+    },
+    nextMonth: {
+      title: 'No Events Scheduled Yet',
+      description: 'We haven\'t scheduled events that far out yet. Check back soon or follow us on Instagram for announcements.'
+    }
+  };
+
+  const { title, description } = messages[dateRange];
+
   return (
     <div className="text-center py-16 px-6">
       <div className="w-20 h-20 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
         <Calendar className="w-10 h-10 text-[#735e59]" />
       </div>
       <h3 className="text-2xl font-bold text-[#4a3f3c] mb-3 font-serif">
-        No Upcoming Events
+        {title}
       </h3>
       <p className="text-[#6b5f5b] max-w-md mx-auto mb-8 leading-relaxed">
-        We're currently planning our next series of transformative experiences.
-        Check back soon or follow us on Instagram for announcements.
+        {description}
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link
@@ -216,7 +261,14 @@ function EmptyState() {
 }
 
 export default function EventsPage() {
-  const upcomingEvents = getUpcomingEvents(events);
+  const [dateRange, setDateRange] = useState<DateRange>('thisMonth');
+  const filteredEvents = getFilteredEvents(events, dateRange);
+
+  const rangeLabels = {
+    lastMonth: { label: 'Past 30 Days', count: 'past' },
+    thisMonth: { label: 'This Month', count: 'upcoming' },
+    nextMonth: { label: 'Next Month', count: 'scheduled' }
+  };
 
   return (
     <>
@@ -247,22 +299,58 @@ export default function EventsPage() {
         {/* Events Grid */}
         <section className="py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
-            {upcomingEvents.length > 0 ? (
+            {/* Date Range Filter */}
+            <div className="flex items-center justify-center gap-2 mb-12">
+              <button
+                onClick={() => setDateRange('lastMonth')}
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  dateRange === 'lastMonth'
+                    ? 'bg-[#735e59] text-[#f2eee9] shadow-lg'
+                    : 'bg-white text-[#735e59] border border-[#735e59]/20 hover:border-[#735e59]/40 hover:shadow-md'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Past 30 Days
+              </button>
+              <button
+                onClick={() => setDateRange('thisMonth')}
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  dateRange === 'thisMonth'
+                    ? 'bg-[#735e59] text-[#f2eee9] shadow-lg'
+                    : 'bg-white text-[#735e59] border border-[#735e59]/20 hover:border-[#735e59]/40 hover:shadow-md'
+                }`}
+              >
+                This Month
+              </button>
+              <button
+                onClick={() => setDateRange('nextMonth')}
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  dateRange === 'nextMonth'
+                    ? 'bg-[#735e59] text-[#f2eee9] shadow-lg'
+                    : 'bg-white text-[#735e59] border border-[#735e59]/20 hover:border-[#735e59]/40 hover:shadow-md'
+                }`}
+              >
+                Next Month
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {filteredEvents.length > 0 ? (
               <>
                 {/* Event count */}
                 <p className="text-center text-[#6b5f5b] mb-12">
-                  {upcomingEvents.length} upcoming {upcomingEvents.length === 1 ? 'event' : 'events'}
+                  {filteredEvents.length} {rangeLabels[dateRange].count} {filteredEvents.length === 1 ? 'event' : 'events'}
                 </p>
 
                 {/* Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-                  {upcomingEvents.map((event) => (
+                  {filteredEvents.map((event) => (
                     <EventCard key={event.id} event={event} />
                   ))}
                 </div>
               </>
             ) : (
-              <EmptyState />
+              <EmptyState dateRange={dateRange} />
             )}
           </div>
         </section>
