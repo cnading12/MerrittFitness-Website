@@ -27,21 +27,21 @@ export const events: Event[] = [
     practitionerName: "Sarah Mitchell"
   },
   {
-    id: "new-year-intention-setting-2025",
+    id: "new-year-intention-setting-2026",
     title: "New Year Intention Setting Workshop",
-    date: "2025-01-04",
+    date: "2026-01-04",
     time: "10:00 AM",
     endTime: "12:30 PM",
-    description: "Begin 2025 with clarity and purpose. This intimate workshop combines gentle yoga, guided meditation, and journaling exercises to help you craft meaningful intentions for the year ahead.",
+    description: "Begin 2026 with clarity and purpose. This intimate workshop combines gentle yoga, guided meditation, and journaling exercises to help you craft meaningful intentions for the year ahead.",
     imageUrl: "/images/hero/outside3.jpg",
     ticketUrl: "https://example.com/tickets/new-year-intentions",
     instagramHandle: "merritt.fitness",
     practitionerName: "Emma Chen"
   },
   {
-    id: "breathwork-journey-jan-2025",
+    id: "breathwork-journey-jan-2026",
     title: "Breathwork Journey: Release & Renew",
-    date: "2025-01-18",
+    date: "2026-01-17",
     time: "6:30 PM",
     endTime: "8:30 PM",
     description: "Experience the transformative power of conscious breathwork in our sacred space. This evening session will guide you through powerful breathing techniques designed to release tension, expand awareness, and reconnect with your inner wisdom.",
