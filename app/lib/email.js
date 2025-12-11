@@ -8,7 +8,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_CONFIG = {
   from: 'Merritt Wellness <bookings@merrittwellness.net>',
   replyTo: 'manager@merrittwellness.net',
-  managerEmail: 'manager@merrittwellness.net'
+  managerEmail: 'manager@merrittwellness.net',
+  clientServicesEmail: 'clientservices@merrittwellness.net'
 };
 
 // Enhanced email templates
@@ -232,13 +233,13 @@ export async function sendBookingConfirmation(booking) {
 
 export async function sendManagerNotification(booking) {
   try {
-    console.log('📧 Sending manager notification to:', EMAIL_CONFIG.managerEmail);
-    
+    console.log('📧 Sending manager notification to:', EMAIL_CONFIG.managerEmail, 'and', EMAIL_CONFIG.clientServicesEmail);
+
     const template = EMAIL_TEMPLATES.managerNotification(booking);
-    
+
     const result = await resend.emails.send({
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.managerEmail],
+      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
       replyTo: booking.email,
       ...template
     });
