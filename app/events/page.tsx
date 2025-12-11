@@ -1,0 +1,308 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { events, Event } from '@/app/data/events';
+import { Calendar, Clock, Ticket, Instagram, Repeat } from 'lucide-react';
+
+// Format date elegantly: "Saturday, December 21"
+function formatDate(dateString: string): string {
+  const date = new Date(dateString + 'T00:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+// Get short month and day for badge: { month: "DEC", day: "21" }
+function getDateParts(dateString: string): { month: string; day: string } {
+  const date = new Date(dateString + 'T00:00:00');
+  const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = date.getDate().toString();
+  return { month, day };
+}
+
+// Filter and sort events
+function getUpcomingEvents(allEvents: Event[]): Event[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return allEvents
+    .filter((event) => {
+      const eventDate = new Date(event.date + 'T00:00:00');
+      return eventDate >= today;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date + 'T00:00:00');
+      const dateB = new Date(b.date + 'T00:00:00');
+      return dateA.getTime() - dateB.getTime();
+    });
+}
+
+function EventCard({ event }: { event: Event }) {
+  const { month, day } = getDateParts(event.date);
+
+  return (
+    <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2">
+      {/* Image with date badge */}
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <Image
+          src={event.imageUrl}
+          alt={event.title}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+        {/* Date badge */}
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 text-center shadow-lg">
+          <div className="text-xs font-bold text-[#735e59] tracking-wider">{month}</div>
+          <div className="text-2xl font-bold text-[#4a3f3c] leading-none font-serif">{day}</div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6 md:p-8">
+        {/* Time */}
+        <div className="flex items-center gap-2 text-[#735e59] text-sm mb-3">
+          <Clock className="w-4 h-4" />
+          <span className="font-medium">
+            {event.time}
+            {event.endTime && ` - ${event.endTime}`}
+          </span>
+        </div>
+
+        {/* Recurrence badge */}
+        {event.recurrence && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#735e59]/10 text-[#735e59] text-xs font-semibold rounded-full mb-3">
+            <Repeat className="w-3 h-3" />
+            {event.recurrence}
+          </div>
+        )}
+
+        {/* Title */}
+        <h3 className="text-xl md:text-2xl font-bold text-[#4a3f3c] mb-3 font-serif group-hover:text-[#735e59] transition-colors duration-300 leading-tight">
+          {event.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-[#6b5f5b] leading-relaxed mb-6 line-clamp-3">
+          {event.description}
+        </p>
+
+        {/* Practitioner info if available */}
+        {event.practitionerName && (
+          <div className="flex items-center gap-3 mb-6 pb-6 border-b border-[#735e59]/10">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 flex items-center justify-center">
+              <span className="text-[#735e59] font-semibold text-sm">
+                {event.practitionerName.charAt(0)}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-[#4a3f3c]">{event.practitionerName}</p>
+              {event.instagramHandle && (
+                <a
+                  href={`https://instagram.com/${event.instagramHandle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-[#735e59] hover:text-[#5a4a46] transition-colors"
+                >
+                  <Instagram className="w-3 h-3" />
+                  @{event.instagramHandle}
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <a
+            href={event.ticketUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+          >
+            <Ticket className="w-4 h-4" />
+            Get Tickets
+          </a>
+
+          {event.instagramHandle && !event.practitionerName && (
+            <a
+              href={`https://instagram.com/${event.instagramHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#735e59]/20 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9] hover:border-[#735e59] transition-all duration-300"
+              aria-label={`Follow @${event.instagramHandle} on Instagram`}
+            >
+              <Instagram className="w-5 h-5" />
+            </a>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="text-center py-16 px-6">
+      <div className="w-20 h-20 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <Calendar className="w-10 h-10 text-[#735e59]" />
+      </div>
+      <h3 className="text-2xl font-bold text-[#4a3f3c] mb-3 font-serif">
+        No Upcoming Events
+      </h3>
+      <p className="text-[#6b5f5b] max-w-md mx-auto mb-8 leading-relaxed">
+        We're currently planning our next series of transformative experiences.
+        Check back soon or follow us on Instagram for announcements.
+      </p>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <Link
+          href="/contact"
+          className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-8 py-4 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+        >
+          Get Notified
+        </Link>
+        <a
+          href="https://instagram.com/merritt.fitness"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 border-2 border-[#735e59] text-[#735e59] font-semibold px-8 py-4 rounded-xl hover:bg-[#735e59] hover:text-[#f2eee9] transition-all duration-300"
+        >
+          <Instagram className="w-5 h-5" />
+          Follow Us
+        </a>
+      </div>
+    </div>
+  );
+}
+
+export default function EventsPage() {
+  const upcomingEvents = getUpcomingEvents(events);
+
+  return (
+    <>
+      <main className="bg-[#faf8f5] font-sans min-h-screen">
+        {/* Hero Header */}
+        <section className="relative pt-32 pb-16 bg-gradient-to-b from-[#735e59] to-[#735e59]/90 overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/30 rounded-full animate-float blur-sm" />
+          <div className="absolute top-32 right-16 w-1.5 h-1.5 bg-[#f2eee9]/20 rounded-full animate-float-delay blur-sm" />
+          <div className="absolute bottom-12 left-1/4 w-1 h-1 bg-[#f2eee9]/25 rounded-full animate-float-slow blur-sm" />
+
+          <div className="max-w-7xl mx-auto px-6 text-center animate-fade-in-up">
+            <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              <Calendar className="w-4 h-4 mr-2" />
+              What's Happening
+            </span>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-[#f2eee9] leading-tight font-serif mb-4">
+              Upcoming
+              <span className="block font-bold">Events</span>
+            </h1>
+            <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/60 to-transparent mx-auto mb-6" />
+            <p className="text-lg md:text-xl text-[#f2eee9]/80 max-w-2xl mx-auto leading-relaxed">
+              Join us for transformative experiences in our historic sanctuary
+            </p>
+          </div>
+        </section>
+
+        {/* Events Grid */}
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-6">
+            {upcomingEvents.length > 0 ? (
+              <>
+                {/* Event count */}
+                <p className="text-center text-[#6b5f5b] mb-12">
+                  {upcomingEvents.length} upcoming {upcomingEvents.length === 1 ? 'event' : 'events'}
+                </p>
+
+                {/* Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {upcomingEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <EmptyState />
+            )}
+          </div>
+        </section>
+
+        {/* Bottom CTA */}
+        <section className="pb-24">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="bg-gradient-to-br from-[#735e59] to-[#5a4a46] rounded-3xl p-10 md:p-14 text-center relative overflow-hidden">
+              {/* Decorative pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-4 left-4 w-32 h-32 border border-[#f2eee9] rounded-full" />
+                <div className="absolute bottom-4 right-4 w-48 h-48 border border-[#f2eee9] rounded-full" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-[#f2eee9] rounded-full" />
+              </div>
+
+              <div className="relative z-10">
+                <h2 className="text-3xl md:text-4xl font-light text-[#f2eee9] mb-4 font-serif">
+                  Want to Host an Event?
+                </h2>
+                <p className="text-[#f2eee9]/80 mb-8 max-w-xl mx-auto leading-relaxed">
+                  Our historic 1905 venue is available for wellness workshops, retreats,
+                  and community gatherings. Let's create something beautiful together.
+                </p>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 bg-[#f2eee9] text-[#735e59] font-semibold px-8 py-4 rounded-xl hover:bg-white transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                >
+                  Get in Touch
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+
+        @keyframes float-delay {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-15px); }
+        }
+
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fade-in-up {
+          0% { opacity: 0; transform: translateY(30px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-float-delay {
+          animation: float-delay 8s ease-in-out infinite;
+        }
+
+        .animate-float-slow {
+          animation: float-slow 10s ease-in-out infinite;
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 1s ease-out 0.3s both;
+        }
+      `}</style>
+    </>
+  );
+}
