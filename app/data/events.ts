@@ -35,6 +35,7 @@ export const events: Event[] = [
     endTime: "6:00 PM",
     description: "Experience a grounding yoga practice led by Steven Benoy in our stunning historic space featuring 24-foot ceilings and original stained glass windows.",
     imageUrl: "/images/events/2.JPEG",
+    ticketUrl: "#",
     practitionerName: "Steven Benoy"
   },
   {
@@ -56,6 +57,7 @@ export const events: Event[] = [
     endTime: "7:00 PM",
     description: "Immerse yourself in the healing vibrations of a sound bath led by Katrina Born. Using crystal singing bowls, gongs, and other resonant instruments, Katrina will guide you into a deep state of relaxation and restoration. Simply lie back and let the sound waves wash over you in our beautiful historic sanctuary with 24-foot ceilings and original stained glass windows.",
     imageUrl: "/images/events/katrina/2.jpg",
+    ticketUrl: "#",
     instagramHandle: "katrina_born_",
     practitionerName: "Katrina Born"
   },
@@ -69,6 +71,7 @@ export const events: Event[] = [
     endTime: "6:30 PM",
     description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
     imageUrl: "/images/events/dance/kids.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
     instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
@@ -81,6 +84,7 @@ export const events: Event[] = [
     endTime: "6:30 PM",
     description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
     imageUrl: "/images/events/dance/kids.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
     instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
@@ -93,6 +97,7 @@ export const events: Event[] = [
   endTime: "9:00 PM",
   description: "Mingle and move at this unique event combining yoga with speed dating. Led by Stephanie, this popular monthly gathering brings together around 40 singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary.",
   imageUrl: "/images/hero/1.jpg",
+  ticketUrl: "#",
   practitionerName: "Stephanie",
   recurrence: "Second Saturday of every month"
 },
@@ -104,6 +109,7 @@ export const events: Event[] = [
     endTime: "6:30 PM",
     description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
     imageUrl: "/images/events/dance/kids.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
     instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
@@ -116,6 +122,7 @@ export const events: Event[] = [
     endTime: "12:00 PM",
     description: "PLACEHOLDER - Need description for this event with Kerri Drumm.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "#",
     practitionerName: "Kerri Drumm"
   },
   {
@@ -126,6 +133,7 @@ export const events: Event[] = [
     endTime: "7:30 PM",
     description: "PLACEHOLDER - Need description for this event.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "#",
     practitionerName: "Chris and Kelsie"
   },
   {
@@ -147,6 +155,7 @@ export const events: Event[] = [
     endTime: "6:00 PM",
     description: "Join Genoa for Full Circle, a weekly gathering held every Thursday. PLACEHOLDER - Need more details about what this practice involves.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
   },
@@ -158,6 +167,7 @@ export const events: Event[] = [
     endTime: "7:00 PM",
     description: "An evening celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "#",
     practitionerName: "Cynthia"
   },
   {
@@ -168,6 +178,7 @@ export const events: Event[] = [
     endTime: "6:30 PM",
     description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
     imageUrl: "/images/events/dance/kids.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
     instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
@@ -180,6 +191,7 @@ export const events: Event[] = [
     endTime: "8:30 PM",
     description: "An evening celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "#",
     practitionerName: "Cynthia"
   },
   {
@@ -190,6 +202,7 @@ export const events: Event[] = [
     endTime: "2:00 PM",
     description: "An afternoon celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
     imageUrl: "/images/hero/1.jpg",
+    ticketUrl: "#",
     practitionerName: "Cynthia"
   }
 ];
