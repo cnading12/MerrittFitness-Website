@@ -156,9 +156,10 @@ export default function Home() {
         <section className="relative h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
           <Image
-            src="/images/hero/outside5.PNG"
+            src="/images/hero/outside5.webp"
             alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
+            priority
             className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom" />
 
           {/* Enhanced floating elements */}
@@ -325,19 +326,25 @@ export default function Home() {
         <section className="py-24 bg-[#faf8f5] relative overflow-hidden">
           {/* Top-left watercolor decoration */}
           <div className="absolute -top-20 -left-20 w-[500px] h-[500px] pointer-events-none z-0">
-            <img
-              src="/images/overlays/WaterColor.pdf.PNG"
+            <Image
+              src="/images/overlays/WaterColor.png"
               alt=""
+              width={500}
+              height={500}
               className="w-full h-full object-contain opacity-80"
+              loading="lazy"
             />
           </div>
 
           {/* Bottom-left watercolor decoration */}
           <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] pointer-events-none z-0">
-            <img
-              src="/images/overlays/WaterColor.pdf.PNG"
+            <Image
+              src="/images/overlays/WaterColor.png"
               alt=""
+              width={500}
+              height={500}
               className="w-full h-full object-contain opacity-70 rotate-180"
+              loading="lazy"
             />
           </div>
 
@@ -360,10 +367,12 @@ export default function Home() {
               <div className="relative group">
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <Image
-                    src="/images/events/katrina/3.jpg"
+                    src="/images/events/katrina/3.webp"
                     alt="Dynamic yoga and movement arts classes in Denver's most spacious historic wellness venue"
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    loading="lazy"
                   />
                 </div>
                 <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
@@ -396,10 +405,11 @@ export default function Home() {
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section id="booking" className="py-24 bg-[#735e59] relative overflow-hidden texture-dark">          <div className="absolute inset-0">
           <Image
-            src="/images/hero/1.jpg"
+            src="/images/hero/1.webp"
             alt="Merritt Wellness Denver yoga studio interior booking background"
             fill
             className="object-cover opacity-10"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
         </div>
@@ -577,11 +587,15 @@ export default function Home() {
               {/* Right Map */}
               <div className="relative">
                 {/* Brushstroke Circle Overlay */}
-                <div className="absolute -top-40 right-10 w-[800px] h-[800px] pointer-events-none z-0">                  <img
-                  src="/images/overlays/circle.pdf.png"
-                  alt=""
-                  className="w-full h-full object-contain opacity-80"
-                />
+                <div className="absolute -top-40 right-10 w-[800px] h-[800px] pointer-events-none z-0">
+                  <Image
+                    src="/images/overlays/Circle.png"
+                    alt=""
+                    width={800}
+                    height={800}
+                    className="w-full h-full object-contain opacity-80"
+                    loading="lazy"
+                  />
                 </div>
 
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
