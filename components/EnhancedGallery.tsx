@@ -299,32 +299,20 @@ const EnhancedGallery = () => {
 
   return (
 <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
-  {/* Stained glass texture overlay */}
-{/* Stained glass texture overlay */}
-<img 
-  src="/images/overlays/stained-glass.PNG" 
-  alt="" 
-  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[1] opacity-90 scale-110"
-/>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
+      
+      {/* Stained glass texture overlay */}
+      <div 
+        className="absolute inset-0 z-[1] opacity-60"
+        style={{
+          backgroundImage: "url('/images/overlays/stained-glass.PNG')",
+          backgroundSize: "200% 200%",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      />
 
-  <div className="relative z-10">
-        {/* Header */}
-        <div className="text-center mb-16 px-6">
-          <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6 backdrop-blur-sm">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Our Sacred Space
-          </span>
-          <h2 className="text-4xl md:text-5xl font-light text-[#f2eee9] mb-6 font-serif">
-            Experience the
-            <span className="block font-bold">Transformation</span>
-          </h2>
-          <p className="text-xl text-[#f2eee9]/80 max-w-3xl mx-auto leading-relaxed">
-            From intimate meditation circles to dynamic movement workshops, witness how our sacred space adapts to every vision
-          </p>
-        </div>
+      <div className="relative z-10">
 
         {/* Filter Tabs */}
         <div className="flex flex-wrap justify-center gap-4 mb-12 px-6">
