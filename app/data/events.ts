@@ -90,15 +90,16 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
 {
-  id: "yoga-speed-dating-jan-2026",
-  title: "Yoga Speed Dating",
+  id: "tantra-speed-date-jan-2026",
+  title: "Tantra Speed Date",
   date: "2026-01-10",
-  time: "5:00 PM",
+  time: "5:30 PM",
   endTime: "9:00 PM",
-  description: "Mingle and move at this unique event combining yoga with speed dating. Led by Stephanie, this popular monthly gathering brings together around 40 singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary.",
-  imageUrl: "/images/hero/1.jpg",
-  ticketUrl: "#",
-  practitionerName: "Stephanie",
+  description: "Tired of swiping? Try a whole new dating experience—it's like yoga for your love life! Led by Stephanie Miller, this popular monthly gathering brings together singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary.",
+  imageUrl: "/images/events/community/tantra.JPEG",
+  ticketUrl: "https://tantraspeeddate.com/Denver",
+  instagramHandle: "tantra_speed_date",
+  practitionerName: "Stephanie Miller",
   recurrence: "Second Saturday of every month"
 },
   {
@@ -113,17 +114,6 @@ export const events: Event[] = [
     instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
-  },
-  {
-    id: "kerri-drumm-church-jan-2026",
-    title: "Kerri Drumm Church Event",
-    date: "2026-01-16",
-    time: "9:00 AM",
-    endTime: "12:00 PM",
-    description: "PLACEHOLDER - Need description for this event with Kerri Drumm.",
-    imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "#",
-    practitionerName: "Kerri Drumm"
   },
   {
     id: "chris-kelsie-event-jan-2026",
