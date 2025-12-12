@@ -1,34 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Play, Pause, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import Image from 'next/image';
+import { ChevronLeft, ChevronRight, X, Play, Pause, ZoomIn } from 'lucide-react';
 
 const EnhancedGallery = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-  const scrollRef = useRef(null);
-  const autoPlayRef = useRef(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Updated gallery items with more diverse content
+  // Updated gallery items with optimized WebP images
   const galleryItems = [
     {
       id: 1,
-      src: "/images/hero/mat1.jpg",
+      src: "/images/hero/mat1.webp",
       title: "Yoga & Flow Sessions",
       desc: "Where ancient practice meets timeless architecture",
       category: "space"
     },
     {
       id: 2,
-      src: "/images/hero/mat2.jpg",
+      src: "/images/hero/mat2.webp",
       title: "Sound Healing",
       desc: "Sacred acoustics amplify transformation",
       category: "space"
     },
     {
       id: 17,
-      src: "/images/hero/Glass-1.png",
+      src: "/images/hero/Glass-1.webp",
       title: "Stained Glass Heritage",
       desc: "Original 1905 windows fill the space with sacred light",
       category: "space",
@@ -36,7 +37,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 18,
-      src: "/images/hero/Glass-Group.png",
+      src: "/images/hero/Glass-Group.webp",
       title: "Community Connection",
       desc: "Gathering beneath century-old stained glass",
       category: "space"
@@ -59,35 +60,35 @@ const EnhancedGallery = () => {
     },
     {
       id: 21,
-      src: "/images/hero/Cafe-East.png",
+      src: "/images/hero/Cafe-East.webp",
       title: "East Wing View",
       desc: "Natural light streams through historic windows",
       category: "space"
     },
     {
       id: 23,
-      src: "/images/hero/Cafe-West.png",
+      src: "/images/hero/Cafe-West.webp",
       title: "West Wing View",
       desc: "Warm afternoon light through stained glass",
       category: "space"
     },
     {
       id: 22,
-      src: "/images/hero/Lockers.png",
+      src: "/images/hero/Lockers.webp",
       title: "Guest Amenities",
       desc: "Secure storage for your practice essentials",
       category: "space"
     },
     {
       id: 4,
-      src: "/images/events/2.JPEG",
+      src: "/images/events/2.webp",
       title: "Dynamic Movement",
       desc: "Expressive arts in sacred spaces",
       category: "yoga"
     },
     {
       id: 5,
-      src: "/images/events/katrina/1.jpg",
+      src: "/images/events/katrina/1.webp",
       title: "Workshop Series",
       desc: "Learning and growing together",
       category: "yoga",
@@ -96,7 +97,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 6,
-      src: "/images/events/katrina/2.jpg",
+      src: "/images/events/katrina/2.webp",
       title: "Mindful Practice",
       desc: "Finding peace in motion",
       category: "yoga",
@@ -105,7 +106,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 7,
-      src: "/images/events/katrina/3.jpg",
+      src: "/images/events/katrina/3.webp",
       title: "Group Sessions",
       desc: "Strength in community",
       category: "yoga",
@@ -114,7 +115,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 8,
-      src: "/images/events/katrina/4.jpg",
+      src: "/images/events/katrina/4.webp",
       title: "Personal Journey",
       desc: "Individual paths to wellness",
       category: "yoga",
@@ -162,14 +163,14 @@ const EnhancedGallery = () => {
     },
     {
       id: 15,
-      src: "/images/hero/nomats.jpg",
+      src: "/images/hero/nomats.webp",
       title: "Architectural Wonder",
       desc: "Every corner tells a story of beauty",
       category: "space"
     },
     {
       id: 16,
-      src: "/images/hero/outside5.PNG",
+      src: "/images/hero/outside5.webp",
       title: "Historic Sanctuary",
       desc: "1905 church transformed for modern wellness",
       category: "space"
@@ -187,7 +188,7 @@ const EnhancedGallery = () => {
   ];
 
   // Filter functionality
-  const handleFilter = (categoryId) => {
+  const handleFilter = (categoryId: string) => {
     setActiveFilter(categoryId);
     if (categoryId === 'all') {
       setFilteredItems(galleryItems);
@@ -210,7 +211,7 @@ const EnhancedGallery = () => {
     setCurrentIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
   };
 
-  const goToSlide = (index) => {
+  const goToSlide = (index: number) => {
     setCurrentIndex(index);
   };
 
@@ -238,12 +239,12 @@ const EnhancedGallery = () => {
   // Touch/swipe handling
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e) => {
+  const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = (e) => {
+  const onTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
@@ -262,7 +263,7 @@ const EnhancedGallery = () => {
   };
 
   // Modal functionality
-  const openModal = (index) => {
+  const openModal = (index: number) => {
     setCurrentIndex(index);
     setIsModalOpen(true);
     document.body.style.overflow = 'hidden';
@@ -277,7 +278,7 @@ const EnhancedGallery = () => {
 
   // Keyboard navigation
   useEffect(() => {
-    const handleKeyPress = (e) => {
+    const handleKeyPress = (e: KeyboardEvent) => {
       if (isModalOpen) {
         if (e.key === 'ArrowLeft') goToPrev();
         if (e.key === 'ArrowRight') goToNext();
@@ -298,19 +299,20 @@ const EnhancedGallery = () => {
   }, []);
 
   return (
-<section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
+    <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
-      
-      {/* Stained glass texture overlay */}
-      <div 
-        className="absolute inset-0 z-[1] opacity-60"
-        style={{
-          backgroundImage: "url('/images/overlays/stained-glass.PNG')",
-          backgroundSize: "200% 200%",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
-        }}
-      />
+
+      {/* Stained glass texture overlay - using Next/Image */}
+      <div className="absolute inset-0 z-[1] opacity-60">
+        <Image
+          src="/images/overlays/stained-glass.png"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          quality={80}
+        />
+      </div>
 
       <div className="relative z-10">
 
@@ -384,30 +386,39 @@ const EnhancedGallery = () => {
                 {item.orientation === 'portrait' ? (
                   <>
                     {/* Blurred background layer */}
-                    <div
-                      className="absolute inset-0 scale-110"
-                      style={{
-                        backgroundImage: `url(${item.src})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        filter: 'blur(30px) brightness(0.6)',
-                      }}
-                    />
+                    <div className="absolute inset-0 scale-110">
+                      <Image
+                        src={item.src}
+                        alt=""
+                        fill
+                        className="object-cover blur-[30px] brightness-[0.6]"
+                        sizes="100vw"
+                        quality={30}
+                      />
+                    </div>
                     {/* Centered full portrait image */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <img
-                        src={item.src}
-                        alt={item.desc}
-                        className="h-full w-auto max-w-full object-contain group-hover:scale-105 transition-transform duration-700"
-                      />
+                      <div className="relative h-full w-auto aspect-[3/4]">
+                        <Image
+                          src={item.src}
+                          alt={item.desc}
+                          fill
+                          className="object-contain group-hover:scale-105 transition-transform duration-700"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          loading={index === 0 ? "eager" : "lazy"}
+                        />
+                      </div>
                     </div>
                   </>
                 ) : (
                   /* Landscape images: standard cover behavior */
-                  <img
+                  <Image
                     src={item.src}
                     alt={item.desc}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, 80vw"
+                    loading={index === 0 ? "eager" : "lazy"}
                   />
                 )}
                 {/* CAPTION OVERLAY - Hidden on mobile, visible on desktop hover */}
@@ -456,7 +467,7 @@ const EnhancedGallery = () => {
             </div>
           </div>
 
-          {/* Thumbnail Strip */}
+          {/* Thumbnail Strip - Using Next/Image */}
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto pb-6 scroll-smooth custom-scrollbar"
@@ -470,10 +481,13 @@ const EnhancedGallery = () => {
                     : 'opacity-60 hover:opacity-100'
                   }`}
               >
-                <img
+                <Image
                   src={item.src}
                   alt={item.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                  loading="lazy"
                 />
                 {index === currentIndex && (
                   <div className="absolute inset-0 bg-[#f2eee9]/20"></div>
@@ -486,7 +500,7 @@ const EnhancedGallery = () => {
         {/* Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] bg-[#4a3f3c]/95 flex items-center justify-center p-4">
-            <div className="relative max-w-7xl max-h-full">
+            <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
               {/* Modal Controls */}
               <div className="absolute top-4 right-4 z-10 flex gap-2">
                 <button
@@ -510,11 +524,14 @@ const EnhancedGallery = () => {
               </div>
 
               {/* Modal Image */}
-              <div className="relative">
-                <img
+              <div className="relative w-full h-[80vh]">
+                <Image
                   src={filteredItems[currentIndex]?.src}
                   alt={filteredItems[currentIndex]?.desc}
-                  className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                  fill
+                  className="object-contain rounded-lg"
+                  sizes="100vw"
+                  priority
                 />
 
                 {/* Modal Info - Much smaller on mobile */}
