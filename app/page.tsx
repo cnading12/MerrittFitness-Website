@@ -322,8 +322,26 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-        <section className="py-24 bg-[#faf8f5] relative">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-24 bg-[#faf8f5] relative overflow-hidden">
+          {/* Top-left watercolor decoration */}
+          <div className="absolute -top-20 -left-20 w-[500px] h-[500px] pointer-events-none z-0">
+            <img
+              src="/images/overlays/WaterColor.pdf.PNG"
+              alt=""
+              className="w-full h-full object-contain opacity-80"
+            />
+          </div>
+
+          {/* Bottom-left watercolor decoration */}
+          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] pointer-events-none z-0">
+            <img
+              src="/images/overlays/WaterColor.pdf.PNG"
+              alt=""
+              className="w-full h-full object-contain opacity-70 rotate-180"
+            />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-20">
               <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -558,6 +576,14 @@ export default function Home() {
 
               {/* Right Map */}
               <div className="relative">
+                {/* Brushstroke Circle Overlay */}
+                <div className="absolute -top-40 right-10 w-[800px] h-[800px] pointer-events-none z-0">                  <img
+                  src="/images/overlays/circle.pdf.png"
+                  alt=""
+                  className="w-full h-full object-contain opacity-80"
+                />
+                </div>
+
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3067.495501733334!2d-105.03225422320789!3d39.750981971554395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c78a04d1b6fa1%3A0x8c9ae4d693f97e2c!2s2246%20Irving%20St%2C%20Denver%2C%20CO%2080211!5e0!3m2!1sen!2sus!4v1754517213228!5m2!1sen!2sus"

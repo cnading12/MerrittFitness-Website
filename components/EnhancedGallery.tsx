@@ -10,167 +10,167 @@ const EnhancedGallery = () => {
   const scrollRef = useRef(null);
   const autoPlayRef = useRef(null);
 
-// Updated gallery items with more diverse content
+  // Updated gallery items with more diverse content
   const galleryItems = [
-    { 
+    {
       id: 1,
-      src: "/images/hero/mat1.jpg", 
-      title: "Yoga & Flow Sessions", 
+      src: "/images/hero/mat1.jpg",
+      title: "Yoga & Flow Sessions",
       desc: "Where ancient practice meets timeless architecture",
       category: "space"
     },
-    { 
+    {
       id: 2,
-      src: "/images/hero/mat2.jpg", 
-      title: "Sound Healing", 
+      src: "/images/hero/mat2.jpg",
+      title: "Sound Healing",
       desc: "Sacred acoustics amplify transformation",
       category: "space"
     },
-    { 
+    {
       id: 17,
-      src: "/images/hero/Glass-1.png", 
-      title: "Stained Glass Heritage", 
+      src: "/images/hero/Glass-1.png",
+      title: "Stained Glass Heritage",
       desc: "Original 1905 windows fill the space with sacred light",
       category: "space",
       orientation: "portrait"
     },
-    { 
+    {
       id: 18,
-      src: "/images/hero/Glass-Group.png", 
-      title: "Community Connection", 
+      src: "/images/hero/Glass-Group.png",
+      title: "Community Connection",
       desc: "Gathering beneath century-old stained glass",
       category: "space"
     },
-    { 
+    {
       id: 19,
-      src: "/images/hero/Sound-event.JPG", 
-      title: "Sound Bath Ceremony", 
+      src: "/images/hero/Sound-event.JPG",
+      title: "Sound Bath Ceremony",
       desc: "Healing vibrations in sacred acoustics",
       category: "events",
       orientation: "portrait"
     },
-    { 
+    {
       id: 20,
-      src: "/images/hero/Sound-Event2.JPG", 
-      title: "Sonic Wellness", 
+      src: "/images/hero/Sound-Event2.JPG",
+      title: "Sonic Wellness",
       desc: "Deep relaxation through sound meditation",
       category: "events",
       orientation: "portrait"
     },
-    { 
+    {
       id: 21,
-      src: "/images/hero/Cafe-East.png", 
-      title: "East Wing View", 
+      src: "/images/hero/Cafe-East.png",
+      title: "East Wing View",
       desc: "Natural light streams through historic windows",
       category: "space"
     },
-    { 
+    {
       id: 23,
-      src: "/images/hero/Cafe-West.png", 
-      title: "West Wing View", 
+      src: "/images/hero/Cafe-West.png",
+      title: "West Wing View",
       desc: "Warm afternoon light through stained glass",
       category: "space"
     },
-    { 
+    {
       id: 22,
-      src: "/images/hero/Lockers.png", 
-      title: "Guest Amenities", 
+      src: "/images/hero/Lockers.png",
+      title: "Guest Amenities",
       desc: "Secure storage for your practice essentials",
       category: "space"
     },
-    { 
+    {
       id: 4,
-      src: "/images/events/2.JPEG", 
-      title: "Dynamic Movement", 
+      src: "/images/events/2.JPEG",
+      title: "Dynamic Movement",
       desc: "Expressive arts in sacred spaces",
       category: "yoga"
     },
-    { 
+    {
       id: 5,
-      src: "/images/events/katrina/1.jpg", 
-      title: "Workshop Series", 
+      src: "/images/events/katrina/1.jpg",
+      title: "Workshop Series",
       desc: "Learning and growing together",
       category: "yoga",
       photographer: "Katrina_born_",
       orientation: "portrait"
     },
-    { 
+    {
       id: 6,
-      src: "/images/events/katrina/2.jpg", 
-      title: "Mindful Practice", 
+      src: "/images/events/katrina/2.jpg",
+      title: "Mindful Practice",
       desc: "Finding peace in motion",
       category: "yoga",
       photographer: "Katrina_born_",
       orientation: "portrait"
     },
-    { 
+    {
       id: 7,
-      src: "/images/events/katrina/3.jpg", 
-      title: "Group Sessions", 
+      src: "/images/events/katrina/3.jpg",
+      title: "Group Sessions",
       desc: "Strength in community",
       category: "yoga",
       photographer: "Katrina_born_",
       orientation: "portrait"
     },
-    { 
+    {
       id: 8,
-      src: "/images/events/katrina/4.jpg", 
-      title: "Personal Journey", 
+      src: "/images/events/katrina/4.jpg",
+      title: "Personal Journey",
       desc: "Individual paths to wellness",
       category: "yoga",
       photographer: "Katrina_born_",
       orientation: "portrait"
     },
-    { 
+    {
       id: 9,
-      src: "/images/events/judo/1.JPG", 
-      title: "Judo Training", 
+      src: "/images/events/judo/1.JPG",
+      title: "Judo Training",
       desc: "Martial arts discipline in our sacred space",
       category: "events",
       orientation: "portrait"
     },
-    { 
+    {
       id: 10,
-      src: "/images/events/judo/2.JPG", 
-      title: "Judo Practice", 
+      src: "/images/events/judo/2.JPG",
+      title: "Judo Practice",
       desc: "Building strength and character through martial arts",
       category: "events"
     },
-    { 
+    {
       id: 11,
-      src: "/images/events/judo/3.JPG", 
-      title: "Judo Techniques", 
+      src: "/images/events/judo/3.JPG",
+      title: "Judo Techniques",
       desc: "Precision and focus in every movement",
       category: "judo",
       orientation: "portrait"
     },
-    { 
+    {
       id: 12,
-      src: "/images/events/judo/4.JPG", 
-      title: "Judo Community", 
+      src: "/images/events/judo/4.JPG",
+      title: "Judo Community",
       desc: "Learning respect and discipline together",
       category: "events",
       orientation: "portrait"
     },
-    { 
+    {
       id: 13,
-      src: "/images/events/judo/5.jpg", 
-      title: "Judo Mastery", 
+      src: "/images/events/judo/5.jpg",
+      title: "Judo Mastery",
       desc: "The way of gentle force",
       category: "events",
       orientation: "portrait"
     },
-    { 
+    {
       id: 15,
-      src: "/images/hero/nomats.jpg", 
-      title: "Architectural Wonder", 
+      src: "/images/hero/nomats.jpg",
+      title: "Architectural Wonder",
       desc: "Every corner tells a story of beauty",
       category: "space"
     },
-    { 
+    {
       id: 16,
-      src: "/images/hero/outside5.PNG", 
-      title: "Historic Sanctuary", 
+      src: "/images/hero/outside5.PNG",
+      title: "Historic Sanctuary",
       desc: "1905 church transformed for modern wellness",
       category: "space"
     }
@@ -192,7 +192,7 @@ const EnhancedGallery = () => {
     if (categoryId === 'all') {
       setFilteredItems(galleryItems);
     } else if (categoryId === 'architecture') {
-      setFilteredItems(galleryItems.filter(item => 
+      setFilteredItems(galleryItems.filter(item =>
         item.category === 'architecture' || item.category === 'exterior'
       ));
     } else {
@@ -298,10 +298,17 @@ const EnhancedGallery = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
+<section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
+  <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
+  {/* Stained glass texture overlay */}
+{/* Stained glass texture overlay */}
+<img 
+  src="/images/overlays/stained-glass.PNG" 
+  alt="" 
+  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-[1] opacity-90 scale-110"
+/>
 
-      <div className="relative z-10">
+  <div className="relative z-10">
         {/* Header */}
         <div className="text-center mb-16 px-6">
           <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6 backdrop-blur-sm">
@@ -325,11 +332,10 @@ const EnhancedGallery = () => {
             <button
               key={category.id}
               onClick={() => handleFilter(category.id)}
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeFilter === category.id
+              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${activeFilter === category.id
                   ? 'bg-[#f2eee9] text-[#4a3f3c] shadow-lg'
                   : 'bg-[#f2eee9]/10 text-[#f2eee9] hover:bg-[#f2eee9]/20 backdrop-blur-sm'
-              }`}
+                }`}
             >
               {category.name} ({category.count})
             </button>
@@ -343,11 +349,10 @@ const EnhancedGallery = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleAutoPlay}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  isAutoPlaying
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isAutoPlaying
                     ? 'bg-[#735e59] text-[#f2eee9]'
                     : 'bg-[#f2eee9]/10 text-[#f2eee9] hover:bg-[#f2eee9]/20 backdrop-blur-sm'
-                }`}
+                  }`}
               >
                 {isAutoPlaying ? <Pause size={16} /> : <Play size={16} />}
                 {isAutoPlaying ? 'Pause' : 'Auto Play'}
@@ -374,7 +379,7 @@ const EnhancedGallery = () => {
           </div>
 
           {/* Main Image Display */}
-          <div 
+          <div
             className="relative aspect-[16/9] mb-8 rounded-3xl overflow-hidden shadow-2xl cursor-pointer group"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
@@ -384,15 +389,14 @@ const EnhancedGallery = () => {
             {filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
+                className={`absolute inset-0 transition-opacity duration-500 ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                  }`}
               >
                 {/* Portrait images: blurred background + centered full image */}
                 {item.orientation === 'portrait' ? (
                   <>
                     {/* Blurred background layer */}
-                    <div 
+                    <div
                       className="absolute inset-0 scale-110"
                       style={{
                         backgroundImage: `url(${item.src})`,
@@ -426,7 +430,7 @@ const EnhancedGallery = () => {
                     {item.photographer && (
                       <p className="text-[#f2eee9]/70 text-sm mt-2">
                         📸 Photo by{' '}
-                        <a 
+                        <a
                           href={`https://instagram.com/${item.photographer}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -455,18 +459,17 @@ const EnhancedGallery = () => {
                     e.stopPropagation();
                     goToSlide(index);
                   }}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentIndex
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
                       ? 'bg-[#f2eee9] w-8'
                       : 'bg-[#f2eee9]/50 hover:bg-[#f2eee9]/80'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
           </div>
 
           {/* Thumbnail Strip */}
-          <div 
+          <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto pb-6 scroll-smooth custom-scrollbar"
           >
@@ -474,11 +477,10 @@ const EnhancedGallery = () => {
               <button
                 key={item.id}
                 onClick={() => goToSlide(index)}
-                className={`relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all duration-300 ${
-                  index === currentIndex
+                className={`relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all duration-300 ${index === currentIndex
                     ? 'ring-2 ring-[#f2eee9] shadow-xl scale-110'
                     : 'opacity-60 hover:opacity-100'
-                }`}
+                  }`}
               >
                 <img
                   src={item.src}
@@ -526,14 +528,14 @@ const EnhancedGallery = () => {
                   alt={filteredItems[currentIndex]?.desc}
                   className="max-w-full max-h-[80vh] object-contain rounded-lg"
                 />
-                
+
                 {/* Modal Info - Much smaller on mobile */}
                 <div className="absolute bottom-2 left-2 right-2 md:bottom-4 md:left-4 md:right-auto bg-[#4a3f3c]/70 text-[#f2eee9] p-2 md:p-4 rounded-lg backdrop-blur-sm md:max-w-md">
                   <h3 className="text-sm md:text-xl font-bold mb-0 md:mb-1 leading-tight font-serif">{filteredItems[currentIndex]?.title}</h3>
                   <p className="text-xs md:text-base text-[#f2eee9]/90 leading-snug md:leading-normal">{filteredItems[currentIndex]?.desc}</p>
                   {filteredItems[currentIndex]?.photographer && (
                     <p className="text-[#f2eee9]/70 text-[10px] md:text-sm mt-1 md:mt-2">
-                      📸 <a 
+                      📸 <a
                         href={`https://instagram.com/${filteredItems[currentIndex].photographer}`}
                         target="_blank"
                         rel="noopener noreferrer"
