@@ -48,7 +48,7 @@ export default function AboutPage() {
                 <div className="relative group">
                   <div className="absolute -inset-4 bg-gradient-to-r from-[#f2eee9]/20 to-[#a08b84]/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
                   <Image
-                    src="/images/hero/outside3.jpg"
+                    src="/images/hero/outside3.webp"
                     alt="Historic Merritt Wellness building exterior showing 1905 church architecture"
                     width={600}
                     height={400}

@@ -56,7 +56,7 @@ export const events: Event[] = [
     time: "5:00 PM",
     endTime: "7:00 PM",
     description: "Immerse yourself in the healing vibrations of a sound bath led by Katrina Born. Using crystal singing bowls, gongs, and other resonant instruments, Katrina will guide you into a deep state of relaxation and restoration. Simply lie back and let the sound waves wash over you in our beautiful historic sanctuary with 24-foot ceilings and original stained glass windows.",
-    imageUrl: "/images/events/katrina/2.jpg",
+    imageUrl: "/images/events/katrina/2.webp",
     ticketUrl: "#",
     instagramHandle: "katrina_born_",
     practitionerName: "Katrina Born"
