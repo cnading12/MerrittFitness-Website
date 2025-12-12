@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, Play, Pause, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import Image from 'next/image';
 
 const EnhancedGallery = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -300,6 +301,19 @@ const EnhancedGallery = () => {
   return (
     <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
+
+      {/* Stained Glass Overlay at Top */}
+      <div className="absolute top-0 left-0 right-0 h-48 pointer-events-none z-0 overflow-hidden">
+        <Image
+          src="/images/overlays/Stained Glass.pdf.PNG"
+          alt=""
+          width={1920}
+          height={200}
+          className="w-full h-full object-cover opacity-30"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#4a3f3c]"></div>
+      </div>
 
       <div className="relative z-10">
         {/* Header */}

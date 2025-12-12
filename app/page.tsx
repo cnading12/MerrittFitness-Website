@@ -322,8 +322,26 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-        <section className="py-24 bg-[#faf8f5] relative">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-24 bg-[#faf8f5] relative overflow-hidden">
+          {/* Watercolor Overlays */}
+          <Image
+            src="/images/overlays/WaterColor.pdf.PNG"
+            alt=""
+            width={300}
+            height={300}
+            className="absolute top-0 left-0 opacity-40 pointer-events-none"
+            aria-hidden="true"
+          />
+          <Image
+            src="/images/overlays/WaterColor.pdf.PNG"
+            alt=""
+            width={300}
+            height={300}
+            className="absolute top-0 right-0 opacity-40 pointer-events-none transform scale-x-[-1]"
+            aria-hidden="true"
+          />
+
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-20">
               <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -479,8 +497,26 @@ export default function Home() {
         </section>
 
         {/* CONTACT SECTION - Enhanced with local keywords */}
-        <section className="py-20 bg-gradient-to-b from-[#f2eee9] to-[#faf8f5] relative">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-20 bg-gradient-to-b from-[#f2eee9] to-[#faf8f5] relative overflow-hidden">
+          {/* Watercolor Corner Overlays */}
+          <Image
+            src="/images/overlays/WaterColor.pdf.PNG"
+            alt=""
+            width={250}
+            height={250}
+            className="absolute top-0 left-0 opacity-30 pointer-events-none"
+            aria-hidden="true"
+          />
+          <Image
+            src="/images/overlays/Swirls.PNG"
+            alt=""
+            width={200}
+            height={200}
+            className="absolute bottom-0 right-0 opacity-25 pointer-events-none"
+            aria-hidden="true"
+          />
+
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div>
@@ -556,8 +592,20 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Right Map */}
+              {/* Right Map with Circle Overlay */}
               <div className="relative">
+                {/* Circle Brush Stroke Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <Image
+                    src="/images/overlays/Circle.pdf.PNG"
+                    alt=""
+                    width={500}
+                    height={500}
+                    className="w-full h-full object-contain opacity-60"
+                    aria-hidden="true"
+                  />
+                </div>
+
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3067.495501733334!2d-105.03225422320789!3d39.750981971554395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c78a04d1b6fa1%3A0x8c9ae4d693f97e2c!2s2246%20Irving%20St%2C%20Denver%2C%20CO%2080211!5e0!3m2!1sen!2sus!4v1754517213228!5m2!1sen!2sus"
@@ -573,7 +621,7 @@ export default function Home() {
                 </div>
 
                 {/* Enhanced Location Badge */}
-                <div className="absolute top-6 left-6 bg-[#faf8f5]/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-[#735e59]/10">
+                <div className="absolute top-6 left-6 bg-[#faf8f5]/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-[#735e59]/10 z-20">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-[#735e59] rounded-full flex items-center justify-center">
                       <svg className="w-6 h-6 text-[#f2eee9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
