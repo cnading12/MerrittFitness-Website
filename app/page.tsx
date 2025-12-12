@@ -591,10 +591,8 @@ export default function Home() {
                   <Image
                     src="/images/overlays/Circle.png"
                     alt=""
-                    width={800}
-                    height={800}
-                    className="w-full h-full object-contain opacity-80"
-                    loading="lazy"
+                    fill
+                    className="object-contain opacity-80"
                   />
                 </div>
 
