@@ -134,7 +134,7 @@ export const events: Event[] = [
     time: "4:00 PM",
     endTime: "8:00 PM",
     description: "Join us each month for our neighborhood association planning meeting, led by Adam Levy. This is a free, community-focused gathering where neighbors come together to discuss local updates, upcoming initiatives, and ways to strengthen our area. We're proud to host and support our neighborhood—everyone is welcome.",
-    imageUrl: "/images/hero/1.jpg",
+    imageUrl: "/images/events/community/food.JPG",
     practitionerName: "Adam Levy",
     recurrence: "Third Tuesday of every month"
   },
@@ -158,7 +158,7 @@ export const events: Event[] = [
     time: "8:00 PM",
     endTime: "12:00 AM",
     description: "Support local art. Support Denver. Join us for an elegant evening celebrating local artists and creative expression. This exclusive gala features a silent auction of art and experiences, giveaways, drinks, and light snacks—followed by a DJ'd afterparty with dancing from 10 PM to midnight. Party attire required—dress to impress! Only 65 seats available.",
-    imageUrl: "/images/hero/1.jpg",
+    imageUrl: "/images/events/community/gala.png",
     ticketUrl: "https://www.artistsamongstus.org/event-details/winter-gala-launching-a-year-of-art-magic",
     instagramHandle: "artistsamongstusdenver",
     practitionerName: "Artists Amongst Us"
