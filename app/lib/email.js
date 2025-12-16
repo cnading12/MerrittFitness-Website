@@ -279,7 +279,7 @@ const EMAIL_TEMPLATES = {
             </p>
             <p style="margin: 0 0 10px 0;">
               <strong style="color: #1e40af;">Lock-Up Video:</strong>
-              <a href="https://youtube.com" style="color: #3b82f6; text-decoration: none;">[YouTube Link Here]</a>
+              <a href="https://www.youtube.com/shorts/_kQJcQzo03c" style="color: #3b82f6; text-decoration: none;">[YouTube Link Here]</a>
             </p>
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
               We recommend watching this in advance so you feel fully confident when wrapping up.
