@@ -154,8 +154,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "https://merrittwellness.net/images/hero/1.jpg"
               ],
               "sameAs": [
-                "https://www.instagram.com/merritt.fitness",
-                "https://www.facebook.com/merritt.fitness"
+                "https://www.instagram.com/merrittwellnessdenver",
+                "https://www.facebook.com/merrittwellnessdenver"
               ],
               "aggregateRating": {
                 "@type": "AggregateRating",

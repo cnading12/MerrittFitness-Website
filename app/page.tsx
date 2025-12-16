@@ -42,8 +42,8 @@ export default function Home() {
       "https://merrittwellness.net/images/events/2.JPEG"
     ],
     "sameAs": [
-      "https://www.instagram.com/merritt.fitness",
-      "https://www.facebook.com/merritt.fitness"
+      "https://www.instagram.com/merrittwellnessdenver",
+      "https://www.facebook.com/merrittwellnessdenver"
     ],
     "amenityFeature": [
       {

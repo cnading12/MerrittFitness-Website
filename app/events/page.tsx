@@ -251,7 +251,7 @@ function EmptyState({ dateRange }: { dateRange: DateRange }) {
           Get Notified
         </Link>
         <a
-          href="https://instagram.com/merritt.fitness"
+          href="https://instagram.com/merrittwellnessdenver"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 border-2 border-[#735e59] text-[#735e59] font-semibold px-8 py-4 rounded-xl hover:bg-[#735e59] hover:text-[#f2eee9] transition-all duration-300"

@@ -95,7 +95,7 @@ export default function ContactPage() {
                   <h3 className="text-xl font-bold mb-4 text-[#4a3f3c] font-serif">Stay Connected</h3>
                   <div className="flex justify-center md:justify-start gap-4">
                     <Link
-                      href="https://www.instagram.com/merritt.fitness"
+                      href="https://www.instagram.com/merrittwellnessdenver"
                       className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
                       target="_blank"
                       rel="noopener"
@@ -106,7 +106,7 @@ export default function ContactPage() {
                       </svg>
                     </Link>
                     <Link
-                      href="https://www.facebook.com/merritt.fitness"
+                      href="https://www.facebook.com/merrittwellnessdenver"
                       className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
                       target="_blank"
                       rel="noopener"
