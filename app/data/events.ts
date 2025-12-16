@@ -116,14 +116,15 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
-    id: "chris-kelsie-event-jan-2026",
-    title: "Chris and Kelsie Event",
+    id: "illumination-chris-kelsie-jan-2026",
+    title: "Illumination with Chris & Kelsie",
     date: "2026-01-17",
     time: "5:30 PM",
     endTime: "7:30 PM",
-    description: "PLACEHOLDER - Need description for this event.",
-    imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "#",
+    description: "Join Chris and Kelsie for Illumination, a rotating series of wellness experiences in our beautiful historic sanctuary. Each gathering offers something different—from energizing dance parties to grounding meditation and flowing yoga—all designed to help you connect, move, and restore.",
+    imageUrl: "/images/events/dance/Event.png",
+    ticketUrl: "https://kelsieriffey.com/illumination",
+    instagramHandle: "yoga.savage",
     practitionerName: "Chris and Kelsie"
   },
   {
@@ -133,32 +134,34 @@ export const events: Event[] = [
     time: "4:00 PM",
     endTime: "8:00 PM",
     description: "Join us each month for our neighborhood association planning meeting, led by Adam Levy. This is a free, community-focused gathering where neighbors come together to discuss local updates, upcoming initiatives, and ways to strengthen our area. We're proud to host and support our neighborhood—everyone is welcome.",
-    imageUrl: "/images/hero/1.jpg",
+    imageUrl: "/images/hero/1.webp",
     practitionerName: "Adam Levy",
     recurrence: "Third Tuesday of every month"
   },
   {
-    id: "genoa-full-circle-jan-22-2026",
-    title: "Full Circle with Genoa",
+    id: "full-circle-dance-jan-22-2026",
+    title: "Full Circle Dance",
     date: "2026-01-22",
     time: "4:00 PM",
-    endTime: "6:00 PM",
-    description: "Join Genoa for Full Circle, a weekly gathering held every Thursday. PLACEHOLDER - Need more details about what this practice involves.",
-    imageUrl: "/images/hero/1.jpg",
+    endTime: "6:30 PM",
+    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
+    imageUrl: "/images/events/dance/kids.jpg",
     ticketUrl: "https://www.fullcircle.dance/sloans-lake",
+    instagramHandle: "fullcircledancecolorado",
     practitionerName: "Genoa",
     recurrence: "Every Thursday"
   },
   {
-    id: "cynthia-artists-amongst-us-jan-24-2026",
-    title: "Artists Amongst Us",
+    id: "artists-amongst-us-winter-gala-jan-2026",
+    title: "Artists Amongst Us Winter Gala",
     date: "2026-01-24",
-    time: "5:00 PM",
-    endTime: "7:00 PM",
-    description: "An evening celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
-    imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "#",
-    practitionerName: "Cynthia"
+    time: "8:00 PM",
+    endTime: "12:00 AM",
+    description: "Support local art. Support Denver. Join us for an elegant evening celebrating local artists and creative expression. This exclusive gala features a silent auction of art and experiences, giveaways, drinks, and light snacks—followed by a DJ'd afterparty with dancing from 10 PM to midnight. Party attire required—dress to impress! Only 65 seats available.",
+    imageUrl: "/images/events/community/gala.png",
+    ticketUrl: "https://www.artistsamongstus.org/event-details/winter-gala-launching-a-year-of-art-magic",
+    instagramHandle: "artistsamongstusdenver",
+    practitionerName: "Artists Amongst Us"
   },
   {
     id: "full-circle-dance-jan-29-2026",
@@ -174,25 +177,25 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
-    id: "cynthia-artists-amongst-us-jan-30-2026",
-    title: "Artists Amongst Us",
+    id: "artists-amongst-us-tango-jan-30-2026",
+    title: "Tango Dance Class",
     date: "2026-01-30",
     time: "6:30 PM",
     endTime: "8:30 PM",
-    description: "An evening celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
-    imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "#",
-    practitionerName: "Cynthia"
+    description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
+    imageUrl: "/images/events/dance/tango.png",
+    instagramHandle: "artistsamongstusdenver",
+    practitionerName: "Artists Amongst Us"
   },
   {
-    id: "cynthia-artists-amongst-us-jan-31-2026",
-    title: "Artists Amongst Us",
+    id: "artists-amongst-us-tango-jan-31-2026",
+    title: "Tango Dance Class",
     date: "2026-01-31",
     time: "12:00 PM",
     endTime: "2:00 PM",
-    description: "An afternoon celebrating local artists and creative expression, hosted by Cynthia. PLACEHOLDER - Need more details about this event series.",
-    imageUrl: "/images/hero/1.jpg",
-    ticketUrl: "#",
-    practitionerName: "Cynthia"
+    description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
+    imageUrl: "/images/events/dance/tango.png",
+    instagramHandle: "artistsamongstusdenver",
+    practitionerName: "Artists Amongst Us"
   }
 ];
