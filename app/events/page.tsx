@@ -26,28 +26,32 @@ function getDateParts(dateString: string): { month: string; day: string } {
   return { month, day };
 }
 
-// Get date range boundaries
+// Get date range boundaries using actual calendar months
 function getDateRange(range: DateRange): { start: Date; end: Date } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const start = new Date(today);
-  const end = new Date(today);
+  let start: Date;
+  let end: Date;
 
   switch (range) {
     case 'lastMonth':
-      // 30 days ago to yesterday
-      start.setDate(today.getDate() - 30);
-      end.setDate(today.getDate() - 1);
+      // First day to last day of previous calendar month
+      start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      end = new Date(today.getFullYear(), today.getMonth(), 0); // Day 0 = last day of prev month
+      end.setHours(23, 59, 59, 999);
       break;
     case 'thisMonth':
-      // Today to 30 days from now
-      end.setDate(today.getDate() + 30);
+      // First day to last day of current calendar month
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Day 0 = last day of current month
+      end.setHours(23, 59, 59, 999);
       break;
     case 'nextMonth':
-      // 31 days from now to 60 days from now
-      start.setDate(today.getDate() + 31);
-      end.setDate(today.getDate() + 60);
+      // First day to last day of next calendar month
+      start = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 2, 0); // Day 0 = last day of next month
+      end.setHours(23, 59, 59, 999);
       break;
   }
 
@@ -214,7 +218,7 @@ function EmptyState({ dateRange }: { dateRange: DateRange }) {
   const messages = {
     lastMonth: {
       title: 'No Past Events',
-      description: 'There were no events in the past 30 days. Check out what\'s coming up!'
+      description: 'There were no events last month. Check out what\'s coming up!'
     },
     thisMonth: {
       title: 'No Upcoming Events',
@@ -265,7 +269,7 @@ export default function EventsPage() {
   const filteredEvents = getFilteredEvents(events, dateRange);
 
   const rangeLabels = {
-    lastMonth: { label: 'Past 30 Days', count: 'past' },
+    lastMonth: { label: 'Last Month', count: 'past' },
     thisMonth: { label: 'This Month', count: 'upcoming' },
     nextMonth: { label: 'Next Month', count: 'scheduled' }
   };
@@ -310,7 +314,7 @@ export default function EventsPage() {
                 }`}
               >
                 <ChevronLeft className="w-4 h-4" />
-                Past 30 Days
+                Last Month
               </button>
               <button
                 onClick={() => setDateRange('thisMonth')}

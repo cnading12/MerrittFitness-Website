@@ -64,7 +64,7 @@ export const events: Event[] = [
 
   // ============ JANUARY 2026 ============
   {
-    id: "full-circle-dance-jan-1-2026",
+    id: "full-circle-dance-jan-01-2026",
     title: "Full Circle Dance",
     date: "2026-01-01",
     time: "4:00 PM",
@@ -77,7 +77,7 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
-    id: "full-circle-dance-jan-1-2026",
+    id: "full-circle-dance-jan-08-2026",
     title: "Full Circle Dance",
     date: "2026-01-08",
     time: "4:00 PM",
@@ -103,7 +103,7 @@ export const events: Event[] = [
   recurrence: "Second Saturday of every month"
 },
   {
-    id: "full-circle-dance-jan-1-2026",
+    id: "full-circle-dance-jan-15-2026",
     title: "Full Circle Dance",
     date: "2026-01-15",
     time: "4:00 PM",
@@ -161,7 +161,7 @@ export const events: Event[] = [
     practitionerName: "Cynthia"
   },
   {
-    id: "full-circle-dance-jan-1-2026",
+    id: "full-circle-dance-jan-29-2026",
     title: "Full Circle Dance",
     date: "2026-01-29",
     time: "4:00 PM",
