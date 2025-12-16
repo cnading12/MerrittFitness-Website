@@ -177,27 +177,12 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
-    id: "artists-amongst-us-tango-jan-30-2026",
-    title: "Tango Dance Class",
+    id: "denver-winter-tango-intensive-jan-2026",
+    title: "Denver Winter Tango Intensive",
     date: "2026-01-30",
-    time: "6:30 PM",
-    endTime: "8:30 PM",
-    description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
-    imageUrl: "/images/events/dance/tango.png",
-    ticketUrl: "#",
-    instagramHandle: "artistsamongstusdenver",
-    practitionerName: "Artists Amongst Us"
-  },
-  {
-    id: "artists-amongst-us-tango-jan-31-2026",
-    title: "Tango Dance Class",
-    date: "2026-01-31",
-    time: "12:00 PM",
-    endTime: "2:00 PM",
-    description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
-    imageUrl: "/images/events/dance/tango.png",
-    ticketUrl: "#",
-    instagramHandle: "artistsamongstusdenver",
-    practitionerName: "Artists Amongst Us"
+    time: "January 30–February 1",
+    description: "Registration is open! Join us for an immersive weekend of tango with beginner-friendly classes, all-level workshops, and in-depth masterclasses. We'll dive into Versatility in Style, Connection, and Musicality—all tailored specifically for Colorado's social tango dancers. Spots are limited—don't wait. Come dance, train, and kick off 2026 with us!",
+    imageUrl: "/images/events/dance/teaching.jpeg",
+    ticketUrl: "https://forms.gle/zBepZ9sfJ9npg3gZ6"
   }
 ];
