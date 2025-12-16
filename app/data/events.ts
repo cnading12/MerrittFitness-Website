@@ -34,7 +34,7 @@ export const events: Event[] = [
     time: "4:30 PM",
     endTime: "6:00 PM",
     description: "Experience a grounding yoga practice led by Steven Benoy in our stunning historic space featuring 24-foot ceilings and original stained glass windows.",
-    imageUrl: "/images/events/2.JPEG",
+    imageUrl: "/images/events/2.webp",
     ticketUrl: "#",
     practitionerName: "Steven Benoy"
   },
@@ -134,7 +134,7 @@ export const events: Event[] = [
     time: "4:00 PM",
     endTime: "8:00 PM",
     description: "Join us each month for our neighborhood association planning meeting, led by Adam Levy. This is a free, community-focused gathering where neighbors come together to discuss local updates, upcoming initiatives, and ways to strengthen our area. We're proud to host and support our neighborhood—everyone is welcome.",
-    imageUrl: "/images/hero/1.webp",
+    imageUrl: "/images/hero/1.jpg",
     practitionerName: "Adam Levy",
     recurrence: "Third Tuesday of every month"
   },
@@ -158,7 +158,7 @@ export const events: Event[] = [
     time: "8:00 PM",
     endTime: "12:00 AM",
     description: "Support local art. Support Denver. Join us for an elegant evening celebrating local artists and creative expression. This exclusive gala features a silent auction of art and experiences, giveaways, drinks, and light snacks—followed by a DJ'd afterparty with dancing from 10 PM to midnight. Party attire required—dress to impress! Only 65 seats available.",
-    imageUrl: "/images/events/community/gala.png",
+    imageUrl: "/images/hero/1.jpg",
     ticketUrl: "https://www.artistsamongstus.org/event-details/winter-gala-launching-a-year-of-art-magic",
     instagramHandle: "artistsamongstusdenver",
     practitionerName: "Artists Amongst Us"
@@ -184,6 +184,7 @@ export const events: Event[] = [
     endTime: "8:30 PM",
     description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
     imageUrl: "/images/events/dance/tango.png",
+    ticketUrl: "#",
     instagramHandle: "artistsamongstusdenver",
     practitionerName: "Artists Amongst Us"
   },
@@ -195,6 +196,7 @@ export const events: Event[] = [
     endTime: "2:00 PM",
     description: "Learn the art of tango in our beautiful historic sanctuary. Hosted by Artists Amongst Us, this non-profit event welcomes dancers of all levels to connect, move, and enjoy complimentary wine while exploring this passionate dance form. No partner required.",
     imageUrl: "/images/events/dance/tango.png",
+    ticketUrl: "#",
     instagramHandle: "artistsamongstusdenver",
     practitionerName: "Artists Amongst Us"
   }
