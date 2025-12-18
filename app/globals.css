@@ -68,7 +68,7 @@ html {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/images/hero/texture-overlay.PNG');
+  background-image: url('/images/hero/texture-overlay.png');
   background-size: 1900px 1900px;
   background-repeat: repeat;
   background-position: center;
