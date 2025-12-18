@@ -435,7 +435,7 @@ export default function Home() {
 <div 
   className="rounded-3xl p-8 border border-[#f2eee9]/10 mb-12 relative overflow-hidden"
   style={{
-    backgroundImage: 'url("/images/overlays/Swirls.PNG")',
+    backgroundImage: 'url("/images/overlays/Swirls.png")',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
   }}
