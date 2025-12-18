@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
@@ -180,6 +181,15 @@ export default function AboutPage() {
                     Private sessions available
                   </li>
                 </ul>
+                <Link
+                  href="/events"
+                  className="inline-flex items-center mt-6 px-6 py-3 bg-[#735e59] text-white rounded-full font-semibold hover:bg-[#5d4a46] transition-colors duration-300"
+                >
+                  View Upcoming Events
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
 
               <div className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2">
@@ -208,6 +218,15 @@ export default function AboutPage() {
                     Flexible event hosting
                   </li>
                 </ul>
+                <Link
+                  href="/booking"
+                  className="inline-flex items-center mt-6 px-6 py-3 bg-[#735e59] text-white rounded-full font-semibold hover:bg-[#5d4a46] transition-colors duration-300"
+                >
+                  Book Your Class
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
             </div>
           </div>
