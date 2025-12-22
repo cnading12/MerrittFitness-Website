@@ -431,40 +431,40 @@ export default function Home() {
               </p>
             </div>
 
-{/* Enhanced Calendar Section */}
-<div 
-  className="rounded-3xl p-8 border border-[#f2eee9]/10 mb-12 relative overflow-hidden"
-  style={{
-    backgroundImage: 'url("/images/overlays/Swirls.png")',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  }}
->
-  <div className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-2xl relative z-10">
-    <div className="p-6 bg-gradient-to-r from-[#f2eee9] to-[#faf8f5] border-b border-[#735e59]/10">
-      <h3 className="text-2xl font-bold text-[#4a3f3c] mb-2 font-serif">Denver Wellness Events Calendar</h3>
-      <p className="text-[#6b5f5b]">Discover upcoming yoga classes, sound baths, and workshops at our Sloans Lake sanctuary</p>
-    </div>
-    {/* Calendar with improved loading */}
-    <div className="relative h-96 bg-[#f2eee9]/50">
-      {!calendarLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#f2eee9]/50">
-          <div className="text-[#6b5f5b] text-center">
-            <div className="w-12 h-12 border-4 border-[#a08b84] border-t-[#735e59] rounded-full animate-spin mb-4 mx-auto"></div>
-            <p className="text-lg font-medium">Loading Denver wellness schedule...</p>
-          </div>
-        </div>
-      )}
-      <iframe
-        src="https://calendar.google.com/calendar/embed?src=c_002ae67fc0cd95665a26d4183a61597bd74447d4760b239bd5135518cf978704%40group.calendar.google.com&ctz=America%2FDenver"
-        className="w-full h-full border-0"
-        title="Merritt Wellness Denver Events Calendar - Yoga, Meditation, Sound Healing"
-        onLoad={() => setCalendarLoaded(true)}
-        style={{ display: calendarLoaded ? 'block' : 'none' }}
-      />
-    </div>
-  </div>
-</div>
+            {/* Enhanced Calendar Section */}
+            <div
+              className="rounded-3xl p-8 border border-[#f2eee9]/10 mb-12 relative overflow-hidden"
+              style={{
+                backgroundImage: 'url("/images/overlays/Swirls.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              <div className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-2xl relative z-10">
+                <div className="p-6 bg-gradient-to-r from-[#f2eee9] to-[#faf8f5] border-b border-[#735e59]/10">
+                  <h3 className="text-2xl font-bold text-[#4a3f3c] mb-2 font-serif">Denver Wellness Events Calendar</h3>
+                  <p className="text-[#6b5f5b]">Discover upcoming yoga classes, sound baths, and workshops at our Sloans Lake sanctuary</p>
+                </div>
+                {/* Calendar with improved loading */}
+                <div className="relative h-96 bg-[#f2eee9]/50">
+                  {!calendarLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#f2eee9]/50">
+                      <div className="text-[#6b5f5b] text-center">
+                        <div className="w-12 h-12 border-4 border-[#a08b84] border-t-[#735e59] rounded-full animate-spin mb-4 mx-auto"></div>
+                        <p className="text-lg font-medium">Loading Denver wellness schedule...</p>
+                      </div>
+                    </div>
+                  )}
+                  <iframe
+                    src="https://calendar.google.com/calendar/embed?src=c_002ae67fc0cd95665a26d4183a61597bd74447d4760b239bd5135518cf978704%40group.calendar.google.com&ctz=America%2FDenver"
+                    className="w-full h-full border-0"
+                    title="Merritt Wellness Denver Events Calendar - Yoga, Meditation, Sound Healing"
+                    onLoad={() => setCalendarLoaded(true)}
+                    style={{ display: calendarLoaded ? 'block' : 'none' }}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
@@ -592,13 +592,12 @@ export default function Home() {
               {/* Right Map */}
               <div className="relative">
                 {/* Brushstroke Circle Overlay */}
-                <div className="absolute -top-40 right-10 w-[800px] h-[800px] pointer-events-none z-0">
-                  <Image
-                    src="/images/overlays/Circle.png"
-                    alt=""
-                    fill
-                    className="object-contain opacity-80"
-                  />
+                <div className="absolute -top-40 w-[800px] h-[800px] pointer-events-none z-0">                  <Image
+                  src="/images/overlays/Circle.PNG"
+                  alt=""
+                  fill
+                  className="object-contain opacity-80"
+                />
                 </div>
 
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
