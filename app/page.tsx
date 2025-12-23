@@ -593,7 +593,7 @@ export default function Home() {
               <div className="relative">
                 {/* Brushstroke Circle Overlay */}
                 <div className="absolute -top-40 w-[800px] h-[800px] pointer-events-none z-0">                  <Image
-                  src="/images/overlays/Circle.PNG"
+                  src="/images/overlays/Circle.png"
                   alt=""
                   fill
                   className="object-contain opacity-80"
