@@ -292,8 +292,8 @@ export default function BookingPage() {
         const afterFour = isAfter4PM(booking.selectedTime);
 
         // Apply minimums per booking
-        if (!formData.isRecurring && hours < 4) {
-          hours = 4;
+        if (!formData.isRecurring && hours < 2) {
+          hours = 2;
           minimumApplied = true;
         }
 
@@ -1279,7 +1279,7 @@ export default function BookingPage() {
               {pricing.minimumApplied && (
                 <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-blue-800">
-                    <strong>ℹ️ Minimums Applied:</strong> 4-hour minimum per single event
+                    <strong>ℹ️ Minimums Applied:</strong> 2-hour minimum per single event
                   </p>
                 </div>
               )}
