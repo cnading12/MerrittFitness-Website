@@ -141,8 +141,8 @@ function calculateAccuratePricing(bookings, contactInfo) {
     const afterFour = isAfter4PM(booking.selectedTime);
 
     // Apply minimums
-    if (!contactInfo.isRecurring && hours < 4) {
-      hours = 4; // Single event: 4-hour minimum
+    if (!contactInfo.isRecurring && hours < 2) {
+      hours = 2; // Single event: 2-hour minimum
     }
 
     // Calculate Saturday charges
