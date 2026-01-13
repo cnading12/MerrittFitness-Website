@@ -92,10 +92,19 @@ const PricingSchema = z.object({
   baseAmount: z.number(),
   saturdayCharges: z.number().optional().default(0),
   setupTeardownFees: z.number().optional().default(0),
+  promoCode: z.string().optional().default(''),
+  promoDiscount: z.number().optional().default(0),
+  promoDescription: z.string().optional().default(''),
+  preDiscountSubtotal: z.number().optional(),
   subtotal: z.number(),
   stripeFee: z.number().optional().default(0),
   total: z.number()
 });
+
+// Valid promo codes configuration (must match frontend)
+const VALID_PROMO_CODES = {
+  'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' }
+};
 
 const MultipleBookingSchema = z.object({
   bookings: z.array(IndividualBookingSchema)
@@ -122,8 +131,8 @@ function isAfter4PM(timeString) {
   return false;
 }
 
-// Calculate accurate pricing with Saturday rates and fees
-function calculateAccuratePricing(bookings, contactInfo) {
+// Calculate accurate pricing with Saturday rates, fees, and promo codes
+function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   const HOURLY_RATE = 95;
   const SATURDAY_EVENING_SURCHARGE = 35;
   const SATURDAY_ALL_DAY_RATE = 200;
@@ -169,7 +178,24 @@ function calculateAccuratePricing(bookings, contactInfo) {
   });
 
   const baseAmount = totalHours * HOURLY_RATE;
-  const subtotal = baseAmount + saturdayCharges + setupTeardownFees;
+  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees;
+
+  // Apply promo code discount (server-side validation)
+  let promoDiscount = 0;
+  let promoDescription = '';
+  let validatedPromoCode = '';
+
+  if (clientPromoCode && VALID_PROMO_CODES[clientPromoCode]) {
+    const promoData = VALID_PROMO_CODES[clientPromoCode];
+    promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+    promoDescription = promoData.description;
+    validatedPromoCode = clientPromoCode;
+    console.log(`✅ Promo code "${clientPromoCode}" applied: ${promoData.description} (-$${promoDiscount})`);
+  } else if (clientPromoCode) {
+    console.log(`⚠️ Invalid promo code attempted: "${clientPromoCode}"`);
+  }
+
+  const subtotal = preDiscountSubtotal - promoDiscount;
   const stripeFee = contactInfo.paymentMethod === 'card'
     ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
     : 0;
@@ -182,6 +208,10 @@ function calculateAccuratePricing(bookings, contactInfo) {
     baseAmount,
     saturdayCharges,
     setupTeardownFees,
+    preDiscountSubtotal,
+    promoCode: validatedPromoCode,
+    promoDiscount,
+    promoDescription,
     subtotal,
     stripeFee,
     total,
@@ -218,6 +248,8 @@ async function createBooking(bookingData) {
           stripe_fee: parseFloat(bookingData.stripeFee || 0),
           saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
           setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
+          promo_code: bookingData.promoCode || '',
+          promo_discount: parseFloat(bookingData.promoDiscount || 0),
           status: bookingData.status,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -258,10 +290,12 @@ async function bookingHandler(request) {
 
     console.log('✅ Data validated successfully');
 
-    // Recalculate pricing
+    // Recalculate pricing with promo code validation
+    const clientPromoCode = validatedData.pricing?.promoCode || '';
     const accuratePricing = calculateAccuratePricing(
       validatedData.bookings,
-      validatedData.contactInfo
+      validatedData.contactInfo,
+      clientPromoCode
     );
 
     const masterBookingId = uuidv4();
@@ -296,6 +330,8 @@ async function bookingHandler(request) {
           stripeFee: accuratePricing.stripeFee,
           saturdayCharges: accuratePricing.saturdayCharges,
           setupTeardownFees: accuratePricing.setupTeardownFees,
+          promoCode: accuratePricing.promoCode,
+          promoDiscount: accuratePricing.promoDiscount,
           status: 'pending_payment' // All bookings require payment
         };
 

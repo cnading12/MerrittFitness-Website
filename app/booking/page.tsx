@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag } from 'lucide-react';
 
 export default function BookingPage() {
   const [availableSlots, setAvailableSlots] = useState({});
@@ -34,6 +34,16 @@ export default function BookingPage() {
     paymentMethod: 'card',
     agreedToTerms: false // NEW: Terms agreement
   });
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoCodeApplied, setPromoCodeApplied] = useState(false);
+  const [promoCodeError, setPromoCodeError] = useState('');
+
+  // Valid promo codes configuration
+  const VALID_PROMO_CODES = {
+    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' }
+  };
 
   // Business-focused event types
   const eventTypes = [
@@ -271,6 +281,31 @@ export default function BookingPage() {
     return Object.keys(errors).length === 0;
   };
 
+  // Promo code validation function
+  const applyPromoCode = () => {
+    setPromoCodeError('');
+
+    if (!promoCode.trim()) {
+      setPromoCodeError('Please enter a promo code');
+      return;
+    }
+
+    const promoData = VALID_PROMO_CODES[promoCode.trim()];
+    if (promoData) {
+      setPromoCodeApplied(true);
+      setPromoCodeError('');
+    } else {
+      setPromoCodeApplied(false);
+      setPromoCodeError('Invalid promo code');
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setPromoCodeApplied(false);
+    setPromoCodeError('');
+  };
+
   // ENHANCED: Pricing calculations with Saturday rates and setup/teardown
   const HOURLY_RATE = 95;
   const SATURDAY_EVENING_SURCHARGE = 35; // After 4 PM
@@ -322,7 +357,18 @@ export default function BookingPage() {
     });
 
     const baseAmount = totalHours * HOURLY_RATE;
-    const subtotal = baseAmount + saturdayCharges + setupTeardownFees;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees;
+
+    // Apply promo code discount
+    let promoDiscount = 0;
+    let promoDescription = '';
+    if (promoCodeApplied && promoCode.trim() && VALID_PROMO_CODES[promoCode.trim()]) {
+      const promoData = VALID_PROMO_CODES[promoCode.trim()];
+      promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+      promoDescription = promoData.description;
+    }
+
+    const subtotal = preDiscountSubtotal - promoDiscount;
     const stripeFee = formData.paymentMethod === 'card'
       ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
       : 0;
@@ -335,6 +381,10 @@ export default function BookingPage() {
       baseAmount,
       saturdayCharges,
       setupTeardownFees,
+      preDiscountSubtotal,
+      promoDiscount,
+      promoDescription,
+      promoCode: promoCodeApplied ? promoCode.trim() : '',
       subtotal,
       stripeFee,
       total,
@@ -1227,6 +1277,52 @@ export default function BookingPage() {
                 </p>
               </div>
 
+              {/* Promo Code Section */}
+              <div className="mb-4 p-3 bg-[#faf8f5] rounded-xl border border-[#735e59]/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag className="text-[#735e59]" size={16} />
+                  <span className="font-medium text-[#4a3f3c] text-sm">Promo Code</span>
+                </div>
+                {!promoCodeApplied ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          setPromoCodeError('');
+                        }}
+                        placeholder="Enter code"
+                        className="flex-1 p-2 text-sm border border-[#735e59]/20 rounded-lg focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                      />
+                      <button
+                        onClick={applyPromoCode}
+                        className="px-3 py-2 bg-[#735e59] text-white text-sm rounded-lg hover:bg-[#5a4a46] transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoCodeError && (
+                      <p className="text-red-600 text-xs">{promoCodeError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="text-green-600" size={16} />
+                      <span className="text-green-800 text-sm font-medium">{promoCode}</span>
+                    </div>
+                    <button
+                      onClick={removePromoCode}
+                      className="text-red-600 hover:text-red-800 text-xs font-medium"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
@@ -1244,6 +1340,13 @@ export default function BookingPage() {
                   <div className="flex justify-between text-purple-600">
                     <span>Setup/Teardown Assistance</span>
                     <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pricing.promoDiscount > 0 && (
+                  <div className="flex justify-between text-green-600 border-t pt-2">
+                    <span>{pricing.promoDescription}</span>
+                    <span>-${pricing.promoDiscount.toFixed(2)}</span>
                   </div>
                 )}
 
@@ -1266,6 +1369,14 @@ export default function BookingPage() {
                   ${pricing.total.toFixed(2)}
                 </span>
               </div>
+
+              {pricing.promoDiscount > 0 && (
+                <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-800">
+                    <strong>🎉 Promo Applied:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} with code &quot;{pricing.promoCode}&quot;
+                  </p>
+                </div>
+              )}
 
               <div className="mt-3 text-xs">
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
