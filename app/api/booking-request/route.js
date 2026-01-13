@@ -83,7 +83,9 @@ const ContactInfoSchema = z.object({
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
-  paymentMethod: z.literal('card').default('card') // Only card payments accepted
+  paymentMethod: z.literal('card').default('card'), // Only card payments accepted
+  isFirstEvent: z.boolean().nullable(), // Required: Is this their first event?
+  wantsOnsiteAssistance: z.boolean().default(false) // Optional: Add on-site assistance if not first event
 });
 
 const PricingSchema = z.object({
@@ -92,6 +94,9 @@ const PricingSchema = z.object({
   baseAmount: z.number(),
   saturdayCharges: z.number().optional().default(0),
   setupTeardownFees: z.number().optional().default(0),
+  onsiteAssistanceFee: z.number().optional().default(0),
+  isFirstEvent: z.boolean().nullable().optional(),
+  wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
   promoDiscount: z.number().optional().default(0),
   promoDescription: z.string().optional().default(''),
@@ -137,12 +142,14 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   const SATURDAY_EVENING_SURCHARGE = 35;
   const SATURDAY_ALL_DAY_RATE = 200;
   const SETUP_TEARDOWN_FEE = 50;
+  const ON_SITE_ASSISTANCE_FEE = 35;
   const STRIPE_FEE_PERCENTAGE = 3;
 
   let totalHours = 0;
   let totalBookings = 0;
   let saturdayCharges = 0;
   let setupTeardownFees = 0;
+  let onsiteAssistanceFee = 0;
 
   bookings.forEach(booking => {
     let hours = parseFloat(booking.hoursRequested) || 0;
@@ -177,8 +184,13 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
     totalBookings++;
   });
 
+  // Calculate on-site assistance fee (first event = required, otherwise optional)
+  if (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance) {
+    onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
+  }
+
   const baseAmount = totalHours * HOURLY_RATE;
-  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees;
+  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee;
 
   // Apply promo code discount (server-side validation)
   let promoDiscount = 0;
@@ -208,6 +220,9 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
     baseAmount,
     saturdayCharges,
     setupTeardownFees,
+    onsiteAssistanceFee,
+    isFirstEvent: contactInfo.isFirstEvent,
+    wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
     preDiscountSubtotal,
     promoCode: validatedPromoCode,
     promoDiscount,
@@ -248,6 +263,9 @@ async function createBooking(bookingData) {
           stripe_fee: parseFloat(bookingData.stripeFee || 0),
           saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
           setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
+          onsite_assistance_fee: parseFloat(bookingData.onsiteAssistanceFee || 0),
+          is_first_event: bookingData.isFirstEvent,
+          wants_onsite_assistance: bookingData.wantsOnsiteAssistance || false,
           promo_code: bookingData.promoCode || '',
           promo_discount: parseFloat(bookingData.promoDiscount || 0),
           status: bookingData.status,
@@ -325,11 +343,14 @@ async function bookingHandler(request) {
           businessName: validatedData.contactInfo.businessName,
           websiteUrl: validatedData.contactInfo.websiteUrl,
           paymentMethod: validatedData.contactInfo.paymentMethod,
+          isFirstEvent: validatedData.contactInfo.isFirstEvent,
+          wantsOnsiteAssistance: validatedData.contactInfo.wantsOnsiteAssistance,
           total: accuratePricing.total,
           subtotal: accuratePricing.subtotal,
           stripeFee: accuratePricing.stripeFee,
           saturdayCharges: accuratePricing.saturdayCharges,
           setupTeardownFees: accuratePricing.setupTeardownFees,
+          onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           status: 'pending_payment' // All bookings require payment
