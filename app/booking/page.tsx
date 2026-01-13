@@ -120,17 +120,6 @@ export default function BookingPage() {
     return date.getDay() === 6;
   };
 
-  // ENHANCED: Check if time is after 4 PM
-  const isAfter4PM = (timeString) => {
-    if (!timeString) return false;
-    const [time, period] = timeString.split(' ');
-    const [hours] = time.split(':').map(Number);
-
-    if (period === 'PM' && hours !== 12) {
-      return hours >= 4;
-    }
-    return false;
-  };
 
   // FIXED: Enhanced email validation
   const validateEmail = (email) => {
@@ -271,16 +260,6 @@ export default function BookingPage() {
         } else if (parseFloat(booking.hoursRequested) < 0.5) {
           errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
         }
-
-        // NEW: Validate Saturday special requirements
-        if (isSaturday(booking.selectedDate)) {
-          const hours = parseFloat(booking.hoursRequested) || 0;
-          const afterFour = isAfter4PM(booking.selectedTime);
-
-          if (!afterFour && hours < 8) {
-            errors[`booking_${index}_hoursRequested`] = 'Saturday all-day events (before 4 PM) require minimum 8 hours';
-          }
-        }
       }
     });
 
@@ -313,10 +292,9 @@ export default function BookingPage() {
     setPromoCodeError('');
   };
 
-  // ENHANCED: Pricing calculations with Saturday rates and setup/teardown
+  // Pricing calculations with Saturday rates and setup/teardown
   const HOURLY_RATE = 95;
-  const SATURDAY_EVENING_SURCHARGE = 35; // After 4 PM
-  const SATURDAY_ALL_DAY_RATE = 200; // Before 4 PM, 8+ hours
+  const SATURDAY_RATE = 200; // All Saturday events
   const SETUP_TEARDOWN_FEE = 50; // Per service
   const ON_SITE_ASSISTANCE_FEE = 35; // First-time event or optional add-on
   const STRIPE_FEE_PERCENTAGE = 3;
@@ -333,23 +311,16 @@ export default function BookingPage() {
       if (booking.hoursRequested) {
         let hours = parseFloat(booking.hoursRequested) || 0;
         const isSat = isSaturday(booking.selectedDate);
-        const afterFour = isAfter4PM(booking.selectedTime);
 
-        // Apply minimums per booking
+        // Apply minimums per booking (2-hour minimum for all events)
         if (!formData.isRecurring && hours < 2) {
           hours = 2;
           minimumApplied = true;
         }
 
-        // Calculate Saturday charges
+        // Calculate Saturday charges ($200/hr for all Saturday events)
         if (isSat) {
-          if (afterFour) {
-            // Saturday evening: $95 + $35/hr
-            saturdayCharges += hours * SATURDAY_EVENING_SURCHARGE;
-          } else if (hours >= 8) {
-            // Saturday all-day: $200/hr (replaces base rate)
-            saturdayCharges += hours * (SATURDAY_ALL_DAY_RATE - HOURLY_RATE);
-          }
+          saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
         }
 
         // Calculate setup/teardown fees
@@ -581,7 +552,7 @@ export default function BookingPage() {
           </p>
         </div>
 
-        {/* NEW: Important Rental Information */}
+        {/* Important Rental Information */}
         <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <AlertCircle className="text-amber-600 mt-1 flex-shrink-0" size={24} />
@@ -590,15 +561,23 @@ export default function BookingPage() {
               <ul className="space-y-2 text-amber-800">
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Standard Rate:</strong> $95/hour with a 2-hour minimum for all events.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Saturday Rentals:</strong> All Saturday events are $200/hour with a 2-hour minimum.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>First-Time Users:</strong> On-site assistance ($35) is required for all first-time renters to help with wifi, speakers, building access, and any questions. Returning users can optionally add this service.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
                   <span><strong>Setup & Cleanup:</strong> All rental times must include your own setup and cleanup. Space must be returned in the condition you found it.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Assistance Available:</strong> Need help? Setup and/or teardown assistance available for $50 each (1 hour per service) or $100 for both.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Saturday Rentals:</strong> Evening events (after 4 PM) are $130/hr ($95 + $35/hr supervision). All-day Saturday events (before 4 PM) require 8+ hours at $200/hr.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
