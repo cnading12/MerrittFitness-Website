@@ -32,7 +32,9 @@ export default function BookingPage() {
     isRecurring: false,
     recurringDetails: '',
     paymentMethod: 'card',
-    agreedToTerms: false // NEW: Terms agreement
+    agreedToTerms: false, // NEW: Terms agreement
+    isFirstEvent: null as boolean | null, // Required: Is this their first event?
+    wantsOnsiteAssistance: false // Optional: Add on-site assistance if not first event
   });
 
   // Promo code state
@@ -208,6 +210,11 @@ export default function BookingPage() {
       errors.agreedToTerms = 'You must agree to the Terms and Conditions to proceed';
     }
 
+    // Validate first event question (required)
+    if (formData.isFirstEvent === null) {
+      errors.isFirstEvent = 'Please indicate if this is your first event at Merritt Wellness';
+    }
+
     // NEW: Validate home address
     if (!formData.homeAddress.trim()) {
       errors.homeAddress = 'Home address is required';
@@ -311,6 +318,7 @@ export default function BookingPage() {
   const SATURDAY_EVENING_SURCHARGE = 35; // After 4 PM
   const SATURDAY_ALL_DAY_RATE = 200; // Before 4 PM, 8+ hours
   const SETUP_TEARDOWN_FEE = 50; // Per service
+  const ON_SITE_ASSISTANCE_FEE = 35; // First-time event or optional add-on
   const STRIPE_FEE_PERCENTAGE = 3;
 
   const calculatePricing = () => {
@@ -319,6 +327,7 @@ export default function BookingPage() {
     let minimumApplied = false;
     let saturdayCharges = 0;
     let setupTeardownFees = 0;
+    let onsiteAssistanceFee = 0;
 
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
@@ -356,8 +365,13 @@ export default function BookingPage() {
       }
     });
 
+    // Calculate on-site assistance fee (first event = required, otherwise optional)
+    if (formData.isFirstEvent === true || formData.wantsOnsiteAssistance) {
+      onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
+    }
+
     const baseAmount = totalHours * HOURLY_RATE;
-    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -381,6 +395,9 @@ export default function BookingPage() {
       baseAmount,
       saturdayCharges,
       setupTeardownFees,
+      onsiteAssistanceFee,
+      isFirstEvent: formData.isFirstEvent,
+      wantsOnsiteAssistance: formData.wantsOnsiteAssistance,
       preDiscountSubtotal,
       promoDiscount,
       promoDescription,
@@ -968,6 +985,101 @@ export default function BookingPage() {
                   </div>
                 </div>
 
+                {/* First Event Question - Required */}
+                <div className={`border-2 rounded-2xl p-5 ${validationErrors.isFirstEvent ? 'border-red-500 bg-red-50' : 'border-[#735e59]/20 bg-[#faf8f5]'}`}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="p-2 bg-[#735e59]/10 rounded-xl flex-shrink-0">
+                      <Info className="text-[#735e59]" size={18} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-1">
+                        Is this your first event at Merritt Wellness? *
+                      </label>
+                      <p className="text-xs text-[#6b5f5b]">
+                        First-time events include on-site assistance ($35) to help with wifi, speakers, building access, and any questions during setup.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 ml-11">
+                    <label className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                      formData.isFirstEvent === true
+                        ? 'bg-[#735e59] text-white'
+                        : 'bg-white border border-[#735e59]/20 text-[#4a3f3c] hover:border-[#735e59]/40'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="isFirstEvent"
+                        checked={formData.isFirstEvent === true}
+                        onChange={() => {
+                          handleInputChange('isFirstEvent', true);
+                          handleInputChange('wantsOnsiteAssistance', false);
+                        }}
+                        className="sr-only"
+                      />
+                      <span className="font-medium">Yes, this is my first event</span>
+                    </label>
+
+                    <label className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                      formData.isFirstEvent === false
+                        ? 'bg-[#735e59] text-white'
+                        : 'bg-white border border-[#735e59]/20 text-[#4a3f3c] hover:border-[#735e59]/40'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="isFirstEvent"
+                        checked={formData.isFirstEvent === false}
+                        onChange={() => handleInputChange('isFirstEvent', false)}
+                        className="sr-only"
+                      />
+                      <span className="font-medium">No, I&apos;ve been here before</span>
+                    </label>
+                  </div>
+
+                  {validationErrors.isFirstEvent && (
+                    <p className="text-red-600 text-sm mt-3 ml-11">{validationErrors.isFirstEvent}</p>
+                  )}
+
+                  {/* First event info box */}
+                  {formData.isFirstEvent === true && (
+                    <div className="mt-4 ml-11 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="text-emerald-600 mt-0.5 flex-shrink-0" size={16} />
+                        <div>
+                          <p className="text-sm font-medium text-emerald-800">On-Site Assistance Included (+$35)</p>
+                          <p className="text-xs text-emerald-700 mt-1">
+                            A staff member will be available to assist with wifi setup, speaker connections, building access, and answer any questions during your event setup. We want your first experience to be seamless!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Optional on-site assistance for returning clients */}
+                  {formData.isFirstEvent === false && (
+                    <div className="mt-4 ml-11">
+                      <label className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all ${
+                        formData.wantsOnsiteAssistance
+                          ? 'bg-[#735e59]/10 border-2 border-[#735e59]'
+                          : 'bg-white border-2 border-[#735e59]/20 hover:border-[#735e59]/40'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={formData.wantsOnsiteAssistance}
+                          onChange={(e) => handleInputChange('wantsOnsiteAssistance', e.target.checked)}
+                          className="mt-1 text-[#735e59] w-5 h-5"
+                        />
+                        <div>
+                          <span className="font-medium text-[#4a3f3c]">Add On-Site Assistance (+$35)</span>
+                          <p className="text-xs text-[#6b5f5b] mt-1">
+                            Optional: Have a staff member available to help with wifi, speakers, building access, and any questions during setup. Recommended for events with new equipment or special requirements.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
                 {/* REMOVED: Partnership discount section - replaced with informational text */}
                 <div className="border-t border-gray-100 pt-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1340,6 +1452,13 @@ export default function BookingPage() {
                   <div className="flex justify-between text-purple-600">
                     <span>Setup/Teardown Assistance</span>
                     <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pricing.onsiteAssistanceFee > 0 && (
+                  <div className="flex justify-between text-teal-600">
+                    <span>On-Site Assistance {pricing.isFirstEvent ? '(First Event)' : ''}</span>
+                    <span>+${pricing.onsiteAssistanceFee.toFixed(2)}</span>
                   </div>
                 )}
 
