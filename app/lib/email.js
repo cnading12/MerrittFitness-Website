@@ -284,6 +284,11 @@ const EMAIL_TEMPLATES = {
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
               We recommend watching this in advance so you feel fully confident when wrapping up.
             </p>
+            <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
+              <strong>Need your access code?</strong> Please email
+              <a href="mailto:clientservices@merrittwellness.net" style="color: #3b82f6; text-decoration: none;">clientservices@merrittwellness.net</a>
+              to receive your personal access code before your event.
+            </p>
           </div>
 
           <!-- Closing -->
