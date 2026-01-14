@@ -128,6 +128,34 @@ function isSaturday(dateString) {
   return date.getDay() === 6;
 }
 
+// Helper function to check if booking ends by 10 PM
+function endsBy10PM(startTime, hoursRequested) {
+  if (!startTime || !hoursRequested) return true;
+
+  // Parse start time (format: "8:00 PM")
+  const [time, period] = startTime.split(' ');
+  const [hourStr, minStr] = time.split(':');
+  let startHour = parseInt(hourStr, 10);
+  const startMin = parseInt(minStr, 10) || 0;
+
+  // Convert to 24-hour format
+  if (period === 'PM' && startHour !== 12) {
+    startHour += 12;
+  } else if (period === 'AM' && startHour === 12) {
+    startHour = 0;
+  }
+
+  // Calculate end time in minutes from midnight
+  const startMinutes = startHour * 60 + startMin;
+  const durationMinutes = parseFloat(hoursRequested) * 60;
+  const endMinutes = startMinutes + durationMinutes;
+
+  // 10 PM = 22:00 = 1320 minutes from midnight
+  const tenPMMinutes = 22 * 60;
+
+  return endMinutes <= tenPMMinutes;
+}
+
 
 // Calculate accurate pricing with Saturday rates, fees, and promo codes
 function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
@@ -292,6 +320,19 @@ async function bookingHandler(request) {
     }
 
     console.log('✅ Data validated successfully');
+
+    // Validate that all bookings end by 10 PM
+    for (const booking of validatedData.bookings) {
+      if (!endsBy10PM(booking.selectedTime, booking.hoursRequested)) {
+        console.error('❌ Booking extends past 10 PM:', booking.eventName);
+        return Response.json({
+          success: false,
+          error: 'All events must end by 10 PM',
+          details: `The booking "${booking.eventName}" starting at ${booking.selectedTime} for ${booking.hoursRequested} hours would extend past 10 PM. Please select an earlier start time or shorter duration.`,
+          code: 'END_TIME_VIOLATION'
+        }, { status: 400 });
+      }
+    }
 
     // Recalculate pricing with promo code validation
     const clientPromoCode = validatedData.pricing?.promoCode || '';
