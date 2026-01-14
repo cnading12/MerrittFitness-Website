@@ -18,6 +18,7 @@ const nextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
+    qualities: [30, 75, 80],
   },
 
   // Security headers

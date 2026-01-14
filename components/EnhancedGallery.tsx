@@ -155,7 +155,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 13,
-      src: "/images/events/judo/5.jpg",
+      src: "/images/events/judo/5.JPG",
       title: "Judo Mastery",
       desc: "The way of gentle force",
       category: "events",
