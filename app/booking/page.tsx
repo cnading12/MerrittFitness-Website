@@ -113,10 +113,13 @@ export default function BookingPage() {
     '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
-  // ENHANCED: Check if date is Saturday
+  // ENHANCED: Check if date is Saturday (timezone-safe)
   const isSaturday = (dateString) => {
     if (!dateString) return false;
-    const date = new Date(dateString);
+    // Parse date string directly to avoid timezone issues
+    // dateString format: "YYYY-MM-DD"
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed in JS
     return date.getDay() === 6;
   };
 
