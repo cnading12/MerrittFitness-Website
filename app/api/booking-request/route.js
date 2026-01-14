@@ -125,22 +125,11 @@ function isSaturday(dateString) {
   return date.getDay() === 6;
 }
 
-// Helper function to check if time is after 4 PM
-function isAfter4PM(timeString) {
-  const [time, period] = timeString.split(' ');
-  const [hours] = time.split(':').map(Number);
-  
-  if (period === 'PM' && hours !== 12) {
-    return hours >= 4;
-  }
-  return false;
-}
 
 // Calculate accurate pricing with Saturday rates, fees, and promo codes
 function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   const HOURLY_RATE = 95;
-  const SATURDAY_EVENING_SURCHARGE = 35;
-  const SATURDAY_ALL_DAY_RATE = 200;
+  const SATURDAY_RATE = 200;
   const SETUP_TEARDOWN_FEE = 50;
   const ON_SITE_ASSISTANCE_FEE = 35;
   const STRIPE_FEE_PERCENTAGE = 3;
@@ -154,22 +143,15 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   bookings.forEach(booking => {
     let hours = parseFloat(booking.hoursRequested) || 0;
     const isSat = isSaturday(booking.selectedDate);
-    const afterFour = isAfter4PM(booking.selectedTime);
 
     // Apply minimums
     if (!contactInfo.isRecurring && hours < 2) {
       hours = 2; // Single event: 2-hour minimum
     }
 
-    // Calculate Saturday charges
+    // Calculate Saturday charges - ALL Saturday events are $200/hour
     if (isSat) {
-      if (afterFour) {
-        // Saturday evening: base + surcharge
-        saturdayCharges += hours * SATURDAY_EVENING_SURCHARGE;
-      } else if (hours >= 8) {
-        // Saturday all-day: special rate (replaces base)
-        saturdayCharges += hours * (SATURDAY_ALL_DAY_RATE - HOURLY_RATE);
-      }
+      saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
     }
 
     // Calculate setup/teardown fees
