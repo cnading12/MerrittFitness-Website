@@ -119,9 +119,12 @@ const MultipleBookingSchema = z.object({
   pricing: PricingSchema
 });
 
-// Helper function to check if date is Saturday
+// Helper function to check if date is Saturday (timezone-safe)
 function isSaturday(dateString) {
-  const date = new Date(dateString);
+  // Parse date string directly to avoid timezone issues
+  // dateString format: "YYYY-MM-DD"
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month is 0-indexed in JS
   return date.getDay() === 6;
 }
 
