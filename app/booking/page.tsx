@@ -123,6 +123,34 @@ export default function BookingPage() {
     return date.getDay() === 6;
   };
 
+  // Check if booking ends by 10 PM (all events must end by 10 PM)
+  const endsBy10PM = (startTime, hoursRequested) => {
+    if (!startTime || !hoursRequested) return true; // Can't validate without both
+
+    // Parse start time (format: "8:00 PM")
+    const [time, period] = startTime.split(' ');
+    const [hourStr, minStr] = time.split(':');
+    let startHour = parseInt(hourStr, 10);
+    const startMin = parseInt(minStr, 10) || 0;
+
+    // Convert to 24-hour format
+    if (period === 'PM' && startHour !== 12) {
+      startHour += 12;
+    } else if (period === 'AM' && startHour === 12) {
+      startHour = 0;
+    }
+
+    // Calculate end time in minutes from midnight
+    const startMinutes = startHour * 60 + startMin;
+    const durationMinutes = parseFloat(hoursRequested) * 60;
+    const endMinutes = startMinutes + durationMinutes;
+
+    // 10 PM = 22:00 = 1320 minutes from midnight
+    const tenPMMinutes = 22 * 60;
+
+    return endMinutes <= tenPMMinutes;
+  };
+
 
   // FIXED: Enhanced email validation
   const validateEmail = (email) => {
@@ -262,6 +290,8 @@ export default function BookingPage() {
           errors[`booking_${index}_hoursRequested`] = 'Duration is required';
         } else if (parseFloat(booking.hoursRequested) < 0.5) {
           errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
+        } else if (booking.selectedTime && !endsBy10PM(booking.selectedTime, booking.hoursRequested)) {
+          errors[`booking_${index}_hoursRequested`] = 'All events must end by 10 PM. Please select an earlier start time or shorter duration.';
         }
       }
     });
