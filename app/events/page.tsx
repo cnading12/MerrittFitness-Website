@@ -69,13 +69,54 @@ const dayNameToNumber: { [key: string]: number } = {
   'saturday': 6,
 };
 
-// Expand weekly recurring events into individual instances within a date range
-function expandWeeklyEvents(allEvents: Event[], start: Date, end: Date): Event[] {
+// Map ordinal words to numbers
+const ordinalToNumber: { [key: string]: number } = {
+  'first': 1,
+  'second': 2,
+  'third': 3,
+  'fourth': 4,
+  'last': -1,
+};
+
+// Get the Nth occurrence of a weekday in a given month
+function getNthWeekdayOfMonth(year: number, month: number, weekday: number, n: number): Date | null {
+  if (n === -1) {
+    // Last occurrence: start from end of month and work backwards
+    const lastDay = new Date(year, month + 1, 0);
+    const current = new Date(lastDay);
+    while (current.getDay() !== weekday) {
+      current.setDate(current.getDate() - 1);
+    }
+    return current;
+  }
+
+  // Find first occurrence of the weekday in the month
+  const firstOfMonth = new Date(year, month, 1);
+  let current = new Date(firstOfMonth);
+  while (current.getDay() !== weekday) {
+    current.setDate(current.getDate() + 1);
+  }
+
+  // Move to Nth occurrence
+  current.setDate(current.getDate() + (n - 1) * 7);
+
+  // Verify we're still in the same month
+  if (current.getMonth() !== month) {
+    return null;
+  }
+
+  return current;
+}
+
+// Expand recurring events into individual instances within a date range
+function expandRecurringEvents(allEvents: Event[], start: Date, end: Date): Event[] {
   const expandedEvents: Event[] = [];
 
   for (const event of allEvents) {
     // Check if this is a weekly recurring event (e.g., "Every Thursday")
     const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
+    // Check if this is a monthly recurring event (e.g., "First Saturday of every month")
+    const monthlyMatch = event.recurrence?.match(/^(\w+)\s+(\w+)\s+of\s+every\s+month$/i);
 
     if (weeklyMatch) {
       const dayName = weeklyMatch[1].toLowerCase();
@@ -104,8 +145,39 @@ function expandWeeklyEvents(allEvents: Event[], start: Date, end: Date): Event[]
         // Unknown day name, keep original event
         expandedEvents.push(event);
       }
+    } else if (monthlyMatch) {
+      const ordinal = monthlyMatch[1].toLowerCase();
+      const dayName = monthlyMatch[2].toLowerCase();
+      const targetDay = dayNameToNumber[dayName];
+      const nthOccurrence = ordinalToNumber[ordinal];
+
+      if (targetDay !== undefined && nthOccurrence !== undefined) {
+        // Generate instances for each month in the range
+        const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+        const current = new Date(startMonth);
+        while (current <= endMonth) {
+          const eventDate = getNthWeekdayOfMonth(current.getFullYear(), current.getMonth(), targetDay, nthOccurrence);
+
+          if (eventDate && eventDate >= start && eventDate <= end) {
+            const dateStr = eventDate.toISOString().split('T')[0];
+            expandedEvents.push({
+              ...event,
+              id: `${event.id}-${dateStr}`,
+              date: dateStr,
+            });
+          }
+
+          // Move to next month
+          current.setMonth(current.getMonth() + 1);
+        }
+      } else {
+        // Unknown ordinal or day name, keep original event
+        expandedEvents.push(event);
+      }
     } else {
-      // Not a weekly recurring event, keep as-is
+      // Not a recurring event, keep as-is
       expandedEvents.push(event);
     }
   }
@@ -117,8 +189,8 @@ function expandWeeklyEvents(allEvents: Event[], start: Date, end: Date): Event[]
 function getFilteredEvents(allEvents: Event[], range: DateRange): Event[] {
   const { start, end } = getDateRange(range);
 
-  // First expand weekly recurring events
-  const expandedEvents = expandWeeklyEvents(allEvents, start, end);
+  // First expand recurring events (weekly and monthly)
+  const expandedEvents = expandRecurringEvents(allEvents, start, end);
 
   return expandedEvents
     .filter((event) => {
