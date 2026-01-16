@@ -58,11 +58,69 @@ function getDateRange(range: DateRange): { start: Date; end: Date } {
   return { start, end };
 }
 
+// Map day names to day numbers (0 = Sunday, 1 = Monday, etc.)
+const dayNameToNumber: { [key: string]: number } = {
+  'sunday': 0,
+  'monday': 1,
+  'tuesday': 2,
+  'wednesday': 3,
+  'thursday': 4,
+  'friday': 5,
+  'saturday': 6,
+};
+
+// Expand weekly recurring events into individual instances within a date range
+function expandWeeklyEvents(allEvents: Event[], start: Date, end: Date): Event[] {
+  const expandedEvents: Event[] = [];
+
+  for (const event of allEvents) {
+    // Check if this is a weekly recurring event (e.g., "Every Thursday")
+    const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
+
+    if (weeklyMatch) {
+      const dayName = weeklyMatch[1].toLowerCase();
+      const targetDay = dayNameToNumber[dayName];
+
+      if (targetDay !== undefined) {
+        // Generate instances for each occurrence of this day within the date range
+        const current = new Date(start);
+
+        // Find the first occurrence of the target day in the range
+        while (current.getDay() !== targetDay) {
+          current.setDate(current.getDate() + 1);
+        }
+
+        // Generate an event for each week
+        while (current <= end) {
+          const dateStr = current.toISOString().split('T')[0];
+          expandedEvents.push({
+            ...event,
+            id: `${event.id}-${dateStr}`,
+            date: dateStr,
+          });
+          current.setDate(current.getDate() + 7);
+        }
+      } else {
+        // Unknown day name, keep original event
+        expandedEvents.push(event);
+      }
+    } else {
+      // Not a weekly recurring event, keep as-is
+      expandedEvents.push(event);
+    }
+  }
+
+  return expandedEvents;
+}
+
 // Filter and sort events by date range
 function getFilteredEvents(allEvents: Event[], range: DateRange): Event[] {
   const { start, end } = getDateRange(range);
 
-  return allEvents
+  // First expand weekly recurring events
+  const expandedEvents = expandWeeklyEvents(allEvents, start, end);
+
+  return expandedEvents
     .filter((event) => {
       const eventDate = new Date(event.date + 'T00:00:00');
       return eventDate >= start && eventDate <= end;
