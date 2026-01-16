@@ -91,7 +91,7 @@ export const events: Event[] = [
   {
   id: "tantra-speed-date-jan-2026",
   title: "Tantra Speed Date",
-  date: "2026-03-07",
+  date: "2026-01-10",
   time: "5:30 PM",
   endTime: "9:00 PM",
   description: "Tired of swiping? Try a whole new dating experience—it's like yoga for your love life! Led by Stephanie Miller, this popular monthly gathering brings together singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary. Use our ticket link for 10% OFF!",
