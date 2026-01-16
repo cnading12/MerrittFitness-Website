@@ -64,9 +64,9 @@ export const events: Event[] = [
 
   // ============ JANUARY 2026 ============
   {
-    id: "full-circle-dance-jan-01-2026",
+    id: "full-circle-dance",
     title: "Full Circle Dance",
-    date: "2026-01-01",
+    date: "2026-01-02",
     time: "4:00 PM",
     endTime: "6:30 PM",
     description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
@@ -77,19 +77,6 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
-    id: "full-circle-dance-jan-08-2026",
-    title: "Full Circle Dance",
-    date: "2026-01-08",
-    time: "4:00 PM",
-    endTime: "6:30 PM",
-    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
-    imageUrl: "/images/events/dance/kids.jpg",
-    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
-    instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa",
-    recurrence: "Every Thursday"
-  },
-{
   id: "tantra-speed-date-jan-2026",
   title: "Tantra Speed Date",
   date: "2026-01-10",
@@ -103,31 +90,6 @@ export const events: Event[] = [
   recurrence: "Second Saturday of every month"
 },
   {
-    id: "full-circle-dance-jan-15-2026",
-    title: "Full Circle Dance",
-    date: "2026-01-15",
-    time: "4:00 PM",
-    endTime: "6:30 PM",
-    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
-    imageUrl: "/images/events/dance/kids.jpg",
-    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
-    instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa",
-    recurrence: "Every Thursday"
-  },
-  {
-    id: "illumination-chris-kelsie-jan-2026",
-    title: "Illumination with Chris & Kelsie",
-    date: "2026-01-17",
-    time: "5:30 PM",
-    endTime: "7:30 PM",
-    description: "Join Chris and Kelsie for Illumination, a rotating series of wellness experiences in our beautiful historic sanctuary. Each gathering offers something different—from energizing dance parties to grounding meditation and flowing yoga—all designed to help you connect, move, and restore.",
-    imageUrl: "/images/events/dance/Event.png",
-    ticketUrl: "https://kelsieriffey.com/illumination",
-    instagramHandle: "yoga.savage",
-    practitionerName: "Chris and Kelsie"
-  },
-  {
     id: "neighborhood-meeting-jan-2026",
     title: "Monthly Neighborhood Meeting",
     date: "2026-01-20",
@@ -137,19 +99,6 @@ export const events: Event[] = [
     imageUrl: "/images/events/community/food.JPG",
     practitionerName: "Adam Levy",
     recurrence: "Third Tuesday of every month"
-  },
-  {
-    id: "full-circle-dance-jan-22-2026",
-    title: "Full Circle Dance",
-    date: "2026-01-22",
-    time: "4:00 PM",
-    endTime: "6:30 PM",
-    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
-    imageUrl: "/images/events/dance/kids.jpg",
-    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
-    instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa",
-    recurrence: "Every Thursday"
   },
   {
     id: "artists-amongst-us-winter-gala-jan-2026",
@@ -162,19 +111,6 @@ export const events: Event[] = [
     ticketUrl: "https://www.artistsamongstus.org/event-details/winter-gala-launching-a-year-of-art-magic",
     instagramHandle: "artistsamongstusdenver",
     practitionerName: "Artists Amongst Us"
-  },
-  {
-    id: "full-circle-dance-jan-29-2026",
-    title: "Full Circle Dance",
-    date: "2026-01-29",
-    time: "4:00 PM",
-    endTime: "6:30 PM",
-    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
-    imageUrl: "/images/events/dance/kids.jpg",
-    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
-    instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa",
-    recurrence: "Every Thursday"
   },
   {
     id: "denver-winter-tango-intensive-jan-2026",
