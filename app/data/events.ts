@@ -89,18 +89,18 @@ export const events: Event[] = [
     practitionerName: "Chris and Kelsie"
   },
   {
-    id: "tantra-speed-date-jan-2026",
-    title: "Tantra Speed Date",
-    date: "2026-01-10",
-    time: "5:30 PM",
-    endTime: "9:00 PM",
-    description: "Tired of swiping? Try a whole new dating experience—it's like yoga for your love life! Led by Stephanie Miller, this popular monthly gathering brings together singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary. Use our ticket link for 10% OFF!",
-    imageUrl: "/images/events/community/tantra.jpg",
-    ticketUrl: "https://www.eventbrite.com/e/tantra-speed-date-denver-meet-singles-speed-dating-tickets-1914191862389?discount=MERRITT10",
-    instagramHandle: "tantra_speed_date",
-    practitionerName: "Stephanie Miller",
-    recurrence: "Second Saturday of every month"
-  },
+  id: "tantra-speed-date-jan-2026",
+  title: "Tantra Speed Date",
+  date: "2026-01-10",
+  time: "5:30 PM",
+  endTime: "9:00 PM",
+  description: "Tired of swiping? Try a whole new dating experience—it's like yoga for your love life! Led by Stephanie Miller, this popular monthly gathering brings together singles for an evening of connection, movement, and meaningful conversations in our beautiful historic sanctuary. Use our ticket link for 10% OFF!",
+  imageUrl: "/images/events/community/tantra.png",
+  ticketUrl: "https://www.eventbrite.com/e/tantra-speed-date-denver-meet-singles-speed-dating-tickets-1914191862389?discount=MERRITT10",
+  instagramHandle: "tantra_speed_date",
+  practitionerName: "Stephanie Miller",
+  recurrence: "Second Saturday of every month"
+},
   {
     id: "neighborhood-meeting-jan-2026",
     title: "Monthly Neighborhood Meeting",
