@@ -77,6 +77,18 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
   {
+    id: "illumination-chris-kelsie-jan-2026",
+    title: "Illumination with Chris & Kelsie",
+    date: "2026-01-17",
+    time: "5:30 PM",
+    endTime: "7:30 PM",
+    description: "Join Chris and Kelsie for Illumination, a rotating series of wellness experiences in our beautiful historic sanctuary. Each gathering offers something different—from energizing dance parties to grounding meditation and flowing yoga—all designed to help you connect, move, and restore.",
+    imageUrl: "/images/events/dance/Event.png",
+    ticketUrl: "https://kelsieriffey.com/illumination",
+    instagramHandle: "yoga.savage",
+    practitionerName: "Chris and Kelsie"
+  },
+  {
   id: "tantra-speed-date-jan-2026",
   title: "Tantra Speed Date",
   date: "2026-01-10",
