@@ -38,7 +38,7 @@ export const events: Event[] = [
     imageUrl: "/images/events/community/Annalise.webp",
     imagePosition: "center top",
     ticketUrl: "https://yogawithannalise.com/events-1",
-    instagramHandle: "velvet__brown",
+    instagramHandle: "yogawithannalise",
     practitionerName: "Annalise Freytag",
     recurrence: "Every Sunday"
   },
