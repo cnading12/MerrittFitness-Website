@@ -14,6 +14,27 @@ const EnhancedGallery = () => {
   // Updated gallery items with optimized WebP images
   const galleryItems = [
     {
+      id: 24,
+      src: "/images/hero/church-1.jpg",
+      title: "Historic Church Exterior",
+      desc: "Our beautifully restored 1905 sanctuary",
+      category: "space"
+    },
+    {
+      id: 25,
+      src: "/images/hero/church-2.jpg",
+      title: "Sacred Architecture",
+      desc: "Timeless beauty in every detail",
+      category: "space"
+    },
+    {
+      id: 26,
+      src: "/images/hero/church-3.jpg",
+      title: "Sanctuary Views",
+      desc: "Where heritage meets modern wellness",
+      category: "space"
+    },
+    {
       id: 1,
       src: "/images/hero/mat1.webp",
       title: "Yoga & Flow Sessions",
