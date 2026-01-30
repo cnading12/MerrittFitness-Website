@@ -123,10 +123,16 @@ function expandRecurringEvents(allEvents: Event[], start: Date, end: Date): Even
       const targetDay = dayNameToNumber[dayName];
 
       if (targetDay !== undefined) {
-        // Generate instances for each occurrence of this day within the date range
-        const current = new Date(start);
+        // Parse the event's start date (the date field represents when the series begins)
+        const eventStartDate = new Date(event.date + 'T00:00:00');
 
-        // Find the first occurrence of the target day in the range
+        // Use the later of: range start or event start date
+        const effectiveStart = start > eventStartDate ? start : eventStartDate;
+
+        // Generate instances for each occurrence of this day within the date range
+        const current = new Date(effectiveStart);
+
+        // Find the first occurrence of the target day on or after effective start
         while (current.getDay() !== targetDay) {
           current.setDate(current.getDate() + 1);
         }
@@ -152,6 +158,9 @@ function expandRecurringEvents(allEvents: Event[], start: Date, end: Date): Even
       const nthOccurrence = ordinalToNumber[ordinal];
 
       if (targetDay !== undefined && nthOccurrence !== undefined) {
+        // Parse the event's start date
+        const eventStartDate = new Date(event.date + 'T00:00:00');
+
         // Generate instances for each month in the range
         const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
         const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
@@ -160,7 +169,8 @@ function expandRecurringEvents(allEvents: Event[], start: Date, end: Date): Even
         while (current <= endMonth) {
           const eventDate = getNthWeekdayOfMonth(current.getFullYear(), current.getMonth(), targetDay, nthOccurrence);
 
-          if (eventDate && eventDate >= start && eventDate <= end) {
+          // Only include if within range AND on or after the event's start date
+          if (eventDate && eventDate >= start && eventDate <= end && eventDate >= eventStartDate) {
             const dateStr = eventDate.toISOString().split('T')[0];
             expandedEvents.push({
               ...event,
