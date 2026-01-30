@@ -56,17 +56,6 @@ export const events: Event[] = [
     practitionerName: "Steven Benoy"
   },
   {
-    id: "neighborhood-meeting-dec-2025",
-    title: "Monthly Neighborhood Meeting",
-    date: "2025-12-16",
-    time: "4:00 PM",
-    endTime: "8:00 PM",
-    description: "Join us each month for our neighborhood association planning meeting, led by Adam Levy. This is a free, community-focused gathering where neighbors come together to discuss local updates, upcoming initiatives, and ways to strengthen our area. We're proud to host and support our neighborhood—everyone is welcome.",
-    imageUrl: "/images/events/community/food.JPG",
-    practitionerName: "Adam Levy",
-    recurrence: "Third Tuesday of every month"
-  },
-  {
     id: "katrina-born-sound-bath-dec-2025",
     title: "Sound Bath with Katrina Born",
     date: "2025-12-20",
