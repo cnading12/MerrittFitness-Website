@@ -152,33 +152,10 @@ const EnhancedGallery = () => {
       orientation: "portrait"
     },
     {
-      id: 10,
-      src: "/images/events/judo/2.JPG",
-      title: "Judo Practice",
-      desc: "Building strength and character through martial arts",
-      category: "events"
-    },
-    {
-      id: 11,
-      src: "/images/events/judo/3.JPG",
-      title: "Judo Techniques",
-      desc: "Precision and focus in every movement",
-      category: "judo",
-      orientation: "portrait"
-    },
-    {
       id: 12,
       src: "/images/events/judo/4.JPG",
       title: "Judo Community",
       desc: "Learning respect and discipline together",
-      category: "events",
-      orientation: "portrait"
-    },
-    {
-      id: 13,
-      src: "/images/events/judo/5.JPG",
-      title: "Judo Mastery",
-      desc: "The way of gentle force",
       category: "events",
       orientation: "portrait"
     },
