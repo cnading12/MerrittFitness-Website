@@ -160,6 +160,20 @@ const EnhancedGallery = () => {
       orientation: "portrait"
     },
     {
+      id: 27,
+      src: "/images/events/art/hero.jpg",
+      title: "Art Show",
+      desc: "Creative expression in our sacred space",
+      category: "art"
+    },
+    {
+      id: 28,
+      src: "/images/events/art/hero-2.png",
+      title: "Art Exhibition",
+      desc: "Local artists showcase their work",
+      category: "art"
+    },
+    {
       id: 15,
       src: "/images/hero/nomats.webp",
       title: "Architectural Wonder",
@@ -182,6 +196,7 @@ const EnhancedGallery = () => {
     { id: 'all', name: 'All', count: galleryItems.length },
     { id: 'yoga', name: 'Yoga', count: galleryItems.filter(item => item.category === 'yoga').length },
     { id: 'events', name: 'Events', count: galleryItems.filter(item => item.category === 'events').length },
+    { id: 'art', name: 'Art', count: galleryItems.filter(item => item.category === 'art').length },
     { id: 'space', name: 'Space', count: galleryItems.filter(item => item.category === 'space' || item.category === 'exterior').length }
   ];
 
