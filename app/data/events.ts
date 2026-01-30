@@ -6,6 +6,7 @@ export interface Event {
   endTime?: string; // Optional end time
   description: string;
   imageUrl: string;
+  imagePosition?: string; // CSS object-position value, e.g., "center top", "center 30%"
   ticketUrl?: string; // Optional - omit for free events
   instagramHandle?: string; // Without @ symbol
   practitionerName?: string;
@@ -30,12 +31,14 @@ export const events: Event[] = [
   {
     id: "sunday-yoga-annalise",
     title: "Free Candlelit Restorative Yoga",
-    date: "2026-02-01",
+    date: "2026-02-15",
     time: "5:30 PM",
     endTime: "7:30 PM",
     description: "Unwind and restore with Annalise Freytag in this donation-based candlelit restorative yoga class. Set in our beautiful historic sanctuary with 24-foot ceilings and original stained glass windows, this gentle practice offers a peaceful space to release tension and reconnect with yourself. All levels welcome.",
     imageUrl: "/images/events/community/Annalise.webp",
+    imagePosition: "center top",
     ticketUrl: "https://yogawithannalise.com/events-1",
+    instagramHandle: "velvet__brown",
     practitionerName: "Annalise Freytag",
     recurrence: "Every Sunday"
   },

@@ -217,6 +217,7 @@ function EventCard({ event }: { event: Event }) {
           alt={event.title}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
+          style={{ objectPosition: event.imagePosition || 'center' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
