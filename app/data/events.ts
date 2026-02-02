@@ -138,5 +138,19 @@ export const events: Event[] = [
     description: "Registration is open! Join us for an immersive weekend of tango with beginner-friendly classes, all-level workshops, and in-depth masterclasses. We'll dive into Versatility in Style, Connection, and Musicality—all tailored specifically for Colorado's social tango dancers. Spots are limited—don't wait. Come dance, train, and kick off 2026 with us!",
     imageUrl: "/images/events/dance/teaching.jpeg",
     ticketUrl: "https://forms.gle/zBepZ9sfJ9npg3gZ6"
+  },
+
+  // ============ FEBRUARY 2026 ============
+  {
+    id: "valentine-breathwork-soundbath-feb-2026",
+    title: "Worthy, Strong & Loved - A Valentine Somatic Breathwork Journey + Soundbath",
+    date: "2026-02-11",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Join Juliana Stoddart for a transformative Valentine's somatic breathwork journey and soundbath experience. Release tension, reconnect with your inner strength, and embrace self-love in our beautiful historic sanctuary with 24-foot ceilings and original stained glass windows.",
+    imageUrl: "/images/events/community/breathwork.png",
+    ticketUrl: "https://www.eventbrite.com/e/worthy-strong-loved-a-valentine-somatic-breathwork-journey-soundbath-tickets-1979863184080?aff=erelexpmlt",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
   }
 ];
