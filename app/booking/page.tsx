@@ -868,7 +868,7 @@ export default function BookingPage() {
                         </label>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                        Each service includes 1 hour of assistance. By default, you're responsible for your own setup/cleanup.
+                        Each service includes up to 1 hour of labor assistance during your booking—not before. All setup and breakdown must occur within your reserved time. By default, you're responsible for your own setup/cleanup.
                       </p>
                     </div>
 
