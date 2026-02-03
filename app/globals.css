@@ -25,6 +25,7 @@ body {
   font-weight: 400;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 /* Elegant heading typography to match logo serif */
