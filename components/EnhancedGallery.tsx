@@ -160,6 +160,20 @@ const EnhancedGallery = () => {
       orientation: "portrait"
     },
     {
+      id: 29,
+      src: "/images/events/dance/Event-1.JPG",
+      title: "Artist Amongst Us",
+      desc: "An evening of dance and creative expression",
+      category: "events"
+    },
+    {
+      id: 30,
+      src: "/images/events/dance/Event-2.JPG",
+      title: "Artist Amongst Us Dance",
+      desc: "Community celebration through movement and art",
+      category: "events"
+    },
+    {
       id: 27,
       src: "/images/events/art/hero.jpg",
       title: "Art Show",
