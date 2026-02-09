@@ -164,7 +164,8 @@ const EnhancedGallery = () => {
       src: "/images/events/dance/Event-1.JPG",
       title: "Artist Amongst Us",
       desc: "An evening of dance and creative expression",
-      category: "events"
+      category: "events",
+      orientation: "portrait"
     },
     {
       id: 30,
