@@ -140,6 +140,20 @@ export const events: Event[] = [
     ticketUrl: "https://forms.gle/zBepZ9sfJ9npg3gZ6"
   },
 
+  // ============ RECURRING: YOGA WITH TERRI STAFFORD ============
+  {
+    id: "terri-stafford-yoga",
+    title: "Yoga with Terri Stafford",
+    date: "2026-04-03",
+    time: "7:00 PM",
+    endTime: "8:00 PM",
+    description: "Join Terri Stafford for a monthly yoga experience in our beautiful historic sanctuary. $35 per person — limited space available. Reserve your spot via Venmo. Please include the number of people and date in your Venmo notes. Bring a mat, towel, and water bottle. Blocks and bolsters are welcome but not necessary.",
+    imageUrl: "/images/events/community/Terri-Event.JPG",
+    instagramHandle: "mandalagobeyond",
+    practitionerName: "Terri Stafford",
+    recurrence: "First Friday of every month"
+  },
+
   // ============ FEBRUARY 2026 ============
   {
     id: "valentine-breathwork-soundbath-feb-2026",
