@@ -144,7 +144,7 @@ export const events: Event[] = [
   {
     id: "terri-stafford-yoga",
     title: "Yoga with Terri Stafford",
-    date: "2026-02-06",
+    date: "2026-04-03",
     time: "7:00 PM",
     endTime: "8:00 PM",
     description: "Join Terri Stafford for a monthly yoga experience in our beautiful historic sanctuary. $35 per person — limited space available. Reserve your spot via Venmo. Please include the number of people and date in your Venmo notes. Bring a mat, towel, and water bottle. Blocks and bolsters are welcome but not necessary.",
