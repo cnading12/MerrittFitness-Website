@@ -44,7 +44,8 @@ export default function BookingPage() {
 
   // Valid promo codes configuration
   const VALID_PROMO_CODES = {
-    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' }
+    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' },
+    'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 }
   };
 
   // Business-focused event types
@@ -311,6 +312,15 @@ export default function BookingPage() {
 
     const promoData = VALID_PROMO_CODES[promoCode.trim()];
     if (promoData) {
+      // Check minimum hours requirement if applicable
+      if (promoData.minHours) {
+        const pricing = calculatePricing();
+        if (pricing.totalHours < promoData.minHours) {
+          setPromoCodeApplied(false);
+          setPromoCodeError(`This code requires a reservation of ${promoData.minHours}+ hours. Your current booking is ${pricing.totalHours} hour${pricing.totalHours !== 1 ? 's' : ''}.`);
+          return;
+        }
+      }
       setPromoCodeApplied(true);
       setPromoCodeError('');
     } else {
@@ -382,8 +392,11 @@ export default function BookingPage() {
     let promoDescription = '';
     if (promoCodeApplied && promoCode.trim() && VALID_PROMO_CODES[promoCode.trim()]) {
       const promoData = VALID_PROMO_CODES[promoCode.trim()];
-      promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
-      promoDescription = promoData.description;
+      // Enforce minimum hours requirement (e.g., EXTENDED15 requires 8+ hours)
+      if (!promoData.minHours || totalHours >= promoData.minHours) {
+        promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+        promoDescription = promoData.description;
+      }
     }
 
     const subtotal = preDiscountSubtotal - promoDiscount;
