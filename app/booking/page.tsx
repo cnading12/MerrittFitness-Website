@@ -844,7 +844,7 @@ export default function BookingPage() {
                         className={getInputClassName(`booking_${index}_hoursRequested`)}
                       >
                         <option value="">Select duration...</option>
-                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12].map(hours => (
+                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(hours => (
                           <option key={hours} value={hours}>
                             {hours === 0.5 ? '30 minutes' : hours === 1 ? '1 hour' : `${hours} hours`}
                           </option>
