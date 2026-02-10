@@ -108,7 +108,8 @@ const PricingSchema = z.object({
 
 // Valid promo codes configuration (must match frontend)
 const VALID_PROMO_CODES = {
-  'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' }
+  'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' },
+  'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 }
 };
 
 const MultipleBookingSchema = z.object({
@@ -212,10 +213,15 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
 
   if (clientPromoCode && VALID_PROMO_CODES[clientPromoCode]) {
     const promoData = VALID_PROMO_CODES[clientPromoCode];
-    promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
-    promoDescription = promoData.description;
-    validatedPromoCode = clientPromoCode;
-    console.log(`✅ Promo code "${clientPromoCode}" applied: ${promoData.description} (-$${promoDiscount})`);
+    // Enforce minimum hours requirement (e.g., EXTENDED15 requires 8+ hours)
+    if (promoData.minHours && totalHours < promoData.minHours) {
+      console.log(`⚠️ Promo code "${clientPromoCode}" rejected: requires ${promoData.minHours}+ hours, booking has ${totalHours} hours`);
+    } else {
+      promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+      promoDescription = promoData.description;
+      validatedPromoCode = clientPromoCode;
+      console.log(`✅ Promo code "${clientPromoCode}" applied: ${promoData.description} (-$${promoDiscount})`);
+    }
   } else if (clientPromoCode) {
     console.log(`⚠️ Invalid promo code attempted: "${clientPromoCode}"`);
   }
