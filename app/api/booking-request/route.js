@@ -41,7 +41,7 @@ const IndividualBookingSchema = z.object({
 
   hoursRequested: z.coerce.number()
     .min(0.5, 'Minimum 0.5 hours')
-    .max(12, 'Maximum 12 hours per booking'),
+    .max(16, 'Maximum 16 hours per booking'),
 
   specialRequests: z.string()
     .max(500, 'Special requests too long')
