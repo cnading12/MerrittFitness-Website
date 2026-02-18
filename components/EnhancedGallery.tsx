@@ -222,13 +222,6 @@ const EnhancedGallery = () => {
       category: "art"
     },
     {
-      id: 15,
-      src: "/images/hero/nomats.webp",
-      title: "Architectural Wonder",
-      desc: "Every corner tells a story of beauty",
-      category: "space"
-    },
-    {
       id: 16,
       src: "/images/hero/outside5.webp",
       title: "Historic Sanctuary",
