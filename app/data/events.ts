@@ -187,7 +187,7 @@ export const events: Event[] = [
     time: "6:00 PM",
     endTime: "8:00 PM",
     description: "Where neuroscience meets spirit. Your nervous system holds the map to your deepest healing. Through conscious breathwork and movement under the full moon's energy, we activate your body's innate wisdom to rewire neural pathways, release stored tension, and awaken dormant vitality. All experience levels welcome. $40 per person.",
-    imageUrl: "/images/events/community/breathwork-2.png",
+    imageUrl: "/images/events/community/jules.JPG",
     ticketUrl: "https://www.eventbrite.com/e/full-moon-holosomatic-breathwork-tickets-1982967711806",
     instagramHandle: "SomaticJules",
     practitionerName: "Juliana Stoddart"
