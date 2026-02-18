@@ -63,9 +63,8 @@ const ContactInfoSchema = z.object({
     .toLowerCase(),
 
   phone: z.string()
-    .max(20, 'Phone number too long')
-    .optional()
-    .default(''),
+    .min(10, 'Please enter a valid phone number')
+    .max(20, 'Phone number too long'),
 
   homeAddress: z.string()
     .min(10, 'Please enter a complete address')
