@@ -161,7 +161,7 @@ export default function BookingPage() {
 
   // FIXED: Enhanced phone validation
   const validatePhone = (phone) => {
-    if (!phone.trim()) return true; // Phone is optional
+    if (!phone.trim()) return false; // Phone is required
     const phoneRegex = /^[\+]?[1-9]?[\d\s\-\(\)]{10,}$/;
     return phoneRegex.test(phone.trim());
   };
@@ -222,7 +222,9 @@ export default function BookingPage() {
       errors.email = 'Please enter a valid email address (e.g., name@example.com)';
     }
 
-    if (formData.phone.trim() && !validatePhone(formData.phone)) {
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!validatePhone(formData.phone)) {
       errors.phone = 'Please enter a valid phone number';
     }
 
@@ -962,7 +964,7 @@ export default function BookingPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
-                      Phone (Optional)
+                      Phone *
                     </label>
                     <input
                       type="tel"
