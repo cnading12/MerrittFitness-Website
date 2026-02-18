@@ -113,8 +113,7 @@ const EnhancedGallery = () => {
       title: "Breathwork Session",
       desc: "Guided breathwork in our sacred space",
       category: "yoga",
-      photographer: "somaticjules",
-      orientation: "portrait"
+      photographer: "somaticjules"
     },
     {
       id: 32,
