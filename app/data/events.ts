@@ -177,5 +177,19 @@ export const events: Event[] = [
     ticketUrl: "https://www.eventbrite.com/e/worthy-strong-loved-a-valentine-somatic-breathwork-journey-soundbath-tickets-1979863184080?aff=erelexpmlt",
     instagramHandle: "SomaticJules",
     practitionerName: "Juliana Stoddart"
+  },
+
+  // ============ MARCH 2026 ============
+  {
+    id: "full-moon-breathwork-mar-2026",
+    title: "Full Moon Holosomatic Breathwork",
+    date: "2026-03-03",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Where neuroscience meets spirit. Your nervous system holds the map to your deepest healing. Through conscious breathwork and movement under the full moon's energy, we activate your body's innate wisdom to rewire neural pathways, release stored tension, and awaken dormant vitality. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/breathwork-2.png",
+    ticketUrl: "https://www.eventbrite.com/e/full-moon-holosomatic-breathwork-tickets-1982967711806",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
   }
 ];
