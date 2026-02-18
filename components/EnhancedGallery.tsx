@@ -101,11 +101,44 @@ const EnhancedGallery = () => {
       category: "space"
     },
     {
-      id: 4,
-      src: "/images/events/2.webp",
-      title: "Dynamic Movement",
-      desc: "Expressive arts in sacred spaces",
-      category: "yoga"
+      id: 35,
+      src: "/images/hero/candles.JPG",
+      title: "Electronic Candles",
+      desc: "One hundred electronic candles included with every rental",
+      category: "space"
+    },
+    {
+      id: 31,
+      src: "/images/events/yoga/breathwork-class.JPG",
+      title: "Breathwork Session",
+      desc: "Guided breathwork in our sacred space",
+      category: "yoga",
+      photographer: "somaticjules",
+      orientation: "portrait"
+    },
+    {
+      id: 32,
+      src: "/images/events/yoga/breathwork-in-action.JPG",
+      title: "Breathwork in Action",
+      desc: "Deep healing through conscious breathing",
+      category: "yoga",
+      photographer: "somaticjules"
+    },
+    {
+      id: 33,
+      src: "/images/events/yoga/shavasana.png",
+      title: "Shavasana",
+      desc: "Rest and restoration after practice",
+      category: "yoga",
+      photographer: "yogawithannalise"
+    },
+    {
+      id: 34,
+      src: "/images/events/yoga/yoga-class.png",
+      title: "Yoga Class",
+      desc: "Community yoga in our historic sanctuary",
+      category: "yoga",
+      photographer: "yogawithannalise"
     },
     {
       id: 5,
