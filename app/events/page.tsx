@@ -4,7 +4,12 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+
+// A display event that may carry multiple occurrence dates for recurring events
+interface DisplayEvent extends Event {
+  occurrenceDates?: string[]; // All dates this recurring event occurs within the filtered range
+}
 
 type DateRange = 'lastMonth' | 'thisMonth' | 'nextMonth';
 
@@ -108,115 +113,101 @@ function getNthWeekdayOfMonth(year: number, month: number, weekday: number, n: n
   return current;
 }
 
-// Expand recurring events into individual instances within a date range
-function expandRecurringEvents(allEvents: Event[], start: Date, end: Date): Event[] {
-  const expandedEvents: Event[] = [];
+// Compute occurrence dates for a recurring event within a date range (without expanding into multiple events)
+function getRecurringOccurrences(event: Event, start: Date, end: Date): string[] {
+  const dates: string[] = [];
+  const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
+  const monthlyMatch = event.recurrence?.match(/^(\w+)\s+(\w+)\s+of\s+every\s+month$/i);
 
-  for (const event of allEvents) {
-    // Check if this is a weekly recurring event (e.g., "Every Thursday")
-    const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
-    // Check if this is a monthly recurring event (e.g., "First Saturday of every month")
-    const monthlyMatch = event.recurrence?.match(/^(\w+)\s+(\w+)\s+of\s+every\s+month$/i);
+  if (weeklyMatch) {
+    const dayName = weeklyMatch[1].toLowerCase();
+    const targetDay = dayNameToNumber[dayName];
 
-    if (weeklyMatch) {
-      const dayName = weeklyMatch[1].toLowerCase();
-      const targetDay = dayNameToNumber[dayName];
+    if (targetDay !== undefined) {
+      const eventStartDate = new Date(event.date + 'T00:00:00');
+      const effectiveStart = start > eventStartDate ? start : eventStartDate;
+      const current = new Date(effectiveStart);
 
-      if (targetDay !== undefined) {
-        // Parse the event's start date (the date field represents when the series begins)
-        const eventStartDate = new Date(event.date + 'T00:00:00');
-
-        // Use the later of: range start or event start date
-        const effectiveStart = start > eventStartDate ? start : eventStartDate;
-
-        // Generate instances for each occurrence of this day within the date range
-        const current = new Date(effectiveStart);
-
-        // Find the first occurrence of the target day on or after effective start
-        while (current.getDay() !== targetDay) {
-          current.setDate(current.getDate() + 1);
-        }
-
-        // Generate an event for each week
-        while (current <= end) {
-          const dateStr = current.toISOString().split('T')[0];
-          expandedEvents.push({
-            ...event,
-            id: `${event.id}-${dateStr}`,
-            date: dateStr,
-          });
-          current.setDate(current.getDate() + 7);
-        }
-      } else {
-        // Unknown day name, keep original event
-        expandedEvents.push(event);
+      while (current.getDay() !== targetDay) {
+        current.setDate(current.getDate() + 1);
       }
-    } else if (monthlyMatch) {
-      const ordinal = monthlyMatch[1].toLowerCase();
-      const dayName = monthlyMatch[2].toLowerCase();
-      const targetDay = dayNameToNumber[dayName];
-      const nthOccurrence = ordinalToNumber[ordinal];
 
-      if (targetDay !== undefined && nthOccurrence !== undefined) {
-        // Parse the event's start date
-        const eventStartDate = new Date(event.date + 'T00:00:00');
-
-        // Generate instances for each month in the range
-        const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
-        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
-
-        const current = new Date(startMonth);
-        while (current <= endMonth) {
-          const eventDate = getNthWeekdayOfMonth(current.getFullYear(), current.getMonth(), targetDay, nthOccurrence);
-
-          // Only include if within range AND on or after the event's start date
-          if (eventDate && eventDate >= start && eventDate <= end && eventDate >= eventStartDate) {
-            const dateStr = eventDate.toISOString().split('T')[0];
-            expandedEvents.push({
-              ...event,
-              id: `${event.id}-${dateStr}`,
-              date: dateStr,
-            });
-          }
-
-          // Move to next month
-          current.setMonth(current.getMonth() + 1);
-        }
-      } else {
-        // Unknown ordinal or day name, keep original event
-        expandedEvents.push(event);
+      while (current <= end) {
+        dates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 7);
       }
-    } else {
-      // Not a recurring event, keep as-is
-      expandedEvents.push(event);
+    }
+  } else if (monthlyMatch) {
+    const ordinal = monthlyMatch[1].toLowerCase();
+    const dayName = monthlyMatch[2].toLowerCase();
+    const targetDay = dayNameToNumber[dayName];
+    const nthOccurrence = ordinalToNumber[ordinal];
+
+    if (targetDay !== undefined && nthOccurrence !== undefined) {
+      const eventStartDate = new Date(event.date + 'T00:00:00');
+      const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+      const current = new Date(startMonth);
+      while (current <= endMonth) {
+        const eventDate = getNthWeekdayOfMonth(current.getFullYear(), current.getMonth(), targetDay, nthOccurrence);
+        if (eventDate && eventDate >= start && eventDate <= end && eventDate >= eventStartDate) {
+          dates.push(eventDate.toISOString().split('T')[0]);
+        }
+        current.setMonth(current.getMonth() + 1);
+      }
     }
   }
 
-  return expandedEvents;
+  return dates;
 }
 
-// Filter and sort events by date range
-function getFilteredEvents(allEvents: Event[], range: DateRange): Event[] {
+// Filter and sort events by date range, consolidating recurring events into a single entry
+function getFilteredEvents(allEvents: Event[], range: DateRange): DisplayEvent[] {
   const { start, end } = getDateRange(range);
+  const result: DisplayEvent[] = [];
 
-  // First expand recurring events (weekly and monthly)
-  const expandedEvents = expandRecurringEvents(allEvents, start, end);
-
-  return expandedEvents
-    .filter((event) => {
+  for (const event of allEvents) {
+    if (event.recurrence) {
+      // Recurring event: compute all occurrence dates in range, return one consolidated entry
+      const occurrenceDates = getRecurringOccurrences(event, start, end);
+      if (occurrenceDates.length > 0) {
+        result.push({
+          ...event,
+          date: occurrenceDates[0], // Use first occurrence for sorting
+          occurrenceDates,
+        });
+      }
+    } else {
+      // One-time event: include if within range
       const eventDate = new Date(event.date + 'T00:00:00');
-      return eventDate >= start && eventDate <= end;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date + 'T00:00:00');
-      const dateB = new Date(b.date + 'T00:00:00');
-      return dateA.getTime() - dateB.getTime();
-    });
+      if (eventDate >= start && eventDate <= end) {
+        result.push(event);
+      }
+    }
+  }
+
+  return result.sort((a, b) => {
+    const dateA = new Date(a.date + 'T00:00:00');
+    const dateB = new Date(b.date + 'T00:00:00');
+    return dateA.getTime() - dateB.getTime();
+  });
 }
 
-function EventCard({ event }: { event: Event }) {
+// Format a short date for occurrence lists: "Sun, Feb 1"
+function formatShortDate(dateString: string): string {
+  const date = new Date(dateString + 'T00:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function EventCard({ event }: { event: DisplayEvent }) {
   const { month, day } = getDateParts(event.date);
   const [isExpanded, setIsExpanded] = useState(false);
+  const isRecurring = !!(event.recurrence && event.occurrenceDates && event.occurrenceDates.length > 0);
 
   return (
     <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col h-full">
@@ -231,11 +222,19 @@ function EventCard({ event }: { event: Event }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-        {/* Date badge */}
-        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 text-center shadow-lg">
-          <div className="text-xs font-bold text-[#735e59] tracking-wider">{month}</div>
-          <div className="text-2xl font-bold text-[#4a3f3c] leading-none font-serif">{day}</div>
-        </div>
+        {isRecurring ? (
+          /* Recurring event badge — replaces the date badge */
+          <div className="absolute top-4 left-4 bg-[#735e59]/95 backdrop-blur-sm rounded-2xl px-4 py-3 text-center shadow-lg">
+            <Repeat className="w-4 h-4 text-[#f2eee9] mx-auto mb-0.5" />
+            <div className="text-[10px] font-bold text-[#f2eee9]/90 tracking-wider uppercase leading-tight">Recurring</div>
+          </div>
+        ) : (
+          /* One-time date badge */
+          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 text-center shadow-lg">
+            <div className="text-xs font-bold text-[#735e59] tracking-wider">{month}</div>
+            <div className="text-2xl font-bold text-[#4a3f3c] leading-none font-serif">{day}</div>
+          </div>
+        )}
 
         {/* Free event badge */}
         {!event.ticketUrl && (
@@ -247,6 +246,14 @@ function EventCard({ event }: { event: Event }) {
 
       {/* Content */}
       <div className="p-6 md:p-8 flex flex-col flex-grow">
+        {/* Recurrence schedule banner for recurring events */}
+        {isRecurring && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[#735e59] text-[#f2eee9] rounded-xl mb-4 -mt-1">
+            <Repeat className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm font-bold tracking-wide">{event.recurrence}</span>
+          </div>
+        )}
+
         {/* Time */}
         <div className="flex items-center gap-2 text-[#735e59] text-sm mb-3">
           <Clock className="w-4 h-4" />
@@ -256,11 +263,20 @@ function EventCard({ event }: { event: Event }) {
           </span>
         </div>
 
-        {/* Recurrence badge */}
-        {event.recurrence && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#735e59]/10 text-[#735e59] text-xs font-semibold rounded-full mb-3 self-start">
-            <Repeat className="w-3 h-3" />
-            {event.recurrence}
+        {/* Upcoming dates list for recurring events */}
+        {isRecurring && event.occurrenceDates && event.occurrenceDates.length > 0 && (
+          <div className="flex items-start gap-2 text-[#735e59] text-sm mb-4">
+            <CalendarDays className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div className="flex flex-wrap gap-1.5">
+              {event.occurrenceDates.map((d) => (
+                <span
+                  key={d}
+                  className="inline-block px-2 py-0.5 bg-[#735e59]/8 rounded-md text-xs font-medium text-[#4a3f3c]"
+                >
+                  {formatShortDate(d)}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
