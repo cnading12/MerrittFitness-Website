@@ -21,7 +21,7 @@ export const events: Event[] = [
     title: "Sunday Morning Service",
     date: "2025-12-14",
     time: "7:30 AM",
-    endTime: "9:30 PM",
+    endTime: "2:00 PM",
     description: "Join this welcoming Sunday morning service held in our beautiful historic sanctuary. While Merritt Wellness is a non-denominational space open to all practices and beliefs, we're honored to host this lovely congregation each week. All are welcome.",
     imageUrl: "/images/events/community/group.JPG",
     recurrence: "Every Sunday"
