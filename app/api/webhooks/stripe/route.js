@@ -20,7 +20,7 @@ const supabase = createClient(
 // CRITICAL: Configuration to prevent Next.js issues
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const preferredRegion = 'auto';
+export const preferredRegion = 'iad1';
 
 export async function POST(request) {
   // SUPER VISIBLE LOGGING
