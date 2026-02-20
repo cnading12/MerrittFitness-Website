@@ -318,6 +318,9 @@ const EMAIL_TEMPLATES = {
   })
 };
 
+// Delay helper to avoid Resend free-plan rate limits (2 requests/second)
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Email sending functions
 export async function sendBookingConfirmation(booking) {
   try {
@@ -400,11 +403,17 @@ export async function sendConfirmationEmails(booking) {
       emailResults.errors.push(`Customer email failed: ${error.message}`);
     }
 
+    // Delay to avoid Resend rate limit (2 requests/second on free plan)
+    await delay(1000);
+
     try {
       emailResults.managerNotification = await sendManagerNotification(booking);
     } catch (error) {
       emailResults.errors.push(`Manager email failed: ${error.message}`);
     }
+
+    // Delay to avoid Resend rate limit (2 requests/second on free plan)
+    await delay(1000);
 
     try {
       emailResults.clientOnboarding = await sendClientOnboarding(booking);
