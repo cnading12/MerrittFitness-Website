@@ -190,7 +190,7 @@ export const events: Event[] = [
     imageUrl: "/images/events/community/Grit-Collage.jpg",
     instagramHandle: "Donks.fx",
     practitionerName: "Donk's",
-    recurrence: "Every Tuesday"
+    recurrence: "Every Wednesday"
   },
 
   // ============ RECURRING: MILE HIGH QUALCHATA ============
