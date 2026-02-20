@@ -190,7 +190,7 @@ export const events: Event[] = [
     imageUrl: "/images/events/community/grit-boxing-collage.jpg",
     instagramHandle: "Donks.fx",
     practitionerName: "Donk's",
-    recurrence: "Every Tuesday"
+    recurrence: "Every Wednesday"
   },
 
   // ============ MARCH 2026 ============
