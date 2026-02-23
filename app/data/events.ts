@@ -187,11 +187,70 @@ export const events: Event[] = [
     time: "3:15 PM",
     endTime: "5:15 PM",
     description: "GRIT Boxing is a 12-session, SEL-focused boxing program designed for upper elementary and middle school youth. Rooted in Donk's four-pillar framework, GRIT uses structured boxing movement as a vehicle for building emotional regulation, self-awareness, resilience, and a sense of belonging. More than a sport, GRIT is a developmental experience that meets young people where they are, creating a brave space where they can discover their individual code, practice navigating challenges, and connect to something larger than themselves. Every session is grounded in trauma-informed, culturally responsive practices that honor the whole person and the communities they come from. March 11th through May 27th. Follow on TikTok: @FuncitionalDonks",
-    imageUrl: "/images/events/community/grit-boxing-collage.jpg",
-    ticketUrl: "https://near.tl/sm/Wj7ymCtge",
+    imageUrl: "/images/events/community/Grit-Collage.jpg",
     instagramHandle: "Donks.fx",
     practitionerName: "Donk's",
     recurrence: "Every Wednesday"
+  },
+
+  // ============ RECURRING: MILE HIGH QUALCHATA ============
+  {
+    id: "mile-high-qualchata",
+    title: "Mile High Qualchata",
+    date: "2026-03-04",
+    time: "5:30 PM",
+    endTime: "8:30 PM",
+    description: "Queer, BPIOC, Straight Friendly and Open to everyone. Working on basic concepts in the realm of individual and partner dancing. 8 weeks of tailored absolute beginner classes for people who have never tried partner dancing and would like to learn! The goal is to give people the tools to go out to Latin dance events and confidently dance by themselves and with others! One hour of salsa class. One hour of bachata class. Social dancing twice a month. March 4th through April 22nd.",
+    imageUrl: "/images/events/community/Qualchata.png",
+    instagramHandle: "milehigh_qualchata",
+    practitionerName: "Mile High Qualchata",
+    recurrence: "Every Wednesday"
+  },
+
+  // ============ MILE HIGH QUALCHATA SOCIALS ============
+  {
+    id: "qualchata-social-mar-06",
+    title: "Mile High Qualchata Social",
+    date: "2026-03-06",
+    time: "5:30 PM",
+    endTime: "8:30 PM",
+    description: "Queer, BPIOC, Straight Friendly and Open to everyone. Join Mile High Qualchata for a Latin dance social! Practice your salsa and bachata moves in a fun, welcoming environment. Open to all levels.",
+    imageUrl: "/images/events/community/Qualchata.png",
+    instagramHandle: "milehigh_qualchata",
+    practitionerName: "Mile High Qualchata"
+  },
+  {
+    id: "qualchata-social-mar-20",
+    title: "Mile High Qualchata Social",
+    date: "2026-03-20",
+    time: "5:30 PM",
+    endTime: "8:30 PM",
+    description: "Queer, BPIOC, Straight Friendly and Open to everyone. Join Mile High Qualchata for a Latin dance social! Practice your salsa and bachata moves in a fun, welcoming environment. Open to all levels.",
+    imageUrl: "/images/events/community/Qualchata.png",
+    instagramHandle: "milehigh_qualchata",
+    practitionerName: "Mile High Qualchata"
+  },
+  {
+    id: "qualchata-social-apr-10",
+    title: "Mile High Qualchata Social",
+    date: "2026-04-10",
+    time: "5:30 PM",
+    endTime: "8:30 PM",
+    description: "Queer, BPIOC, Straight Friendly and Open to everyone. Join Mile High Qualchata for a Latin dance social! Practice your salsa and bachata moves in a fun, welcoming environment. Open to all levels.",
+    imageUrl: "/images/events/community/Qualchata.png",
+    instagramHandle: "milehigh_qualchata",
+    practitionerName: "Mile High Qualchata"
+  },
+  {
+    id: "qualchata-social-apr-24",
+    title: "Mile High Qualchata Social",
+    date: "2026-04-24",
+    time: "5:30 PM",
+    endTime: "8:30 PM",
+    description: "Queer, BPIOC, Straight Friendly and Open to everyone. Join Mile High Qualchata for a Latin dance social! Practice your salsa and bachata moves in a fun, welcoming environment. Open to all levels.",
+    imageUrl: "/images/events/community/Qualchata.png",
+    instagramHandle: "milehigh_qualchata",
+    practitionerName: "Mile High Qualchata"
   },
 
   // ============ MARCH 2026 ============
