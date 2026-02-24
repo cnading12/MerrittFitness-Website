@@ -188,6 +188,7 @@ export const events: Event[] = [
     endTime: "5:15 PM",
     description: "GRIT Boxing is a 12-session, SEL-focused boxing program designed for upper elementary and middle school youth. Rooted in Donk's four-pillar framework, GRIT uses structured boxing movement as a vehicle for building emotional regulation, self-awareness, resilience, and a sense of belonging. More than a sport, GRIT is a developmental experience that meets young people where they are, creating a brave space where they can discover their individual code, practice navigating challenges, and connect to something larger than themselves. Every session is grounded in trauma-informed, culturally responsive practices that honor the whole person and the communities they come from. March 11th through May 27th. Follow on TikTok: @FuncitionalDonks",
     imageUrl: "/images/events/community/Grit-Collage.jpg",
+    ticketUrl: "https://near.tl/sm/Wj7ymCtge",
     instagramHandle: "Donks.fx",
     practitionerName: "Donk's",
     recurrence: "Every Wednesday"
