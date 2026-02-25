@@ -297,6 +297,21 @@ const EMAIL_TEMPLATES = {
             </p>
           </div>
 
+          <!-- Wi-Fi Info -->
+          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Wi-Fi Access</h2>
+            <table style="border-collapse: collapse;">
+              <tr>
+                <td style="padding: 4px 12px 4px 0; color: #374151; font-weight: 600;">Network:</td>
+                <td style="padding: 4px 0; color: #111827;">merrittcowork</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 12px 4px 0; color: #374151; font-weight: 600;">Password:</td>
+                <td style="padding: 4px 0; color: #111827;">Merritt23X</td>
+              </tr>
+            </table>
+          </div>
+
           <!-- Closing -->
           <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
