@@ -271,18 +271,24 @@ const EMAIL_TEMPLATES = {
             </p>
           </div>
 
-          <!-- Lock-Up Instructions -->
+          <!-- Facility Onboarding Playlist -->
           <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-            <h2 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">End-of-Event Lock-Up Instructions</h2>
+            <h2 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">Facility Walkthrough &amp; Instructions</h2>
             <p style="color: #1e3a8a; line-height: 1.6; margin: 0 0 15px 0;">
-              To make departure easy, we've created a short walkthrough video showing exactly how to secure the property at the conclusion of your event.
+              To help you feel fully prepared, we've put together a short video playlist covering everything you need to know for your event:
             </p>
+            <ul style="margin: 0 0 15px 0; padding-left: 20px; color: #1e3a8a; line-height: 1.8;">
+              <li>How to unlock and lock the building</li>
+              <li>How to use the projector</li>
+              <li>How to use the PA system</li>
+              <li>How to lock up (shorter video if you only need a quick refresher)</li>
+            </ul>
             <p style="margin: 0 0 10px 0;">
-              <strong style="color: #1e40af;">Lock-Up Video:</strong>
-              <a href="https://youtube.com/shorts/CwdDc6LbIjg?si=GQ7XMmqUaJnqMG6H" style="color: #3b82f6; text-decoration: none;">[YouTube Link Here]</a>
+              <strong style="color: #1e40af;">Watch the Playlist:</strong>
+              <a href="https://www.youtube.com/playlist?list=PLkE5cGIi8Zdjl6Sb3aa7UKqFrYWQN3uiu" style="color: #3b82f6; text-decoration: none;">Merritt Wellness Onboarding Videos</a>
             </p>
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
-              We recommend watching this in advance so you feel fully confident when wrapping up.
+              We recommend watching these in advance so you feel fully confident on the day of your event.
             </p>
             <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>Need your access code?</strong> Please email
