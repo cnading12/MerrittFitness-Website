@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays, MessageCircle } from 'lucide-react';
 
 // A display event that may carry multiple occurrence dates for recurring events
 interface DisplayEvent extends Event {
@@ -212,12 +212,12 @@ function EventCard({ event }: { event: DisplayEvent }) {
   return (
     <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col h-full">
       {/* Image with date badge */}
-      <div className="relative aspect-[16/10] overflow-hidden flex-shrink-0">
+      <div className={`relative aspect-[16/10] overflow-hidden flex-shrink-0${event.imageFit === 'contain' ? ' bg-white' : ''}`}>
         <Image
           src={event.imageUrl}
           alt={event.title}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`${event.imageFit === 'contain' ? 'object-contain' : 'object-cover'} transition-transform duration-700 group-hover:scale-105`}
           style={{ objectPosition: event.imagePosition || 'center' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -336,33 +336,47 @@ function EventCard({ event }: { event: DisplayEvent }) {
         )}
 
         {/* Actions - pushed to bottom */}
-        <div className="flex items-center gap-3 mt-auto">
-          {event.ticketUrl ? (
-            <a
-              href={event.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
-            >
-              <Ticket className="w-4 h-4" />
-              Get Tickets
-            </a>
-          ) : (
-            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-xl">
-              <Calendar className="w-4 h-4" />
-              Free Event
-            </div>
-          )}
+        <div className="flex flex-col gap-3 mt-auto">
+          <div className="flex items-center gap-3">
+            {event.ticketUrl ? (
+              <a
+                href={event.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3.5 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                <Ticket className="w-4 h-4" />
+                {event.ticketLabel || 'Get Tickets'}
+              </a>
+            ) : (
+              <div className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-xl">
+                <Calendar className="w-4 h-4" />
+                Free Event
+              </div>
+            )}
 
-          {event.instagramHandle && !event.practitionerName && (
+            {event.instagramHandle && !event.practitionerName && (
+              <a
+                href={`https://instagram.com/${event.instagramHandle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#735e59]/20 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9] hover:border-[#735e59] transition-all duration-300"
+                aria-label={`Follow @${event.instagramHandle} on Instagram`}
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+          </div>
+
+          {event.whatsappUrl && (
             <a
-              href={`https://instagram.com/${event.instagramHandle}`}
+              href={event.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#735e59]/20 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9] hover:border-[#735e59] transition-all duration-300"
-              aria-label={`Follow @${event.instagramHandle} on Instagram`}
+              className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-semibold px-6 py-3.5 rounded-xl hover:bg-[#1da851] transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
             >
-              <Instagram className="w-5 h-5" />
+              <MessageCircle className="w-4 h-4" />
+              Join WhatsApp Group
             </a>
           )}
         </div>
