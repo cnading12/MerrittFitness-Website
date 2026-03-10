@@ -221,6 +221,58 @@ const EnhancedGallery = () => {
       category: "art"
     },
     {
+      id: 36,
+      src: "/images/events/art/Karen-1.png",
+      title: "Karen Borthick Fine Art",
+      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      category: "art",
+      artist: {
+        name: "Karen Borthick",
+        website: "https://www.karenborthickart.com/merritt-wellness-gallery",
+        facebook: "https://www.facebook.com/profile.php?id=100064845797532",
+        facebookName: "Karen Borthick Fine Art"
+      }
+    },
+    {
+      id: 37,
+      src: "/images/events/art/Karen-2.png",
+      title: "Karen Borthick Fine Art",
+      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      category: "art",
+      artist: {
+        name: "Karen Borthick",
+        website: "https://www.karenborthickart.com/merritt-wellness-gallery",
+        facebook: "https://www.facebook.com/profile.php?id=100064845797532",
+        facebookName: "Karen Borthick Fine Art"
+      }
+    },
+    {
+      id: 38,
+      src: "/images/events/art/Karen-3.png",
+      title: "Karen Borthick Fine Art",
+      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      category: "art",
+      artist: {
+        name: "Karen Borthick",
+        website: "https://www.karenborthickart.com/merritt-wellness-gallery",
+        facebook: "https://www.facebook.com/profile.php?id=100064845797532",
+        facebookName: "Karen Borthick Fine Art"
+      }
+    },
+    {
+      id: 39,
+      src: "/images/events/art/Karen-4.png",
+      title: "Karen Borthick Fine Art",
+      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      category: "art",
+      artist: {
+        name: "Karen Borthick",
+        website: "https://www.karenborthickart.com/merritt-wellness-gallery",
+        facebook: "https://www.facebook.com/profile.php?id=100064845797532",
+        facebookName: "Karen Borthick Fine Art"
+      }
+    },
+    {
       id: 16,
       src: "/images/hero/outside5.webp",
       title: "Historic Sanctuary",
@@ -493,6 +545,33 @@ const EnhancedGallery = () => {
                         </a>
                       </p>
                     )}
+                    {item.artist && (
+                      <div className="text-[#f2eee9]/70 text-sm mt-2 space-y-1">
+                        <p>
+                          🎨 Art by{' '}
+                          <a
+                            href={item.artist.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#a08b84] hover:text-[#f2eee9] underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.artist.name}
+                          </a>
+                        </p>
+                        <p>
+                          <a
+                            href={item.artist.facebook}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#a08b84] hover:text-[#f2eee9] underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.artist.facebookName} on Facebook
+                          </a>
+                        </p>
+                      </div>
+                    )}
                     <div className="mt-4 flex items-center gap-2">
                       <ZoomIn size={16} />
                       <span className="text-sm">Click to enlarge</span>
@@ -602,6 +681,31 @@ const EnhancedGallery = () => {
                         @{filteredItems[currentIndex].photographer}
                       </a>
                     </p>
+                  )}
+                  {filteredItems[currentIndex]?.artist && (
+                    <div className="text-[#f2eee9]/70 text-[10px] md:text-sm mt-1 md:mt-2 space-y-0.5 md:space-y-1">
+                      <p>
+                        🎨{' '}
+                        <a
+                          href={filteredItems[currentIndex].artist.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#a08b84] hover:text-[#f2eee9] underline"
+                        >
+                          {filteredItems[currentIndex].artist.name}
+                        </a>
+                      </p>
+                      <p>
+                        <a
+                          href={filteredItems[currentIndex].artist.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#a08b84] hover:text-[#f2eee9] underline"
+                        >
+                          {filteredItems[currentIndex].artist.facebookName} on Facebook
+                        </a>
+                      </p>
+                    </div>
                   )}
                   <p className="text-[#f2eee9]/60 text-[10px] md:text-sm mt-1 md:mt-2">
                     {currentIndex + 1} of {filteredItems.length}
