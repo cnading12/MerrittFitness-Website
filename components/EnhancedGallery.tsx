@@ -222,7 +222,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 36,
-      src: "/images/events/art/Karen-1.png",
+      src: "/images/events/art/Karen-1.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -235,7 +235,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 37,
-      src: "/images/events/art/Karen-2.png",
+      src: "/images/events/art/Karen-2.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -248,7 +248,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 38,
-      src: "/images/events/art/Karen-3.png",
+      src: "/images/events/art/Karen-3.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -261,7 +261,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 39,
-      src: "/images/events/art/Karen-4.png",
+      src: "/images/events/art/Karen-4.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
