@@ -30,22 +30,6 @@ export const events: Event[] = [
     recurrence: "Every Sunday"
   },
 
-  // ============ RECURRING: YOGA WITH ANNALISE (LAST SUNDAY OF MONTH) ============
-  {
-    id: "sunday-yoga-annalise",
-    title: "Free Candlelit Restorative Yoga",
-    date: "2026-03-29",
-    time: "4:30 PM",
-    endTime: "7:00 PM",
-    description: "Unwind and restore with Annalise Freytag in this donation-based candlelit restorative yoga class. Set in our beautiful historic sanctuary with 24-foot ceilings and original stained glass windows, this gentle practice offers a peaceful space to release tension and reconnect with yourself. All levels welcome.",
-    imageUrl: "/images/events/community/Annalise.webp",
-    imagePosition: "center top",
-    ticketUrl: "https://yogawithannalise.com/events-1",
-    instagramHandle: "yogawithannalise",
-    practitionerName: "Annalise Freytag",
-    recurrence: "Last Sunday of every month"
-  },
-
   // ============ DECEMBER 2025 ============
   {
     id: "steven-benoy-yoga-dec-2025",
