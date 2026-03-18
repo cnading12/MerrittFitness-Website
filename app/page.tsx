@@ -5,6 +5,7 @@ import EnhancedGallery from "@/components/EnhancedGallery";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { getBlurDataURL } from "@/lib/blur-data";
 
 export default function Home() {
   const [calendarLoaded, setCalendarLoaded] = useState(false);
@@ -160,6 +161,8 @@ export default function Home() {
             alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
             fill
             priority
+            placeholder="blur"
+            blurDataURL={getBlurDataURL("/images/hero/outside5.webp")}
             className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom" />
 
           {/* Enhanced floating elements */}
@@ -333,6 +336,8 @@ export default function Home() {
               height={500}
               className="w-full h-full object-contain opacity-80"
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
             />
           </div>
 
@@ -345,6 +350,8 @@ export default function Home() {
               height={500}
               className="w-full h-full object-contain opacity-70 rotate-180"
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
             />
           </div>
 
@@ -373,6 +380,8 @@ export default function Home() {
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     loading="lazy"
+                    placeholder="blur"
+                    blurDataURL={getBlurDataURL("/images/events/katrina/3.webp")}
                   />
                 </div>
                 <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
@@ -410,6 +419,8 @@ export default function Home() {
             fill
             className="object-cover opacity-10"
             loading="lazy"
+            placeholder="blur"
+            blurDataURL={getBlurDataURL("/images/hero/1.webp")}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
         </div>
@@ -597,6 +608,8 @@ export default function Home() {
                   alt=""
                   fill
                   className="object-contain opacity-80"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL("/images/overlays/Circle.png")}
                 />
                 </div>
 

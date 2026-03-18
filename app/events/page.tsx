@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getBlurDataURL } from '@/lib/blur-data';
 import { events, Event } from '@/app/data/events';
 import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays, MessageCircle } from 'lucide-react';
 
@@ -219,6 +220,8 @@ function EventCard({ event }: { event: DisplayEvent }) {
           fill
           className={`${event.imageFit === 'contain' ? 'object-contain' : 'object-cover'} transition-transform duration-700 group-hover:scale-105`}
           style={{ objectPosition: event.imagePosition || 'center' }}
+          placeholder="blur"
+          blurDataURL={getBlurDataURL(event.imageUrl) || "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADwAQCdASoIAAUABUB8JZACdAEO/hepgAD+8sP/4Onf/t3BHXP/wMf/1dNcjNf/0MaEGGP/6qoWUv/3LGf/7lmQAAAA"}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 

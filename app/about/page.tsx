@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { getBlurDataURL } from "@/lib/blur-data";
 
 export default function AboutPage() {
   return (
@@ -55,6 +56,8 @@ export default function AboutPage() {
                     height={400}
                     className="relative rounded-3xl shadow-2xl group-hover:scale-[1.02] transition-transform duration-500"
                     priority
+                    placeholder="blur"
+                    blurDataURL={getBlurDataURL("/images/hero/outside5.webp")}
                   />
                   <div className="absolute -bottom-6 -right-6 bg-[#faf8f5] rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
                     <div className="text-center">
@@ -240,6 +243,8 @@ export default function AboutPage() {
               alt="Merritt Wellness interior"
               fill
               className="object-cover opacity-10"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/hero/1.webp")}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
           </div>

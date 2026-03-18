@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, X, Play, Pause, ZoomIn } from 'lucide-react';
+import { getBlurDataURL } from '@/lib/blur-data';
 
 const EnhancedGallery = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -416,6 +417,8 @@ const EnhancedGallery = () => {
           className="object-cover"
           sizes="100vw"
           quality={80}
+          placeholder="blur"
+          blurDataURL={getBlurDataURL("/images/overlays/stained-glass.png")}
         />
       </div>
 
@@ -499,6 +502,8 @@ const EnhancedGallery = () => {
                         className="object-cover blur-[30px] brightness-[0.6]"
                         sizes="100vw"
                         quality={30}
+                        placeholder="blur"
+                        blurDataURL={getBlurDataURL(item.src)}
                       />
                     </div>
                     {/* Centered full portrait image */}
@@ -511,6 +516,8 @@ const EnhancedGallery = () => {
                           className="object-contain group-hover:scale-105 transition-transform duration-700"
                           sizes="(max-width: 768px) 100vw, 50vw"
                           loading={index === 0 ? "eager" : "lazy"}
+                          placeholder="blur"
+                          blurDataURL={getBlurDataURL(item.src)}
                         />
                       </div>
                     </div>
@@ -524,6 +531,8 @@ const EnhancedGallery = () => {
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     sizes="(max-width: 768px) 100vw, 80vw"
                     loading={index === 0 ? "eager" : "lazy"}
+                    placeholder="blur"
+                    blurDataURL={getBlurDataURL(item.src)}
                   />
                 )}
                 {/* CAPTION OVERLAY - Hidden on mobile, visible on desktop hover */}
@@ -620,6 +629,8 @@ const EnhancedGallery = () => {
                   className="object-cover"
                   sizes="96px"
                   loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL(item.src)}
                 />
                 {index === currentIndex && (
                   <div className="absolute inset-0 bg-[#f2eee9]/20"></div>
@@ -664,6 +675,8 @@ const EnhancedGallery = () => {
                   className="object-contain rounded-lg"
                   sizes="100vw"
                   priority
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL(filteredItems[currentIndex]?.src)}
                 />
 
                 {/* Modal Info - Much smaller on mobile */}
