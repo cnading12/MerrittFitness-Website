@@ -3,10 +3,10 @@
 
 export const blurDataMap: Record<string, string> = {
   "/images/events/2.webp": "data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADwAQCdASoKAAYABUB8JbACdADdlUxFwgAA4C1byeDj72Ca+VgwiOIzXy9cEGI4Oh0EHoRxO2y5AAAA",
-  "/images/events/art/Karen-1.webp": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADQAQCdASoKAAgABUB8JaACdAEOPDWB6AD+kZdsknYaBkt7gXbDywuGIyHCszl8jdq//x1JIiFQq1s0LTX0yJworHeAAA==",
-  "/images/events/art/Karen-2.webp": "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAADwAQCdASoKAAgABUB8JbACdAEfhYWOfAAA/lvr2za2JXgO4mk8ufwXR6jreVJJRKi+v92Iruk/kvUxYAAAAA==",
-  "/images/events/art/Karen-3.webp": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADQAQCdASoKAAgABUB8JbACdADcEV/6AAD9+k5JIHt3hnimtQPH0Nl7K2lmubml72kkZqvAoXzFMkO0AAA=",
-  "/images/events/art/Karen-4.webp": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAACwAQCdASoKAAgABUB8JbACdADZUgIAAP6UND9d7uPu/9zgLn6x75KNyDVRYSQ0uzQN2yJmF2NAAA==",
+  "/images/events/art/Karen-1.webp": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoKAAgABUB8JZACdAEOQcK+xEAA3kOjsuVXByNjrilB36iEnKSAaNh1fKcREgz5I5FfHGBNhuGyitz9iQAAAA==",
+  "/images/events/art/Karen-2.webp": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoKAAgABUB8JbACdAEQK/p6AADeX9xJosNEx4RdWLZOzysrhtUVryf9OrQEIVBSfOlJyYavfBcfGtPIAAA=",
+  "/images/events/art/Karen-3.webp": "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAACwAQCdASoKAAgABUB8JaACdADcCznAAPoK5r/sb/qi0jne53rISkKziEAKbI2FYGZMMAwAAAA=",
+  "/images/events/art/Karen-4.webp": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAACwAQCdASoKAAgABUB8JaACdADum36AAMwQQjrZkjAQY5yN9luw2kuE9880+eSgAAA=",
   "/images/events/art/hero-2.webp": "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAADQAQCdASoKAAcABUB8JagCdAEO10TLQADJbBf6XZtG8fjWMQAVwc9mLfhNFCFYOvj0iiAAAAA=",
   "/images/events/art/hero.webp": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADwAQCdASoKAAgABUB8JagCdAD0Y3P4/5YA/Kdn59XWsNUV3GQ964OetxYtVl1W1wqf+2fMKVJ+rvNNuAA=",
   "/images/events/community/Grit-Collage.webp": "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAACwAQCdASoIAAoABUB8JZQAApyhm1LAAP51zpfndx7EV3dggIEZZwEK58kgKobGqHAAAA==",
