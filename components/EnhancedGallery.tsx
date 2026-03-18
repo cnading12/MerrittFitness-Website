@@ -15,21 +15,21 @@ const EnhancedGallery = () => {
   const galleryItems = [
     {
       id: 24,
-      src: "/images/hero/church-1.jpg",
+      src: "/images/hero/church-1.webp",
       title: "Historic Church Exterior",
       desc: "Our beautifully restored 1905 sanctuary",
       category: "space"
     },
     {
       id: 25,
-      src: "/images/hero/church-2.jpg",
+      src: "/images/hero/church-2.webp",
       title: "Sacred Architecture",
       desc: "Timeless beauty in every detail",
       category: "space"
     },
     {
       id: 26,
-      src: "/images/hero/church-3.jpg",
+      src: "/images/hero/church-3.webp",
       title: "Sanctuary Views",
       desc: "Where heritage meets modern wellness",
       category: "space"
@@ -102,14 +102,14 @@ const EnhancedGallery = () => {
     },
     {
       id: 35,
-      src: "/images/hero/candles.JPG",
+      src: "/images/hero/candles.webp",
       title: "Electronic Candles",
       desc: "One hundred electronic candles included with every rental",
       category: "space"
     },
     {
       id: 31,
-      src: "/images/events/yoga/breathwork-class.JPG",
+      src: "/images/events/yoga/breathwork-class.webp",
       title: "Breathwork Session",
       desc: "Guided breathwork in our sacred space",
       category: "yoga",
@@ -117,7 +117,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 32,
-      src: "/images/events/yoga/breathwork-in-action.JPG",
+      src: "/images/events/yoga/breathwork-in-action.webp",
       title: "Breathwork in Action",
       desc: "Deep healing through conscious breathing",
       category: "yoga",
@@ -125,7 +125,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 33,
-      src: "/images/events/yoga/shavasana.png",
+      src: "/images/events/yoga/shavasana.webp",
       title: "Shavasana",
       desc: "Rest and restoration after practice",
       category: "yoga",
@@ -133,7 +133,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 34,
-      src: "/images/events/yoga/yoga-class.png",
+      src: "/images/events/yoga/yoga-class.webp",
       title: "Yoga Class",
       desc: "Community yoga in our historic sanctuary",
       category: "yoga",
@@ -208,14 +208,14 @@ const EnhancedGallery = () => {
     },
     {
       id: 27,
-      src: "/images/events/art/hero.jpg",
+      src: "/images/events/art/hero.webp",
       title: "Art Show",
       desc: "Creative expression in our sacred space",
       category: "art"
     },
     {
       id: 28,
-      src: "/images/events/art/hero-2.png",
+      src: "/images/events/art/hero-2.webp",
       title: "Art Exhibition",
       desc: "Local artists showcase their work",
       category: "art"

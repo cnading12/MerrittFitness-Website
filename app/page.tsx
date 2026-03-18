@@ -37,9 +37,9 @@ export default function Home() {
     "priceRange": "$95/hour",
     "paymentAccepted": ["Credit Card", "Cash", "Check", "Venmo", "Zelle"],
     "image": [
-      "https://merrittwellness.net/images/hero/outside3.jpg",
-      "https://merrittwellness.net/images/hero/1.jpg",
-      "https://merrittwellness.net/images/events/2.JPEG"
+      "https://merrittwellness.net/images/hero/outside3.webp",
+      "https://merrittwellness.net/images/hero/1.webp",
+      "https://merrittwellness.net/images/events/2.webp"
     ],
     "sameAs": [
       "https://www.instagram.com/merrittwellnessdenver",

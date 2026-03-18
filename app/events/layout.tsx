@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/1.jpg',
+        url: 'https://merrittwellness.net/images/hero/1.webp',
         width: 1200,
         height: 630,
         alt: 'Merritt Wellness Events - Sound Baths and Yoga Workshops in Denver',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Upcoming Events | Merritt Wellness Denver',
     description: 'Transformative wellness events at our historic 1905 venue. Sound baths, yoga workshops, breathwork, and more.',
-    images: ['https://merrittwellness.net/images/hero/1.jpg'],
+    images: ['https://merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net/events',

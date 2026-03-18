@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/1.jpg',
+        url: 'https://merrittwellness.net/images/hero/1.webp',
         width: 1200,
         height: 630,
         alt: 'Merritt Wellness interior - yoga and meditation space in Denver',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Book Yoga & Sound Baths | Merritt Wellness Denver',
     description: 'Reserve your wellness experience at our historic venue in Sloans Lake. Yoga, sound baths, meditation & more.',
-    images: ['https://merrittwellness.net/images/hero/1.jpg'],
+    images: ['https://merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net/booking',
