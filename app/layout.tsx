@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.jpg',
+        url: 'https://merrittwellness.net/images/hero/outside3.webp',
         width: 1200,
         height: 630,
         alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Merritt Wellness | Yoga, Sound Baths & Meditation Denver',
     description: 'Experience yoga, sound baths, and meditation at our stunning 1905 venue in Sloans Lake Denver. Book your wellness journey today!',
-    images: ['https://merrittwellness.net/images/hero/outside3.jpg'],
+    images: ['https://merrittwellness.net/images/hero/outside3.webp'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net',
@@ -150,8 +150,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "currenciesAccepted": "USD",
               "paymentAccepted": ["Cash", "Credit Card", "Venmo", "Zelle"],
               "image": [
-                "https://merrittwellness.net/images/hero/outside3.jpg",
-                "https://merrittwellness.net/images/hero/1.jpg"
+                "https://merrittwellness.net/images/hero/outside3.webp",
+                "https://merrittwellness.net/images/hero/1.webp"
               ],
               "sameAs": [
                 "https://www.instagram.com/merrittwellnessdenver",

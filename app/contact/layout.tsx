@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.jpg',
+        url: 'https://merrittwellness.net/images/hero/outside3.webp',
         width: 1200,
         height: 630,
         alt: 'Merritt Wellness - Historic wellness venue in Denver Sloans Lake',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Contact Merritt Wellness | Denver Yoga & Wellness Studio',
     description: 'Book your wellness experience in Denver\'s Sloans Lake. Yoga, sound baths, meditation & more.',
-    images: ['https://merrittwellness.net/images/hero/outside3.jpg'],
+    images: ['https://merrittwellness.net/images/hero/outside3.webp'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net/contact',

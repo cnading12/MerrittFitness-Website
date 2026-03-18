@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { getBlurDataURL } from '@/lib/blur-data';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Menu, X, Calendar } from 'lucide-react';
@@ -75,6 +76,8 @@ export default function Navbar() {
               height={70}
               className="transition-transform duration-200 group-hover:scale-105"
               priority
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/hero/logo.png")}
             />
           </Link>
 
@@ -155,6 +158,8 @@ export default function Navbar() {
                 width={140}
                 height={60}
                 priority
+                placeholder="blur"
+                blurDataURL={getBlurDataURL("/images/hero/logo.png")}
               />
             </Link>
             <button
