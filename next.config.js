@@ -23,6 +23,11 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
   },
 
+  // Exclude public images from build trace to prevent micromatch stack overflow
+  outputFileTracingExcludes: {
+    '*': ['./public/images/**/*'],
+  },
+
   // Security headers
   async headers() {
     return [
