@@ -66,15 +66,15 @@ export default function Navbar() {
           ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20' 
           : 'bg-[#f2eee9]/80 backdrop-blur-sm'
       }`}>
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4 overflow-hidden">
           {/* Logo - Made Bigger */}
-          <Link href="/" className="flex items-center shrink-0 z-50 group" tabIndex={0}>
+          <Link href="/" className="flex items-center min-w-0 z-50 group" tabIndex={0}>
             <Image
               src="/images/hero/logo.png"
               alt="Merritt Wellness Logo"
               width={160}
               height={70}
-              className="transition-transform duration-200 group-hover:scale-105"
+              className="transition-transform duration-200 group-hover:scale-105 max-w-[120px] sm:max-w-[160px] h-auto"
               priority
               placeholder="blur"
               blurDataURL={getBlurDataURL("/images/hero/logo.png")}
@@ -106,19 +106,19 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden text-[#735e59] hover:text-[#5a4a46] z-50 relative p-2 rounded-full hover:bg-[#735e59]/10 transition-colors duration-200"
+            className="md:hidden shrink-0 text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <div className="relative w-6 h-6">
-              <span className={`absolute top-2 left-0 w-6 h-0.5 bg-current transition-all duration-300 ${
-                menuOpen ? 'rotate-45 top-2.5' : ''
+            <div className="relative w-7 h-6">
+              <span className={`absolute top-[4px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+                menuOpen ? 'rotate-45 top-[11px]' : ''
               }`}></span>
-              <span className={`absolute top-3.5 left-0 w-6 h-0.5 bg-current transition-opacity duration-300 ${
+              <span className={`absolute top-[11px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-opacity duration-300 ${
                 menuOpen ? 'opacity-0' : 'opacity-100'
               }`}></span>
-              <span className={`absolute top-5 left-0 w-6 h-0.5 bg-current transition-all duration-300 ${
-                menuOpen ? '-rotate-45 top-2.5' : ''
+              <span className={`absolute top-[18px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+                menuOpen ? '-rotate-45 top-[11px]' : ''
               }`}></span>
             </div>
           </button>
