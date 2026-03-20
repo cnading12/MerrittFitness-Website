@@ -48,6 +48,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 /* Selection color matching brand */
