@@ -106,19 +106,19 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden text-[#735e59] hover:text-[#5a4a46] z-50 relative p-2 rounded-full hover:bg-[#735e59]/10 transition-colors duration-200"
+            className="md:hidden text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <div className="relative w-6 h-6">
-              <span className={`absolute top-2 left-0 w-6 h-0.5 bg-current transition-all duration-300 ${
-                menuOpen ? 'rotate-45 top-2.5' : ''
+            <div className="relative w-7 h-6">
+              <span className={`absolute top-[4px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+                menuOpen ? 'rotate-45 top-[11px]' : ''
               }`}></span>
-              <span className={`absolute top-3.5 left-0 w-6 h-0.5 bg-current transition-opacity duration-300 ${
+              <span className={`absolute top-[11px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-opacity duration-300 ${
                 menuOpen ? 'opacity-0' : 'opacity-100'
               }`}></span>
-              <span className={`absolute top-5 left-0 w-6 h-0.5 bg-current transition-all duration-300 ${
-                menuOpen ? '-rotate-45 top-2.5' : ''
+              <span className={`absolute top-[18px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+                menuOpen ? '-rotate-45 top-[11px]' : ''
               }`}></span>
             </div>
           </button>
