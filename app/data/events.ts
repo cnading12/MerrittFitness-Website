@@ -280,6 +280,7 @@ export const events: Event[] = [
     endTime: "8:00 PM",
     description: "Most of us live almost entirely from the neck up—with overthinking, second-guessing, and cut off from the deeper intelligence the body has been holding all along. Holosomatic Breathwork changes that. Using rhythmic breathing, intentional movement, and vocal toning, you'll shift your physiology, move beyond ordinary awareness, and feel, maybe for the first time, what it's like to trust yourself from the inside out. Doors open at 5:50 PM. All experience levels welcome. Early bird tickets $30, regular tickets $40.",
     imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://www.eventbrite.com/e/holosomatic-breathwork-w-somatic-jules-tickets-1984462260040?aff=oddtdtcreator&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnlUBR1fkYzUxHBo7mFjVMmv9NOEx0URAtzQSvvQiC1qGiLTe8S0ql7N8wFak_aem_ZmFrZWR1bW15MTZieXRlcw",
     instagramHandle: "SomaticJules",
     practitionerName: "Juliana Stoddart"
   }
