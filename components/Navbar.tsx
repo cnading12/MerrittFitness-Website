@@ -66,15 +66,15 @@ export default function Navbar() {
           ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20' 
           : 'bg-[#f2eee9]/80 backdrop-blur-sm'
       }`}>
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4 overflow-hidden">
           {/* Logo - Made Bigger */}
-          <Link href="/" className="flex items-center shrink-0 z-50 group" tabIndex={0}>
+          <Link href="/" className="flex items-center min-w-0 z-50 group" tabIndex={0}>
             <Image
               src="/images/hero/logo.png"
               alt="Merritt Wellness Logo"
               width={160}
               height={70}
-              className="transition-transform duration-200 group-hover:scale-105"
+              className="transition-transform duration-200 group-hover:scale-105 max-w-[120px] sm:max-w-[160px] h-auto"
               priority
               placeholder="blur"
               blurDataURL={getBlurDataURL("/images/hero/logo.png")}
@@ -106,7 +106,7 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
+            className="md:hidden shrink-0 text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
