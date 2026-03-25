@@ -271,6 +271,31 @@ export const events: Event[] = [
     practitionerName: "Juliana Stoddart"
   },
 
+  // ============ RECURRING: WESTERN WISH SECOND SUNDAYS SHOWCASE ============
+  {
+    id: "western-wish-second-sundays-apr-2026",
+    title: "Second Sundays Showcase: Songwriters' Round",
+    date: "2026-04-12",
+    time: "6:00 PM",
+    description: "WesternWish Productions & KRFC 88.9 FM present Second Sundays Showcase: Songwriters' Round — an intimate evening of music and storytelling featuring three independent original musicians: Abigael Elizabeth, Sam McManus, and Sid Williamson. Doors at 5:30 PM, show at 6:00 PM.",
+    imageUrl: "/images/events/western-wish/Western-Wish-April.png",
+    ticketUrl: "https://www.tickettailor.com/events/westernwishproductions/2050830",
+    instagramHandle: "westernwishproductions",
+    practitionerName: "WesternWish Productions"
+  },
+  {
+    id: "western-wish-second-sundays",
+    title: "Second Sundays Showcase",
+    date: "2026-05-10",
+    time: "6:00 PM",
+    description: "An intimate, listening room-style event series where independent musicians share original songs and the stories behind them in a supportive acoustic setting. Doors at 5:30 PM, show at 6:00 PM.",
+    imageUrl: "/images/events/western-wish/Western-Wish.png",
+    ticketUrl: "https://www.westernwish.com/events",
+    instagramHandle: "westernwishproductions",
+    practitionerName: "WesternWish Productions",
+    recurrence: "Second Sunday of every month"
+  },
+
   // ============ APRIL 2026 ============
   {
     id: "holosomatic-breathwork-apr-2026",
