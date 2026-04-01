@@ -263,7 +263,7 @@ Contact manager@merrittwellness.net for changes.
       location: 'Merritt Wellness, 2246 Irving St, Denver, CO 80211',
       colorId: '11',
       transparency: 'opaque',
-      visibility: 'public'
+      visibility: 'private'
     };
 
     console.log('📤 Sending event to Google Calendar:', {
