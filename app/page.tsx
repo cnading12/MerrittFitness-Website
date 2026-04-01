@@ -452,7 +452,7 @@ export default function Home() {
 
             {/* Enhanced Calendar Section */}
             <div
-              className="rounded-3xl p-8 border border-[#f2eee9]/10 mb-12 relative overflow-hidden"
+              className="rounded-3xl p-8 border border-[#735e59] bg-[#735e59] mb-12 relative overflow-hidden"
             >
               <div className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-2xl relative z-10">
                 <div className="p-6 bg-gradient-to-r from-[#f2eee9] to-[#faf8f5] border-b border-[#735e59]/10">
