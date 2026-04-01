@@ -413,9 +413,9 @@ const EnhancedGallery = () => {
         className="absolute inset-0 z-[1] opacity-60"
         style={{
           backgroundImage: 'url(/images/overlays/stained-glass.png)',
-          backgroundSize: '100% auto',
+          backgroundSize: '600px 600px',
           backgroundPosition: 'top center',
-          backgroundRepeat: 'repeat-y',
+          backgroundRepeat: 'repeat',
         }}
       />
 
