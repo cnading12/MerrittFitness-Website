@@ -408,16 +408,19 @@ const EnhancedGallery = () => {
     <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
 
-      {/* Stained glass texture overlay */}
-      <div
-        className="absolute inset-0 z-[1] opacity-60"
-        style={{
-          backgroundImage: 'url(/images/overlays/stained-glass.png)',
-          backgroundSize: '600px 600px',
-          backgroundPosition: 'top center',
-          backgroundRepeat: 'repeat',
-        }}
-      />
+      {/* Stained glass texture overlay - using Next/Image */}
+      <div className="absolute inset-0 z-[1] opacity-60" style={{ minHeight: '100%', minWidth: '100%' }}>
+        <Image
+          src="/images/overlays/stained-glass.png"
+          alt=""
+          fill
+          className="object-cover !h-full !w-full"
+          sizes="(max-width: 768px) 200vw, 100vw"
+          quality={80}
+          placeholder="blur"
+          blurDataURL={getBlurDataURL("/images/overlays/stained-glass.png")}
+        />
+      </div>
 
       <div className="relative z-10">
 
