@@ -412,7 +412,15 @@ export default function Home() {
         </section>
 
         {/* BOOKING SECTION - Enhanced with local keywords */}
-        <section id="booking" className="py-24 bg-[#735e59] relative overflow-hidden texture-dark">          <div className="absolute inset-0">
+        <section
+          id="booking"
+          className="py-24 bg-[#735e59] relative overflow-hidden texture-dark"
+          style={{
+            backgroundImage: 'url("/images/overlays/Swirls.png")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >          <div className="absolute inset-0">
           <Image
             src="/images/hero/1.webp"
             alt="Merritt Wellness Denver yoga studio interior booking background"
@@ -445,11 +453,6 @@ export default function Home() {
             {/* Enhanced Calendar Section */}
             <div
               className="rounded-3xl p-8 border border-[#f2eee9]/10 mb-12 relative overflow-hidden"
-              style={{
-                backgroundImage: 'url("/images/overlays/Swirls.png")',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
             >
               <div className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-2xl relative z-10">
                 <div className="p-6 bg-gradient-to-r from-[#f2eee9] to-[#faf8f5] border-b border-[#735e59]/10">
