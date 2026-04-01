@@ -523,8 +523,19 @@ export default function Home() {
         </section>
 
         {/* CONTACT SECTION - Enhanced with local keywords */}
-        <section className="py-20 bg-gradient-to-b from-[#f2eee9] to-[#faf8f5] relative">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-20 bg-gradient-to-b from-[#f2eee9] to-[#faf8f5] relative overflow-hidden">
+          {/* Brushstroke Circle Overlay */}
+          <div className="absolute -top-40 right-0 w-[800px] h-[800px] pointer-events-none z-0">
+            <Image
+              src="/images/overlays/Circle.png"
+              alt=""
+              fill
+              className="object-contain opacity-80"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/Circle.png")}
+            />
+          </div>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div>
@@ -602,17 +613,6 @@ export default function Home() {
 
               {/* Right Map */}
               <div className="relative">
-                {/* Brushstroke Circle Overlay */}
-                <div className="absolute -top-40 w-[800px] h-[800px] pointer-events-none z-0">                  <Image
-                  src="/images/overlays/Circle.png"
-                  alt=""
-                  fill
-                  className="object-contain opacity-80"
-                  placeholder="blur"
-                  blurDataURL={getBlurDataURL("/images/overlays/Circle.png")}
-                />
-                </div>
-
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3067.495501733334!2d-105.03225422320789!3d39.750981971554395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c78a04d1b6fa1%3A0x8c9ae4d693f97e2c!2s2246%20Irving%20St%2C%20Denver%2C%20CO%2080211!5e0!3m2!1sen!2sus!4v1754517213228!5m2!1sen!2sus"
