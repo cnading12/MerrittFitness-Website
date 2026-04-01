@@ -601,7 +601,7 @@ export default function Home() {
               </div>
 
               {/* Right Map */}
-              <div className="relative overflow-hidden">
+              <div className="relative">
                 {/* Brushstroke Circle Overlay */}
                 <div className="absolute -top-40 w-[800px] h-[800px] pointer-events-none z-0">                  <Image
                   src="/images/overlays/Circle.png"
