@@ -49,7 +49,14 @@ const IndividualBookingSchema = z.object({
     .default(''),
 
   needsSetupHelp: z.boolean().default(false),
-  needsTeardownHelp: z.boolean().default(false)
+  needsTeardownHelp: z.boolean().default(false),
+
+  // Expected attendee count — used server-side to determine whether first-time
+  // on-site event supervision ($30/hr, 4hr cap) should be applied.
+  expectedAttendees: z.coerce.number()
+    .int('Attendee count must be a whole number')
+    .min(1, 'At least one attendee is required')
+    .max(130, 'Venue capacity is 130 attendees')
 });
 
 const ContactInfoSchema = z.object({
@@ -94,6 +101,8 @@ const PricingSchema = z.object({
   saturdayCharges: z.number().optional().default(0),
   setupTeardownFees: z.number().optional().default(0),
   onsiteAssistanceFee: z.number().optional().default(0),
+  eventSupervisionFee: z.number().optional().default(0),
+  eventSupervisionHours: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
@@ -163,6 +172,9 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   const SATURDAY_RATE = 200;
   const SETUP_TEARDOWN_FEE = 50;
   const ON_SITE_ASSISTANCE_FEE = 35;
+  const EVENT_SUPERVISION_RATE = 30; // $/hr for first-time 40+ attendee bookings
+  const EVENT_SUPERVISION_MAX_HOURS = 4;
+  const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
   const STRIPE_FEE_PERCENTAGE = 3;
 
   let totalHours = 0;
@@ -170,6 +182,8 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   let saturdayCharges = 0;
   let setupTeardownFees = 0;
   let onsiteAssistanceFee = 0;
+  let eventSupervisionFee = 0;
+  let eventSupervisionHours = 0;
 
   bookings.forEach(booking => {
     let hours = parseFloat(booking.hoursRequested) || 0;
@@ -193,6 +207,16 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
       setupTeardownFees += SETUP_TEARDOWN_FEE;
     }
 
+    // Event supervision fee: required on first-time bookings with 40+ attendees.
+    // Supervisor stays the entire event up to a 4-hour cap. On longer events they
+    // cover the first 2hrs and last 2hrs (still billed as 4hrs × $30 = $120).
+    const attendees = parseInt(booking.expectedAttendees, 10) || 0;
+    if (contactInfo.isFirstEvent === true && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
+      const supervisedHours = Math.min(hours, EVENT_SUPERVISION_MAX_HOURS);
+      eventSupervisionFee += supervisedHours * EVENT_SUPERVISION_RATE;
+      eventSupervisionHours += supervisedHours;
+    }
+
     totalHours += hours;
     totalBookings++;
   });
@@ -203,7 +227,7 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   }
 
   const baseAmount = totalHours * HOURLY_RATE;
-  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee;
+  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee;
 
   // Apply promo code discount (server-side validation)
   let promoDiscount = 0;
@@ -239,6 +263,8 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
     saturdayCharges,
     setupTeardownFees,
     onsiteAssistanceFee,
+    eventSupervisionFee,
+    eventSupervisionHours,
     isFirstEvent: contactInfo.isFirstEvent,
     wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
     preDiscountSubtotal,
@@ -255,43 +281,63 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
 // Create booking in database with enhanced fields
 async function createBooking(bookingData) {
   try {
-    const { data, error } = await supabase
+    // Build insert record. The optional columns `expected_attendees` and
+    // `event_supervision_fee` are added to the payload but retried without them
+    // if the DB has not yet been migrated (see migrations/*.sql).
+    const baseRecord = {
+      id: bookingData.id,
+      master_booking_id: bookingData.masterBookingId,
+      event_name: bookingData.eventName,
+      event_type: bookingData.eventType,
+      event_date: bookingData.selectedDate,
+      event_time: bookingData.selectedTime,
+      hours_requested: parseFloat(bookingData.hoursRequested),
+      contact_name: bookingData.contactName,
+      email: bookingData.email,
+      phone: bookingData.phone || '',
+      home_address: bookingData.homeAddress,
+      business_name: bookingData.businessName || '',
+      website_url: bookingData.websiteUrl || '',
+      special_requests: bookingData.specialRequests || '',
+      needs_setup_help: bookingData.needsSetupHelp || false,
+      needs_teardown_help: bookingData.needsTeardownHelp || false,
+      payment_method: bookingData.paymentMethod,
+      total_amount: parseFloat(bookingData.total),
+      subtotal: parseFloat(bookingData.subtotal),
+      stripe_fee: parseFloat(bookingData.stripeFee || 0),
+      saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
+      setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
+      onsite_assistance_fee: parseFloat(bookingData.onsiteAssistanceFee || 0),
+      is_first_event: bookingData.isFirstEvent,
+      wants_onsite_assistance: bookingData.wantsOnsiteAssistance || false,
+      promo_code: bookingData.promoCode || '',
+      promo_discount: parseFloat(bookingData.promoDiscount || 0),
+      status: bookingData.status,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const recordWithNewColumns = {
+      ...baseRecord,
+      expected_attendees: parseInt(bookingData.expectedAttendees, 10) || 0,
+      event_supervision_fee: parseFloat(bookingData.eventSupervisionFee || 0),
+      event_supervision_hours: parseFloat(bookingData.eventSupervisionHours || 0)
+    };
+
+    let { data, error } = await supabase
       .from('bookings')
-      .insert([
-        {
-          id: bookingData.id,
-          master_booking_id: bookingData.masterBookingId,
-          event_name: bookingData.eventName,
-          event_type: bookingData.eventType,
-          event_date: bookingData.selectedDate,
-          event_time: bookingData.selectedTime,
-          hours_requested: parseFloat(bookingData.hoursRequested),
-          contact_name: bookingData.contactName,
-          email: bookingData.email,
-          phone: bookingData.phone || '',
-          home_address: bookingData.homeAddress,
-          business_name: bookingData.businessName || '',
-          website_url: bookingData.websiteUrl || '',
-          special_requests: bookingData.specialRequests || '',
-          needs_setup_help: bookingData.needsSetupHelp || false,
-          needs_teardown_help: bookingData.needsTeardownHelp || false,
-          payment_method: bookingData.paymentMethod,
-          total_amount: parseFloat(bookingData.total),
-          subtotal: parseFloat(bookingData.subtotal),
-          stripe_fee: parseFloat(bookingData.stripeFee || 0),
-          saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
-          setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
-          onsite_assistance_fee: parseFloat(bookingData.onsiteAssistanceFee || 0),
-          is_first_event: bookingData.isFirstEvent,
-          wants_onsite_assistance: bookingData.wantsOnsiteAssistance || false,
-          promo_code: bookingData.promoCode || '',
-          promo_discount: parseFloat(bookingData.promoDiscount || 0),
-          status: bookingData.status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
+      .insert([recordWithNewColumns])
       .select();
+
+    // If the DB hasn't been migrated yet (PGRST204 = column not found),
+    // fall back to the legacy column set so bookings don't fail in production.
+    if (error && (error.code === 'PGRST204' || /column .* does not exist/i.test(error.message || ''))) {
+      console.warn('⚠️ New supervision columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([baseRecord])
+        .select());
+    }
 
     if (error) {
       console.error('❌ Database error:', error);
@@ -367,6 +413,7 @@ async function bookingHandler(request) {
           specialRequests: booking.specialRequests,
           needsSetupHelp: booking.needsSetupHelp,
           needsTeardownHelp: booking.needsTeardownHelp,
+          expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
           phone: validatedData.contactInfo.phone,
@@ -382,6 +429,8 @@ async function bookingHandler(request) {
           saturdayCharges: accuratePricing.saturdayCharges,
           setupTeardownFees: accuratePricing.setupTeardownFees,
           onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
+          eventSupervisionFee: accuratePricing.eventSupervisionFee,
+          eventSupervisionHours: accuratePricing.eventSupervisionHours,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           status: 'pending_payment' // All bookings require payment
