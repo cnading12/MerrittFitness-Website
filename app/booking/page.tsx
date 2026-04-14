@@ -19,7 +19,8 @@ export default function BookingPage() {
     hoursRequested: '',
     specialRequests: '',
     needsSetupHelp: false,
-    needsTeardownHelp: false
+    needsTeardownHelp: false,
+    expectedAttendees: '' // Required: used to determine if on-site event supervision is needed (40+ attendees on first booking)
   }]);
 
   const [formData, setFormData] = useState({
@@ -296,6 +297,16 @@ export default function BookingPage() {
         } else if (booking.selectedTime && !endsBy10PM(booking.selectedTime, booking.hoursRequested)) {
           errors[`booking_${index}_hoursRequested`] = 'All events must end by 10 PM. Please select an earlier start time or shorter duration.';
         }
+        if (!booking.expectedAttendees || booking.expectedAttendees === '') {
+          errors[`booking_${index}_expectedAttendees`] = 'Expected attendee count is required';
+        } else {
+          const attendeeCount = parseInt(booking.expectedAttendees, 10);
+          if (isNaN(attendeeCount) || attendeeCount < 1) {
+            errors[`booking_${index}_expectedAttendees`] = 'Please enter a valid attendee count (1 or more)';
+          } else if (attendeeCount > 130) {
+            errors[`booking_${index}_expectedAttendees`] = 'Maximum capacity is 130 attendees (standing room)';
+          }
+        }
       }
     });
 
@@ -342,6 +353,9 @@ export default function BookingPage() {
   const SATURDAY_RATE = 200; // All Saturday events
   const SETUP_TEARDOWN_FEE = 50; // Per service
   const ON_SITE_ASSISTANCE_FEE = 35; // First-time event or optional add-on
+  const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site event supervisor for first-time bookings with 40+ attendees
+  const EVENT_SUPERVISION_MAX_HOURS = 4; // Cap: supervisor covers first 2hr + last 2hr on events >4hr
+  const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
   const STRIPE_FEE_PERCENTAGE = 3;
 
   const calculatePricing = () => {
@@ -351,6 +365,9 @@ export default function BookingPage() {
     let saturdayCharges = 0;
     let setupTeardownFees = 0;
     let onsiteAssistanceFee = 0;
+    let eventSupervisionFee = 0;
+    let eventSupervisionHours = 0;
+    let eventSupervisionApplies = false;
 
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
@@ -376,6 +393,18 @@ export default function BookingPage() {
           setupTeardownFees += SETUP_TEARDOWN_FEE;
         }
 
+        // Calculate on-site event supervision fee: required when the renter is a
+        // first-time user AND any booking has 40+ expected attendees.
+        // Supervisor covers the full event, capped at 4 hours total. Over 4 hours
+        // they cover the first 2 and last 2 (still billed as 4hrs flat at $30/hr).
+        const attendees = parseInt(booking.expectedAttendees, 10) || 0;
+        if (formData.isFirstEvent === true && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
+          const supervisedHours = Math.min(hours, EVENT_SUPERVISION_MAX_HOURS);
+          eventSupervisionFee += supervisedHours * EVENT_SUPERVISION_RATE;
+          eventSupervisionHours += supervisedHours;
+          eventSupervisionApplies = true;
+        }
+
         totalHours += hours;
         totalBookings++;
       }
@@ -387,7 +416,7 @@ export default function BookingPage() {
     }
 
     const baseAmount = totalHours * HOURLY_RATE;
-    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -415,6 +444,12 @@ export default function BookingPage() {
       saturdayCharges,
       setupTeardownFees,
       onsiteAssistanceFee,
+      eventSupervisionFee,
+      eventSupervisionHours,
+      eventSupervisionApplies,
+      eventSupervisionRate: EVENT_SUPERVISION_RATE,
+      eventSupervisionMaxHours: EVENT_SUPERVISION_MAX_HOURS,
+      eventSupervisionThreshold: EVENT_SUPERVISION_GROUP_THRESHOLD,
       isFirstEvent: formData.isFirstEvent,
       wantsOnsiteAssistance: formData.wantsOnsiteAssistance,
       preDiscountSubtotal,
@@ -441,7 +476,8 @@ export default function BookingPage() {
       hoursRequested: '',
       specialRequests: '',
       needsSetupHelp: false,
-      needsTeardownHelp: false
+      needsTeardownHelp: false,
+      expectedAttendees: ''
     }]);
   };
 
@@ -618,6 +654,10 @@ export default function BookingPage() {
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>First-Time Users:</strong> On-site assistance ($35) is required for all first-time renters to help with wifi, speakers, building access, and any questions. Returning users can optionally add this service.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Large First-Time Events:</strong> First-time bookings with 40 or more attendees include an on-site Event Supervisor at $30/hour (4-hour maximum). For events up to 4 hours, the supervisor stays the entire time. For events longer than 4 hours, the supervisor covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -855,6 +895,44 @@ export default function BookingPage() {
                       {getFieldError(`booking_${index}_hoursRequested`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_hoursRequested`)}</p>
                       )}
+                    </div>
+
+                    {/* Expected Attendees */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                        Expected Attendees *
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={130}
+                        value={booking.expectedAttendees}
+                        onChange={(e) => updateBooking(booking.id, 'expectedAttendees', e.target.value)}
+                        placeholder="e.g., 25"
+                        className={getInputClassName(`booking_${index}_expectedAttendees`)}
+                      />
+                      {getFieldError(`booking_${index}_expectedAttendees`) && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_expectedAttendees`)}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-2">
+                        Venue capacity: 100 seated / 130 standing. First-time bookings with <strong>40+ attendees</strong> include an on-site Event Supervisor (+$30/hr, 4-hour max) to help the event run smoothly.
+                      </p>
+                      {/* Live notice when supervision will apply for this specific booking */}
+                      {formData.isFirstEvent === true &&
+                        parseInt(booking.expectedAttendees, 10) >= 40 &&
+                        booking.hoursRequested && (
+                          <div className="mt-3 bg-teal-50 border border-teal-200 rounded-xl p-3">
+                            <div className="flex items-start gap-2">
+                              <Users className="text-teal-700 mt-0.5 flex-shrink-0" size={16} />
+                              <p className="text-xs text-teal-800">
+                                <strong>On-Site Event Supervisor included for this event.</strong>{' '}
+                                {parseFloat(booking.hoursRequested) <= 4
+                                  ? `A supervisor will be on-site for the full ${booking.hoursRequested}-hour event (+$${(Math.min(parseFloat(booking.hoursRequested), 4) * 30).toFixed(0)}).`
+                                  : `A supervisor will be on-site for the first 2 hours and the last 2 hours of your ${booking.hoursRequested}-hour event (+$120, 4-hour max).`}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                     </div>
 
                     {/* NEW: Setup/Teardown Options */}
@@ -1489,6 +1567,15 @@ export default function BookingPage() {
                   </div>
                 )}
 
+                {pricing.eventSupervisionFee > 0 && (
+                  <div className="flex justify-between text-teal-700">
+                    <span>
+                      Event Supervision ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
+                    </span>
+                    <span>+${pricing.eventSupervisionFee.toFixed(2)}</span>
+                  </div>
+                )}
+
                 {pricing.promoDiscount > 0 && (
                   <div className="flex justify-between text-green-600 border-t pt-2">
                     <span>{pricing.promoDescription}</span>
@@ -1537,6 +1624,14 @@ export default function BookingPage() {
                 <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-blue-800">
                     <strong>ℹ️ Minimums Applied:</strong> 2-hour minimum per single event
+                  </p>
+                </div>
+              )}
+
+              {pricing.eventSupervisionFee > 0 && (
+                <div className="mt-3 text-xs bg-teal-50 border border-teal-200 rounded-lg p-3">
+                  <p className="text-teal-800">
+                    <strong>👥 Event Supervision Included:</strong> Because this is your first booking with {pricing.eventSupervisionThreshold}+ attendees, an on-site supervisor is included at ${pricing.eventSupervisionRate}/hr (4-hour max). For events over 4 hours, they cover the first 2 and last 2 hours.
                   </p>
                 </div>
               )}
