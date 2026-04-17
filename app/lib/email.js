@@ -187,6 +187,14 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #111827;">${booking.business_name}</td>
             </tr>
             ` : ''}
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td>
+              <td style="padding: 8px 0; color: #111827;">
+                ${booking.id_photo_data
+                  ? `Attached to this email (<code>${booking.id_photo_name || 'id-photo'}</code>)`
+                  : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter</span>'}
+              </td>
+            </tr>
           </table>
         </div>
 
@@ -342,6 +350,34 @@ const EMAIL_TEMPLATES = {
 // Delay helper to avoid Resend free-plan rate limits (2 requests/second)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Extract the raw base64 payload from a "data:<mime>;base64,<content>" URL.
+// Returns null if the input isn't a valid data URL so the email still sends.
+function extractBase64FromDataUrl(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== 'string') return null;
+  const commaIndex = dataUrl.indexOf('base64,');
+  if (commaIndex === -1) return null;
+  return dataUrl.slice(commaIndex + 'base64,'.length);
+}
+
+// Build a Resend attachment object from the ID photo columns on a booking row,
+// or null if no photo is present. Resend accepts a `content` base64 string.
+function buildIdPhotoAttachment(booking) {
+  const base64 = extractBase64FromDataUrl(booking?.id_photo_data);
+  if (!base64) return null;
+
+  // Derive a filename with the correct extension when the stored name lacks one.
+  const mime = booking.id_photo_type || 'image/jpeg';
+  const ext = mime.split('/')[1]?.split('+')[0] || 'jpg';
+  const rawName = (booking.id_photo_name || `id-photo-${booking.id}`).trim();
+  const filename = /\.[a-z0-9]+$/i.test(rawName) ? rawName : `${rawName}.${ext}`;
+
+  return {
+    filename,
+    content: base64,
+    contentType: mime
+  };
+}
+
 // Email sending functions
 export async function sendBookingConfirmation(booking) {
   try {
@@ -369,13 +405,23 @@ export async function sendManagerNotification(booking) {
     console.log('📧 Sending manager notification to:', EMAIL_CONFIG.managerEmail, 'and', EMAIL_CONFIG.clientServicesEmail);
 
     const template = EMAIL_TEMPLATES.managerNotification(booking);
+    const idPhotoAttachment = buildIdPhotoAttachment(booking);
 
-    const result = await resend.emails.send({
+    const payload = {
       from: EMAIL_CONFIG.from,
       to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
       replyTo: booking.email,
       ...template
-    });
+    };
+
+    if (idPhotoAttachment) {
+      payload.attachments = [idPhotoAttachment];
+      console.log('📎 Attaching renter ID photo:', idPhotoAttachment.filename);
+    } else {
+      console.warn('⚠️ No ID photo found on booking', booking.id, '- manager email will flag it as missing.');
+    }
+
+    const result = await resend.emails.send(payload);
 
     console.log('✅ Manager notification sent successfully:', result.data?.id);
     return result;

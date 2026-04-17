@@ -38,6 +38,15 @@ export default function BookingPage() {
     wantsOnsiteAssistance: false // Optional: Add on-site assistance if not first event
   });
 
+  // Required government-issued ID photo (base64 data URL + metadata)
+  const [idPhoto, setIdPhoto] = useState<{
+    dataUrl: string;
+    name: string;
+    type: string;
+    size: number;
+  } | null>(null);
+  const ID_PHOTO_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+
   // Promo code state
   const [promoCode, setPromoCode] = useState('');
   const [promoCodeApplied, setPromoCodeApplied] = useState(false);
@@ -244,6 +253,15 @@ export default function BookingPage() {
       errors.homeAddress = 'Home address is required';
     } else if (formData.homeAddress.trim().length < 10) {
       errors.homeAddress = 'Please enter a complete address';
+    }
+
+    // Require a government-issued ID photo
+    if (!idPhoto) {
+      errors.idPhoto = 'A photo of your government-issued ID is required';
+    } else if (!idPhoto.type.startsWith('image/')) {
+      errors.idPhoto = 'ID photo must be an image file (JPG, PNG, HEIC, etc.)';
+    } else if (idPhoto.size > ID_PHOTO_MAX_BYTES) {
+      errors.idPhoto = 'ID photo must be smaller than 8 MB';
     }
 
     // Validate at least one complete booking
@@ -536,6 +554,47 @@ export default function BookingPage() {
     }
   };
 
+  const handleIdPhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setIdPhoto(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setValidationErrors(prev => ({ ...prev, idPhoto: 'Please upload an image file (JPG, PNG, HEIC, etc.)' }));
+      setIdPhoto(null);
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > ID_PHOTO_MAX_BYTES) {
+      setValidationErrors(prev => ({ ...prev, idPhoto: 'ID photo must be smaller than 8 MB' }));
+      setIdPhoto(null);
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setIdPhoto({
+        dataUrl: String(reader.result || ''),
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      if (validationErrors.idPhoto) {
+        const newErrors = { ...validationErrors };
+        delete newErrors.idPhoto;
+        setValidationErrors(newErrors);
+      }
+    };
+    reader.onerror = () => {
+      setValidationErrors(prev => ({ ...prev, idPhoto: 'Failed to read the selected file. Please try again.' }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const pricing = calculatePricing();
 
   const getFieldError = (fieldName) => {
@@ -582,7 +641,13 @@ export default function BookingPage() {
       const submissionData = {
         bookings: validBookings,
         contactInfo: formData,
-        pricing: pricing
+        pricing: pricing,
+        idPhoto: idPhoto ? {
+          dataUrl: idPhoto.dataUrl,
+          name: idPhoto.name,
+          type: idPhoto.type,
+          size: idPhoto.size
+        } : null
       };
 
       console.log('🚀 Submitting booking data:', {
@@ -1072,6 +1137,40 @@ export default function BookingPage() {
                     />
                     {getFieldError('homeAddress') && (
                       <p className="text-red-600 text-sm mt-1">{getFieldError('homeAddress')}</p>
+                    )}
+                  </div>
+
+                  {/* Government-issued ID Photo — required */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                      Photo of Government-Issued ID *
+                    </label>
+                    <p className="text-xs text-[#6b5f5b] mb-2">
+                      Upload a clear photo of your driver's license, state ID, or passport. This is required for all renters and is shared only with the Merritt Wellness team.
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleIdPhotoChange}
+                      className={getInputClassName('idPhoto', 'w-full p-3 border rounded-xl transition-colors bg-white file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-[#735e59] file:text-white file:cursor-pointer')}
+                    />
+                    {idPhoto && (
+                      <div className="mt-2 flex items-center gap-3">
+                        {idPhoto.type.startsWith('image/') && (
+                          <img
+                            src={idPhoto.dataUrl}
+                            alt="ID preview"
+                            className="h-16 w-16 object-cover rounded-lg border border-[#735e59]/30"
+                          />
+                        )}
+                        <div className="text-xs text-[#4a3f3c]">
+                          <div className="font-medium">{idPhoto.name}</div>
+                          <div className="text-[#6b5f5b]">{(idPhoto.size / 1024).toFixed(0)} KB</div>
+                        </div>
+                      </div>
+                    )}
+                    {getFieldError('idPhoto') && (
+                      <p className="text-red-600 text-sm mt-1">{getFieldError('idPhoto')}</p>
                     )}
                   </div>
 
