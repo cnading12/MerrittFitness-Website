@@ -89,8 +89,11 @@ const ContactInfoSchema = z.object({
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
-  paymentMethod: z.literal('card').default('card'), // Only card payments accepted
-  isFirstEvent: z.boolean().nullable(), // Required: Is this their first event?
+  // 'card' for single events (only method supported for one-time checkout).
+  // 'ach' is accepted on recurring applications — monthly auto-debit runs
+  // through Stripe ACH.
+  paymentMethod: z.enum(['card', 'ach']).default('card'),
+  isFirstEvent: z.boolean().nullable().optional(), // Required for single events; ignored for recurring
   wantsOnsiteAssistance: z.boolean().default(false) // Optional: Add on-site assistance if not first event
 });
 
@@ -133,11 +136,56 @@ const IdPhotoSchema = z.object({
 });
 
 const MultipleBookingSchema = z.object({
+  applicationType: z.literal('single').optional(),
   bookings: z.array(IndividualBookingSchema)
     .min(1, 'At least one booking required')
     .max(10, 'Maximum 10 bookings allowed'),
   contactInfo: ContactInfoSchema,
   pricing: PricingSchema,
+  idPhoto: IdPhotoSchema
+});
+
+// Recurring-series application. One row per weekday/time/frequency slot. All
+// slots share the same renter, series name, and event type. Pricing is
+// calculated per-month from the configured slots; the first month is prorated.
+const RecurringSlotSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  startTime: z.string().regex(/^\d{1,2}:\d{2} (AM|PM)$/, 'Invalid time format'),
+  durationHours: z.coerce.number().min(0.5, 'Minimum 0.5 hours').max(12, 'Maximum 12 hours per slot'),
+  frequency: z.enum(['weekly', 'biweekly', 'monthly'])
+});
+
+const RecurringScheduleSchema = z.object({
+  eventName: z.string().min(1, 'Series name is required').max(100, 'Series name too long'),
+  eventType: z.enum([
+    'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
+    'workshop', 'therapy', 'private-event', 'other'
+  ]),
+  expectedAttendees: z.coerce.number().int().min(1).max(130),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  paymentPreference: z.enum(['ach', 'card']).default('ach'),
+  specialRequests: z.string().max(500).optional().default(''),
+  slots: z.array(RecurringSlotSchema).min(1, 'At least one slot required').max(20, 'Too many slots')
+});
+
+const RecurringBookingSchema = z.object({
+  applicationType: z.literal('recurring'),
+  contactInfo: ContactInfoSchema,
+  recurringSchedule: RecurringScheduleSchema,
+  pricing: z.object({
+    weeklyHours: z.number(),
+    monthlyMinHours: z.number(),
+    monthlyMaxHours: z.number(),
+    monthlyMinCharge: z.number(),
+    monthlyMaxCharge: z.number(),
+    firstMonthHours: z.number(),
+    firstMonthCharge: z.number(),
+    firstMonthFee: z.number().optional().default(0),
+    firstMonthTotal: z.number(),
+    hourlyRate: z.number(),
+    paymentPreference: z.enum(['ach', 'card'])
+  }),
   idPhoto: IdPhotoSchema
 });
 
@@ -387,10 +435,162 @@ async function createBooking(bookingData) {
   }
 }
 
+// Serialize a recurring schedule into a single booking row. The `bookings`
+// table stays single-row-per-application: the recurring_pattern column stores
+// the JSON spec so downstream tooling (scheduler, monthly invoicer) can rebuild
+// the occurrence list. ACH setup + Stripe subscription creation is handled
+// separately on the payment page (not in this request).
+async function createRecurringApplication(validatedData) {
+  const { contactInfo, recurringSchedule, pricing, idPhoto } = validatedData;
+  const applicationId = uuidv4();
+  const masterBookingId = applicationId; // Recurring series = one master record.
+
+  const record = {
+    id: applicationId,
+    master_booking_id: masterBookingId,
+    event_name: recurringSchedule.eventName,
+    event_type: recurringSchedule.eventType,
+    // The start date becomes the first billable date; subsequent occurrences
+    // are derived from recurring_pattern when monthly invoicing runs.
+    event_date: recurringSchedule.startDate,
+    event_time: recurringSchedule.slots[0]?.startTime || '',
+    hours_requested: pricing.weeklyHours,
+    contact_name: contactInfo.contactName,
+    email: contactInfo.email,
+    phone: contactInfo.phone || '',
+    home_address: contactInfo.homeAddress,
+    business_name: contactInfo.businessName || '',
+    website_url: contactInfo.websiteUrl || '',
+    special_requests: recurringSchedule.specialRequests || '',
+    needs_setup_help: false,
+    needs_teardown_help: false,
+    payment_method: recurringSchedule.paymentPreference,
+    // First-month prorated charge is due on the 1st after start date.
+    total_amount: pricing.firstMonthTotal,
+    subtotal: pricing.firstMonthCharge,
+    stripe_fee: pricing.firstMonthFee || 0,
+    saturday_charges: 0,
+    setup_teardown_fees: 0,
+    onsite_assistance_fee: 0,
+    is_first_event: null,
+    wants_onsite_assistance: false,
+    promo_code: '',
+    promo_discount: 0,
+    status: 'pending_recurring_setup',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  const withExtendedColumns = {
+    ...record,
+    expected_attendees: recurringSchedule.expectedAttendees,
+    event_supervision_fee: 0,
+    event_supervision_hours: 0,
+    id_photo_data: idPhoto.dataUrl,
+    id_photo_name: idPhoto.name,
+    id_photo_type: idPhoto.type,
+    // Persist the full recurring schedule so the monthly invoicer can
+    // regenerate occurrences and charge the correct hours each month.
+    recurring_details: JSON.stringify({
+      paymentPreference: recurringSchedule.paymentPreference,
+      startDate: recurringSchedule.startDate,
+      endDate: recurringSchedule.endDate || null,
+      slots: recurringSchedule.slots,
+      pricing: {
+        monthlyMinCharge: pricing.monthlyMinCharge,
+        monthlyMaxCharge: pricing.monthlyMaxCharge,
+        weeklyHours: pricing.weeklyHours,
+        hourlyRate: pricing.hourlyRate
+      }
+    })
+  };
+
+  const isMissingColumnError = (err) =>
+    err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+  let { data, error } = await supabase
+    .from('bookings')
+    .insert([withExtendedColumns])
+    .select();
+
+  // Fall back through the same column-dropping cascade as single-event bookings
+  // so applications still land in the DB pre-migration.
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ recurring_details column missing — falling back without it.');
+    const { recurring_details, ...withoutRecurring } = withExtendedColumns;
+    ({ data, error } = await supabase
+      .from('bookings')
+      .insert([withoutRecurring])
+      .select());
+  }
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ ID photo columns missing — falling back.');
+    const { id_photo_data, id_photo_name, id_photo_type, recurring_details, ...trimmed } = withExtendedColumns;
+    ({ data, error } = await supabase
+      .from('bookings')
+      .insert([trimmed])
+      .select());
+  }
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ Supervision columns missing — falling back.');
+    ({ data, error } = await supabase.from('bookings').insert([record]).select());
+  }
+
+  if (error) {
+    console.error('❌ Recurring application insert failed:', error);
+    throw error;
+  }
+  return data[0];
+}
+
 async function bookingHandler(request) {
   try {
     const rawData = await request.json();
     console.log('📝 Booking request received');
+
+    // Route to the recurring path when the client submits an application of
+    // type "recurring". Recurring applications have a materially different
+    // payload shape (slots + schedule vs. concrete dates).
+    if (rawData?.applicationType === 'recurring') {
+      let validatedRecurring;
+      try {
+        validatedRecurring = RecurringBookingSchema.parse(rawData);
+      } catch (validationError) {
+        console.error('❌ Recurring validation failed:', validationError.errors);
+        return Response.json({
+          success: false,
+          error: 'Validation failed',
+          details: validationError.errors,
+          code: 'VALIDATION_ERROR'
+        }, { status: 400 });
+      }
+
+      try {
+        const created = await createRecurringApplication(validatedRecurring);
+        console.log('✅ Recurring application created:', {
+          id: created.id,
+          paymentPreference: validatedRecurring.recurringSchedule.paymentPreference,
+          slots: validatedRecurring.recurringSchedule.slots.length
+        });
+        return Response.json({
+          success: true,
+          id: created.id,
+          masterBookingId: created.master_booking_id,
+          applicationType: 'recurring',
+          paymentPreference: validatedRecurring.recurringSchedule.paymentPreference,
+          firstMonthTotal: validatedRecurring.pricing.firstMonthTotal,
+          message: 'Recurring application created. Proceed to set up auto-pay.'
+        });
+      } catch (error) {
+        console.error('❌ Recurring application creation error:', error);
+        return Response.json({
+          success: false,
+          error: 'Failed to create recurring application',
+          details: error.message,
+          code: 'RECURRING_CREATION_FAILED'
+        }, { status: 500 });
+      }
+    }
 
     // Validate input data
     let validatedData;
