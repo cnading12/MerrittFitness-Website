@@ -1,6 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote } from 'lucide-react';
+
+type ApplicationType = 'single' | 'recurring';
+type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
+type PaymentPreference = 'ach' | 'card';
+
+type RecurringSlot = {
+  id: number;
+  dayOfWeek: number; // 0 = Sunday ... 6 = Saturday
+  startTime: string;
+  durationHours: string;
+  frequency: RecurringFrequency;
+};
+
+const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function BookingPage() {
   const [availableSlots, setAvailableSlots] = useState({});
@@ -9,7 +24,10 @@ export default function BookingPage() {
   const [submitMessage, setSubmitMessage] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Enhanced multiple bookings state
+  // Application type — the very first choice: single event vs. recurring series.
+  const [applicationType, setApplicationType] = useState<ApplicationType>('single');
+
+  // Enhanced multiple bookings state (single-event path)
   const [bookings, setBookings] = useState([{
     id: 1,
     eventName: '',
@@ -22,6 +40,20 @@ export default function BookingPage() {
     needsTeardownHelp: false,
     expectedAttendees: '' // Required: used to determine if on-site event supervision is needed (40+ attendees on first booking)
   }]);
+
+  // Recurring-series state (recurring path)
+  const [recurringDetails, setRecurringDetails] = useState({
+    eventName: '',
+    eventType: '',
+    expectedAttendees: '',
+    startDate: '',
+    endDate: '',
+    paymentPreference: 'ach' as PaymentPreference,
+    specialRequests: ''
+  });
+  const [recurringSlots, setRecurringSlots] = useState<RecurringSlot[]>([
+    { id: 1, dayOfWeek: 3, startTime: '6:00 PM', durationHours: '2', frequency: 'weekly' }
+  ]);
 
   const [formData, setFormData] = useState({
     contactName: '',
@@ -133,6 +165,55 @@ export default function BookingPage() {
     const date = new Date(year, month - 1, day); // month is 0-indexed in JS
     return date.getDay() === 6;
   };
+
+  // Parse "YYYY-MM-DD" into a local Date without timezone drift.
+  const parseLocalDate = (dateString: string): Date | null => {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  // Count how many times a weekday falls within [start, end] inclusive at a
+  // given frequency (weekly, biweekly from the first occurrence, or monthly —
+  // one per calendar month).
+  const countOccurrencesInRange = (
+    dayOfWeek: number,
+    frequency: RecurringFrequency,
+    start: Date,
+    end: Date
+  ): number => {
+    if (start > end) return 0;
+    // Walk to the first matching weekday on/after start.
+    const first = new Date(start);
+    const offset = (dayOfWeek - first.getDay() + 7) % 7;
+    first.setDate(first.getDate() + offset);
+    if (first > end) return 0;
+
+    if (frequency === 'monthly') {
+      let count = 0;
+      const cursor = new Date(first);
+      while (cursor <= end) {
+        count++;
+        // Advance to same weekday next month (first occurrence).
+        const nextMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        const nmOffset = (dayOfWeek - nextMonth.getDay() + 7) % 7;
+        nextMonth.setDate(nextMonth.getDate() + nmOffset);
+        cursor.setTime(nextMonth.getTime());
+      }
+      return count;
+    }
+
+    const step = frequency === 'biweekly' ? 14 : 7;
+    const diffDays = Math.floor((end.getTime() - first.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.floor(diffDays / step) + 1;
+  };
+
+  // First day of the month containing `date`.
+  const firstOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+  // Last day of the month containing `date`.
+  const lastOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
   // Check if booking ends by 10 PM (all events must end by 10 PM)
   const endsBy10PM = (startTime, hoursRequested) => {
@@ -262,6 +343,59 @@ export default function BookingPage() {
       errors.idPhoto = 'ID photo must be an image file (JPG, PNG, HEIC, etc.)';
     } else if (idPhoto.size > ID_PHOTO_MAX_BYTES) {
       errors.idPhoto = 'ID photo must be smaller than 8 MB';
+    }
+
+    // Recurring-path validation short-circuits the per-date booking checks.
+    if (applicationType === 'recurring') {
+      if (!recurringDetails.eventName.trim()) {
+        errors.recurring_eventName = 'Event / series name is required';
+      }
+      if (!recurringDetails.eventType) {
+        errors.recurring_eventType = 'Event type is required';
+      }
+      if (!recurringDetails.startDate) {
+        errors.recurring_startDate = 'Start date is required';
+      } else {
+        const start = parseLocalDate(recurringDetails.startDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (start && start < today) {
+          errors.recurring_startDate = 'Start date cannot be in the past';
+        }
+      }
+      if (recurringDetails.endDate) {
+        const start = parseLocalDate(recurringDetails.startDate);
+        const end = parseLocalDate(recurringDetails.endDate);
+        if (start && end && end < start) {
+          errors.recurring_endDate = 'End date must be on or after the start date';
+        }
+      }
+      if (!recurringDetails.expectedAttendees) {
+        errors.recurring_expectedAttendees = 'Expected attendee count is required';
+      } else {
+        const n = parseInt(recurringDetails.expectedAttendees, 10);
+        if (isNaN(n) || n < 1) {
+          errors.recurring_expectedAttendees = 'Please enter a valid attendee count (1 or more)';
+        } else if (n > 130) {
+          errors.recurring_expectedAttendees = 'Maximum capacity is 130 attendees (standing room)';
+        }
+      }
+      if (recurringSlots.length === 0) {
+        errors.recurring_slots = 'Add at least one recurring slot';
+      }
+      recurringSlots.forEach((slot, idx) => {
+        if (!slot.startTime) {
+          errors[`recurring_slot_${idx}_startTime`] = 'Start time is required';
+        }
+        const duration = parseFloat(slot.durationHours);
+        if (!slot.durationHours || isNaN(duration) || duration < 0.5) {
+          errors[`recurring_slot_${idx}_durationHours`] = 'Duration must be at least 30 minutes';
+        } else if (!endsBy10PM(slot.startTime, slot.durationHours)) {
+          errors[`recurring_slot_${idx}_durationHours`] = 'All events must end by 10 PM';
+        }
+      });
+      setValidationErrors(errors);
+      return Object.keys(errors).length === 0;
     }
 
     // Validate at least one complete booking
@@ -484,6 +618,103 @@ export default function BookingPage() {
     };
   };
 
+  // ===== Recurring schedule helpers =====
+
+  // Weekly hours across the configured slots (a biweekly slot contributes half,
+  // a monthly slot ≈ 1/4.33). Returned as a plain weekly-average.
+  const calculateWeeklyHours = () => {
+    return recurringSlots.reduce((sum, slot) => {
+      const hours = parseFloat(slot.durationHours) || 0;
+      const multiplier = slot.frequency === 'weekly' ? 1 : slot.frequency === 'biweekly' ? 0.5 : 1 / 4.33;
+      return sum + hours * multiplier;
+    }, 0);
+  };
+
+  // Minimum / maximum hours in any calendar month based on how many times each
+  // slot's weekday can appear. A weekly slot shows up 4–5 times per month, a
+  // biweekly slot 2–3 times, a monthly slot exactly once.
+  const calculateMonthlyHourRange = () => {
+    const ranges = recurringSlots.map(slot => {
+      const hours = parseFloat(slot.durationHours) || 0;
+      if (slot.frequency === 'weekly') return { min: hours * 4, max: hours * 5 };
+      if (slot.frequency === 'biweekly') return { min: hours * 2, max: hours * 3 };
+      return { min: hours, max: hours };
+    });
+    return ranges.reduce(
+      (acc, r) => ({ min: acc.min + r.min, max: acc.max + r.max }),
+      { min: 0, max: 0 }
+    );
+  };
+
+  // Hours in the first (possibly partial) month given the renter's start date.
+  const calculateFirstMonthHours = () => {
+    const start = parseLocalDate(recurringDetails.startDate);
+    if (!start) return 0;
+    const end = lastOfMonth(start);
+    return recurringSlots.reduce((sum, slot) => {
+      const occurrences = countOccurrencesInRange(slot.dayOfWeek, slot.frequency, start, end);
+      return sum + occurrences * (parseFloat(slot.durationHours) || 0);
+    }, 0);
+  };
+
+  const calculateRecurringPricing = () => {
+    const weeklyHours = calculateWeeklyHours();
+    const monthlyRange = calculateMonthlyHourRange();
+    const firstMonthHours = calculateFirstMonthHours();
+
+    const monthlyMinCharge = monthlyRange.min * HOURLY_RATE;
+    const monthlyMaxCharge = monthlyRange.max * HOURLY_RATE;
+    const monthlyAvgCharge = (monthlyMinCharge + monthlyMaxCharge) / 2;
+    const firstMonthCharge = firstMonthHours * HOURLY_RATE;
+
+    // ACH avoids the 3% card fee; monthly auto-debit is the recommended default.
+    const firstMonthFee = recurringDetails.paymentPreference === 'card'
+      ? Math.round(firstMonthCharge * (STRIPE_FEE_PERCENTAGE / 100))
+      : 0;
+
+    return {
+      weeklyHours,
+      monthlyMinHours: monthlyRange.min,
+      monthlyMaxHours: monthlyRange.max,
+      monthlyMinCharge,
+      monthlyMaxCharge,
+      monthlyAvgCharge,
+      firstMonthHours,
+      firstMonthCharge,
+      firstMonthFee,
+      firstMonthTotal: firstMonthCharge + firstMonthFee,
+      hourlyRate: HOURLY_RATE,
+      paymentPreference: recurringDetails.paymentPreference
+    };
+  };
+
+  const addRecurringSlot = () => {
+    const newId = Math.max(0, ...recurringSlots.map(s => s.id)) + 1;
+    setRecurringSlots([
+      ...recurringSlots,
+      { id: newId, dayOfWeek: 3, startTime: '6:00 PM', durationHours: '2', frequency: 'weekly' }
+    ]);
+  };
+
+  const removeRecurringSlot = (id: number) => {
+    if (recurringSlots.length > 1) {
+      setRecurringSlots(recurringSlots.filter(s => s.id !== id));
+    }
+  };
+
+  const updateRecurringSlot = (id: number, field: keyof RecurringSlot, value: string | number) => {
+    setRecurringSlots(slots => slots.map(s => (s.id === id ? { ...s, [field]: value } : s)));
+  };
+
+  const updateRecurringDetails = (field: keyof typeof recurringDetails, value: string) => {
+    setRecurringDetails(prev => ({ ...prev, [field]: value }));
+    if (validationErrors[`recurring_${field}`]) {
+      const next = { ...validationErrors };
+      delete next[`recurring_${field}`];
+      setValidationErrors(next);
+    }
+  };
+
   // Multiple booking management functions
   const addBooking = () => {
     const newId = Math.max(...bookings.map(b => b.id)) + 1;
@@ -598,6 +829,7 @@ export default function BookingPage() {
   };
 
   const pricing = calculatePricing();
+  const recurringPricing = calculateRecurringPricing();
 
   const getFieldError = (fieldName) => {
     return validationErrors[fieldName];
@@ -628,34 +860,68 @@ export default function BookingPage() {
     setIsSubmitting(true);
 
     try {
-      const validBookings = bookings.filter(booking =>
-        booking.eventName.trim() &&
-        booking.eventType &&
-        booking.selectedDate &&
-        booking.selectedTime &&
-        booking.hoursRequested
-      );
+      const idPhotoPayload = idPhoto ? {
+        dataUrl: idPhoto.dataUrl,
+        name: idPhoto.name,
+        type: idPhoto.type,
+        size: idPhoto.size
+      } : null;
 
-      if (validBookings.length === 0) {
-        throw new Error('Please complete at least one booking');
+      let submissionData;
+
+      if (applicationType === 'recurring') {
+        const recurringPricing = calculateRecurringPricing();
+        submissionData = {
+          applicationType: 'recurring',
+          contactInfo: {
+            ...formData,
+            isRecurring: true,
+            paymentMethod: recurringDetails.paymentPreference === 'ach' ? 'ach' : 'card'
+          },
+          recurringSchedule: {
+            eventName: recurringDetails.eventName,
+            eventType: recurringDetails.eventType,
+            expectedAttendees: parseInt(recurringDetails.expectedAttendees, 10) || 0,
+            startDate: recurringDetails.startDate,
+            endDate: recurringDetails.endDate || null,
+            paymentPreference: recurringDetails.paymentPreference,
+            specialRequests: recurringDetails.specialRequests,
+            slots: recurringSlots.map(s => ({
+              dayOfWeek: s.dayOfWeek,
+              startTime: s.startTime,
+              durationHours: parseFloat(s.durationHours) || 0,
+              frequency: s.frequency
+            }))
+          },
+          pricing: recurringPricing,
+          idPhoto: idPhotoPayload
+        };
+      } else {
+        const validBookings = bookings.filter(booking =>
+          booking.eventName.trim() &&
+          booking.eventType &&
+          booking.selectedDate &&
+          booking.selectedTime &&
+          booking.hoursRequested
+        );
+
+        if (validBookings.length === 0) {
+          throw new Error('Please complete at least one booking');
+        }
+
+        submissionData = {
+          applicationType: 'single',
+          bookings: validBookings,
+          contactInfo: formData,
+          pricing: pricing,
+          idPhoto: idPhotoPayload
+        };
       }
 
-      const submissionData = {
-        bookings: validBookings,
-        contactInfo: formData,
-        pricing: pricing,
-        idPhoto: idPhoto ? {
-          dataUrl: idPhoto.dataUrl,
-          name: idPhoto.name,
-          type: idPhoto.type,
-          size: idPhoto.size
-        } : null
-      };
-
       console.log('🚀 Submitting booking data:', {
-        bookingCount: validBookings.length,
+        applicationType,
         email: formData.email,
-        paymentMethod: formData.paymentMethod
+        paymentMethod: applicationType === 'recurring' ? recurringDetails.paymentPreference : formData.paymentMethod
       });
 
       const bookingResponse = await fetch('/api/booking-request', {
@@ -670,7 +936,13 @@ export default function BookingPage() {
 
       if (bookingResponse.ok && bookingResult.success) {
         console.log('✅ Booking created successfully:', bookingResult);
-        window.location.href = `/booking/payment?booking_id=${bookingResult.id}`;
+        // Recurring applications skip the single-payment checkout — pass an
+        // `application_type` flag so the payment page can render the ACH
+        // auto-debit setup flow instead of a one-time Stripe charge.
+        const redirect = applicationType === 'recurring'
+          ? `/booking/payment?booking_id=${bookingResult.id}&application_type=recurring`
+          : `/booking/payment?booking_id=${bookingResult.id}`;
+        window.location.href = redirect;
       } else {
         throw new Error(bookingResult.error || 'Failed to create booking');
       }
@@ -774,6 +1046,94 @@ export default function BookingPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Booking Form */}
           <div className="lg:col-span-2">
+            {/* Application Type — first question a renter answers. Drives the
+                rest of the form: a single booking collects specific dates, a
+                recurring series collects weekdays + frequency. */}
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-[#735e59]/10 rounded-xl">
+                  <CalendarDays className="text-[#735e59]" size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">What Are You Booking?</h2>
+                <div className="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
+                  Required
+                </div>
+              </div>
+
+              <p className="text-sm text-[#6b5f5b] mb-4">
+                Choose the type of application that best describes your booking. You can switch between options at any time before submitting.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setApplicationType('single')}
+                  className={`text-left p-5 rounded-2xl border-2 transition-all ${
+                    applicationType === 'single'
+                      ? 'border-[#735e59] bg-[#735e59]/5 shadow-md'
+                      : 'border-[#735e59]/20 bg-white hover:border-[#735e59]/40'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-xl ${applicationType === 'single' ? 'bg-[#735e59] text-white' : 'bg-[#735e59]/10 text-[#735e59]'}`}>
+                      <Calendar size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-[#4a3f3c]">Single Event Booking</span>
+                        <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Default</span>
+                      </div>
+                      <p className="text-sm text-[#6b5f5b]">
+                        Booking one event (can span multiple days). Pay once at checkout — great for workshops, retreats, private events, and one-time classes.
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setApplicationType('recurring')}
+                  className={`text-left p-5 rounded-2xl border-2 transition-all ${
+                    applicationType === 'recurring'
+                      ? 'border-[#735e59] bg-[#735e59]/5 shadow-md'
+                      : 'border-[#735e59]/20 bg-white hover:border-[#735e59]/40'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-xl ${applicationType === 'recurring' ? 'bg-[#735e59] text-white' : 'bg-[#735e59]/10 text-[#735e59]'}`}>
+                      <Repeat size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-[#4a3f3c]">Recurring Events</span>
+                        <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Monthly Auto-Pay</span>
+                      </div>
+                      <p className="text-sm text-[#6b5f5b]">
+                        Classes that repeat on a consistent schedule — e.g. every Wednesday + every other Friday. Billed automatically on the 1st of each month.
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {applicationType === 'recurring' && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start gap-2">
+                    <Info className="text-blue-600 mt-0.5 flex-shrink-0" size={16} />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-medium mb-1">How recurring billing works</p>
+                      <ul className="list-disc list-inside space-y-1 text-blue-800 text-xs">
+                        <li>Charged on the 1st of every month for that month's scheduled hours.</li>
+                        <li>Your first month is prorated — you only pay for occurrences from your start date onward.</li>
+                        <li>Months with an extra week (5 Wednesdays instead of 4) are billed at the higher total — you only ever pay for hours actually scheduled.</li>
+                        <li>Both you and the Merritt Wellness team receive a billing summary at the start of each month.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Public Calendar Section */}
             <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
@@ -795,7 +1155,8 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* Multiple Bookings Section */}
+            {/* Multiple Bookings Section — only for single-event applications. */}
+            {applicationType === 'single' && (
             <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -1061,6 +1422,292 @@ export default function BookingPage() {
                 </div>
               )}
             </div>
+            )}
+
+            {/* Recurring Schedule Section — only for recurring applications. */}
+            {applicationType === 'recurring' && (
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-[#a08b84]/20 rounded-xl">
+                  <Repeat className="text-[#735e59]" size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Recurring Schedule</h2>
+                <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                  Monthly Billing
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    Series / Class Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={recurringDetails.eventName}
+                    onChange={(e) => updateRecurringDetails('eventName', e.target.value)}
+                    placeholder="e.g., Denver Dance Collective"
+                    className={getInputClassName('recurring_eventName')}
+                    maxLength={100}
+                  />
+                  {validationErrors.recurring_eventName && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_eventName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    Event Type *
+                  </label>
+                  <select
+                    value={recurringDetails.eventType}
+                    onChange={(e) => updateRecurringDetails('eventType', e.target.value)}
+                    className={getInputClassName('recurring_eventType')}
+                  >
+                    <option value="">Select a type...</option>
+                    {eventTypes.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                  {validationErrors.recurring_eventType && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_eventType}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    Typical Expected Attendees *
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={130}
+                    value={recurringDetails.expectedAttendees}
+                    onChange={(e) => updateRecurringDetails('expectedAttendees', e.target.value)}
+                    placeholder="e.g., 20"
+                    className={getInputClassName('recurring_expectedAttendees')}
+                  />
+                  {validationErrors.recurring_expectedAttendees && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_expectedAttendees}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={recurringDetails.startDate}
+                    onChange={(e) => updateRecurringDetails('startDate', e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className={getInputClassName('recurring_startDate')}
+                  />
+                  {validationErrors.recurring_startDate && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_startDate}</p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    End Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={recurringDetails.endDate}
+                    onChange={(e) => updateRecurringDetails('endDate', e.target.value)}
+                    min={recurringDetails.startDate || new Date().toISOString().split('T')[0]}
+                    className={getInputClassName('recurring_endDate')}
+                  />
+                  <p className="text-xs text-[#6b5f5b] mt-1">
+                    Leave blank to book indefinitely. You can cancel the auto-pay at any time by contacting us.
+                  </p>
+                  {validationErrors.recurring_endDate && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_endDate}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Slot builder — one row per "every X on day Y at time Z". Users
+                  can stack multiple slots to model schedules like
+                  "every Wed 2hrs + every other Fri 4hrs". */}
+              <div className="border-t border-[#735e59]/10 pt-6 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] font-serif">Weekly Slots</h3>
+                  <button
+                    type="button"
+                    onClick={addRecurringSlot}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#735e59] text-[#f2eee9] rounded-xl hover:bg-[#5a4a46] transition-colors"
+                  >
+                    <Plus size={16} />
+                    Add Slot
+                  </button>
+                </div>
+
+                <p className="text-sm text-[#6b5f5b] mb-4">
+                  Add one row for every repeating time. For example: a slot for "Every Wednesday, 6:00 PM, 2 hours, weekly" and another for "Every Friday, 6:00 PM, 4 hours, every other week".
+                </p>
+
+                {recurringSlots.map((slot, idx) => (
+                  <div key={slot.id} className="border border-[#735e59]/10 rounded-2xl p-4 mb-3 bg-[#faf8f5]/50">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-semibold text-[#4a3f3c]">Slot #{idx + 1}</span>
+                      {recurringSlots.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeRecurringSlot(slot.id)}
+                          className="flex items-center gap-1 px-2 py-1 text-red-600 hover:bg-red-50 rounded-lg text-sm transition-colors"
+                        >
+                          <Minus size={14} />
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a3f3c] mb-1">Day</label>
+                        <select
+                          value={slot.dayOfWeek}
+                          onChange={(e) => updateRecurringSlot(slot.id, 'dayOfWeek', parseInt(e.target.value, 10))}
+                          className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                        >
+                          {DAY_LABELS.map((d, i) => (
+                            <option key={i} value={i}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a3f3c] mb-1">Start Time</label>
+                        <select
+                          value={slot.startTime}
+                          onChange={(e) => updateRecurringSlot(slot.id, 'startTime', e.target.value)}
+                          className={`w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59] ${
+                            validationErrors[`recurring_slot_${idx}_startTime`] ? 'border-red-500' : 'border-[#735e59]/20'
+                          }`}
+                        >
+                          {timeSlots.map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a3f3c] mb-1">Duration (hrs)</label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max="12"
+                          value={slot.durationHours}
+                          onChange={(e) => updateRecurringSlot(slot.id, 'durationHours', e.target.value)}
+                          className={`w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59] ${
+                            validationErrors[`recurring_slot_${idx}_durationHours`] ? 'border-red-500' : 'border-[#735e59]/20'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-[#4a3f3c] mb-1">Frequency</label>
+                        <select
+                          value={slot.frequency}
+                          onChange={(e) => updateRecurringSlot(slot.id, 'frequency', e.target.value as RecurringFrequency)}
+                          className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                        >
+                          <option value="weekly">Every week</option>
+                          <option value="biweekly">Every other week</option>
+                          <option value="monthly">Once a month</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {validationErrors[`recurring_slot_${idx}_durationHours`] && (
+                      <p className="text-red-600 text-xs mt-2">{validationErrors[`recurring_slot_${idx}_durationHours`]}</p>
+                    )}
+
+                    <p className="text-xs text-[#6b5f5b] mt-2">
+                      {`${slot.frequency === 'weekly' ? 'Every' : slot.frequency === 'biweekly' ? 'Every other' : 'Once a month on'} ${DAY_LABELS[slot.dayOfWeek]} at ${slot.startTime} for ${slot.durationHours || '—'} hrs`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                  Special Requests (optional)
+                </label>
+                <textarea
+                  value={recurringDetails.specialRequests}
+                  onChange={(e) => updateRecurringDetails('specialRequests', e.target.value)}
+                  rows={3}
+                  placeholder="Equipment needs, setup requirements, anything we should know about the series..."
+                  className="w-full p-3 border border-[#735e59]/20 rounded-xl focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59] resize-none"
+                  maxLength={500}
+                />
+              </div>
+
+              {/* Payment preference — push ACH because it avoids the monthly 3% fee. */}
+              <div className="border-t border-[#735e59]/10 pt-6 mt-6">
+                <h3 className="text-lg font-semibold text-[#4a3f3c] mb-2 font-serif">Monthly Payment Method</h3>
+                <p className="text-sm text-[#6b5f5b] mb-4">
+                  You'll be auto-charged on the 1st of every month for that month's hours. We strongly recommend ACH auto-debit to avoid the 3% card processing fee on every monthly charge.
+                </p>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => updateRecurringDetails('paymentPreference', 'ach')}
+                    className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                      recurringDetails.paymentPreference === 'ach'
+                        ? 'border-emerald-600 bg-emerald-50 shadow-md'
+                        : 'border-[#735e59]/20 bg-white hover:border-[#735e59]/40'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-xl ${recurringDetails.paymentPreference === 'ach' ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                        <Banknote size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[#4a3f3c]">ACH Auto-Debit</span>
+                          <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">No Fee</span>
+                        </div>
+                        <p className="text-sm text-[#6b5f5b]">
+                          Connect a bank account once. Monthly charges go through with no 3% processing fee. Recommended for recurring renters.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateRecurringDetails('paymentPreference', 'card')}
+                    className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                      recurringDetails.paymentPreference === 'card'
+                        ? 'border-[#735e59] bg-[#735e59]/5 shadow-md'
+                        : 'border-[#735e59]/20 bg-white hover:border-[#735e59]/40'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-xl ${recurringDetails.paymentPreference === 'card' ? 'bg-[#735e59] text-white' : 'bg-[#735e59]/10 text-[#735e59]'}`}>
+                        <CreditCard size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[#4a3f3c]">Credit / Debit Card</span>
+                          <span className="text-xs font-medium bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">+3% Fee</span>
+                        </div>
+                        <p className="text-sm text-[#6b5f5b]">
+                          Card on file, auto-charged monthly. Stripe adds a 3% processing fee on every monthly charge.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            )}
 
             {/* Contact & Payment Section */}
             <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
@@ -1302,7 +1949,10 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                {/* Payment Section - Card Only */}
+                {/* Payment Section — single-event card checkout. Recurring
+                    applications pick ACH or card inside the Recurring Schedule
+                    card above and skip this block. */}
+                {applicationType === 'single' && (
                 <div className="border-t border-[#735e59]/10 pt-6">
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-4 font-serif">Payment</h3>
                   <div className="bg-[#735e59]/5 border-2 border-[#735e59] rounded-2xl p-4">
@@ -1326,6 +1976,7 @@ export default function BookingPage() {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
             </div>
 
@@ -1556,12 +2207,16 @@ export default function BookingPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="animate-spin" size={20} />
-                      Creating Your Booking...
+                      {applicationType === 'recurring' ? 'Submitting Application...' : 'Creating Your Booking...'}
                     </>
                   ) : (
                     <>
-                      <CreditCard size={20} />
-                      Proceed to Secure Payment
+                      {applicationType === 'recurring'
+                        ? <Banknote size={20} />
+                        : <CreditCard size={20} />}
+                      {applicationType === 'recurring'
+                        ? 'Submit Recurring Application'
+                        : 'Proceed to Secure Payment'}
                       <ArrowRight size={20} />
                     </>
                   )}
@@ -1585,9 +2240,10 @@ export default function BookingPage() {
             <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-6 sticky top-24">
               <h3 className="text-lg font-bold text-[#4a3f3c] mb-4 flex items-center font-serif">
                 <DollarSign className="mr-2 text-[#735e59]" size={20} />
-                Pricing Summary
+                {applicationType === 'recurring' ? 'Monthly Billing Estimate' : 'Pricing Summary'}
               </h3>
 
+              {applicationType === 'single' && (
               <div className="mb-4 p-3 bg-[#735e59]/10 rounded-xl">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-[#4a3f3c]">Total Classes</span>
@@ -1597,8 +2253,62 @@ export default function BookingPage() {
                   {pricing.totalHours} total hours • $95/hour base
                 </p>
               </div>
+              )}
 
-              {/* Promo Code Section */}
+              {applicationType === 'recurring' && (
+              <div className="mb-4 space-y-3">
+                <div className="p-3 bg-[#735e59]/10 rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-[#4a3f3c]">Weekly Hours</span>
+                    <span className="text-xl font-bold text-[#735e59]">{recurringPricing.weeklyHours.toFixed(1)}</span>
+                  </div>
+                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${HOURLY_RATE}/hr</p>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#735e59]/10">
+                  <p className="text-sm font-medium text-[#4a3f3c] mb-2">Typical Monthly Charge</p>
+                  <p className="text-sm text-[#6b5f5b]">
+                    ${recurringPricing.monthlyMinCharge.toFixed(0)} – ${recurringPricing.monthlyMaxCharge.toFixed(0)}
+                    <span className="text-xs text-[#a08b84]"> (varies w/ 4 vs 5-week months)</span>
+                  </p>
+                  <p className="text-xs text-[#6b5f5b] mt-1">
+                    {recurringPricing.monthlyMinHours}–{recurringPricing.monthlyMaxHours} hours/month
+                  </p>
+                </div>
+
+                {recurringDetails.startDate && recurringPricing.firstMonthHours > 0 && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <p className="text-sm font-medium text-emerald-900 mb-1">First Month (Prorated)</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-emerald-800">{recurringPricing.firstMonthHours.toFixed(1)} hrs × ${HOURLY_RATE}</span>
+                      <span className="font-bold text-emerald-900">${recurringPricing.firstMonthCharge.toFixed(2)}</span>
+                    </div>
+                    {recurringPricing.firstMonthFee > 0 && (
+                      <p className="text-xs text-orange-700 mt-1">+${recurringPricing.firstMonthFee.toFixed(2)} Stripe fee (card)</p>
+                    )}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-200">
+                      <span className="text-sm font-medium text-emerald-900">Due at start</span>
+                      <span className="font-bold text-emerald-900">${recurringPricing.firstMonthTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+                  <p className="font-medium mb-1">
+                    {recurringPricing.paymentPreference === 'ach' ? '🏦 ACH Auto-Debit Selected' : '💳 Card Auto-Charge Selected'}
+                  </p>
+                  <p className="text-blue-800">
+                    {recurringPricing.paymentPreference === 'ach'
+                      ? 'Charged on the 1st of each month. No processing fees.'
+                      : 'Charged on the 1st of each month. A 3% Stripe fee is added to every charge — switch to ACH to avoid it.'}
+                  </p>
+                </div>
+              </div>
+              )}
+
+              {/* Promo Code Section — single-event only. Recurring pricing is
+                  hour-based monthly with no promo layer. */}
+              {applicationType === 'single' && (
               <div className="mb-4 p-3 bg-[#faf8f5] rounded-xl border border-[#735e59]/10">
                 <div className="flex items-center gap-2 mb-2">
                   <Tag className="text-[#735e59]" size={16} />
@@ -1643,7 +2353,10 @@ export default function BookingPage() {
                   </div>
                 )}
               </div>
+              )}
 
+              {applicationType === 'single' && (
+              <>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
@@ -1738,6 +2451,8 @@ export default function BookingPage() {
                     <strong>👥 Facility Host Included:</strong> Because this is your first booking with {pricing.eventSupervisionThreshold}+ attendees, a Facility Host is included at ${pricing.eventSupervisionRate}/hr (4-hour max). For events over 4 hours, they cover the first 2 and last 2 hours.
                   </p>
                 </div>
+              )}
+              </>
               )}
             </div>
 
