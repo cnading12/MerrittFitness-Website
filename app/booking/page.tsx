@@ -657,7 +657,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Large First-Time Events:</strong> First-time bookings with 40 or more attendees include an on-site Event Supervisor at $30/hour (4-hour maximum). For events up to 4 hours, the supervisor stays the entire time. For events longer than 4 hours, the supervisor covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
+                  <span><strong>Large First-Time Events:</strong> First-time bookings with 40 or more attendees include a Facility Host at $30/hour (4-hour maximum). For events up to 4 hours, the Facility Host stays the entire time. For events longer than 4 hours, the Facility Host covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -915,7 +915,7 @@ export default function BookingPage() {
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_expectedAttendees`)}</p>
                       )}
                       <p className="text-xs text-gray-500 mt-2">
-                        Venue capacity: 100 seated / 130 standing. First-time bookings with <strong>40+ attendees</strong> include an on-site Event Supervisor (+$30/hr, 4-hour max) to help the event run smoothly.
+                        Venue capacity: 100 seated / 130 standing. First-time bookings with <strong>40+ attendees</strong> include a Facility Host (+$30/hr, 4-hour max) to help the event run smoothly.
                       </p>
                       {/* Live notice when supervision will apply for this specific booking */}
                       {formData.isFirstEvent === true &&
@@ -925,10 +925,10 @@ export default function BookingPage() {
                             <div className="flex items-start gap-2">
                               <Users className="text-teal-700 mt-0.5 flex-shrink-0" size={16} />
                               <p className="text-xs text-teal-800">
-                                <strong>On-Site Event Supervisor included for this event.</strong>{' '}
+                                <strong>Facility Host included for this event.</strong>{' '}
                                 {parseFloat(booking.hoursRequested) <= 4
-                                  ? `A supervisor will be on-site for the full ${booking.hoursRequested}-hour event (+$${(Math.min(parseFloat(booking.hoursRequested), 4) * 30).toFixed(0)}).`
-                                  : `A supervisor will be on-site for the first 2 hours and the last 2 hours of your ${booking.hoursRequested}-hour event (+$120, 4-hour max).`}
+                                  ? `A Facility Host will be on-site for the full ${booking.hoursRequested}-hour event (+$${(Math.min(parseFloat(booking.hoursRequested), 4) * 30).toFixed(0)}).`
+                                  : `A Facility Host will be on-site for the first 2 hours and the last 2 hours of your ${booking.hoursRequested}-hour event (+$120, 4-hour max).`}
                               </p>
                             </div>
                           </div>
@@ -1570,7 +1570,7 @@ export default function BookingPage() {
                 {pricing.eventSupervisionFee > 0 && (
                   <div className="flex justify-between text-teal-700">
                     <span>
-                      Event Supervision ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
+                      Facility Host ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
                     </span>
                     <span>+${pricing.eventSupervisionFee.toFixed(2)}</span>
                   </div>
@@ -1631,7 +1631,7 @@ export default function BookingPage() {
               {pricing.eventSupervisionFee > 0 && (
                 <div className="mt-3 text-xs bg-teal-50 border border-teal-200 rounded-lg p-3">
                   <p className="text-teal-800">
-                    <strong>👥 Event Supervision Included:</strong> Because this is your first booking with {pricing.eventSupervisionThreshold}+ attendees, an on-site supervisor is included at ${pricing.eventSupervisionRate}/hr (4-hour max). For events over 4 hours, they cover the first 2 and last 2 hours.
+                    <strong>👥 Facility Host Included:</strong> Because this is your first booking with {pricing.eventSupervisionThreshold}+ attendees, a Facility Host is included at ${pricing.eventSupervisionRate}/hr (4-hour max). For events over 4 hours, they cover the first 2 and last 2 hours.
                   </p>
                 </div>
               )}
