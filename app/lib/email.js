@@ -530,7 +530,207 @@ const EMAIL_TEMPLATES = {
         </div>
       </div>
     `
-  })
+  }),
+
+  // Sent to the renter immediately after the monthly invoicer writes the
+  // upcoming-month invoice item. Tells them what will be billed, when it
+  // will be charged, and against which payment method.
+  monthlyBillingClient: ({ booking, year, month, occurrences, totalHours, amount, hourlyRate, chargeDate, paymentMethod, summaryText }) => {
+    const monthLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const chargeLabel = formatBillingDate(chargeDate);
+    const paymentLabel = paymentMethod === 'ach'
+      ? 'ACH Auto-Debit (bank transfer, no processing fee)'
+      : 'Card on file (3% processing fee)';
+
+    const rowsHtml = occurrences.map((occ) => {
+      const dow = new Date(Date.UTC(
+        Number(occ.date.slice(0, 4)),
+        Number(occ.date.slice(5, 7)) - 1,
+        Number(occ.date.slice(8, 10))
+      )).getUTCDay();
+      const dayName = DAY_LABELS[dow] || '';
+      const pretty = new Date(occ.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC'
+      });
+      return `<tr>
+        <td style="padding: 6px 12px 6px 0; color: #111827;">${pretty}</td>
+        <td style="padding: 6px 0; color: #374151; text-align: right;">${occ.hours} hrs</td>
+      </tr>`;
+    }).join('');
+
+    return {
+      subject: `Your ${monthLabel} invoice — ${booking.event_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #059669; margin: 0; font-size: 24px;">${monthLabel} Invoice Ready</h1>
+              <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
+            </div>
+
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${booking.contact_name},</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
+              Here is your upcoming ${monthLabel} invoice for <strong>${booking.event_name}</strong>. The charge below will appear on your ${paymentMethod === 'ach' ? 'bank' : 'card'} statement shortly after the billing date.
+            </p>
+
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Invoice Summary</h2>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600; width: 55%;">Billing period:</td>
+                  <td style="padding: 6px 0; color: #111827;">${monthLabel}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Total hours:</td>
+                  <td style="padding: 6px 0; color: #111827;">${totalHours} hrs</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
+                  <td style="padding: 6px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Amount due:</td>
+                  <td style="padding: 6px 0; color: #111827; font-weight: 600;">$${Number(amount).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Payment method:</td>
+                  <td style="padding: 6px 0; color: #111827;">${paymentLabel}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Charge date:</td>
+                  <td style="padding: 6px 0; color: #111827;">${chargeLabel}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1f2937; margin: 0 0 10px 0; font-size: 16px;">Scheduled Dates</h3>
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">${summaryText || ''}</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                ${rowsHtml || '<tr><td style="padding: 6px 0; color: #6b7280;">No scheduled dates in this month.</td></tr>'}
+              </table>
+            </div>
+
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #451a03; line-height: 1.6; font-size: 14px;">
+                Need to adjust your schedule, add a date, or cancel? Reply to this email or reach us at clientservices@merrittwellness.net. Changes made before the charge date can be applied to this invoice.
+              </p>
+            </div>
+
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
+              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
+              <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                Booking ID: <strong>${booking.id}</strong><br>
+                Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+  },
+
+  // End-of-run roll-up for the ops team. One table row per booking the cron
+  // touched, separated into Succeeded / Skipped / Failed sections so failures
+  // are impossible to miss.
+  monthlyBillingRollup: ({ year, month, results, durationMs, dryRun }) => {
+    const monthLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+    const money = (n) => `$${Number(n || 0).toFixed(2)}`;
+
+    const renderRow = (r) => `<tr>
+      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.contactName || ''}<br><span style="color: #6b7280; font-size: 12px;">${r.eventName || ''}</span></td>
+      <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.occurrenceCount != null ? r.occurrenceCount : '—'}</td>
+      <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.totalHours != null ? `${r.totalHours} hrs` : '—'}</td>
+      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.amount != null ? money(r.amount) : '—'}</td>
+      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${r.note || ''}</td>
+    </tr>`;
+
+    const tableHead = `<thead><tr>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Client / Series</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Occurrences</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Hours</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Amount</th>
+      <th style="text-align: left; padding: 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Note</th>
+    </tr></thead>`;
+
+    const succeededTotal = results.succeeded.reduce((s, r) => s + Number(r.amount || 0), 0);
+
+    const section = (title, rows, color) => {
+      if (!rows || rows.length === 0) return '';
+      return `<div style="margin: 20px 0;">
+        <h2 style="color: ${color}; margin: 0 0 10px 0; font-size: 18px;">${title} (${rows.length})</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${tableHead}
+          <tbody>${rows.map(renderRow).join('')}</tbody>
+        </table>
+      </div>`;
+    };
+
+    const headerBanner = dryRun
+      ? `<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+           <strong style="color: #92400e;">DRY RUN</strong>
+           <span style="color: #451a03;"> — No Stripe invoice items were created and no client emails were sent.</span>
+         </div>`
+      : '';
+
+    return {
+      subject: `Monthly recurring billing — ${monthLabel}${dryRun ? ' (dry run)' : ''}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h1 style="color: #111827; margin: 0 0 5px 0; font-size: 22px;">Monthly Recurring Billing Roll-Up</h1>
+            <p style="color: #6b7280; margin: 0 0 20px 0;">Billing period: <strong>${monthLabel}</strong></p>
+
+            ${headerBanner}
+
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Succeeded:</td>
+                  <td style="padding: 4px 0; color: #059669; font-weight: 600;">${results.succeeded.length}</td>
+                  <td style="padding: 4px 16px 4px 24px; color: #374151; font-weight: 600;">Skipped:</td>
+                  <td style="padding: 4px 0; color: #d97706; font-weight: 600;">${results.skipped.length}</td>
+                  <td style="padding: 4px 16px 4px 24px; color: #374151; font-weight: 600;">Failed:</td>
+                  <td style="padding: 4px 0; color: #b91c1c; font-weight: 600;">${results.failed.length}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Total billed:</td>
+                  <td style="padding: 4px 0; color: #111827; font-weight: 600;" colspan="5">${money(succeededTotal)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Duration:</td>
+                  <td style="padding: 4px 0; color: #111827;" colspan="5">${durationMs} ms</td>
+                </tr>
+              </table>
+            </div>
+
+            ${section('Succeeded', results.succeeded, '#059669')}
+            ${section('Skipped (idempotent — already billed this month)', results.skipped, '#d97706')}
+            ${section('Failed', results.failed, '#b91c1c')}
+
+            ${results.failed.length > 0 ? `
+            <div style="background: #fee2e2; padding: 16px; border-radius: 8px; margin-top: 20px;">
+              <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">Failure Details</h3>
+              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${r.eventName || r.bookingId}:</strong> ${r.error || 'Unknown error'}</p>`).join('')}
+            </div>
+            ` : ''}
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                Generated by the monthly-recurring-billing cron. A full row is stored in <code>cron_runs</code> for audit.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+  }
 };
 
 // Delay helper to avoid Resend free-plan rate limits (2 requests/second)
@@ -696,6 +896,49 @@ export async function sendRecurringSetupEmails(booking) {
     throw new Error(results.errors.join(', ') || 'Both recurring setup emails failed');
   }
   return results;
+}
+
+// Sent to the renter immediately after the monthly cron creates an invoice
+// item for their upcoming month. Args match the cron's per-booking result
+// shape so the route just forwards its plan object.
+export async function sendMonthlyBillingClientEmail(args) {
+  const { booking } = args;
+  try {
+    console.log('📧 Sending monthly billing client email to:', booking.email);
+    const template = EMAIL_TEMPLATES.monthlyBillingClient(args);
+    const result = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      to: [booking.email],
+      replyTo: EMAIL_CONFIG.clientServicesEmail,
+      ...template
+    });
+    console.log('✅ Monthly billing client email sent:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send monthly billing client email:', error);
+    throw new Error(`Monthly billing client email failed: ${error.message}`);
+  }
+}
+
+// Sent to ops once at the end of each monthly-billing cron run. Bundles the
+// whole run into a single email (table with succeeded / skipped / failed).
+export async function sendMonthlyBillingRollupEmail(args) {
+  try {
+    console.log('📧 Sending monthly billing rollup to team');
+    const template = EMAIL_TEMPLATES.monthlyBillingRollup(args);
+    const result = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
+      ...template
+    });
+    console.log('✅ Monthly billing rollup sent:', result.data?.id);
+    return result;
+  } catch (error) {
+    // The rollup email is informational — don't let a send failure fail the
+    // whole cron run. Log loudly and keep going.
+    console.error('❌ Failed to send monthly billing rollup email:', error);
+    return { error: error.message };
+  }
 }
 
 export async function sendConfirmationEmails(booking) {
