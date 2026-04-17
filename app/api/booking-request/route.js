@@ -120,12 +120,25 @@ const VALID_PROMO_CODES = {
   'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 }
 };
 
+// Required government-issued ID photo. Stored on each booking record and
+// attached to the manager notification email sent after successful payment.
+const ID_PHOTO_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+const IdPhotoSchema = z.object({
+  dataUrl: z.string()
+    .regex(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, 'ID photo must be a base64-encoded image')
+    .refine(val => val.length < Math.ceil(ID_PHOTO_MAX_BYTES * 4 / 3) + 100, 'ID photo must be smaller than 8 MB'),
+  name: z.string().min(1).max(255),
+  type: z.string().regex(/^image\//, 'ID photo must be an image'),
+  size: z.number().int().min(1).max(ID_PHOTO_MAX_BYTES, 'ID photo must be smaller than 8 MB')
+});
+
 const MultipleBookingSchema = z.object({
   bookings: z.array(IndividualBookingSchema)
     .min(1, 'At least one booking required')
     .max(10, 'Maximum 10 bookings allowed'),
   contactInfo: ContactInfoSchema,
-  pricing: PricingSchema
+  pricing: PricingSchema,
+  idPhoto: IdPhotoSchema
 });
 
 // Helper function to check if date is Saturday (timezone-safe)
@@ -324,14 +337,35 @@ async function createBooking(bookingData) {
       event_supervision_hours: parseFloat(bookingData.eventSupervisionHours || 0)
     };
 
+    // ID photo columns are applied on top of the supervision columns. They are
+    // populated from IdPhotoSchema; the dataUrl holds the full "data:image/...;base64,..."
+    // string which the email layer splits apart to attach to manager notifications.
+    const recordWithIdPhoto = {
+      ...recordWithNewColumns,
+      id_photo_data: bookingData.idPhotoDataUrl || null,
+      id_photo_name: bookingData.idPhotoName || null,
+      id_photo_type: bookingData.idPhotoType || null
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithNewColumns])
+      .insert([recordWithIdPhoto])
       .select();
 
-    // If the DB hasn't been migrated yet (PGRST204 = column not found),
-    // fall back to the legacy column set so bookings don't fail in production.
-    if (error && (error.code === 'PGRST204' || /column .* does not exist/i.test(error.message || ''))) {
+    // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
+    // PGRST204 = column not found in Supabase.
+    const isMissingColumnError = (err) =>
+      err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ ID photo columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithNewColumns])
+        .select());
+    }
+
+    if (isMissingColumnError(error)) {
       console.warn('⚠️ New supervision columns missing from DB — falling back. Run the pending migration. Error:', error.message);
       ({ data, error } = await supabase
         .from('bookings')
@@ -433,6 +467,9 @@ async function bookingHandler(request) {
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
+          idPhotoDataUrl: validatedData.idPhoto.dataUrl,
+          idPhotoName: validatedData.idPhoto.name,
+          idPhotoType: validatedData.idPhoto.type,
           status: 'pending_payment' // All bookings require payment
         };
 
