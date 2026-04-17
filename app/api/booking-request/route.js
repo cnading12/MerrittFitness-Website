@@ -234,8 +234,10 @@ function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
     totalBookings++;
   });
 
-  // Calculate on-site assistance fee (first event = required, otherwise optional)
-  if (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance) {
+  // On-site assistance: required for first-time renters with fewer than 40
+  // attendees, optional add-on for returning renters. Mutually exclusive with
+  // the Facility Host — a booking never pays for both.
+  if (eventSupervisionFee === 0 && (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance)) {
     onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
   }
 

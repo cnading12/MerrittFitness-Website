@@ -428,8 +428,10 @@ export default function BookingPage() {
       }
     });
 
-    // Calculate on-site assistance fee (first event = required, otherwise optional)
-    if (formData.isFirstEvent === true || formData.wantsOnsiteAssistance) {
+    // On-site assistance: required for first-time renters with fewer than 40
+    // attendees, optional add-on for returning renters. Mutually exclusive with
+    // the Facility Host — a booking never pays for both.
+    if (!eventSupervisionApplies && (formData.isFirstEvent === true || formData.wantsOnsiteAssistance)) {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
@@ -718,11 +720,11 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>First-Time Users:</strong> On-site assistance ($35) is required for all first-time renters to help with wifi, speakers, building access, and any questions. Returning users can optionally add this service.</span>
+                  <span><strong>First-Time Users (under 40 attendees):</strong> On-site assistance ($35) is required to help with wifi, speakers, building access, and any questions. Returning users can optionally add this service.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Large First-Time Events:</strong> First-time bookings with 40 or more attendees include a Facility Host at $30/hour (4-hour maximum). For events up to 4 hours, the Facility Host stays the entire time. For events longer than 4 hours, the Facility Host covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
+                  <span><strong>Large First-Time Events (40+ attendees):</strong> A Facility Host is required at $30/hour (4-hour maximum) in place of on-site assistance — you are never charged for both. For events up to 4 hours, the Facility Host stays the entire time. For events longer than 4 hours, the Facility Host covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -1244,8 +1246,11 @@ export default function BookingPage() {
                     <p className="text-red-600 text-sm mt-3 ml-11">{validationErrors.isFirstEvent}</p>
                   )}
 
-                  {/* First event info box */}
-                  {formData.isFirstEvent === true && (
+                  {/* First event info box — hidden when any booking has 40+
+                      attendees, since the Facility Host replaces On-Site
+                      Assistance for those events. */}
+                  {formData.isFirstEvent === true &&
+                    !bookings.some(b => parseInt(b.expectedAttendees, 10) >= EVENT_SUPERVISION_GROUP_THRESHOLD) && (
                     <div className="mt-4 ml-11 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                       <div className="flex items-start gap-2">
                         <CheckCircle className="text-emerald-600 mt-0.5 flex-shrink-0" size={16} />
