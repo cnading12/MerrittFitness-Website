@@ -736,6 +736,17 @@ const EMAIL_TEMPLATES = {
 // Delay helper to avoid Resend free-plan rate limits (2 requests/second)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Read the two ops addresses from env at call time (not at module load) so
+// the sender behaves correctly under env-var changes in hot-reloaded dev
+// environments. Returns { manager, clientServices, addrs } where `addrs` is
+// a filtered array suitable for Resend's `to` or `bcc`.
+function getOpsEmails() {
+  const manager = (process.env.OPS_EMAIL_MANAGER || '').trim() || null;
+  const clientServices = (process.env.OPS_EMAIL_CLIENT_SERVICES || '').trim() || null;
+  const addrs = [manager, clientServices].filter(Boolean);
+  return { manager, clientServices, addrs };
+}
+
 // Extract the raw base64 payload from a "data:<mime>;base64,<content>" URL.
 // Returns null if the input isn't a valid data URL so the email still sends.
 function extractBase64FromDataUrl(dataUrl) {
@@ -842,12 +853,25 @@ export async function sendRecurringSetupClient(booking) {
   try {
     console.log('📧 Sending recurring setup confirmation to:', booking.email);
     const template = EMAIL_TEMPLATES.recurringSetupClient(booking);
-    const result = await resend.emails.send({
+
+    // Silently copy ops on every client-facing recurring billing email so
+    // staff see what the client sees without reaching back to the renter.
+    const ops = getOpsEmails();
+    if (ops.addrs.length === 0) {
+      console.warn('⚠️ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — sending recurring setup client email without BCC');
+    } else if (ops.addrs.length === 1) {
+      console.warn(`⚠️ Only one ops email configured — BCCing ${ops.addrs[0]} only on recurring setup client email`);
+    }
+
+    const payload = {
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.clientServicesEmail,
       ...template
-    });
+    };
+    if (ops.addrs.length > 0) payload.bcc = ops.addrs;
+
+    const result = await resend.emails.send(payload);
     console.log('✅ Recurring setup client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -906,12 +930,25 @@ export async function sendMonthlyBillingClientEmail(args) {
   try {
     console.log('📧 Sending monthly billing client email to:', booking.email);
     const template = EMAIL_TEMPLATES.monthlyBillingClient(args);
-    const result = await resend.emails.send({
+
+    // Silently copy ops on every client-facing monthly billing email so
+    // staff see the exact invoice the client received.
+    const ops = getOpsEmails();
+    if (ops.addrs.length === 0) {
+      console.warn('⚠️ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — sending client billing email without BCC');
+    } else if (ops.addrs.length === 1) {
+      console.warn(`⚠️ Only one ops email configured — BCCing ${ops.addrs[0]} only on client billing email`);
+    }
+
+    const payload = {
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.clientServicesEmail,
       ...template
-    });
+    };
+    if (ops.addrs.length > 0) payload.bcc = ops.addrs;
+
+    const result = await resend.emails.send(payload);
     console.log('✅ Monthly billing client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -922,13 +959,24 @@ export async function sendMonthlyBillingClientEmail(args) {
 
 // Sent to ops once at the end of each monthly-billing cron run. Bundles the
 // whole run into a single email (table with succeeded / skipped / failed).
+// Recipients come from the two ops env vars. Both addresses are passed in a
+// single Resend `to: [...]` so it arrives as one thread in both inboxes.
 export async function sendMonthlyBillingRollupEmail(args) {
   try {
-    console.log('📧 Sending monthly billing rollup to team');
+    const ops = getOpsEmails();
+    if (ops.addrs.length === 0) {
+      console.error('❌ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — skipping monthly billing rollup send');
+      return { skipped: true, reason: 'Both ops email env vars missing' };
+    }
+    if (ops.addrs.length === 1) {
+      console.warn(`⚠️ Only one ops email configured — sending rollup to ${ops.addrs[0]} only`);
+    }
+
+    console.log('📧 Sending monthly billing rollup to:', ops.addrs.join(', '));
     const template = EMAIL_TEMPLATES.monthlyBillingRollup(args);
     const result = await resend.emails.send({
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
+      to: ops.addrs,
       ...template
     });
     console.log('✅ Monthly billing rollup sent:', result.data?.id);
