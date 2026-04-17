@@ -12,6 +12,31 @@ const EMAIL_CONFIG = {
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
 
+const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function parseRecurringDetails(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  return raw;
+}
+
+function formatBillingDate(value) {
+  if (!value) return 'TBD';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return 'TBD';
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+  });
+}
+
+function describeSlot(slot) {
+  const day = DAY_LABELS[Number(slot.dayOfWeek)] || 'Day';
+  const freq = slot.frequency === 'weekly' ? 'Every' : slot.frequency === 'biweekly' ? 'Every other' : 'Once a month on';
+  return `${freq} ${day} at ${slot.startTime} for ${slot.durationHours} hrs`;
+}
+
 // Enhanced email templates
 const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking) => ({
@@ -215,6 +240,167 @@ const EMAIL_TEMPLATES = {
       </div>
     `
   }),
+
+  recurringSetupClient: (booking) => {
+    const details = parseRecurringDetails(booking.recurring_details);
+    const slots = details?.slots || [];
+    const hourlyRate = details?.hourlyRate || details?.pricing?.hourlyRate || 95;
+    const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
+    const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
+    const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
+    const firstBillingDate = formatBillingDate(details?.firstBillingDate);
+    const startDate = details?.startDate || booking.event_date;
+    const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
+
+    return {
+      subject: `Recurring booking confirmed: ${booking.event_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #059669; margin: 0; font-size: 24px;">Recurring Booking Confirmed</h1>
+              <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
+            </div>
+
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${booking.contact_name},</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
+              Your recurring rental for <strong>${booking.event_name}</strong> is all set. Your payment method is on file and we will auto-charge on the first of each month going forward.
+            </p>
+
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Billing Details</h2>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 55%;">Start date:</td>
+                  <td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td>
+                  <td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td>
+                  <td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td>
+                  <td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td>
+                  <td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit (no fee)' : 'Card (3% processing fee)'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
+                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr</td>
+                </tr>
+              </table>
+            </div>
+
+            ${slots.length ? `
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1f2937; margin: 0 0 10px 0; font-size: 16px;">Your Recurring Schedule</h3>
+              <ul style="margin: 0; padding-left: 20px; color: #374151; line-height: 1.8;">
+                ${slots.map(s => `<li>${describeSlot(s)}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">Note on Monthly Totals</h3>
+              <p style="margin: 0; color: #451a03; line-height: 1.6;">
+                Each month's total will vary based on the actual number of occurrences in that month. Weekly slots typically land 4–5 times per month, biweekly slots 2–3 times, and monthly slots once. The base monthly estimate above reflects the expected range.
+              </p>
+            </div>
+
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
+              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
+              <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                Booking ID: <strong>${booking.id}</strong><br>
+                Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+  },
+
+  recurringSetupManager: (booking) => {
+    const details = parseRecurringDetails(booking.recurring_details);
+    const slots = details?.slots || [];
+    const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
+    const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
+    const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
+    const firstBillingDate = formatBillingDate(details?.firstBillingDate);
+    const startDate = details?.startDate || booking.event_date;
+    const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
+
+    return {
+      subject: `New recurring booking: ${booking.event_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #1e40af; margin: 0 0 10px 0;">New Recurring Booking</h2>
+            <p style="color: #1e3a8a; margin: 0;">A new recurring series is active at Historic Merritt Wellness. Auto-debit is set up and the first invoice will close on ${firstBillingDate}.</p>
+          </div>
+
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0;">Series Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Series:</td><td style="padding: 8px 0; color: #111827;">${booking.event_name}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td><td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${booking.event_type?.replace('-', ' ') || ''}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Start date:</td><td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td><td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td><td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td><td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td><td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit' : 'Card (3% fee)'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Expected attendees:</td><td style="padding: 8px 0; color: #111827;">${booking.expected_attendees || 'n/a'}</td></tr>
+            </table>
+          </div>
+
+          ${slots.length ? `
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #0369a1; margin: 0 0 10px 0;">Recurring Slots</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #0c4a6e; line-height: 1.8;">
+              ${slots.map(s => `<li>${describeSlot(s)}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #059669; margin: 0 0 15px 0;">Renter Information</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Name:</td><td style="padding: 8px 0; color: #111827;">${booking.contact_name}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${booking.email}" style="color: #059669; text-decoration: none;">${booking.email}</a></td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td><td style="padding: 8px 0; color: #111827;">${booking.phone || 'Not provided'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td><td style="padding: 8px 0; color: #111827;">${booking.home_address || 'Not provided'}</td></tr>
+              ${booking.business_name ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td><td style="padding: 8px 0; color: #111827;">${booking.business_name}</td></tr>` : ''}
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td><td style="padding: 8px 0; color: #111827;">${booking.id_photo_data ? `Attached (<code>${booking.id_photo_name || 'id-photo'}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter</span>'}</td></tr>
+            </table>
+          </div>
+
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #0369a1; margin: 0 0 10px 0;">Stripe References</h3>
+            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Booking ID:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
+            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Subscription:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.stripe_subscription_id || 'pending'}</code></p>
+            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Customer:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.stripe_customer_id || 'pending'}</code></p>
+          </div>
+
+          <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #451a03; font-size: 14px;">
+              Monthly totals will vary based on actual occurrences. The next-PR monthly cron job will write invoice items against this subscription.
+            </p>
+          </div>
+        </div>
+      `,
+    };
+  },
 
   clientOnboarding: (booking) => ({
     subject: `Welcome to Merritt Wellness — Important Info for Your Upcoming Event`,
@@ -450,6 +636,66 @@ export async function sendClientOnboarding(booking) {
     console.error('❌ Failed to send client onboarding email:', error);
     throw new Error(`Client onboarding email failed: ${error.message}`);
   }
+}
+
+export async function sendRecurringSetupClient(booking) {
+  try {
+    console.log('📧 Sending recurring setup confirmation to:', booking.email);
+    const template = EMAIL_TEMPLATES.recurringSetupClient(booking);
+    const result = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      to: [booking.email],
+      replyTo: EMAIL_CONFIG.clientServicesEmail,
+      ...template
+    });
+    console.log('✅ Recurring setup client email sent:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send recurring setup client email:', error);
+    throw new Error(`Recurring setup client email failed: ${error.message}`);
+  }
+}
+
+export async function sendRecurringSetupManager(booking) {
+  try {
+    console.log('📧 Sending recurring setup manager notification');
+    const template = EMAIL_TEMPLATES.recurringSetupManager(booking);
+    const idPhotoAttachment = buildIdPhotoAttachment(booking);
+    const payload = {
+      from: EMAIL_CONFIG.from,
+      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
+      replyTo: booking.email,
+      ...template
+    };
+    if (idPhotoAttachment) {
+      payload.attachments = [idPhotoAttachment];
+    }
+    const result = await resend.emails.send(payload);
+    console.log('✅ Recurring setup manager email sent:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send recurring setup manager email:', error);
+    throw new Error(`Recurring setup manager email failed: ${error.message}`);
+  }
+}
+
+export async function sendRecurringSetupEmails(booking) {
+  const results = { clientEmail: null, managerEmail: null, errors: [] };
+  try {
+    results.clientEmail = await sendRecurringSetupClient(booking);
+  } catch (error) {
+    results.errors.push(`Client email failed: ${error.message}`);
+  }
+  await delay(1000);
+  try {
+    results.managerEmail = await sendRecurringSetupManager(booking);
+  } catch (error) {
+    results.errors.push(`Manager email failed: ${error.message}`);
+  }
+  if (!results.clientEmail && !results.managerEmail) {
+    throw new Error(results.errors.join(', ') || 'Both recurring setup emails failed');
+  }
+  return results;
 }
 
 export async function sendConfirmationEmails(booking) {
