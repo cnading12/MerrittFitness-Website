@@ -2,11 +2,14 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import SecurePaymentFlow from '../../../components/payment/SecurePaymentFlow';
+import RecurringPaymentSetup from '../../../components/payment/RecurringPaymentSetup';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 function PaymentPageContent() {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get('booking_id');
+  const applicationType = searchParams.get('application_type');
+  const isRecurring = applicationType === 'recurring';
   const [bookingExists, setBookingExists] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -77,13 +80,19 @@ function PaymentPageContent() {
     <main className="pt-48 pb-20 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Complete Your Payment</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            {isRecurring ? 'Set Up Monthly Auto-Pay' : 'Complete Your Payment'}
+          </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            You're just one step away from confirming your booking at our historic wellness sanctuary.
+            {isRecurring
+              ? 'Connect your bank (recommended — no fee) or card to authorize monthly charges for your recurring series.'
+              : "You're just one step away from confirming your booking at our historic wellness sanctuary."}
           </p>
         </div>
-        
-        <SecurePaymentFlow bookingId={bookingId} />
+
+        {isRecurring
+          ? <RecurringPaymentSetup bookingId={bookingId} />
+          : <SecurePaymentFlow bookingId={bookingId} />}
       </div>
     </main>
   );

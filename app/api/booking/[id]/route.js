@@ -66,7 +66,13 @@ export async function GET(request, context) {
       created_at: booking.created_at,
       updated_at: booking.updated_at,
       payment_intent_id: booking.payment_intent_id,
-      calendar_event_id: booking.calendar_event_id
+      calendar_event_id: booking.calendar_event_id,
+      // Recurring-series fields (null for single-event bookings).
+      recurring_details: booking.recurring_details ?? null,
+      stripe_subscription_id: booking.stripe_subscription_id ?? null,
+      stripe_customer_id: booking.stripe_customer_id ?? null,
+      pending_recurring_setup: booking.pending_recurring_setup ?? null,
+      master_booking_id: booking.master_booking_id ?? null
     });
     
   } catch (error) {

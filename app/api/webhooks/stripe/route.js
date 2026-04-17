@@ -4,7 +4,8 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { createCalendarEvent } from '../../../lib/calendar.js';
-import { sendConfirmationEmails } from '../../../lib/email.js';
+import { sendConfirmationEmails, sendRecurringSetupEmails } from '../../../lib/email.js';
+import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -103,7 +104,12 @@ export async function POST(request) {
         console.log('⏳ [WEBHOOK] Processing payment processing status...');
         await handlePaymentProcessing(event.data.object);
         break;
-        
+
+      case 'setup_intent.succeeded':
+        console.log('🏦 [WEBHOOK] Processing setup intent success...');
+        await handleSetupIntentSucceeded(event.data.object);
+        break;
+
       default:
         console.log('ℹ️ [WEBHOOK] Unhandled event type:', event.type);
         return Response.json({ 
@@ -435,6 +441,45 @@ async function handlePaymentProcessing(paymentIntent) {
   } catch (error) {
     console.error('❌ [WEBHOOK] Failed to update booking status:', error);
     throw error;
+  }
+}
+
+// Safety net for recurring bookings: if the client-side finalize call fails
+// (tab closed, network drop, ACH processing delay), this webhook re-runs the
+// same idempotent subscription-creation helper. Only acts on SetupIntents
+// tagged with applicationType=recurring so ad-hoc SetupIntents are ignored.
+async function handleSetupIntentSucceeded(setupIntent) {
+  const { bookingId, applicationType } = setupIntent.metadata || {};
+
+  if (applicationType !== 'recurring') {
+    console.log('ℹ️ [WEBHOOK] Non-recurring SetupIntent, ignoring.');
+    return;
+  }
+
+  if (!bookingId) {
+    console.error('❌ [WEBHOOK] Recurring SetupIntent missing bookingId metadata');
+    throw new Error('Missing bookingId in recurring SetupIntent metadata');
+  }
+
+  console.log('🔁 [WEBHOOK] Finalizing recurring setup for booking:', bookingId);
+
+  const { booking, alreadyDone } = await finalizeRecurringSetup({
+    bookingId,
+    setupIntentId: setupIntent.id,
+  });
+
+  if (alreadyDone) {
+    console.log('✅ [WEBHOOK] Recurring setup already complete — no action taken.');
+    return;
+  }
+
+  console.log('✅ [WEBHOOK] Recurring subscription created via webhook safety net');
+
+  try {
+    await sendRecurringSetupEmails(booking);
+    console.log('📧 [WEBHOOK] Recurring setup emails sent');
+  } catch (err) {
+    console.error('⚠️ [WEBHOOK] Recurring setup emails failed:', err.message);
   }
 }
 
