@@ -296,6 +296,21 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ MAY 2026 ============
+  {
+    id: "soften-unwind-yin-massage-sound-bath-may-2026",
+    title: "Soften & Unwind: A Restorative Evening",
+    date: "2026-05-21",
+    time: "7:00 PM",
+    endTime: "8:30 PM",
+    description: "Join us for a special event designed to calm your nervous system and invite deep relaxation. Hosted by Anissa M. Cordova, PhD (Psychotherapist, Emotional Resilience Coach, Sound Bath Facilitator) and Courtney Greth, LMT (End-of-Life Doula, Reiki Practitioner, Biodynamic Craniosacral Therapist). Courtney will guide gentle yin yoga, with optional individualized massage offered to a limited number of participants. The evening will flow into a soothing sound bath led by Anissa, with reiki gently woven throughout to support your rest.",
+    imageUrl: "/images/events/yoga/May 21 Yin Massage Sound Bath.jpg",
+    imageFit: "contain",
+    ticketUrl: "https://www.recentertherapeuticmassage.com",
+    ticketLabel: "Reserve Your Spot",
+    practitionerName: "Anissa M. Cordova & Courtney Greth"
+  },
+
   // ============ APRIL 2026 ============
   {
     id: "holosomatic-breathwork-apr-2026",
