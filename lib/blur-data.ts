@@ -9,7 +9,6 @@ export const blurDataMap: Record<string, string> = {
   "/images/events/art/Karen-4.webp": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAACwAQCdASoKAAgABUB8JaACdADum36AAMwQQjrZkjAQY5yN9luw2kuE9880+eSgAAA=",
   "/images/events/art/hero-2.webp": "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAADQAQCdASoKAAcABUB8JagCdAEO10TLQADJbBf6XZtG8fjWMQAVwc9mLfhNFCFYOvj0iiAAAAA=",
   "/images/events/art/hero.webp": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADwAQCdASoKAAgABUB8JagCdAD0Y3P4/5YA/Kdn59XWsNUV3GQ964OetxYtVl1W1wqf+2fMKVJ+rvNNuAA=",
-  "/images/events/community/Grit-Collage.webp": "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAACwAQCdASoIAAoABUB8JZQAApyhm1LAAP51zpfndx7EV3dggIEZZwEK58kgKobGqHAAAA==",
   "/images/events/community/Qualchata.webp": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAADQAQCdASoIAAoABUB8JQBOgBuCTNJWAAD8YJyaeZ3R8Rj9iUtwb6Y8sisifv/V01t7T7xjWp4AAA==",
   "/images/events/community/Terri-Event.JPG": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoHAAoABUB8JYgC7AEOZk4JygAA4Bk0axIXlGZUB7qiN13QwN0R8WvNCvxfgAAA",
   "/images/events/community/breathwork.webp": "data:image/webp;base64,UklGRjQAAABXRUJQVlA4ICgAAACwAQCdASoIAAoABUB8JYwAAuYa/9bYAPKPyEGfS5U4Do05wPGIcUAA",
