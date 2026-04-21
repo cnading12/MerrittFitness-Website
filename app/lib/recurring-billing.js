@@ -136,6 +136,14 @@ export async function finalizeRecurringSetup({ bookingId, setupIntentId }) {
   const startDate =
     details?.startDate || details?.start_date || booking.event_date || null;
   const firstMonthCharge = Number(booking.subtotal) || 0; // set at intake: prorated first-month amount
+  // Full-month prepaid deposit collected at setup and applied to the final
+  // month of service. Falls back to monthlyMaxCharge if the explicit value
+  // wasn't persisted (pre-deploy records).
+  const lastMonthCharge =
+    Number(details?.pricing?.lastMonthCharge) ||
+    Number(details?.lastMonthCharge) ||
+    Number(details?.pricing?.monthlyMaxCharge) ||
+    0;
 
   const zeroPrice = await getOrCreateZeroMonthlyPrice();
   const billingAnchor = nextFirstOfMonthUnix();
@@ -177,6 +185,22 @@ export async function finalizeRecurringSetup({ bookingId, setupIntentId }) {
     });
   }
 
+  // Last-month prepaid deposit — charged at setup alongside the prorated
+  // first month, applied as a credit against the final month of service.
+  if (lastMonthCharge > 0) {
+    await stripe.invoiceItems.create({
+      customer: customerId,
+      subscription: subscription.id,
+      amount: Math.round(lastMonthCharge * 100),
+      currency: 'usd',
+      description: 'Last-month prepaid deposit (applied to final month of membership)',
+      metadata: {
+        bookingId: booking.id,
+        kind: 'last_month_prepaid',
+      },
+    });
+  }
+
   const billingAnchorIso = new Date(billingAnchor * 1000).toISOString();
 
   // Merge our newly-computed billing context into whatever recurring_details
@@ -191,6 +215,7 @@ export async function finalizeRecurringSetup({ bookingId, setupIntentId }) {
     monthlyMaxCharge: details?.pricing?.monthlyMaxCharge ?? null,
     weeklyHours: details?.pricing?.weeklyHours ?? null,
     firstMonthCharge,
+    lastMonthCharge,
     firstBillingDate: billingAnchorIso,
     paymentMethod: setupIntent.metadata?.paymentMethod || booking.payment_method || 'ach',
   };

@@ -183,6 +183,10 @@ const RecurringBookingSchema = z.object({
     firstMonthCharge: z.number(),
     firstMonthFee: z.number().optional().default(0),
     firstMonthTotal: z.number(),
+    lastMonthCharge: z.number().optional().default(0),
+    lastMonthFee: z.number().optional().default(0),
+    lastMonthTotal: z.number().optional().default(0),
+    dueAtStart: z.number().optional().default(0),
     hourlyRate: z.number(),
     paymentPreference: z.enum(['ach', 'card'])
   }),
@@ -465,8 +469,14 @@ async function createRecurringApplication(validatedData) {
     needs_setup_help: false,
     needs_teardown_help: false,
     payment_method: recurringSchedule.paymentPreference,
-    // First-month prorated charge is due on the 1st after start date.
-    total_amount: pricing.firstMonthTotal,
+    // First prorated month + full last month (prepaid deposit) are both due at
+    // setup and collected on the first subscription invoice. The `subtotal` /
+    // `stripe_fee` columns track the prorated first month specifically (used
+    // by recurring-billing to create that invoice line); `total_amount` is the
+    // full amount the customer authorizes at setup.
+    total_amount: (pricing.dueAtStart && pricing.dueAtStart > 0)
+      ? pricing.dueAtStart
+      : pricing.firstMonthTotal + (pricing.lastMonthTotal || 0),
     subtotal: pricing.firstMonthCharge,
     stripe_fee: pricing.firstMonthFee || 0,
     saturday_charges: 0,
@@ -500,7 +510,14 @@ async function createRecurringApplication(validatedData) {
         monthlyMinCharge: pricing.monthlyMinCharge,
         monthlyMaxCharge: pricing.monthlyMaxCharge,
         weeklyHours: pricing.weeklyHours,
-        hourlyRate: pricing.hourlyRate
+        hourlyRate: pricing.hourlyRate,
+        firstMonthCharge: pricing.firstMonthCharge,
+        firstMonthFee: pricing.firstMonthFee || 0,
+        lastMonthCharge: pricing.lastMonthCharge || 0,
+        lastMonthFee: pricing.lastMonthFee || 0,
+        dueAtStart: (pricing.dueAtStart && pricing.dueAtStart > 0)
+          ? pricing.dueAtStart
+          : pricing.firstMonthTotal + (pricing.lastMonthTotal || 0)
       }
     })
   };

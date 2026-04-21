@@ -666,11 +666,21 @@ export default function BookingPage() {
     const monthlyMaxCharge = monthlyRange.max * HOURLY_RATE;
     const monthlyAvgCharge = (monthlyMinCharge + monthlyMaxCharge) / 2;
     const firstMonthCharge = firstMonthHours * HOURLY_RATE;
+    // Last month is prepaid in full at setup and applied against the final
+    // month of service. Use the max (5-week) monthly charge so the deposit
+    // covers any actual final month, regardless of how the calendar falls.
+    const lastMonthCharge = monthlyMaxCharge;
 
     // ACH avoids the 3% card fee; monthly auto-debit is the recommended default.
     const firstMonthFee = recurringDetails.paymentPreference === 'card'
       ? Math.round(firstMonthCharge * (STRIPE_FEE_PERCENTAGE / 100))
       : 0;
+    const lastMonthFee = recurringDetails.paymentPreference === 'card'
+      ? Math.round(lastMonthCharge * (STRIPE_FEE_PERCENTAGE / 100))
+      : 0;
+
+    const firstMonthTotal = firstMonthCharge + firstMonthFee;
+    const lastMonthTotal = lastMonthCharge + lastMonthFee;
 
     return {
       weeklyHours,
@@ -682,7 +692,11 @@ export default function BookingPage() {
       firstMonthHours,
       firstMonthCharge,
       firstMonthFee,
-      firstMonthTotal: firstMonthCharge + firstMonthFee,
+      firstMonthTotal,
+      lastMonthCharge,
+      lastMonthFee,
+      lastMonthTotal,
+      dueAtStart: firstMonthTotal + lastMonthTotal,
       hourlyRate: HOURLY_RATE,
       paymentPreference: recurringDetails.paymentPreference
     };
@@ -2286,9 +2300,19 @@ export default function BookingPage() {
                     {recurringPricing.firstMonthFee > 0 && (
                       <p className="text-xs text-orange-700 mt-1">+${recurringPricing.firstMonthFee.toFixed(2)} Stripe fee (card)</p>
                     )}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-emerald-200">
-                      <span className="text-sm font-medium text-emerald-900">Due at start</span>
-                      <span className="font-bold text-emerald-900">${recurringPricing.firstMonthTotal.toFixed(2)}</span>
+                    <div className="mt-3 pt-3 border-t border-emerald-200">
+                      <p className="text-sm font-medium text-emerald-900 mb-1">Last Month (Prepaid)</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-emerald-800">Applied to final month of service</span>
+                        <span className="font-bold text-emerald-900">${recurringPricing.lastMonthCharge.toFixed(2)}</span>
+                      </div>
+                      {recurringPricing.lastMonthFee > 0 && (
+                        <p className="text-xs text-orange-700 mt-1">+${recurringPricing.lastMonthFee.toFixed(2)} Stripe fee (card)</p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-emerald-300">
+                      <span className="text-sm font-semibold text-emerald-900">Due at start</span>
+                      <span className="font-bold text-emerald-900">${recurringPricing.dueAtStart.toFixed(2)}</span>
                     </div>
                   </div>
                 )}

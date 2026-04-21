@@ -156,6 +156,12 @@ export default function RecurringPaymentSetup({ bookingId }) {
   const monthlyMax = details?.pricing?.monthlyMaxCharge ?? details?.monthlyMaxCharge;
   const hourlyRate = details?.pricing?.hourlyRate ?? details?.hourlyRate ?? 95;
   const firstMonthCharge = Number(booking.subtotal ?? 0);
+  const lastMonthCharge = Number(
+    details?.pricing?.lastMonthCharge ?? details?.lastMonthCharge ?? monthlyMax ?? 0
+  );
+  const dueAtStart = Number(
+    details?.pricing?.dueAtStart ?? booking.total_amount ?? (firstMonthCharge + lastMonthCharge)
+  );
   const startDate = details?.startDate || booking.event_date;
 
   return (
@@ -223,8 +229,10 @@ export default function RecurringPaymentSetup({ bookingId }) {
           <div className="flex items-start gap-2 p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
             <Info className="text-blue-600 flex-shrink-0 mt-0.5" size={16} />
             <p className="text-sm text-blue-900">
-              You'll only be charged <strong>${firstMonthCharge.toFixed(2)}</strong> for your first
-              (partial) month, invoiced on {formatDate(details?.firstBillingDate || startDate)}. After
+              You'll be charged <strong>${dueAtStart.toFixed(2)}</strong> at setup —
+              <strong> ${firstMonthCharge.toFixed(2)}</strong> for your first (prorated) month
+              plus <strong>${lastMonthCharge.toFixed(2)}</strong> prepaid for your last month of
+              membership. Invoiced on {formatDate(details?.firstBillingDate || startDate)}. After
               that, we auto-charge on the first of each month for the previous month's hours.
             </p>
           </div>
@@ -335,11 +343,20 @@ export default function RecurringPaymentSetup({ bookingId }) {
               </div>
             )}
             <div className="flex justify-between pt-2 border-t border-gray-100">
-              <span className="font-medium text-gray-900">First-month charge</span>
-              <span className="font-bold text-gray-900">${firstMonthCharge.toFixed(2)}</span>
+              <span className="text-gray-600">First month (prorated)</span>
+              <span className="text-gray-900">${firstMonthCharge.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Last month (prepaid)</span>
+              <span className="text-gray-900">${lastMonthCharge.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-gray-200">
+              <span className="font-medium text-gray-900">Due at setup</span>
+              <span className="font-bold text-gray-900">${dueAtStart.toFixed(2)}</span>
             </div>
             <p className="text-xs text-gray-500">
-              Prorated for partial first month. Subsequent months vary based on actual occurrences.
+              First month is prorated from your start date. Last month is a prepaid deposit applied
+              to the final month of service. Subsequent months vary based on actual occurrences.
             </p>
           </div>
         </div>

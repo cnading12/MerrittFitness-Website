@@ -248,6 +248,10 @@ const EMAIL_TEMPLATES = {
     const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
     const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
     const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
+    const lastMonthCharge = Number(
+      details?.lastMonthCharge ?? details?.pricing?.lastMonthCharge ?? 0
+    );
+    const dueAtSetup = firstMonthCharge + lastMonthCharge;
     const firstBillingDate = formatBillingDate(details?.firstBillingDate);
     const startDate = details?.startDate || booking.event_date;
     const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
@@ -282,6 +286,16 @@ const EMAIL_TEMPLATES = {
                   <td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td>
                   <td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td>
                 </tr>
+                ${lastMonthCharge > 0 ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Last-month prepaid deposit:</td>
+                  <td style="padding: 8px 0; color: #111827;">$${lastMonthCharge.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #374151; font-weight: 700; border-top: 1px solid #d1fae5;">Total due at setup:</td>
+                  <td style="padding: 8px 0; color: #111827; font-weight: 700; border-top: 1px solid #d1fae5;">$${dueAtSetup.toFixed(2)}</td>
+                </tr>
+                ` : ''}
                 <tr>
                   <td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td>
                   <td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td>
@@ -337,6 +351,10 @@ const EMAIL_TEMPLATES = {
     const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
     const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
     const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
+    const lastMonthCharge = Number(
+      details?.lastMonthCharge ?? details?.pricing?.lastMonthCharge ?? 0
+    );
+    const dueAtSetup = firstMonthCharge + lastMonthCharge;
     const firstBillingDate = formatBillingDate(details?.firstBillingDate);
     const startDate = details?.startDate || booking.event_date;
     const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
@@ -358,6 +376,10 @@ const EMAIL_TEMPLATES = {
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Start date:</td><td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td><td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td><td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td></tr>
+              ${lastMonthCharge > 0 ? `
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Last-month prepaid deposit:</td><td style="padding: 8px 0; color: #111827;">$${lastMonthCharge.toFixed(2)}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 700; border-top: 1px solid #d1d5db;">Total charged at setup:</td><td style="padding: 8px 0; color: #111827; font-weight: 700; border-top: 1px solid #d1d5db;">$${dueAtSetup.toFixed(2)}</td></tr>
+              ` : ''}
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td><td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td><td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit' : 'Card (3% fee)'}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Expected attendees:</td><td style="padding: 8px 0; color: #111827;">${booking.expected_attendees || 'n/a'}</td></tr>
