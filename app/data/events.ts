@@ -283,6 +283,18 @@ export const events: Event[] = [
 
   // ============ MAY 2026 ============
   {
+    id: "holosomatic-breathwork-may-2026",
+    title: "Holosomatic Breathwork",
+    date: "2026-05-13",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Anxiety. Looping thoughts. Self-doubt. Harmful patterns. None of that is your true nature. Holosomatic Breathwork cuts through all of it. Through breath, movement, and sound, your body becomes the guide—back to the truth of who you are, back to the one who knows exactly what you need, what you want, what you're here for. This is body-led healing, and it will change everything. Doors open at 5:50 PM. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+  {
     id: "soften-unwind-yin-massage-sound-bath-may-2026",
     title: "Soften & Unwind: A Restorative Evening",
     date: "2026-05-21",
