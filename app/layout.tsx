@@ -211,7 +211,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "LocationFeatureSpecification",
                   "name": "Square Footage",
-                  "value": "2,400 sq ft open sanctuary space"
+                  "value": "Approximately 2,400 sq ft total across the building, with a ~1,100 sq ft main hall and ~1,600 sq ft upstairs"
                 },
                 {
                   "@type": "LocationFeatureSpecification",
@@ -278,7 +278,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "name": "What makes Merritt Wellness unique for wellness events?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and 2,400 square feet of open sanctuary space. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
+                    "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
                   }
                 },
                 {

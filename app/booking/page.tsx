@@ -2018,9 +2018,10 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif">Facility Information & Booking Terms</h3>
 
                   <p>
-                    <strong>Facility Specifications:</strong> 2,000 square feet space with seating for 100, accommodates up to 130 standing room.
-                    Due to the historical age and nature of our building and its historical value, accessibility, decorations, types of events,
-                    and hours of operations will be handled on a case-by-case basis.
+                    <strong>Facility Specifications:</strong> Approximately 2,400 square feet total, including the main hall (~1,100 sq ft),
+                    additional upstairs areas (bringing the upstairs total to ~1,600 sq ft), and a downstairs level. Seating for 100,
+                    accommodates up to 130 standing. Due to the historical age and nature of our building and its historical value,
+                    accessibility, decorations, types of events, and hours of operations will be handled on a case-by-case basis.
                   </p>
 
                   <p>
