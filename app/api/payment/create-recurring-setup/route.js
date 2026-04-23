@@ -136,7 +136,7 @@ export async function POST(request) {
           // Financial Connections gives us instant account verification + the
           // bank's routing/account numbers without requiring microdeposits.
           financial_connections: {
-            permissions: ['payment_method', 'balances'],
+            permissions: ['payment_method'],
           },
           verification_method: 'instant',
         },
