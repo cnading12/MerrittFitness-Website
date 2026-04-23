@@ -21,22 +21,7 @@
 import { NextResponse } from 'next/server';
 
 import { runMonthlyBilling } from '../../../lib/monthly-billing.js';
-
-// Pure function so it's easy to reason about without mocking Date. Accepts
-// a Date and returns true iff that moment falls on the last calendar day of
-// its own UTC month.
-function isLastDayOfMonth(nowUtc) {
-  const tomorrow = new Date(nowUtc.getTime() + 24 * 60 * 60 * 1000);
-  return tomorrow.getUTCMonth() !== nowUtc.getUTCMonth();
-}
-
-function nextMonth(nowUtc) {
-  const y = nowUtc.getUTCFullYear();
-  const m = nowUtc.getUTCMonth() + 1; // 1-indexed "current month"
-  // Month after the current one. Wraps Dec -> Jan/next-year.
-  if (m === 12) return { year: y + 1, month: 1 };
-  return { year: y, month: m + 1 };
-}
+import { isLastDayOfMonth, nextMonth } from '../../../lib/cron-schedule.js';
 
 async function handler(request) {
   const auth = request.headers.get('authorization') || '';

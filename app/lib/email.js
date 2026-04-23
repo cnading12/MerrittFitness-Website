@@ -38,7 +38,9 @@ function describeSlot(slot) {
 }
 
 // Enhanced email templates
-const EMAIL_TEMPLATES = {
+// Exported for tests so we can snapshot template content without calling
+// Resend. Production code still goes through the `sendXxx` wrappers below.
+export const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking) => ({
     subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}`,
     html: `
