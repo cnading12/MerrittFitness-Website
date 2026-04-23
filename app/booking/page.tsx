@@ -2023,8 +2023,10 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif">Facility Information & Booking Requirements</h3>
 
                   <p>
-                    Merritt Wellness includes an approximate 2,000 square feet multipurpose space. Due to the historic nature and
-                    value of the building, decorations, types of events, and hours of operations may be handled on a case-by-case basis.
+                    Merritt Wellness includes approximately 2,400 square feet total, including the main hall (~1,100 sq ft),
+                    additional upstairs areas (bringing the upstairs total to ~1,600 sq ft), and a downstairs level. Seating for 100,
+                    accommodates up to 130 standing. Due to the historic nature and value of the building, decorations, types of
+                    events, and hours of operations may be handled on a case-by-case basis.
                   </p>
 
                   <ul className="list-disc pl-5 space-y-2">
