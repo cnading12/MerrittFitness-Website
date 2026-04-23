@@ -2015,139 +2015,211 @@ export default function BookingPage() {
 
               <div className="border-2 border-[#735e59]/10 rounded-2xl p-6 bg-[#faf8f5] max-h-96 overflow-y-auto mb-4">
                 <div className="prose prose-sm max-w-none text-[#6b5f5b] space-y-4">
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif">Facility Information & Booking Terms</h3>
+                  <p className="italic">
+                    Please read the material below to make sure all parties understand the requirements of providing for everyone's
+                    safety and keeping Merritt Wellness maintained and a safe location for future use.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif">Facility Information & Booking Requirements</h3>
 
                   <p>
-                    <strong>Facility Specifications:</strong> Approximately 2,400 square feet total, including the main hall (~1,100 sq ft),
-                    additional upstairs areas (bringing the upstairs total to ~1,600 sq ft), and a downstairs level. Seating for 100,
-                    accommodates up to 130 standing. Due to the historical age and nature of our building and its historical value,
-                    accessibility, decorations, types of events, and hours of operations will be handled on a case-by-case basis.
+                    Merritt Wellness includes an approximate 2,000 square feet multipurpose space. Due to the historic nature and
+                    value of the building, decorations, types of events, and hours of operations may be handled on a case-by-case basis.
+                  </p>
+
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li>A signed agreement is due on day of booking for events more than 60 days out for guaranteed booking.</li>
+                    <li>
+                      The rental fee is due no later than thirty (30) days prior to the first reserved event and then on or before
+                      the first for all recurring reservations.
+                    </li>
+                    <li>
+                      A copy of your Special Event Liability Insurance (see Insurance section below) is due no later than ten (10)
+                      days prior to your event. Otherwise, the credit card on file will be held for damages should they occur.
+                    </li>
+                    <li>
+                      Alcohol service is permitted with the proper general liability insurance certificate provided by you, the Client.
+                      Alcohol must be served by TIPS certified bartenders and servers. Additional lawful requirements may apply.
+                    </li>
+                    <li>
+                      The City of Denver's Registered Neighborhood Organization does not allow events to go past 10 P.M. However,
+                      there may be some exceptions depending on the type of event.
+                    </li>
+                  </ul>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Payment Structure</h3>
+
+                  <p>
+                    Client agrees to pay Merritt Wellness an hourly rental rate per hour for use of the Premises. Payment for recurring
+                    rentals is due on or before the first of each month. Failure to submit payment within 30 days of the due date will
+                    result in suspension or cancellation of the Client's scheduled class sessions and/or termination of this Agreement
+                    at the sole discretion of Merritt Wellness. Any outstanding balance must be paid in full prior to resuming use of
+                    the Premises.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Missed Class / Cancellation Policy</h3>
+
+                  <p>
+                    Client must provide at least 30 days written notice to cancel or reschedule a scheduled class session. If cancellation
+                    notice is provided less than 30 days prior to the scheduled session, the full rental fee for that session will be
+                    charged. Merritt Wellness is not responsible for rescheduling missed sessions due to late cancellations or participant
+                    absence. If circumstances beyond the control of Merritt Wellness force us to cancel your reservation, Merritt Wellness
+                    will refund all sums paid. If the full rental payment is not received 60 days prior to your event, Merritt Wellness
+                    reserves the right to cancel your reservation without a deposit refund.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance</h3>
+
+                  <p>
+                    Special Event Liability Insurance is required of ALL Clients and is due no later than ten (10) days prior to your
+                    event. The insurance must, at client's sole expense, provide and maintain public liability and personal property
+                    damage insurance, insuring Merritt Wellness LLC and Merritt Wellness employees, contractors and contracted vendors
+                    against all bodily injury, property damage, personal injury and other loss arising out of Client's use and occupancy
+                    of the premises, or any other occupant on the premises, including appurtenances to the premises and sidewalks.
                   </p>
 
                   <p>
-                    <strong>Booking Timeline:</strong> 60 days out for guaranteed booking. The balance of your space rental fee is due sixty (60)
-                    days prior to your event. A copy of your Special Event Liability Insurance (see Insurance Section below) is due no later than
-                    ten (10) days prior to your event. Otherwise, the credit card on file will be held for damages should they occur.
+                    The insurance required hereunder shall have a single limit liability of no less than <strong>$1 Million</strong>,
+                    and general aggregate liability of not less than <strong>$2 Million</strong>. Merritt Wellness LLC shall be named
+                    as an additional insured of said policy. Any caterers and/or outside vendors, companies, and/or institutions MUST
+                    provide a copy of their Certificate and Catering License to Merritt Wellness at least one month prior to the event.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Smoke-Free Facility</h3>
+
                   <p>
-                    <strong>Alcohol Service:</strong> Alcohol service is permitted with the proper general liability insurance certificate provided
-                    by you the client. The alcohol must be served by TIPS certified bartenders and servers.
+                    Merritt Wellness is a smoke-free facility. Although the building is equipped with fire sprinklers, the premises is
+                    located in a potentially flammable historic building. There is no open flame or frying allowed on site or any
+                    cooking that will create a large amount of smoke as our facility is not ventilated. No smoking in any restroom.
+                    If smoking materials are discarded in planters, sidewalks or grounds, an extra cleanup charge will be imposed.
+                    Any guests violating the smoking restrictions will be asked to leave the premises by the event staff.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Attorney Fees</h3>
+
                   <p>
-                    <strong>Event Hours:</strong> The City of Denver registered Neighborhood Organization does not allow events to go past 10 P.M.
-                    However, there may be some exceptions depending on the type of event.
+                    In the event Merritt Wellness retains the services of an attorney to represent its interests in regard to the lease
+                    or to bring an action for the recovery of damages or other charges, the Client agrees to pay a reasonable attorney
+                    fee of not less than $500.00 or 20% of the sum sued for, whichever is greater, plus the costs of any legal action.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Lost and Found</h3>
+
                   <p>
-                    <strong>Cancellation Policy:</strong> Neither the reservation deposit nor the final guaranteed booking payment is refundable.
-                    Any cancellations may cause the loss of additional bookings or business on that previously reserved date by you. If circumstances
-                    beyond the control of Merritt Wellness force us to cancel your reservation, Merritt Wellness will refund all sums paid. If the
-                    full rental payment is not received 60 days prior to your event, Merritt Wellness reserves the right to cancel your reservation
-                    without a deposit refund.
+                    Merritt Wellness takes no responsibility for personal effects and possessions left on premises during or after any
+                    event. We do, however, maintain a lost and found and will hold recovered items up to 30 days. Every attempt will
+                    be made to return any recovered item to its rightful owner.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance Requirements</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Promotions and Copyright</h3>
 
                   <p>
-                    <strong>Special Event Liability Insurance:</strong> Required of ALL clients and is due no later than ten (10) days prior to your
-                    event. The insurance must, at client's sole expense, provide and maintain public liability and personal property damage insurance,
-                    insuring Merritt Wellness LLC and Merritt Wellness employees, contractors and contracted vendors against all bodily injury,
-                    property damage, personal injury and other loss arising out of client's use and occupancy of the premises, or any other occupant
-                    on the premises, including appurtenances to the premises and sidewalks.
+                    It is important to us that you have a fantastic and successful event. Should Merritt Wellness LLC be engaged in
+                    the promotion or co-production of your event, it is imperative that we see and approve all marketing messages and
+                    communications 30 days prior to the event. We are happy to provide professionally created images and logos of
+                    Merritt Wellness for promotional needs. We also reserve the right to take pictures of your event and use them for
+                    our marketing and promotional purposes.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Catering, Cleaning, Trash and Equipment Removal</h3>
+
                   <p>
-                    The insurance required hereunder shall have a single limit liability of no less than <strong>$1 Million</strong>, and general
-                    aggregate liability of not less than <strong>$2 Million</strong>. Merritt Wellness LLC shall be named as an additional insured
-                    of said policy.
+                    Merritt Wellness will be in a clean condition prior to your event. Upon additional planning with Merritt Wellness,
+                    you will need to incorporate your set-up time and clean up time into the rental agreement. You are required to
+                    return the space to the same clean condition in which it was found, unless payment for clean-up was made. Otherwise,
+                    all trash must be collected, properly bagged and removed by the renter or the caterer and the furniture must be
+                    rearranged. Any excessive cleaning required after a class session may result in additional cleaning fees charged
+                    to the Client. All rental equipment must be removed that night unless approved otherwise by Merritt Wellness.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Site Decoration</h3>
+
                   <p>
-                    Any caterers and/or outside vendors, companies, and/or institutions MUST provide a copy of their Certificate and Catering License
-                    to Merritt Wellness at least one month prior to the event.
+                    Merritt Wellness wants every event to be a special and welcoming experience. Therefore, every effort will be made
+                    to allow renter to prepare decorations reflecting their creative requirements. We ask that only the staff of
+                    Merritt Wellness assist with rearranging and moving any furnishings, including artwork, lighting, antiques or
+                    seating. No nails, screws, staples or penetrating items should be used on our walls, brick or fine wood. Any tape
+                    or gummed backing materials must be properly removed and in an extreme case of any wall damage, the card on file
+                    will be charged.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Facility Rules & Safety</h3>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">City, County, State and Federal Laws</h3>
 
                   <p>
-                    <strong>Smoke-Free Facility:</strong> Merritt Wellness is a smoke-free facility. Although the building is equipped with fire
-                    sprinklers, the premises is located in a potentially flammable historic building. There is no open flame or frying allowed on
-                    site or any cooking that will create a large amount of smoke as our facility is not ventilated. No smoking in any restroom.
-                    If smoking materials are discarded in planters, sidewalks or grounds, an extra cleanup charge will be imposed. Any guests
-                    violating the smoking restrictions will be asked to leave the premises by the event staff.
-                  </p>
-
-                  <p>
-                    <strong>Drug-Free Environment:</strong> There is absolutely no drug use or smoking of any kind tolerated on premises or within
-                    25 feet of the building including loitering or congregating outside on the sidewalk at any time during the event.
-                  </p>
-
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Legal & Liability</h3>
-
-                  <p>
-                    <strong>Attorney Fees:</strong> In the event Merritt Wellness retains the services of an attorney to represent its interests
-                    in regard to the lease or to bring an action for the recovery of damages or other charges, the Client agrees to pay a reasonable
-                    attorney fee of not less than $500.00 or 20% of the sum sued for, whichever is greater, plus the costs of any legal action.
-                  </p>
-
-                  <p>
-                    <strong>Lost and Found:</strong> Merritt Wellness takes no responsibility for personal effects and possessions left on premises
-                    during or after any event. We do, however, maintain a lost and found and will hold recovered items up to 30 days.
-                  </p>
-
-                  <p>
-                    <strong>City, County, State and Federal Laws:</strong> Renter agrees to comply with all applicable city, county, State, and
-                    Federal laws and shall conduct no illegal act on the premises. This is a drug free and non-smoking facility at all times,
-                    NO EXCEPTIONS. Client shall not sell alcohol on premises at any time. Client may not serve alcohol to minors on the premises
-                    at any time. Client agrees, for everyone's safety, to ensure alcoholic beverages are consumed in a responsible manner.
-                  </p>
-
-                  <p>
-                    Merritt Wellness reserves the right, in its exclusive discretion, to expel anyone who in its judgment is intoxicated or under
-                    the influence of alcohol or drugs, or who shall in any manner do or participate in any act jeopardizing the rights, use permit,
+                    Renter agrees to comply with all applicable city, county, State, and Federal laws and shall conduct no illegal act
+                    on the premises. This is a drug free and non-smoking facility at all times, NO EXCEPTIONS. Client shall not sell
+                    alcohol on premises at any time. Client may not serve alcohol to minors on the premises at any time. Client agrees,
+                    for everyone's safety, to ensure alcoholic beverages are consumed in a responsible manner. Merritt Wellness reserves
+                    the right, in its exclusive discretion, to expel anyone who in its judgment is intoxicated or under the influence
+                    of alcohol or drugs, or who shall in any manner do or participate in any act jeopardizing the rights, use permit,
                     or insurability of Merritt Wellness or the safety of its staff, guests, or building contents.
                   </p>
 
-                  <p>
-                    <strong>Liability:</strong> Renter agrees to indemnify, defend, and hold Merritt Wellness LLC, its landlord, building owners,
-                    officers, employees, and agents harmless of and from any liabilities, costs, penalties, or expenses arising out of and/or
-                    resulting from the rental and use of the premises, including but not limited to, the personal guarantee of provision, service,
-                    and dispensing of payment by client, its employees, and agents of alcoholic beverages at Merritt Wellness LLC.
-                  </p>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Liability</h3>
 
                   <p>
-                    <strong>Conduct:</strong> Disparaging remarks or any type of physical violence will not be tolerated and will be cause for
-                    immediate expulsion. Client and guests shall use the premises in a considerate manner at all times. Conduct deemed disorderly
-                    at the sole discretion of Merritt Wellness LLC staff shall be grounds for immediate expulsion from the premises and conclusion
-                    of the rental period. In such cases no refund of the rental fee shall be made.
+                    Renter agrees to indemnify, defend, and hold Merritt Wellness LLC, its landlord, building owners, officers,
+                    employees, and agents harmless of and from any liabilities, costs, penalties, or expenses arising out of and/or
+                    resulting from the rental and use of the premises, including but not limited to, the personal guarantee of
+                    provision, service, and dispensing of payment by client, its employees, and agents of alcoholic beverages at
+                    Merritt Wellness LLC.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Catering, Cleaning & Decorations</h3>
-
-                  <p>
-                    <strong>Promotions and Copyright:</strong> Should Merritt Wellness LLC be engaged in the promotion or co-production of your
-                    event, it is imperative that we see and approve all marketing messages and communications 30 days prior to the event. We are
-                    happy to provide professionally created images and logos of Merritt Wellness for promotional needs. We also reserve the right
-                    to take pictures of your event and use them for our marketing and promotional purposes.
-                  </p>
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Conduct</h3>
 
                   <p>
-                    <strong>Catering, Cleaning, Trash and Equipment Removal:</strong> Merritt Wellness will be in a clean condition prior to your
-                    event. Upon additional planning with Merritt Wellness, you will need to incorporate your set-up time and clean up time into the
-                    rental agreement. You are required to return the space to the same clean condition in which it was found, unless payment for
-                    clean-up was made. Otherwise, all trash must be collected, properly bagged and removed by the renter or the caterer and the
-                    furniture must be rearranged. All rental equipment must be removed that night unless approved otherwise by Merritt Wellness.
+                    There is absolutely no drug use or smoking of any kind tolerated on premises or within 25 feet of the building
+                    including loitering or congregating outside on the sidewalk at any time during the event. Disparaging remarks or
+                    any type of physical violence will not be tolerated and will be cause for immediate expulsion. Client and guests
+                    shall use the premises in a considerate manner at all times. Conduct deemed disorderly at the sole discretion of
+                    Merritt Wellness LLC staff shall be grounds for immediate expulsion from the premises and conclusion of the rental
+                    period. In such cases no refund of the rental fee shall be made.
                   </p>
 
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Termination of Recurring Use Agreement</h3>
+
                   <p>
-                    <strong>Site Decoration:</strong> Merritt Wellness wants to make every event here a special and welcome experience. Therefore
-                    every effort will be made to allow renter to prepare decorations reflecting their creative requirements. We ask that only the
-                    staff of Merritt Wellness assist with rearranging and moving any furnishings, including artwork, lighting, antiques or seating.
-                    No nails, screws, staples or penetrating items should be used on our walls, brick or fine wood. Any tape or gummed backing
-                    materials must be properly removed and in an extreme case of any wall damage, the card on file will be charged.
+                    Either Merritt Wellness or the Client may terminate this recurring use agreement by providing 30 days written
+                    notice to the other party. Any outstanding rental fees owed for previously scheduled or completed sessions must
+                    be paid in full prior to termination of this Agreement.
                   </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Storage</h3>
+
+                  <p>
+                    Client may not store equipment, props, supplies, or other materials at Merritt Wellness unless prior written
+                    permission has been granted by Merritt Wellness management. Merritt Wellness assumes no responsibility or liability
+                    for any items left on the premises. Any unauthorized items left on site may be removed or discarded at the
+                    discretion of Merritt Wellness.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Instructor Responsibility</h3>
+
+                  <p>
+                    Client assumes full responsibility for the conduct, supervision, and safety of all participants attending their
+                    class or activity. Merritt Wellness LLC shall not be held responsible for injuries, accidents, or damages sustained
+                    by participants during any class, workshop, or activity conducted by the Client.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Capacity Compliance</h3>
+
+                  <p>
+                    Client is responsible for ensuring that the number of participants in any class or session does not exceed the
+                    maximum occupancy permitted by Merritt Wellness and local safety regulations.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Payment Regardless of Attendance</h3>
+
+                  <p>
+                    Rental fees are based on the reserved time and use of the space, not the number of participants attending the
+                    class. Client remains responsible for payment of the full rental fee regardless of attendance levels.
+                  </p>
+
+                  <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 mt-6">
+                    <p className="text-sm text-amber-900 font-semibold">
+                      Merritt Wellness requires a credit card to be on file during the entirety of your event.
+                    </p>
+                  </div>
 
                   <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mt-6">
                     <p className="text-sm text-blue-900">
