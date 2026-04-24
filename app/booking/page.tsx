@@ -2062,12 +2062,18 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Missed Class / Cancellation Policy</h3>
 
                   <p>
-                    Client must provide at least 30 days written notice to cancel or reschedule a scheduled class session. If cancellation
-                    notice is provided less than 30 days prior to the scheduled session, the full rental fee for that session will be
-                    charged. Merritt Wellness is not responsible for rescheduling missed sessions due to late cancellations or participant
-                    absence. If circumstances beyond the control of Merritt Wellness force us to cancel your reservation, Merritt Wellness
-                    will refund all sums paid. If the full rental payment is not received 60 days prior to your event, Merritt Wellness
-                    reserves the right to cancel your reservation without a deposit refund.
+                    <strong>Event Cancellations:</strong> Cancellations made 90 or more days in advance of the scheduled event date
+                    receive a full refund. For cancellations made within 90 days of your event, please contact Merritt Wellness
+                    directly to discuss options. If the full rental payment is not received 90 days prior to your event, Merritt
+                    Wellness reserves the right to cancel your reservation without a deposit refund. If circumstances beyond the
+                    control of Merritt Wellness force us to cancel your reservation, Merritt Wellness will refund all sums paid.
+                  </p>
+
+                  <p>
+                    <strong>Recurring Class Sessions:</strong> Client must provide at least 30 days written notice to cancel or
+                    reschedule a scheduled class session. If cancellation notice is provided less than 30 days prior to the scheduled
+                    session, the full rental fee for that session will be charged. Merritt Wellness is not responsible for rescheduling
+                    missed sessions due to late cancellations or participant absence.
                   </p>
 
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance</h3>
