@@ -1991,10 +1991,10 @@ export default function BookingPage() {
                   <div className="space-y-2 text-emerald-800">
                     <p className="flex items-center gap-2">
                       <span className="font-bold text-emerald-600">100% Refund:</span>
-                      <span>Cancellations made 60+ days in advance receive a full refund.</span>
+                      <span>Cancellations made 90+ days in advance receive a full refund.</span>
                     </p>
                     <p className="text-sm text-emerald-700">
-                      For cancellations within 60 days of your event, please contact us directly at (720) 357-9499 to discuss options.
+                      For cancellations within 90 days of your event, please contact us directly at (720) 357-9499 to discuss options.
                     </p>
                   </div>
                 </div>
