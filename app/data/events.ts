@@ -18,6 +18,57 @@ export interface Event {
 
 // Add your events here - events with dates in the past will be automatically filtered out
 export const events: Event[] = [
+  // ============ RECURRING: SUNDAY MORNING SERVICE ============
+  {
+    id: "sunday-morning-service",
+    title: "Sunday Morning Service",
+    date: "2026-04-26",
+    time: "7:30 AM",
+    endTime: "12:30 PM",
+    description: "Join this welcoming Sunday morning service held in our beautiful historic sanctuary. While Merritt Wellness is a non-denominational space open to all practices and beliefs, we're honored to host this lovely congregation each week. All are welcome.",
+    imageUrl: "/images/events/community/group.webp",
+    recurrence: "Every Sunday"
+  },
+
+  // ============ RECURRING: SUNDAY AFTERNOON SERVICE ============
+  {
+    id: "sunday-afternoon-service",
+    title: "Sunday Afternoon Service",
+    date: "2026-04-26",
+    time: "1:00 PM",
+    endTime: "4:00 PM",
+    description: "Join this welcoming Sunday afternoon service held in our beautiful historic sanctuary. While Merritt Wellness is a non-denominational space open to all practices and beliefs, we're honored to host this lovely congregation each week. All are welcome.",
+    imageUrl: "/images/events/community/group.webp",
+    recurrence: "Every Sunday"
+  },
+
+  // ============ RECURRING: FULL CIRCLE DANCE ============
+  {
+    id: "full-circle-dance",
+    title: "Full Circle Dance",
+    date: "2026-04-30",
+    time: "4:00 PM",
+    endTime: "6:30 PM",
+    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
+    imageUrl: "/images/events/dance/kids.jpg",
+    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
+    instagramHandle: "fullcircledancecolorado",
+    practitionerName: "Genoa",
+    recurrence: "Every Thursday"
+  },
+
+  // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
+  {
+    id: "sloans-lake-citizens-group",
+    title: "Sloans Lake Citizens Group",
+    date: "2026-05-21",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "A monthly gathering of the Sloans Lake Citizens Group, hosted in our historic sanctuary. Neighbors come together to discuss local updates, community initiatives, and ways to strengthen our area. Free and open to all who care about the Sloans Lake neighborhood.",
+    imageUrl: "/images/events/community/food.webp",
+    recurrence: "Third Thursday of every month"
+  },
+
   {
   id: "tantra-speed-date-mar-2026",
   title: "Tantra Speed Date",
