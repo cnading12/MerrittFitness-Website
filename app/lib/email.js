@@ -38,6 +38,9 @@ function describeSlot(slot) {
 }
 
 // Enhanced email templates
+// Exported (also referenced as `EMAIL_TEMPLATES` below) so tests can render
+// individual templates without dispatching real emails through Resend.
+export
 const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking) => ({
     subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}`,
@@ -441,19 +444,22 @@ const EMAIL_TEMPLATES = {
             <p style="color: #374151; line-height: 1.6; margin: 15px 0 10px 0;">
               <strong>Please direct all communication to:</strong>
             </p>
-            <p style="margin: 0;">
+            <p style="margin: 0 0 6px 0;">
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">clientservices@merrittwellness.net</a>
             </p>
+            <p style="margin: 0;">
+              <a href="tel:+13033598337" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">303-359-8337</a>
+            </p>
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
-              This inbox is actively monitored by our on-site team and is the fastest way to get support before and during your event.
+              This inbox and phone line are actively monitored by our on-site team and are the fastest way to get support before and during your event.
             </p>
           </div>
 
-          <!-- Manager Email Use -->
+          <!-- Manager Contact -->
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-            <h2 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">Manager Email Use</h2>
+            <h2 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">Manager Contact</h2>
             <p style="color: #451a03; line-height: 1.6; margin: 0 0 10px 0;">
-              The <strong>manager@merrittwellness.net</strong> email is reserved strictly for:
+              The <strong>manager@merrittwellness.net</strong> email and <strong><a href="tel:+17203579499" style="color: #92400e; text-decoration: none;">720-357-9499</a></strong> phone line are reserved strictly for:
             </p>
             <ul style="margin: 10px 0; padding-left: 20px; color: #451a03;">
               <li style="margin-bottom: 5px;">Future booking inquiries</li>
@@ -461,7 +467,7 @@ const EMAIL_TEMPLATES = {
               <li style="margin-bottom: 5px;">Large-scale or long-term planning questions</li>
             </ul>
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
-              Using the correct inbox helps us respond quickly and keeps everything organized for your event.
+              Using the correct contact helps us respond quickly and keeps everything organized for your event.
             </p>
           </div>
 
@@ -475,6 +481,7 @@ const EMAIL_TEMPLATES = {
               <li>How to unlock and lock the building</li>
               <li>How to use the projector</li>
               <li>How to use the PA system</li>
+              <li>How to operate the heating and air conditioning</li>
               <li>How to lock up (shorter video if you only need a quick refresher)</li>
             </ul>
             <p style="margin: 0 0 10px 0;">
@@ -487,6 +494,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>Need your access code?</strong> Please email
               <a href="mailto:clientservices@merrittwellness.net" style="color: #3b82f6; text-decoration: none;">clientservices@merrittwellness.net</a>
+              or call <a href="tel:+13033598337" style="color: #3b82f6; text-decoration: none;">303-359-8337</a>
               to receive your personal access code before your event.
             </p>
           </div>
@@ -511,6 +519,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
               If anything comes up as you prepare, don't hesitate to reach out to
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a>
+              or call <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
               — we're happy to help.
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
@@ -524,7 +533,8 @@ const EMAIL_TEMPLATES = {
             <p style="color: #111827; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
             <p style="color: #6b7280; font-size: 14px; margin: 0;">
               <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
-              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a><br>
+              <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
             </p>
           </div>
         </div>
