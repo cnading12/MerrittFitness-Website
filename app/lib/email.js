@@ -481,6 +481,7 @@ const EMAIL_TEMPLATES = {
               <li>How to unlock and lock the building</li>
               <li>How to use the projector</li>
               <li>How to use the PA system</li>
+              <li>Surround Sound Audio System &amp; Wireless Microphones</li>
               <li>How to operate the heating and air conditioning</li>
               <li>How to lock up (shorter video if you only need a quick refresher)</li>
             </ul>
