@@ -86,6 +86,15 @@ test('clientOnboarding template: lists heating and air conditioning video', () =
   );
 });
 
+test('clientOnboarding template: lists surround sound & wireless mics video', () => {
+  const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
+  assert.match(
+    html,
+    /Surround Sound Audio System (?:&amp;|&) Wireless Microphones/i,
+    'expected surround sound & wireless mics bullet in the facility walkthrough list'
+  );
+});
+
 test('clientOnboarding template: links to the YouTube playlist', () => {
   const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
   assert.ok(
