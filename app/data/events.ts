@@ -37,8 +37,9 @@ export const events: Event[] = [
     date: "2026-04-26",
     time: "1:00 PM",
     endTime: "4:00 PM",
-    description: "Join this welcoming Sunday afternoon service held in our beautiful historic sanctuary. While Merritt Wellness is a non-denominational space open to all practices and beliefs, we're honored to host this lovely congregation each week. All are welcome.",
-    imageUrl: "/images/events/community/group.webp",
+    description: "Join Pastor Tate for a welcoming Sunday afternoon service held in our beautiful historic sanctuary. While Merritt Wellness is a non-denominational space open to all practices and beliefs, we're honored to host this lovely congregation each week. All are welcome. For more information, contact Pastor Tate at 720-532-4638.",
+    imageUrl: "/images/events/community/pator-tate.jpeg",
+    practitionerName: "Pastor Tate",
     recurrence: "Every Sunday"
   },
 
