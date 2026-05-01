@@ -13,7 +13,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { computeOccurrences, summarizeOccurrences, _internal }
+import { computeOccurrences, summarizeOccurrences, findOccurrenceConflicts, _internal }
   from '../app/lib/recurring-occurrences.js';
 
 const dates = (occs) => occs.map((o) => o.date);
@@ -223,4 +223,255 @@ test('_internal.firstMatchingDayOnOrAfter: returns same date when weekday matche
 test('_internal.firstMatchingDayOnOrAfter: wraps to the next week when needed', () => {
   // 2026-11-04 is Wed; first Tuesday on-or-after = 2026-11-10.
   assert.equal(_internal.firstMatchingDayOnOrAfter('2026-11-04', 2), '2026-11-10');
+});
+
+// ---------- exceptions: skip ----------
+
+test('exceptions: skip drops the matching occurrence and leaves the rest', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-18', action: 'skip' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11', '2026-11-25']);
+});
+
+test('exceptions: skip on a non-occurrence date is a no-op', () => {
+  // Nov 19 is a Thursday; no slot lands there. The skip should change
+  // nothing.
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-19', action: 'skip' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11', '2026-11-18', '2026-11-25']);
+});
+
+test('exceptions: skip with slotIdx only drops that specific slot', () => {
+  // Two slots on the same Wednesday — skip should only knock out one.
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [
+      { dayOfWeek: 3, startTime: '9:00 AM', durationHours: 1, frequency: 'weekly' }, // idx 0
+      { dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }, // idx 1
+    ],
+    exceptions: [{ date: '2026-11-11', slotIdx: 1, action: 'skip' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  // Nov 11 should now have only the 9 AM occurrence; other Wednesdays still
+  // have both.
+  const nov11 = occs.filter((o) => o.date === '2026-11-11');
+  assert.equal(nov11.length, 1);
+  assert.equal(nov11[0].slot.startTime, '9:00 AM');
+  const nov04 = occs.filter((o) => o.date === '2026-11-04');
+  assert.equal(nov04.length, 2);
+});
+
+test('exceptions: skip without slotIdx drops every slot on that date', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [
+      { dayOfWeek: 3, startTime: '9:00 AM', durationHours: 1, frequency: 'weekly' },
+      { dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' },
+    ],
+    exceptions: [{ date: '2026-11-11', action: 'skip' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  const nov11 = occs.filter((o) => o.date === '2026-11-11');
+  assert.equal(nov11.length, 0);
+});
+
+// ---------- exceptions: reschedule ----------
+
+test('exceptions: reschedule moves an occurrence to a new date in the same month', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-18', action: 'reschedule', newDate: '2026-11-19' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11', '2026-11-19', '2026-11-25']);
+  const moved = occs.find((o) => o.date === '2026-11-19');
+  assert.equal(moved.rescheduledFrom, '2026-11-18');
+  assert.equal(moved.hours, 2);
+});
+
+test('exceptions: reschedule with newStartTime overrides the slot start time', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{
+      date: '2026-11-18', action: 'reschedule',
+      newDate: '2026-11-19', newStartTime: '7:00 PM',
+    }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  const moved = occs.find((o) => o.date === '2026-11-19');
+  assert.equal(moved.slot.startTime, '7:00 PM');
+});
+
+test('exceptions: reschedule across months drops the original AND injects on the new month', () => {
+  // Nov 25 → Dec 2. November loses Nov 25; December gains a synthetic Dec 2
+  // entry on top of the regular Dec Wednesdays. slotIdx is required for the
+  // engine to know which slot's metadata to use.
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-25', slotIdx: 0, action: 'reschedule', newDate: '2026-12-02' }],
+  };
+  const nov = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(nov), ['2026-11-04', '2026-11-11', '2026-11-18']);
+
+  const dec = computeOccurrences(pattern, 2026, 12);
+  // Dec 2 is already a Wednesday occurrence — the rescheduled entry would
+  // double-up, but the engine dedupes (date, slotIdx, startTime).
+  assert.deepEqual(dates(dec), ['2026-12-02', '2026-12-09', '2026-12-16', '2026-12-23', '2026-12-30']);
+});
+
+test('exceptions: reschedule across months without slotIdx is dropped (cant rebuild slot)', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-25', action: 'reschedule', newDate: '2026-12-02' }],
+  };
+  const nov = computeOccurrences(pattern, 2026, 11);
+  // Nov 25 still gets dropped (the exception matches), but nothing is added
+  // to December because slotIdx is missing.
+  assert.deepEqual(dates(nov), ['2026-11-04', '2026-11-11', '2026-11-18']);
+});
+
+test('exceptions: reschedule onto a non-Wednesday in the same month works', () => {
+  // Nov 18 (Wed) → Nov 21 (Sat). Nov 21 isn't a regular Wednesday slot day
+  // but the synthetic occurrence still lands there.
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-18', action: 'reschedule', newDate: '2026-11-21' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11', '2026-11-21', '2026-11-25']);
+});
+
+test('exceptions: reschedule outside the booking window is dropped', () => {
+  // Booking ends Nov 20; reschedule to Nov 21 (past the window).
+  const pattern = {
+    startDate: '2026-11-01',
+    endDate: '2026-11-20',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [{ date: '2026-11-18', action: 'reschedule', newDate: '2026-11-21' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  // Original Nov 18 dropped; new date out of window so also dropped.
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11']);
+});
+
+test('exceptions: malformed entries (missing date or action) are ignored', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+    exceptions: [
+      { action: 'skip' },              // no date
+      { date: '2026-11-18' },          // no action
+      { date: '2026-11-25', action: 'unknown_action' },
+      null,
+      'garbage',
+    ],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11);
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-11', '2026-11-18', '2026-11-25']);
+});
+
+test('exceptions: also accepted via options.exceptions', () => {
+  const pattern = {
+    startDate: '2026-11-01',
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: 2, frequency: 'weekly' }],
+  };
+  const occs = computeOccurrences(pattern, 2026, 11, {
+    exceptions: [{ date: '2026-11-11', action: 'skip' }],
+  });
+  assert.deepEqual(dates(occs), ['2026-11-04', '2026-11-18', '2026-11-25']);
+});
+
+// ---------- findOccurrenceConflicts ----------
+
+test('findOccurrenceConflicts: flags an occurrence whose window overlaps a busy range', () => {
+  // Renter wants 6–8 PM on Nov 4. Calendar already shows a 7–9 PM event.
+  const occurrences = [{
+    date: '2026-11-04',
+    hours: 2,
+    slot: { startTime: '6:00 PM' },
+    slotIdx: 0,
+    slotLabel: 'Wed 6 PM',
+  }];
+  const busy = [
+    { date: '2026-11-04', startMinutes: 19 * 60, endMinutes: 21 * 60, summary: 'Yoga Class' },
+  ];
+  const conflicts = findOccurrenceConflicts(occurrences, busy);
+  assert.equal(conflicts.length, 1);
+  assert.equal(conflicts[0].conflict.summary, 'Yoga Class');
+});
+
+test('findOccurrenceConflicts: back-to-back (touching) is not a conflict', () => {
+  // Renter 6–8 PM, busy 8–10 PM. Half-open intervals — no overlap.
+  const occurrences = [{
+    date: '2026-11-04', hours: 2,
+    slot: { startTime: '6:00 PM' }, slotIdx: 0, slotLabel: '',
+  }];
+  const busy = [
+    { date: '2026-11-04', startMinutes: 20 * 60, endMinutes: 22 * 60, summary: 'Other' },
+  ];
+  assert.deepEqual(findOccurrenceConflicts(occurrences, busy), []);
+});
+
+test('findOccurrenceConflicts: matches only on the same date', () => {
+  // Same time of day, different date — not a conflict.
+  const occurrences = [{
+    date: '2026-11-04', hours: 2,
+    slot: { startTime: '6:00 PM' }, slotIdx: 0, slotLabel: '',
+  }];
+  const busy = [
+    { date: '2026-11-05', startMinutes: 18 * 60, endMinutes: 20 * 60, summary: 'X' },
+  ];
+  assert.deepEqual(findOccurrenceConflicts(occurrences, busy), []);
+});
+
+test('findOccurrenceConflicts: reports each conflicting occurrence at most once', () => {
+  // Two overlapping busy ranges on the same date — only one conflict reported.
+  const occurrences = [{
+    date: '2026-11-04', hours: 3,
+    slot: { startTime: '6:00 PM' }, slotIdx: 0, slotLabel: '',
+  }];
+  const busy = [
+    { date: '2026-11-04', startMinutes: 18 * 60, endMinutes: 19 * 60, summary: 'A' },
+    { date: '2026-11-04', startMinutes: 20 * 60, endMinutes: 21 * 60, summary: 'B' },
+  ];
+  assert.equal(findOccurrenceConflicts(occurrences, busy).length, 1);
+});
+
+test('findOccurrenceConflicts: excludeSummaryRegex filters out matching busy ranges', () => {
+  // Use the regex to ignore the renter's own existing bookings.
+  const occurrences = [{
+    date: '2026-11-04', hours: 2,
+    slot: { startTime: '6:00 PM' }, slotIdx: 0, slotLabel: '',
+  }];
+  const busy = [
+    { date: '2026-11-04', startMinutes: 19 * 60, endMinutes: 21 * 60, summary: '🔒 BOOKED: Jane Yoga' },
+  ];
+  assert.deepEqual(
+    findOccurrenceConflicts(occurrences, busy, { excludeSummaryRegex: /Jane Yoga/i }),
+    []
+  );
+});
+
+test('findOccurrenceConflicts: skips occurrences with unparseable start times', () => {
+  const occurrences = [{
+    date: '2026-11-04', hours: 2,
+    slot: { startTime: 'not a time' }, slotIdx: 0, slotLabel: '',
+  }];
+  const busy = [
+    { date: '2026-11-04', startMinutes: 18 * 60, endMinutes: 20 * 60, summary: 'X' },
+  ];
+  assert.deepEqual(findOccurrenceConflicts(occurrences, busy), []);
 });

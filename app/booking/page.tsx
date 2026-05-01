@@ -55,6 +55,29 @@ export default function BookingPage() {
     { id: 1, dayOfWeek: 3, startTime: '6:00 PM', durationHours: '2', frequency: 'weekly' }
   ]);
 
+  // Per-date overrides chosen during the conflict-resolution step. Keyed by
+  // `${date}|${slotIdx}` so it's cheap to look up while rendering the modal.
+  type RecurringException = {
+    date: string;
+    slotIdx: number | null;
+    action: 'skip' | 'reschedule';
+    newDate?: string;
+    newStartTime?: string;
+    reason?: string;
+  };
+  type RecurringConflict = {
+    date: string;
+    slotIdx: number | null;
+    startTime: string | null;
+    durationHours: number;
+    rescheduledFrom: string | null;
+    conflictWith: { summary: string; startMinutes: number; endMinutes: number };
+  };
+  const [recurringExceptions, setRecurringExceptions] = useState<RecurringException[]>([]);
+  const [recurringConflicts, setRecurringConflicts] = useState<RecurringConflict[] | null>(null);
+  const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
+  const [conflictModalOpen, setConflictModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     contactName: '',
     email: '',
@@ -715,6 +738,76 @@ export default function BookingPage() {
     }
   };
 
+  // Look up the renter's recorded exception for a specific (date, slotIdx).
+  // Used by the conflict modal to render the current resolution state of
+  // each row.
+  const getException = (date: string, slotIdx: number | null) => {
+    return recurringExceptions.find(
+      (e) => e.date === date && (e.slotIdx ?? null) === (slotIdx ?? null)
+    );
+  };
+
+  const setException = (next: RecurringException) => {
+    setRecurringExceptions((prev) => {
+      const filtered = prev.filter(
+        (e) => !(e.date === next.date && (e.slotIdx ?? null) === (next.slotIdx ?? null))
+      );
+      return [...filtered, next];
+    });
+  };
+
+  const clearException = (date: string, slotIdx: number | null) => {
+    setRecurringExceptions((prev) =>
+      prev.filter((e) => !(e.date === date && (e.slotIdx ?? null) === (slotIdx ?? null)))
+    );
+  };
+
+  // Run the calendar conflict check for the proposed recurring schedule.
+  // Returns true if the call succeeded, false otherwise. Sets the conflict
+  // list and opens the modal when conflicts are found.
+  const runRecurringConflictCheck = async (): Promise<boolean> => {
+    if (!recurringDetails.startDate || recurringSlots.length === 0) return false;
+    setIsCheckingConflicts(true);
+    try {
+      const response = await fetch('/api/recurring-conflicts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startDate: recurringDetails.startDate,
+          endDate: recurringDetails.endDate || null,
+          slots: recurringSlots.map((s) => ({
+            dayOfWeek: s.dayOfWeek,
+            startTime: s.startTime,
+            durationHours: parseFloat(s.durationHours) || 0,
+            frequency: s.frequency,
+          })),
+          exceptions: recurringExceptions,
+          horizonMonths: 3,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        // Calendar service hiccup: don't block the renter, just let them
+        // submit. The monthly invoicer will still expand occurrences correctly.
+        console.warn('Conflict check unavailable:', data.error || data.details);
+        setRecurringConflicts(null);
+        return true;
+      }
+      setRecurringConflicts(data.conflicts || []);
+      if ((data.conflicts || []).length > 0) {
+        setConflictModalOpen(true);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Conflict check failed:', err);
+      setRecurringConflicts(null);
+      return true; // fail open — never block submission on a transient error
+    } finally {
+      setIsCheckingConflicts(false);
+    }
+  };
+
   // Multiple booking management functions
   const addBooking = () => {
     const newId = Math.max(...bookings.map(b => b.id)) + 1;
@@ -842,7 +935,10 @@ export default function BookingPage() {
       : `${baseClassName} border-[#735e59]/20 focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]`;
   };
 
-  const handleSubmit = async () => {
+  // `skipConflictCheck` lets the conflict modal's "Submit anyway" button
+  // bypass the pre-flight calendar scan after the renter has acknowledged
+  // their conflicts.
+  const handleSubmit = async (skipConflictCheck = false) => {
     setSubmitMessage('');
     setValidationErrors({});
 
@@ -855,6 +951,17 @@ export default function BookingPage() {
         }
       }, 100);
       return;
+    }
+
+    // Recurring applications get a calendar scan first. If conflicts are
+    // found we open the modal and stop here; the renter resolves each row
+    // (Skip / Move to / Keep), then clicks "Submit Anyway" to proceed with
+    // exceptions baked into the payload.
+    if (applicationType === 'recurring' && !skipConflictCheck) {
+      const cleared = await runRecurringConflictCheck();
+      if (!cleared) {
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -891,7 +998,8 @@ export default function BookingPage() {
               startTime: s.startTime,
               durationHours: parseFloat(s.durationHours) || 0,
               frequency: s.frequency
-            }))
+            })),
+            exceptions: recurringExceptions
           },
           pricing: recurringPricing,
           idPhoto: idPhotoPayload
@@ -2278,14 +2386,19 @@ export default function BookingPage() {
 
                 <button
                   type="button"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !formData.agreedToTerms}
+                  onClick={() => handleSubmit()}
+                  disabled={isSubmitting || isCheckingConflicts || !formData.agreedToTerms}
                   className={`inline-flex items-center gap-3 px-8 py-4 rounded-full font-semibold transition-all duration-300 ${!isSubmitting && formData.agreedToTerms
                     ? 'bg-[#735e59] text-[#f2eee9] hover:bg-[#5a4a46] hover:scale-105 shadow-lg hover:shadow-xl'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                 >
-                  {isSubmitting ? (
+                  {isCheckingConflicts ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Checking schedule for conflicts…
+                    </>
+                  ) : isSubmitting ? (
                     <>
                       <Loader2 className="animate-spin" size={20} />
                       {applicationType === 'recurring' ? 'Submitting Application...' : 'Creating Your Booking...'}
@@ -2583,6 +2696,194 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== Recurring schedule conflict modal =====
+          Surfaced after the renter clicks Submit on a recurring application
+          if the calendar scan finds overlaps in the next 3 months. Each row
+          can be Skipped (drop the occurrence) or Moved (reschedule to a new
+          date/time). "Submit Anyway" forwards the exceptions list with the
+          booking and the monthly invoicer honors them. */}
+      {conflictModalOpen && recurringConflicts && recurringConflicts.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-3xl shadow-xl border border-[#735e59]/10 w-full max-w-3xl my-8">
+            <div className="p-6 border-b border-[#735e59]/10 flex items-start gap-3">
+              <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={24} />
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Schedule Conflicts Found</h2>
+                <p className="text-sm text-[#6b5f5b] mt-1">
+                  We found {recurringConflicts.length} {recurringConflicts.length === 1 ? 'date' : 'dates'} in the next 3 months where your time would overlap an existing booking. Choose how to handle each — you can skip the date, move it, or keep it as-is and we&apos;ll sort it out together. <span className="font-medium text-[#4a3f3c]">Billing happens monthly on the 1st, so skipped dates are simply not billed.</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setConflictModalOpen(false)}
+                className="text-[#a08b84] hover:text-[#4a3f3c] text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[55vh] overflow-y-auto">
+              {recurringConflicts.map((c, idx) => {
+                const exception = getException(c.date, c.slotIdx);
+                const action = exception?.action ?? 'keep';
+                const niceDate = (() => {
+                  const [y, m, d] = c.date.split('-').map(Number);
+                  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+                    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+                  });
+                })();
+                const fmtMins = (mins: number) => {
+                  const h24 = Math.floor(mins / 60);
+                  const m = mins % 60;
+                  const period = h24 >= 12 ? 'PM' : 'AM';
+                  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+                  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+                };
+                return (
+                  <div key={`${c.date}-${c.slotIdx ?? 'all'}-${idx}`} className="border border-[#735e59]/10 rounded-2xl p-4 bg-[#faf8f5]">
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-2">
+                      <div className="font-semibold text-[#4a3f3c]">{niceDate}</div>
+                      <div className="text-sm text-[#6b5f5b]">
+                        Your slot: {c.startTime} for {c.durationHours}h
+                      </div>
+                    </div>
+                    <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                      Conflicts with <span className="font-medium">{c.conflictWith.summary}</span>
+                      {' '}({fmtMins(c.conflictWith.startMinutes)}–{fmtMins(c.conflictWith.endMinutes)})
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => clearException(c.date, c.slotIdx)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          action === 'keep'
+                            ? 'bg-[#735e59] text-white border-[#735e59]'
+                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-[#735e59]/5'
+                        }`}
+                      >
+                        Keep as scheduled
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setException({
+                            date: c.date,
+                            slotIdx: c.slotIdx,
+                            action: 'skip',
+                            reason: 'calendar conflict',
+                          })
+                        }
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          action === 'skip'
+                            ? 'bg-red-600 text-white border-red-600'
+                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-red-50'
+                        }`}
+                      >
+                        Skip this date
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setException({
+                            date: c.date,
+                            slotIdx: c.slotIdx,
+                            action: 'reschedule',
+                            newDate: exception?.newDate || c.date,
+                            newStartTime: exception?.newStartTime || c.startTime || undefined,
+                            reason: 'calendar conflict',
+                          })
+                        }
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          action === 'reschedule'
+                            ? 'bg-[#735e59] text-white border-[#735e59]'
+                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-[#735e59]/5'
+                        }`}
+                      >
+                        Move to a different date
+                      </button>
+                    </div>
+
+                    {action === 'reschedule' && (
+                      <div className="mt-3 grid sm:grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="block text-xs text-[#6b5f5b] mb-1">New date</span>
+                          <input
+                            type="date"
+                            value={exception?.newDate || ''}
+                            onChange={(e) =>
+                              setException({
+                                date: c.date,
+                                slotIdx: c.slotIdx,
+                                action: 'reschedule',
+                                newDate: e.target.value,
+                                newStartTime: exception?.newStartTime || c.startTime || undefined,
+                                reason: 'calendar conflict',
+                              })
+                            }
+                            className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="block text-xs text-[#6b5f5b] mb-1">New start time</span>
+                          <select
+                            value={exception?.newStartTime || c.startTime || ''}
+                            onChange={(e) =>
+                              setException({
+                                date: c.date,
+                                slotIdx: c.slotIdx,
+                                action: 'reschedule',
+                                newDate: exception?.newDate || c.date,
+                                newStartTime: e.target.value,
+                                reason: 'calendar conflict',
+                              })
+                            }
+                            className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                          >
+                            {[
+                              '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
+                              '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
+                              '6:00 PM','7:00 PM','8:00 PM',
+                            ].map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-6 border-t border-[#735e59]/10 flex flex-wrap gap-3 justify-end items-center bg-[#faf8f5] rounded-b-3xl">
+              <p className="text-xs text-[#6b5f5b] mr-auto">
+                We&apos;ll save your choices on this application. Skipped dates aren&apos;t billed; rescheduled dates take their place.
+              </p>
+              <button
+                type="button"
+                onClick={() => setConflictModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium border border-[#735e59]/20 text-[#4a3f3c] hover:bg-[#735e59]/5"
+              >
+                Back to form
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setConflictModalOpen(false);
+                  handleSubmit(true);
+                }}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-[#735e59] text-white hover:bg-[#4a3f3c] disabled:opacity-60"
+              >
+                {isSubmitting ? 'Submitting…' : 'Submit Application'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

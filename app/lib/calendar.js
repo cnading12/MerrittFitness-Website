@@ -173,6 +173,107 @@ export async function checkCalendarAvailability(date) {
   }
 }
 
+// Fetch every busy range across a date span (inclusive). Used by the
+// recurring conflict-check endpoint so we don't have to make one Google API
+// call per candidate occurrence — one window query covers them all.
+//
+// Returns Array<{ date: 'YYYY-MM-DD', startMinutes, endMinutes, summary }>
+// where startMinutes / endMinutes are minutes-from-midnight in Denver time.
+// If a single calendar event spans multiple days the function emits one row
+// per day, clipped to that day, so the overlap math at the call site stays
+// trivial (compare on the same date).
+export async function findBusyRangesInRange(startDateStr, endDateStr) {
+  if (!startDateStr || !endDateStr) {
+    throw new Error('findBusyRangesInRange requires startDateStr and endDateStr');
+  }
+
+  const auth = await getGoogleAuth();
+  const calendar = google.calendar('v3');
+
+  const startTime = new Date(startDateStr + 'T00:00:00-07:00');
+  const endTime = new Date(endDateStr + 'T23:59:59-07:00');
+
+  const response = await calendar.events.list({
+    auth,
+    calendarId: process.env.GOOGLE_CALENDAR_ID,
+    timeMin: startTime.toISOString(),
+    timeMax: endTime.toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+    timeZone: 'America/Denver',
+    maxResults: 2500,
+  });
+
+  const events = response.data.items || [];
+  const ranges = [];
+
+  for (const event of events) {
+    if (!event.start?.dateTime || !event.end?.dateTime) continue;
+
+    // Local Denver components for the event boundaries.
+    const startLocal = new Date(event.start.dateTime).toLocaleString('en-US', {
+      timeZone: 'America/Denver',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+    const endLocal = new Date(event.end.dateTime).toLocaleString('en-US', {
+      timeZone: 'America/Denver',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+
+    const startParts = parseLocalDateTime(startLocal);
+    const endParts = parseLocalDateTime(endLocal);
+    if (!startParts || !endParts) continue;
+
+    if (startParts.date === endParts.date) {
+      ranges.push({
+        date: startParts.date,
+        startMinutes: startParts.hour * 60 + startParts.minute,
+        endMinutes: endParts.hour * 60 + endParts.minute,
+        summary: event.summary || '(busy)',
+      });
+    } else {
+      // Multi-day event: emit one row per day inside the span. The first day
+      // gets [start..23:59], the last day gets [00:00..end], full days in
+      // between are [00:00..23:59].
+      let cursorIso = startParts.date;
+      while (cursorIso <= endParts.date) {
+        const isFirst = cursorIso === startParts.date;
+        const isLast = cursorIso === endParts.date;
+        ranges.push({
+          date: cursorIso,
+          startMinutes: isFirst ? startParts.hour * 60 + startParts.minute : 0,
+          endMinutes: isLast ? endParts.hour * 60 + endParts.minute : 24 * 60,
+          summary: event.summary || '(busy)',
+        });
+        cursorIso = nextIsoDate(cursorIso);
+      }
+    }
+  }
+
+  return ranges;
+}
+
+// Parse "MM/DD/YYYY, HH:MM" (Denver wall-clock) into pieces. Returns null on
+// any deviation from that exact shape.
+function parseLocalDateTime(localStr) {
+  const m = localStr.match(/^(\d{2})\/(\d{2})\/(\d{4}),?\s+(\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, mm, dd, yyyy, hh, min] = m;
+  return {
+    date: `${yyyy}-${mm}-${dd}`,
+    hour: Number(hh),
+    minute: Number(min),
+  };
+}
+
+function nextIsoDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d + 1));
+  return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+}
+
 // COMPLETELY FIXED: Calendar event creation with proper timezone handling
 export async function createCalendarEvent(booking, includeAttendees = false) {
   try {

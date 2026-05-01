@@ -162,9 +162,15 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
     }
   }
 
+  // Pass through any per-date exceptions the renter recorded during the
+  // conflict-resolution step. The engine drops `skip` dates and moves
+  // `reschedule` dates so we never invoice for occurrences they already
+  // declined.
+  const exceptions = Array.isArray(details.exceptions) ? details.exceptions : [];
   const occurrences = computeOccurrences(details, year, month, {
     startDate,
     endDate,
+    exceptions,
   });
 
   if (occurrences.length === 0) {

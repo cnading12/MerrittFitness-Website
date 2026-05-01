@@ -155,6 +155,19 @@ const RecurringSlotSchema = z.object({
   frequency: z.enum(['weekly', 'biweekly', 'monthly'])
 });
 
+// Per-date overrides the renter chose during the conflict-resolution step.
+// `skip` drops a single occurrence from invoicing; `reschedule` swaps it to a
+// different date / time. Both are surfaced by /api/recurring-conflicts and
+// persisted on the booking row inside recurring_details.exceptions.
+const RecurringExceptionSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
+  slotIdx: z.number().int().min(0).optional().nullable(),
+  action: z.enum(['skip', 'reschedule']),
+  newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  newStartTime: z.string().regex(/^\d{1,2}:\d{2} (AM|PM)$/).optional().nullable(),
+  reason: z.string().max(200).optional().default(''),
+});
+
 const RecurringScheduleSchema = z.object({
   eventName: z.string().min(1, 'Series name is required').max(100, 'Series name too long'),
   eventType: z.enum([
@@ -166,7 +179,8 @@ const RecurringScheduleSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   paymentPreference: z.enum(['ach', 'card']).default('ach'),
   specialRequests: z.string().max(500).optional().default(''),
-  slots: z.array(RecurringSlotSchema).min(1, 'At least one slot required').max(20, 'Too many slots')
+  slots: z.array(RecurringSlotSchema).min(1, 'At least one slot required').max(20, 'Too many slots'),
+  exceptions: z.array(RecurringExceptionSchema).max(200).optional().default([]),
 });
 
 const RecurringBookingSchema = z.object({
@@ -348,6 +362,10 @@ async function createRecurringApplication(validatedData) {
       startDate: recurringSchedule.startDate,
       endDate: recurringSchedule.endDate || null,
       slots: recurringSchedule.slots,
+      // Per-date overrides chosen during the conflict-resolution step. The
+      // monthly invoicer reads this list and either skips or moves the
+      // affected occurrences before billing.
+      exceptions: Array.isArray(recurringSchedule.exceptions) ? recurringSchedule.exceptions : [],
       pricing: {
         monthlyMinCharge: pricing.monthlyMinCharge,
         monthlyMaxCharge: pricing.monthlyMaxCharge,
