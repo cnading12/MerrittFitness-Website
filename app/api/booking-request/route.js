@@ -4,6 +4,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import {
+  isSaturday,
+  endsBy10PM,
+  calculateAccuratePricing,
+  findRecurringSlotConflicts,
+} from '../../lib/booking-pricing.js';
 // NOTE: Calendar events are now created in the Stripe webhook after payment completion
 // import { createCalendarEvent } from '../../lib/calendar.js';
 // NOTE: Confirmation emails are now sent in the Stripe webhook after payment completion
@@ -117,12 +123,6 @@ const PricingSchema = z.object({
   total: z.number()
 });
 
-// Valid promo codes configuration (must match frontend)
-const VALID_PROMO_CODES = {
-  'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' },
-  'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 }
-};
-
 // Required government-issued ID photo. Stored on each booking record and
 // attached to the manager notification email sent after successful payment.
 const ID_PHOTO_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
@@ -189,157 +189,9 @@ const RecurringBookingSchema = z.object({
   idPhoto: IdPhotoSchema
 });
 
-// Helper function to check if date is Saturday (timezone-safe)
-function isSaturday(dateString) {
-  // Parse date string directly to avoid timezone issues
-  // dateString format: "YYYY-MM-DD"
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day); // month is 0-indexed in JS
-  return date.getDay() === 6;
-}
-
-// Helper function to check if booking ends by 10 PM
-function endsBy10PM(startTime, hoursRequested) {
-  if (!startTime || !hoursRequested) return true;
-
-  // Parse start time (format: "8:00 PM")
-  const [time, period] = startTime.split(' ');
-  const [hourStr, minStr] = time.split(':');
-  let startHour = parseInt(hourStr, 10);
-  const startMin = parseInt(minStr, 10) || 0;
-
-  // Convert to 24-hour format
-  if (period === 'PM' && startHour !== 12) {
-    startHour += 12;
-  } else if (period === 'AM' && startHour === 12) {
-    startHour = 0;
-  }
-
-  // Calculate end time in minutes from midnight
-  const startMinutes = startHour * 60 + startMin;
-  const durationMinutes = parseFloat(hoursRequested) * 60;
-  const endMinutes = startMinutes + durationMinutes;
-
-  // 10 PM = 22:00 = 1320 minutes from midnight
-  const tenPMMinutes = 22 * 60;
-
-  return endMinutes <= tenPMMinutes;
-}
-
-
-// Calculate accurate pricing with Saturday rates, fees, and promo codes
-function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
-  const HOURLY_RATE = 95;
-  const SATURDAY_RATE = 200;
-  const SETUP_TEARDOWN_FEE = 50;
-  const ON_SITE_ASSISTANCE_FEE = 35;
-  const EVENT_SUPERVISION_RATE = 30; // $/hr for first-time 40+ attendee bookings
-  const EVENT_SUPERVISION_MAX_HOURS = 4;
-  const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
-  const STRIPE_FEE_PERCENTAGE = 3;
-
-  let totalHours = 0;
-  let totalBookings = 0;
-  let saturdayCharges = 0;
-  let setupTeardownFees = 0;
-  let onsiteAssistanceFee = 0;
-  let eventSupervisionFee = 0;
-  let eventSupervisionHours = 0;
-
-  bookings.forEach(booking => {
-    let hours = parseFloat(booking.hoursRequested) || 0;
-    const isSat = isSaturday(booking.selectedDate);
-
-    // Apply minimums
-    if (!contactInfo.isRecurring && hours < 2) {
-      hours = 2; // Single event: 2-hour minimum
-    }
-
-    // Calculate Saturday charges - ALL Saturday events are $200/hour
-    if (isSat) {
-      saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
-    }
-
-    // Calculate setup/teardown fees
-    if (booking.needsSetupHelp) {
-      setupTeardownFees += SETUP_TEARDOWN_FEE;
-    }
-    if (booking.needsTeardownHelp) {
-      setupTeardownFees += SETUP_TEARDOWN_FEE;
-    }
-
-    // Event supervision fee: required on first-time bookings with 40+ attendees.
-    // Supervisor stays the entire event up to a 4-hour cap. On longer events they
-    // cover the first 2hrs and last 2hrs (still billed as 4hrs × $30 = $120).
-    const attendees = parseInt(booking.expectedAttendees, 10) || 0;
-    if (contactInfo.isFirstEvent === true && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
-      const supervisedHours = Math.min(hours, EVENT_SUPERVISION_MAX_HOURS);
-      eventSupervisionFee += supervisedHours * EVENT_SUPERVISION_RATE;
-      eventSupervisionHours += supervisedHours;
-    }
-
-    totalHours += hours;
-    totalBookings++;
-  });
-
-  // On-site assistance: required for first-time renters with fewer than 40
-  // attendees, optional add-on for returning renters. Mutually exclusive with
-  // the Facility Host — a booking never pays for both.
-  if (eventSupervisionFee === 0 && (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance)) {
-    onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
-  }
-
-  const baseAmount = totalHours * HOURLY_RATE;
-  const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee;
-
-  // Apply promo code discount (server-side validation)
-  let promoDiscount = 0;
-  let promoDescription = '';
-  let validatedPromoCode = '';
-
-  if (clientPromoCode && VALID_PROMO_CODES[clientPromoCode]) {
-    const promoData = VALID_PROMO_CODES[clientPromoCode];
-    // Enforce minimum hours requirement (e.g., EXTENDED15 requires 8+ hours)
-    if (promoData.minHours && totalHours < promoData.minHours) {
-      console.log(`⚠️ Promo code "${clientPromoCode}" rejected: requires ${promoData.minHours}+ hours, booking has ${totalHours} hours`);
-    } else {
-      promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
-      promoDescription = promoData.description;
-      validatedPromoCode = clientPromoCode;
-      console.log(`✅ Promo code "${clientPromoCode}" applied: ${promoData.description} (-$${promoDiscount})`);
-    }
-  } else if (clientPromoCode) {
-    console.log(`⚠️ Invalid promo code attempted: "${clientPromoCode}"`);
-  }
-
-  const subtotal = preDiscountSubtotal - promoDiscount;
-  const stripeFee = contactInfo.paymentMethod === 'card'
-    ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
-    : 0;
-  const total = subtotal + stripeFee;
-
-  return {
-    totalHours,
-    totalBookings,
-    hourlyRate: HOURLY_RATE,
-    baseAmount,
-    saturdayCharges,
-    setupTeardownFees,
-    onsiteAssistanceFee,
-    eventSupervisionFee,
-    eventSupervisionHours,
-    isFirstEvent: contactInfo.isFirstEvent,
-    wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
-    preDiscountSubtotal,
-    promoCode: validatedPromoCode,
-    promoDiscount,
-    promoDescription,
-    subtotal,
-    stripeFee,
-    total,
-    paymentMethod: contactInfo.paymentMethod
-  };
-}
+// Pricing helpers (calculateAccuratePricing, isSaturday, endsBy10PM,
+// findRecurringSlotConflicts) live in app/lib/booking-pricing.js so they can
+// be unit-tested without spinning up the request layer.
 
 // Create booking in database with enhanced fields
 async function createBooking(bookingData) {
@@ -562,6 +414,19 @@ async function bookingHandler(request) {
           error: 'Validation failed',
           details: validationError.errors,
           code: 'VALIDATION_ERROR'
+        }, { status: 400 });
+      }
+
+      // Reject overlapping slots that share a day-of-week. The hours from
+      // each slot stack into the monthly invoice, so without this check a
+      // renter could double-bill themselves (or hide an overlap from staff).
+      const slotConflicts = findRecurringSlotConflicts(validatedRecurring.recurringSchedule.slots);
+      if (slotConflicts.length > 0) {
+        return Response.json({
+          success: false,
+          error: 'Recurring slots overlap',
+          details: slotConflicts,
+          code: 'RECURRING_SLOT_CONFLICT'
         }, { status: 400 });
       }
 
