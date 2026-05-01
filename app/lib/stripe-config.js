@@ -94,8 +94,18 @@ export async function createSecurePaymentIntent(bookingData, paymentMethod = 'ca
       delete paymentIntentData.automatic_payment_methods;
     }
     
-    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
-    
+    // Idempotency key tied to the booking id: a duplicate request from the
+    // client (network retry, double-click) returns the same PaymentIntent
+    // instead of creating a second one and double-charging.
+    const idempotencyKey = bookingData.id
+      ? `pi_create_${bookingData.id}_${paymentMethod}`
+      : undefined;
+
+    const paymentIntent = await stripe.paymentIntents.create(
+      paymentIntentData,
+      idempotencyKey ? { idempotencyKey } : undefined
+    );
+
     console.log('✅ Secure payment intent created:', paymentIntent.id);
     return paymentIntent;
     
