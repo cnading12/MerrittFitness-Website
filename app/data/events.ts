@@ -244,6 +244,17 @@ export const events: Event[] = [
 
   // ============ MAY 2026 ============
   {
+    id: "create-your-own-life-shaman-oyun-may-2026",
+    title: "Create Your Own Life — Live Without Self-Destruction",
+    date: "2026-05-09",
+    time: "5:00 PM",
+    endTime: "7:00 PM",
+    description: "Join Shaman Abay Oyun for a live gathering featuring energy cleansing, practices to awaken your inner power, and guidance to gain clarity in your path. You will leave feeling inner strength, a bright flow of energy, and an inner breakthrough. Master Oyun has spent 34 years helping people in 38 countries. For more information & registration, contact +1 212 256 1366.",
+    imageUrl: "/images/events/community/shamen.JPEG",
+    imageFit: "contain",
+    practitionerName: "Shaman Abay Oyun"
+  },
+  {
     id: "holosomatic-breathwork-may-2026",
     title: "Holosomatic Breathwork",
     date: "2026-05-13",
