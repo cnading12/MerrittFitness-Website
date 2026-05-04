@@ -173,6 +173,36 @@ export const events: Event[] = [
     practitionerName: "Mile High Qualchata"
   },
 
+  // ============ RECURRING: SLOW FLOW + NERVOUS SYSTEM RESET ============
+  {
+    id: "slow-flow-nervous-system-reset",
+    title: "Slow Flow + Nervous System Reset",
+    date: "2026-05-05",
+    time: "10:00 AM",
+    endTime: "11:00 AM",
+    description: "Experience the connection between body, breath, and awareness in a weekly all-levels class that teaches you tools and techniques to maintain steadiness in a busy world. What you need: Yoga Mat, Block, Blanket, Strap. Cost: $15 suggested donation (Venmo or Cash).",
+    imageUrl: "/images/events/yoga/Slow Flow + Nervous Syetem Reset.JPEG",
+    imageFit: "contain",
+    instagramHandle: "Kris10ami",
+    practitionerName: "Kristen Boyle",
+    recurrence: "Every Tuesday"
+  },
+
+  // ============ RECURRING: SINGLE MOMS THRIVE ============
+  {
+    id: "single-moms-thrive",
+    title: "Single Moms Thrive",
+    date: "2026-05-07",
+    time: "10:00 AM",
+    endTime: "11:00 AM",
+    description: "A Yoga Practice for Single Moms. The community you've been craving. Learn tools and techniques to stay steady among all challenges. Feel the relief from true Self Care. You are not alone. Recommended: Yoga Mat, Block, Blanket, Strap. $15 suggested donation (Venmo @iamkris10 or Cash).",
+    imageUrl: "/images/events/yoga/Single Moms Thrive.JPEG",
+    imageFit: "contain",
+    instagramHandle: "Kris10ami",
+    practitionerName: "Kristen Boyle",
+    recurrence: "Every Thursday"
+  },
+
   // ============ MARCH 2026 ============
   {
     id: "full-moon-breathwork-mar-2026",
