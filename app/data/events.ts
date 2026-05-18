@@ -230,12 +230,24 @@ export const events: Event[] = [
     practitionerName: "WesternWish Productions"
   },
   {
+    id: "western-wish-second-sundays-may-2026",
+    title: "Second Sundays Showcase: Songwriters' Round",
+    date: "2026-05-10",
+    time: "6:00 PM",
+    description: "WesternWish Productions & KRFC 88.9 FM present Second Sundays Showcase: Songwriters' Round — an intimate, listening room-style evening where independent musicians share original songs and the stories behind them. Doors at 5:30 PM, show at 6:00 PM.",
+    imageUrl: "/images/events/western-wish/Western-Wish.png",
+    ticketUrl: "https://www.westernwish.com/events",
+    instagramHandle: "westernwishproductions",
+    practitionerName: "WesternWish Productions"
+  },
+  {
     id: "western-wish-second-sundays-jun-2026",
     title: "Second Sundays Showcase: Songwriters' Round",
     date: "2026-06-14",
     time: "6:00 PM",
     description: "WesternWish Productions & KRFC 88.9 FM present Second Sundays Showcase: Songwriters' Round — an intimate evening of music and storytelling featuring three independent original musicians: Tony Meade, Haley Harkin, and Garden District (duo). Doors at 5:30 PM, show at 6:00 PM. Use code MERRITT15 for 15% off tickets.",
     imageUrl: "/images/events/western-wish/June.png",
+    imageFit: "contain",
     ticketUrl: "https://www.tickettailor.com/events/westernwishproductions/2053136",
     instagramHandle: "westernwishproductions",
     practitionerName: "WesternWish Productions"
