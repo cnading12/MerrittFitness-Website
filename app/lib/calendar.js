@@ -2,6 +2,10 @@
 // Properly handles Denver timezone without shifting issues
 
 import { google } from 'googleapis';
+import { buildStaffAttentionFlags, pickCalendarColorId } from './calendar-flags.js';
+
+// Re-export so callers (and tests that already use the full path) keep working.
+export { buildStaffAttentionFlags, pickCalendarColorId };
 
 async function getGoogleAuth() {
   try {
@@ -336,17 +340,30 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
       timezone: 'America/Denver'
     });
 
+    // Build staff-attention flags so they're visible at a glance on the
+    // calendar grid (in the title) and spelled out in the description.
+    const flags = buildStaffAttentionFlags(booking);
+    const titlePrefix = flags.length
+      ? `${flags.map((f) => f.tag).join(' | ')} — `
+      : '';
+    const flagBlock = flags.length
+      ? `⚠️ STAFF ATTENTION REQUIRED ⚠️\n${flags
+          .map((f) => `• ${f.detail}`)
+          .join('\n')}\n\n`
+      : '';
+
     const event = {
-      summary: `🔒 BOOKED: ${booking.event_name}`,
+      summary: `🔒 ${titlePrefix}BOOKED: ${booking.event_name}`,
       description: `
 BOOKING CONFIRMED - This Time Slot is RESERVED
 
-Event: ${booking.event_name}
+${flagBlock}Event: ${booking.event_name}
 Type: ${booking.event_type || 'Not specified'}
 Organizer: ${booking.contact_name}
 Email: ${booking.email}
 Phone: ${booking.phone || 'Not provided'}
 Duration: ${duration} hours
+Expected attendees: ${booking.expected_attendees ?? 'n/a'}
 ${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
 ${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
 
@@ -362,7 +379,7 @@ Contact manager@merrittwellness.net for changes.
         timeZone: 'America/Denver',
       },
       location: 'Merritt Wellness, 2246 Irving St, Denver, CO 80211',
-      colorId: '11',
+      colorId: pickCalendarColorId(flags),
       transparency: 'opaque',
       visibility: 'private'
     };
