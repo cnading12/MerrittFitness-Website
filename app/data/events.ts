@@ -43,21 +43,6 @@ export const events: Event[] = [
     recurrence: "Every Sunday"
   },
 
-  // ============ RECURRING: FULL CIRCLE DANCE ============
-  {
-    id: "full-circle-dance",
-    title: "Full Circle Dance",
-    date: "2026-04-30",
-    time: "4:00 PM",
-    endTime: "6:30 PM",
-    description: "Full Circle Dance offers a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes help little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space.",
-    imageUrl: "/images/events/dance/kids.jpg",
-    ticketUrl: "https://www.fullcircle.dance/sloans-lake",
-    instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa",
-    recurrence: "Every Thursday"
-  },
-
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
   {
     id: "sloans-lake-citizens-group",
