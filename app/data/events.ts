@@ -267,6 +267,18 @@ export const events: Event[] = [
 
   // ============ JUNE 2026 ============
   {
+    id: "channel-one-sound-system-jun-2026",
+    title: "Channel One Sound System",
+    date: "2026-06-07",
+    time: "6:00 PM",
+    endTime: "10:00 PM",
+    description: "Pomegranate Sounds presents Channel One Sound System featuring Mikey Dread & Ras Sherby, live at Merritt Wellness. A legendary night of roots reggae and dub culture brought to Denver by Pomegranate Sounds & Friends — with sets from The Groove Thief, Mister Niño, Ras Drew (One Drum), Slim, and DJ Soul Rock. Food & vendors by Denver Doubles, Pom Vinyl Shop, and Exodus Art. Tickets: $20 early bird, $30 supporters, $35 at the door.",
+    imageUrl: "/images/events/community/Channel One Sound System June 7, 2026.png",
+    imageFit: "contain",
+    ticketUrl: "https://theticketing.co/e/pschannelone",
+    practitionerName: "Pomegranate Sounds"
+  },
+  {
     id: "holosomatic-breathwork-jun-2026",
     title: "Holosomatic Breathwork",
     date: "2026-06-18",
