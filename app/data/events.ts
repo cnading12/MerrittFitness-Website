@@ -43,6 +43,19 @@ export const events: Event[] = [
     recurrence: "Every Sunday"
   },
 
+  // ============ PAST: FULL CIRCLE DANCE (FINAL CLASS) ============
+  {
+    id: "full-circle-dance-final",
+    title: "Full Circle Dance (Final Class)",
+    date: "2026-05-14",
+    time: "4:00 PM",
+    endTime: "6:30 PM",
+    description: "Our final Full Circle Dance class with Genoa at Merritt Wellness. Full Circle Dance offered a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes helped little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space. Thank you to Genoa and all the families who joined us.",
+    imageUrl: "/images/events/dance/kids.jpg",
+    instagramHandle: "fullcircledancecolorado",
+    practitionerName: "Genoa"
+  },
+
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
   {
     id: "sloans-lake-citizens-group",
