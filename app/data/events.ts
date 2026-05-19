@@ -14,6 +14,7 @@ export interface Event {
   instagramHandle?: string; // Without @ symbol
   practitionerName?: string;
   recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
+  endDate?: string; // Optional ISO date — for recurring events, the last day occurrences should appear
 }
 
 // Add your events here - events with dates in the past will be automatically filtered out
@@ -43,17 +44,19 @@ export const events: Event[] = [
     recurrence: "Every Sunday"
   },
 
-  // ============ PAST: FULL CIRCLE DANCE (FINAL CLASS) ============
+  // ============ PAST: FULL CIRCLE DANCE (ENDED MAY 14, 2026) ============
   {
-    id: "full-circle-dance-final",
-    title: "Full Circle Dance (Final Class)",
-    date: "2026-05-14",
+    id: "full-circle-dance",
+    title: "Full Circle Dance",
+    date: "2026-04-30",
+    endDate: "2026-05-14",
     time: "4:00 PM",
     endTime: "6:30 PM",
-    description: "Our final Full Circle Dance class with Genoa at Merritt Wellness. Full Circle Dance offered a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes helped little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space. Thank you to Genoa and all the families who joined us.",
+    description: "Full Circle Dance offered a heart-centered dance experience for our youngest movers ages 2-8. Led by Genoa, these weekly classes helped little dancers explore movement, build confidence, and grow through joy in our bright, welcoming historic space. The final class was held May 14, 2026.",
     imageUrl: "/images/events/dance/kids.jpg",
     instagramHandle: "fullcircledancecolorado",
-    practitionerName: "Genoa"
+    practitionerName: "Genoa",
+    recurrence: "Every Thursday"
   },
 
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
