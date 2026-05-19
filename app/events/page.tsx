@@ -120,6 +120,9 @@ function getRecurringOccurrences(event: Event, start: Date, end: Date): string[]
   const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
   const monthlyMatch = event.recurrence?.match(/^(\w+)\s+(\w+)\s+of\s+every\s+month$/i);
 
+  const recurrenceEnd = event.endDate ? new Date(event.endDate + 'T00:00:00') : null;
+  const effectiveEnd = recurrenceEnd && recurrenceEnd < end ? recurrenceEnd : end;
+
   if (weeklyMatch) {
     const dayName = weeklyMatch[1].toLowerCase();
     const targetDay = dayNameToNumber[dayName];
@@ -133,7 +136,7 @@ function getRecurringOccurrences(event: Event, start: Date, end: Date): string[]
         current.setDate(current.getDate() + 1);
       }
 
-      while (current <= end) {
+      while (current <= effectiveEnd) {
         dates.push(current.toISOString().split('T')[0]);
         current.setDate(current.getDate() + 7);
       }
@@ -147,12 +150,12 @@ function getRecurringOccurrences(event: Event, start: Date, end: Date): string[]
     if (targetDay !== undefined && nthOccurrence !== undefined) {
       const eventStartDate = new Date(event.date + 'T00:00:00');
       const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
-      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+      const endMonth = new Date(effectiveEnd.getFullYear(), effectiveEnd.getMonth(), 1);
 
       const current = new Date(startMonth);
       while (current <= endMonth) {
         const eventDate = getNthWeekdayOfMonth(current.getFullYear(), current.getMonth(), targetDay, nthOccurrence);
-        if (eventDate && eventDate >= start && eventDate <= end && eventDate >= eventStartDate) {
+        if (eventDate && eventDate >= start && eventDate <= effectiveEnd && eventDate >= eventStartDate) {
           dates.push(eventDate.toISOString().split('T')[0]);
         }
         current.setMonth(current.getMonth() + 1);
