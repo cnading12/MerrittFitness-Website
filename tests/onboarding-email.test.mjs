@@ -109,6 +109,67 @@ test('clientOnboarding template: includes Wi-Fi credentials', () => {
   assert.ok(html.includes('Merritt23X'), 'expected Wi-Fi password');
 });
 
+test('clientOnboarding template: makes clear renters must watch the onboarding videos beforehand', () => {
+  const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
+  assert.match(
+    html,
+    /must.{0,40}watch the onboarding/i,
+    'expected explicit "must watch the onboarding videos" language'
+  );
+  assert.match(
+    html,
+    /before your event/i,
+    'expected language emphasizing watching before the event'
+  );
+});
+
+test('clientOnboarding template: warns about charges/fines for arriving early or staying late', () => {
+  const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
+  assert.match(
+    html,
+    /charged or fined/i,
+    'expected "charged or fined" language for overstaying'
+  );
+  assert.match(
+    html,
+    /no showing up early/i,
+    'expected explicit "no showing up early" policy'
+  );
+  assert.match(
+    html,
+    /(staying late|no.{0,10}stay)/i,
+    'expected explicit no-late-stay policy'
+  );
+});
+
+test('clientOnboarding template: emphasizes the lock-up video and $50 fine', () => {
+  const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
+  assert.match(
+    html,
+    /lock.?up/i,
+    'expected lock-up language'
+  );
+  assert.match(
+    html,
+    /most important/i,
+    'expected the lock-up video to be flagged as the most important'
+  );
+  assert.match(
+    html,
+    /\$50/,
+    'expected the $50 fine amount to be stated'
+  );
+});
+
+test("clientOnboarding template: makes clear fines are at Merritt Wellness's discretion", () => {
+  const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
+  assert.match(
+    html,
+    /discretion/i,
+    'expected explicit language that fines are at our discretion'
+  );
+});
+
 test('sendClientOnboarding: dispatches via Resend with correct recipient and subject', async () => {
   sentEmails.length = 0;
   const result = await sendClientOnboarding(sampleBooking);
@@ -136,4 +197,43 @@ test('sendConfirmationEmails: includes the onboarding email in the booking flow'
   assert.ok(result.success, 'sendConfirmationEmails should report success');
   assert.ok(result.clientOnboarding, 'clientOnboarding result should be populated');
   assert.deepEqual(result.errors, [], 'no errors expected on the happy path');
+});
+
+test('sendConfirmationEmails: spaces sends out to stay under Resend rate limit', async () => {
+  // Resend's free plan caps at 2 requests/second. We send 3 emails per
+  // booking, so the flow must insert ~1s pauses between sends. Record the
+  // wall-clock timestamp of each Resend invocation and assert the gaps are
+  // present — without this, bursts of bookings would hit a 429.
+  sentEmails.length = 0;
+  const sendTimestamps = [];
+  const realNow = Date.now.bind(Date);
+
+  // Re-stub Resend's send to capture the time of each call. The MockResend
+  // class is already what `email.js` is using; we attach a timestamp recorder
+  // by patching the array push.
+  const origPush = sentEmails.push.bind(sentEmails);
+  sentEmails.push = (...args) => {
+    sendTimestamps.push(realNow());
+    return origPush(...args);
+  };
+
+  try {
+    await sendConfirmationEmails(sampleBooking);
+  } finally {
+    sentEmails.push = origPush;
+  }
+
+  assert.equal(sendTimestamps.length, 3, 'expected three timed sends');
+  const gap1 = sendTimestamps[1] - sendTimestamps[0];
+  const gap2 = sendTimestamps[2] - sendTimestamps[1];
+
+  // Allow a small clock-jitter tolerance below the nominal 1000ms delay.
+  assert.ok(
+    gap1 >= 900,
+    `expected ≥900ms between customer and manager sends, got ${gap1}ms`
+  );
+  assert.ok(
+    gap2 >= 900,
+    `expected ≥900ms between manager and onboarding sends, got ${gap2}ms`
+  );
 });
