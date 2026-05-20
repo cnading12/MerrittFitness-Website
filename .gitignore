@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Original unoptimized images (backup)
 public/images/_originals/
+
+# Local email preview output
+onboarding-email-preview.html

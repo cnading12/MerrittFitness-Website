@@ -473,30 +473,59 @@ const EMAIL_TEMPLATES = {
 
           <!-- Facility Onboarding Playlist -->
           <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-            <h2 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">Facility Walkthrough &amp; Instructions</h2>
-            <p style="color: #1e3a8a; line-height: 1.6; margin: 0 0 15px 0;">
-              To help you feel fully prepared, we've put together a short video playlist covering everything you need to know for your event:
+            <h2 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">Required: Watch the Onboarding Videos Before Your Event</h2>
+            <p style="color: #1e3a8a; line-height: 1.6; margin: 0 0 15px 0; font-weight: 600;">
+              You <u>must</u> watch the onboarding video playlist before your event. These videos cover everything you need to know to operate the space safely and leave it ready for the next guest. Please do not wait until the day of — watch them in advance so you arrive prepared.
             </p>
             <ul style="margin: 0 0 15px 0; padding-left: 20px; color: #1e3a8a; line-height: 1.8;">
-              <li>How to unlock and lock the building</li>
+              <li><strong>How to lock up the building</strong> — the single most important video. Please watch it carefully (see policy section below).</li>
+              <li>How to unlock and enter the building</li>
               <li>How to use the projector</li>
               <li>How to use the PA system</li>
               <li>Surround Sound Audio System &amp; Wireless Microphones</li>
               <li>How to operate the heating and air conditioning</li>
-              <li>How to lock up (shorter video if you only need a quick refresher)</li>
             </ul>
             <p style="margin: 0 0 10px 0;">
               <strong style="color: #1e40af;">Watch the Playlist:</strong>
               <a href="https://www.youtube.com/playlist?list=PLkE5cGIi8Zdjl6Sb3aa7UKqFrYWQN3uiu" style="color: #3b82f6; text-decoration: none;">Merritt Wellness Onboarding Videos</a>
-            </p>
-            <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
-              We recommend watching these in advance so you feel fully confident on the day of your event.
             </p>
             <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>Need your access code?</strong> Please email
               <a href="mailto:clientservices@merrittwellness.net" style="color: #3b82f6; text-decoration: none;">clientservices@merrittwellness.net</a>
               or call <a href="tel:+13033598337" style="color: #3b82f6; text-decoration: none;">303-359-8337</a>
               to receive your personal access code before your event.
+            </p>
+          </div>
+
+          <!-- Important Policies & Potential Fines -->
+          <div style="background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <h2 style="color: #991b1b; margin: 0 0 15px 0; font-size: 18px;">Important Policies — Please Read Carefully</h2>
+            <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 15px 0;">
+              To keep our space running smoothly for every guest, we ask that you follow these two policies. Failure to do so may result in a fine. <strong>Whether a fine is applied is entirely at Merritt Wellness's discretion</strong> — we reserve the right to issue or waive any fine on a case-by-case basis.
+            </p>
+
+            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fecaca;">
+              <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 16px;">1. Respect Your Booked Time — No Early Arrivals or Late Departures</h3>
+              <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 8px 0;">
+                You may be <strong>charged or fined</strong> if you use the space for longer than you have booked. <strong>There is no showing up early and no staying late.</strong> Please include any setup and cleanup time in your booked window.
+              </p>
+              <p style="color: #7f1d1d; line-height: 1.6; margin: 0;">
+                We frequently book events back-to-back. Other guests will respect your time, and we ask that you respect theirs.
+              </p>
+            </div>
+
+            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fecaca;">
+              <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 16px;">2. Lock Up Correctly — Watch the Lock-Up Video</h3>
+              <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 8px 0;">
+                Locking up properly is the <strong>most important</strong> thing you'll do at the end of your event. The lock-up video in the onboarding playlist is the most important video we have — please make sure you (and anyone helping you close out) are fully familiar with the lock-up process before your event.
+              </p>
+              <p style="color: #7f1d1d; line-height: 1.6; margin: 0;">
+                If the building is not locked up correctly, you may be fined <strong>up to an additional $50</strong>.
+              </p>
+            </div>
+
+            <p style="color: #7f1d1d; line-height: 1.6; margin: 12px 0 0 0; font-size: 14px;">
+              Again, any fines are <strong>completely at Merritt Wellness's discretion</strong>. We'd much rather never have to issue one — watching the videos in advance is the easiest way to make sure that's the case.
             </p>
           </div>
 
