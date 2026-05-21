@@ -4,7 +4,17 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { createCalendarEvent } from '../../../lib/calendar.js';
-import { sendConfirmationEmails, sendRecurringSetupEmails } from '../../../lib/email.js';
+import {
+  sendBookingConfirmation,
+  sendManagerNotification,
+  sendClientOnboarding,
+  sendRecurringSetupEmails,
+} from '../../../lib/email.js';
+
+// Resend's free plan caps at ~2 requests/sec. Space individual sends out so a
+// group of bookings doesn't burst past the limit.
+const EMAIL_RATE_LIMIT_DELAY_MS = 1000;
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 
 // Initialize Stripe
@@ -229,155 +239,211 @@ async function findBooking(bookingId, paymentIntentId) {
   return null;
 }
 
+// Stripe payment intent metadata only carries the FIRST booking's id when the
+// renter books a multi-event group, but the booking row plus all its siblings
+// share a `master_booking_id`. Fetch the group so we confirm, calendar, and
+// email every booking — not just the one Stripe handed us.
+async function fetchBookingGroup(seedBooking) {
+  if (!seedBooking.master_booking_id) {
+    console.log('📋 [WEBHOOK] Single booking (no master_booking_id)');
+    return [seedBooking];
+  }
+
+  console.log('🔗 [WEBHOOK] Fetching booking group by master_booking_id:', seedBooking.master_booking_id);
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('master_booking_id', seedBooking.master_booking_id)
+    .order('event_date', { ascending: true });
+
+  if (error) {
+    console.error('❌ [WEBHOOK] Failed to fetch booking group, falling back to seed:', error);
+    return [seedBooking];
+  }
+
+  if (!data || data.length === 0) {
+    console.warn('⚠️ [WEBHOOK] Group query returned no rows, using seed booking');
+    return [seedBooking];
+  }
+
+  console.log(`✅ [WEBHOOK] Found ${data.length} bookings in group`);
+  return data;
+}
+
+// Atomically transition a single booking to confirmed. Returns the freshly
+// updated row, or null if the booking was ALREADY confirmed (so retried Stripe
+// webhooks don't re-create calendar events or re-send emails for the same
+// booking).
+async function confirmBooking(booking, paymentIntent) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'confirmed',
+      payment_intent_id: paymentIntent.id,
+      payment_confirmed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', booking.id)
+    .neq('status', 'confirmed')
+    .select();
+
+  if (error) {
+    console.error(`❌ [WEBHOOK] Failed to confirm booking ${booking.id}:`, error);
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    console.log(`⏭️ [WEBHOOK] Booking ${booking.id} was already confirmed — skipping`);
+    return null;
+  }
+
+  return data[0];
+}
+
+async function ensureCalendarEvent(booking) {
+  if (booking.calendar_event_id) {
+    console.log(`📅 [WEBHOOK] Calendar event already exists for ${booking.id}:`, booking.calendar_event_id);
+    return;
+  }
+
+  try {
+    console.log(`📅 [WEBHOOK] Creating calendar event for ${booking.id} (${booking.event_date} ${booking.event_time})...`);
+    const calendarEvent = await createCalendarEvent(booking);
+
+    if (calendarEvent && calendarEvent.id) {
+      await supabase
+        .from('bookings')
+        .update({
+          calendar_event_id: calendarEvent.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', booking.id);
+      console.log(`✅ [WEBHOOK] Calendar event created for ${booking.id}:`, calendarEvent.id);
+    }
+  } catch (calendarError) {
+    // Calendar failure should not block other bookings or emails — log and continue.
+    console.error(`⚠️ [WEBHOOK] Calendar event failed for ${booking.id} (non-critical):`, calendarError.message);
+  }
+}
+
+async function sendBookingEmails(booking, { sendOnboarding }) {
+  const errors = [];
+
+  try {
+    await sendBookingConfirmation(booking);
+    console.log(`✅ [WEBHOOK] Customer confirmation sent for ${booking.id} (${booking.event_date})`);
+  } catch (err) {
+    console.error(`❌ [WEBHOOK] Customer confirmation failed for ${booking.id}:`, err.message);
+    errors.push(`customer:${booking.id}:${err.message}`);
+  }
+  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+
+  try {
+    await sendManagerNotification(booking);
+    console.log(`✅ [WEBHOOK] Manager notification sent for ${booking.id} (${booking.event_date})`);
+  } catch (err) {
+    console.error(`❌ [WEBHOOK] Manager notification failed for ${booking.id}:`, err.message);
+    errors.push(`manager:${booking.id}:${err.message}`);
+  }
+  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+
+  // The onboarding email is generic welcome / policy material — the renter
+  // only needs it once per booking group, not once per date.
+  if (sendOnboarding) {
+    try {
+      await sendClientOnboarding(booking);
+      console.log(`✅ [WEBHOOK] Client onboarding sent (once for group)`);
+    } catch (err) {
+      console.error(`❌ [WEBHOOK] Client onboarding failed:`, err.message);
+      errors.push(`onboarding:${booking.id}:${err.message}`);
+    }
+    await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+  }
+
+  return errors;
+}
+
 async function handlePaymentSuccess(paymentIntent) {
   console.log('');
   console.log('💰 [WEBHOOK] ========================================');
   console.log('💰 [WEBHOOK] PAYMENT SUCCESS HANDLER');
   console.log('💰 [WEBHOOK] ========================================');
-  
+
   const bookingId = paymentIntent.metadata?.bookingId;
-  
+
   console.log('📋 [WEBHOOK] Payment Intent Details:');
   console.log('   ID:', paymentIntent.id);
   console.log('   Amount:', paymentIntent.amount);
   console.log('   Status:', paymentIntent.status);
   console.log('   Metadata:', paymentIntent.metadata);
-  
+
   if (!bookingId) {
     console.error('❌ [WEBHOOK] No bookingId in payment intent metadata!');
-    console.error('💡 [WEBHOOK] Check payment intent creation in create-intent route');
     throw new Error('Missing bookingId in payment intent metadata');
   }
-  
-  console.log('🎯 [WEBHOOK] Booking ID from metadata:', bookingId);
-  
+
+  console.log('🎯 [WEBHOOK] Seed booking ID from metadata:', bookingId);
+
   try {
-    // Find the booking using improved lookup
-    const booking = await findBooking(bookingId, paymentIntent.id);
-    
-    if (!booking) {
+    const seedBooking = await findBooking(bookingId, paymentIntent.id);
+    if (!seedBooking) {
       throw new Error(`Booking not found: ${bookingId}`);
     }
-    
-    console.log('✅ [WEBHOOK] Booking found successfully');
-    console.log('📋 [WEBHOOK] Booking details:');
-    console.log('   ID:', booking.id);
-    console.log('   Event:', booking.event_name);
-    console.log('   Email:', booking.email);
-    console.log('   Status:', booking.status);
-    console.log('   Created:', booking.created_at);
-    
-    // Update booking status to confirmed
-    console.log('📝 [WEBHOOK] Updating booking to confirmed...');
-    
-    const { data: updatedData, error: updateError } = await supabase
-      .from('bookings')
-      .update({
-        status: 'confirmed',
-        payment_intent_id: paymentIntent.id,
-        payment_confirmed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', booking.id)
-      .select();
-    
-    if (updateError) {
-      console.error('❌ [WEBHOOK] Failed to update booking:', updateError);
-      throw updateError;
+
+    console.log('✅ [WEBHOOK] Seed booking found:', {
+      id: seedBooking.id,
+      event: seedBooking.event_name,
+      email: seedBooking.email,
+      master_booking_id: seedBooking.master_booking_id,
+      status: seedBooking.status,
+    });
+
+    const bookings = await fetchBookingGroup(seedBooking);
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error('⚠️ [WEBHOOK] RESEND_API_KEY not set — emails will fail but DB + calendar will still update');
     }
-    
-    console.log('✅ [WEBHOOK] Booking status updated to confirmed');
-    
-    // Get the updated booking
-    const updatedBooking = updatedData[0];
-    
-    // Create calendar event if not exists
-    if (!updatedBooking.calendar_event_id) {
-      try {
-        console.log('📅 [WEBHOOK] Creating calendar event...');
-        const calendarEvent = await createCalendarEvent(updatedBooking);
-        
-        if (calendarEvent && calendarEvent.id) {
-          await supabase
-            .from('bookings')
-            .update({
-              calendar_event_id: calendarEvent.id,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', booking.id);
-          
-          console.log('✅ [WEBHOOK] Calendar event created:', calendarEvent.id);
-        }
-      } catch (calendarError) {
-        console.error('⚠️ [WEBHOOK] Calendar failed (non-critical):', calendarError.message);
-      }
-    }
-    
-    // ===== SEND EMAILS =====
-    console.log('');
-    console.log('📧 [WEBHOOK] ========================================');
-    console.log('📧 [WEBHOOK] SENDING CONFIRMATION EMAILS');
-    console.log('📧 [WEBHOOK] ========================================');
-    console.log('📧 [WEBHOOK] Recipients:');
-    console.log('   Customer:', updatedBooking.email);
-    console.log('   Manager: manager@merrittwellness.net, clientservices@merrittwellness.net');
-    console.log('📧 [WEBHOOK] Event:', updatedBooking.event_name);
-    console.log('📧 [WEBHOOK] ========================================');
-    
-    try {
-      // Verify email function exists
-      if (typeof sendConfirmationEmails !== 'function') {
-        throw new Error('sendConfirmationEmails is not imported correctly');
-      }
-      
-      // Check if RESEND_API_KEY exists
-      if (!process.env.RESEND_API_KEY) {
-        throw new Error('RESEND_API_KEY environment variable not set');
-      }
-      
-      console.log('📧 [WEBHOOK] Calling sendConfirmationEmails()...');
-      const emailResult = await sendConfirmationEmails(updatedBooking);
-      
+
+    let onboardingPending = true;
+    const allEmailErrors = [];
+    let confirmedCount = 0;
+
+    // Process every booking in the group sequentially so calendar inserts and
+    // email sends stay below provider rate limits.
+    for (const booking of bookings) {
       console.log('');
-      console.log('✅✅✅ [WEBHOOK] EMAIL SUCCESS! ✅✅✅');
-      console.log('📧 [WEBHOOK] Results:', {
-        customerSent: !!emailResult.customerConfirmation,
-        managerSent: !!emailResult.managerNotification,
-        errors: emailResult.errors || []
+      console.log(`🎯 [WEBHOOK] Processing booking ${booking.id} (${booking.event_date} ${booking.event_time})`);
+
+      const confirmed = await confirmBooking(booking, paymentIntent);
+      if (!confirmed) {
+        // Already-confirmed booking — skip side effects entirely so a retried
+        // webhook doesn't double-book the calendar or double-send emails.
+        continue;
+      }
+      confirmedCount += 1;
+
+      await ensureCalendarEvent(confirmed);
+
+      const emailErrors = await sendBookingEmails(confirmed, {
+        sendOnboarding: onboardingPending,
       });
-      
-      if (emailResult.customerConfirmation?.data?.id) {
-        console.log('📧 [WEBHOOK] Customer email ID:', emailResult.customerConfirmation.data.id);
+      if (onboardingPending && emailErrors.every((e) => !e.startsWith('onboarding:'))) {
+        onboardingPending = false;
       }
-      
-      if (emailResult.managerNotification?.data?.id) {
-        console.log('📧 [WEBHOOK] Manager email ID:', emailResult.managerNotification.data.id);
-      }
-      
-      console.log('📧 [WEBHOOK] ========================================');
-      console.log('');
-      
-    } catch (emailError) {
-      console.log('');
-      console.error('❌❌❌ [WEBHOOK] EMAIL FAILED! ❌❌❌');
-      console.error('📧 [WEBHOOK] Error:', emailError.message);
-      console.error('📧 [WEBHOOK] Stack:', emailError.stack);
-      console.error('📧 [WEBHOOK] ========================================');
-      console.log('');
-      
-      // Log detailed diagnostics
-      console.error('🔍 [WEBHOOK] Email Diagnostics:');
-      console.error('   RESEND_API_KEY set:', !!process.env.RESEND_API_KEY);
-      console.error('   Email function type:', typeof sendConfirmationEmails);
-      console.error('   Booking email:', updatedBooking.email);
-      console.error('   Booking ID:', updatedBooking.id);
-      
-      // Don't throw - webhook should still succeed even if email fails
-      console.log('⚠️ [WEBHOOK] Continuing despite email failure');
+      allEmailErrors.push(...emailErrors);
     }
-    
+
+    console.log('');
+    console.log('📊 [WEBHOOK] Group processing summary:');
+    console.log('   Bookings in group:', bookings.length);
+    console.log('   Newly confirmed this run:', confirmedCount);
+    console.log('   Email errors:', allEmailErrors.length);
+    if (allEmailErrors.length > 0) {
+      console.error('   Errors:', allEmailErrors);
+    }
+
     console.log('🎉 [WEBHOOK] Payment success handling complete');
-    
   } catch (error) {
     console.error('❌ [WEBHOOK] Payment success handling failed:', error);
     console.error('❌ [WEBHOOK] Stack:', error.stack);
@@ -385,30 +451,47 @@ async function handlePaymentSuccess(paymentIntent) {
   }
 }
 
+// Returns a Supabase filter that selects either the single seed booking row
+// (when it has no master_booking_id) or every booking row sharing the master
+// id (multi-event groups). Lets failure/processing handlers update siblings.
+function buildGroupFilter(query, seedBooking) {
+  if (seedBooking.master_booking_id) {
+    return query.eq('master_booking_id', seedBooking.master_booking_id);
+  }
+  return query.eq('id', seedBooking.id);
+}
+
 async function handlePaymentFailure(paymentIntent) {
   const bookingId = paymentIntent.metadata?.bookingId;
-  
+
   if (!bookingId) {
     throw new Error('Missing bookingId in payment intent metadata');
   }
-  
+
   console.log('❌ [WEBHOOK] Payment failed for booking:', bookingId);
-  
+
   try {
-    const { error } = await supabase
+    const seedBooking = await findBooking(bookingId, paymentIntent.id);
+    if (!seedBooking) {
+      throw new Error(`Booking not found: ${bookingId}`);
+    }
+
+    const baseQuery = supabase
       .from('bookings')
       .update({
         status: 'payment_failed',
         payment_intent_id: paymentIntent.id,
         failure_reason: paymentIntent.last_payment_error?.message || 'Payment failed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId);
-    
+        updated_at: new Date().toISOString(),
+      });
+
+    const { data, error } = await buildGroupFilter(baseQuery, seedBooking)
+      .neq('status', 'confirmed')
+      .select();
+
     if (error) throw error;
-    
-    console.log('✅ [WEBHOOK] Booking marked as payment_failed');
-    
+
+    console.log(`✅ [WEBHOOK] ${data?.length || 0} bookings marked as payment_failed`);
   } catch (error) {
     console.error('❌ [WEBHOOK] Failed to update booking status:', error);
     throw error;
@@ -417,27 +500,34 @@ async function handlePaymentFailure(paymentIntent) {
 
 async function handlePaymentProcessing(paymentIntent) {
   const bookingId = paymentIntent.metadata?.bookingId;
-  
+
   if (!bookingId) {
     throw new Error('Missing bookingId in payment intent metadata');
   }
-  
+
   console.log('⏳ [WEBHOOK] Payment processing for booking:', bookingId);
-  
+
   try {
-    const { error } = await supabase
+    const seedBooking = await findBooking(bookingId, paymentIntent.id);
+    if (!seedBooking) {
+      throw new Error(`Booking not found: ${bookingId}`);
+    }
+
+    const baseQuery = supabase
       .from('bookings')
       .update({
         status: 'payment_processing',
         payment_intent_id: paymentIntent.id,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', bookingId);
-    
+        updated_at: new Date().toISOString(),
+      });
+
+    const { data, error } = await buildGroupFilter(baseQuery, seedBooking)
+      .neq('status', 'confirmed')
+      .select();
+
     if (error) throw error;
-    
-    console.log('✅ [WEBHOOK] Booking marked as payment_processing');
-    
+
+    console.log(`✅ [WEBHOOK] ${data?.length || 0} bookings marked as payment_processing`);
   } catch (error) {
     console.error('❌ [WEBHOOK] Failed to update booking status:', error);
     throw error;
