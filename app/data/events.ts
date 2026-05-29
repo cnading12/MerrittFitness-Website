@@ -287,7 +287,7 @@ export const events: Event[] = [
     endTime: "8:00 PM",
     description: "Anxiety. Looping thoughts. Self-doubt. Harmful patterns. None of that is your true nature. Holosomatic Breathwork cuts through all of it. Through breath, movement, and sound, your body becomes the guide—back to the truth of who you are, back to the one who knows exactly what you need, what you want, what you're here for. This is body-led healing, and it will change everything. Doors open at 5:50 PM. All experience levels welcome. $40 per person.",
     imageUrl: "/images/events/community/jules.webp",
-    ticketUrl: "https://somaticjules.com/events/",
+    ticketUrl: "https://www.eventbrite.com/e/1989422503261?aff=oddtdtcreator",
     instagramHandle: "SomaticJules",
     practitionerName: "Juliana Stoddart"
   },
