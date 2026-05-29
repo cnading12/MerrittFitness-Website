@@ -268,6 +268,18 @@ export const events: Event[] = [
 
   // ============ JUNE 2026 ============
   {
+    id: "boy-mom-play-and-learn-2026",
+    title: "Boy Mom Play & Learn",
+    date: "2026-06-25",
+    time: "9:00 AM",
+    description: "A 4-session play + learn group for moms of boys, led by Dr. Steph Bono, licensed psychologist and fellow boy mom. There's room for toddlers to play, space for moms to share and connect, and expert advice plus science-backed tools for your boy mom journey. \"Boys will be boys — let's raise good ones.\" Sessions are held Thursday mornings beginning June 25. Spots are limited — save yours and learn more at evergrowpsych.com/boymom.",
+    imageUrl: "/images/events/community/Boy Mom Play & Learn.png",
+    imageFit: "contain",
+    ticketUrl: "https://evergrowpsych.com/boymom",
+    ticketLabel: "Save Your Spot",
+    practitionerName: "Dr. Steph Bono"
+  },
+  {
     id: "channel-one-sound-system-jun-2026",
     title: "Channel One Sound System",
     date: "2026-06-07",
