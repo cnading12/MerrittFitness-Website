@@ -182,6 +182,24 @@ function getFilteredEvents(allEvents: Event[], range: DateRange): DisplayEvent[]
           occurrenceDates,
         });
       }
+    } else if (event.sessionDates && event.sessionDates.length > 0) {
+      // Fixed multi-session series: show the full remaining schedule on one card
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcoming = [...event.sessionDates]
+        .sort()
+        .filter((d) => new Date(d + 'T00:00:00') >= today);
+      const inRange = upcoming.some((d) => {
+        const dt = new Date(d + 'T00:00:00');
+        return dt >= start && dt <= end;
+      });
+      if (inRange && upcoming.length > 0) {
+        result.push({
+          ...event,
+          date: upcoming[0], // Use first upcoming session for badge + sorting
+          occurrenceDates: upcoming,
+        });
+      }
     } else {
       // One-time event: include if within range
       const eventDate = new Date(event.date + 'T00:00:00');
@@ -269,8 +287,8 @@ function EventCard({ event }: { event: DisplayEvent }) {
           </span>
         </div>
 
-        {/* Upcoming dates list for recurring events */}
-        {isRecurring && event.occurrenceDates && event.occurrenceDates.length > 0 && (
+        {/* Upcoming dates list for recurring events and fixed multi-session series */}
+        {event.occurrenceDates && event.occurrenceDates.length > 0 && (
           <div className="flex items-start gap-2 text-[#735e59] text-sm mb-4">
             <CalendarDays className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div className="flex flex-wrap gap-1.5">
