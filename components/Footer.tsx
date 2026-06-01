@@ -26,18 +26,18 @@ export default function Footer() {
             <span className="hidden sm:inline">Facebook</span>
           </Link>
           <a
-            href="tel:720-357-9499"
+            href="tel:303-359-8337"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
           >
             <Phone size={18} /> 
-            <span>(720) 357-9499</span>
+            <span>(303) 359-8337</span>
           </a>
           <a
-            href="mailto:manager@merrittwellness.net"
+            href="mailto:clientservices@merrittwellness.net"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
           >
             <Mail size={18} /> 
-            <span className="hidden md:inline">manager@merrittwellness.net</span>
+            <span className="hidden md:inline">clientservices@merrittwellness.net</span>
             <span className="md:hidden">Email</span>
           </a>
         </div>

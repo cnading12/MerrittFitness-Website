@@ -8,8 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_CONFIG = {
   from: 'Merritt Wellness <bookings@merrittwellness.net>',
-  replyTo: 'manager@merrittwellness.net',
-  managerEmail: 'manager@merrittwellness.net',
+  replyTo: 'clientservices@merrittwellness.net',
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
 
@@ -124,8 +123,8 @@ const EMAIL_TEMPLATES = {
           <!-- Contact Info -->
           <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; margin: 0;">Questions? Contact us:</p>
-            <p style="color: #374151; margin: 5px 0;">📞 (720) 357-9499</p>
-            <p style="color: #374151; margin: 5px 0;">📧 manager@merrittwellness.net</p>
+            <p style="color: #374151; margin: 5px 0;">📞 (303) 359-8337</p>
+            <p style="color: #374151; margin: 5px 0;">📧 clientservices@merrittwellness.net</p>
             <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
               (Simply reply to this email to reach us directly)
             </p>
@@ -336,7 +335,7 @@ const EMAIL_TEMPLATES = {
 
             <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
+              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
               <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 
@@ -677,7 +676,7 @@ const EMAIL_TEMPLATES = {
 
             <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
+              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
               <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 
@@ -857,14 +856,14 @@ export async function sendBookingConfirmation(booking) {
 
 export async function sendManagerNotification(booking) {
   try {
-    console.log('📧 Sending manager notification to:', EMAIL_CONFIG.managerEmail, 'and', EMAIL_CONFIG.clientServicesEmail);
+    console.log('📧 Sending manager notification to:', EMAIL_CONFIG.clientServicesEmail);
 
     const template = EMAIL_TEMPLATES.managerNotification(booking);
     const idPhotoAttachment = buildIdPhotoAttachment(booking);
 
     const payload = {
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
+      to: [EMAIL_CONFIG.clientServicesEmail],
       replyTo: booking.email,
       ...template
     };
@@ -945,7 +944,7 @@ export async function sendRecurringSetupManager(booking) {
     const idPhotoAttachment = buildIdPhotoAttachment(booking);
     const payload = {
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.managerEmail, EMAIL_CONFIG.clientServicesEmail],
+      to: [EMAIL_CONFIG.clientServicesEmail],
       replyTo: booking.email,
       ...template
     };

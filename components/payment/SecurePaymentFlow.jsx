@@ -591,11 +591,11 @@ function CheckoutForm({ bookingId, bookingData, onDebug }) {
       <div className="border-t border-gray-200 pt-4 text-center">
         <p className="text-sm text-gray-600 mb-2">Questions about your payment?</p>
         <div className="flex justify-center gap-4 text-sm">
-          <a href="tel:720-357-9499" className="text-emerald-600 hover:text-emerald-700">
-            (720) 357-9499
+          <a href="tel:303-359-8337" className="text-emerald-600 hover:text-emerald-700">
+            (303) 359-8337
           </a>
-          <a href="mailto:manager@merrittwellness.net" className="text-emerald-600 hover:text-emerald-700">
-            manager@merrittwellness.net
+          <a href="mailto:clientservices@merrittwellness.net" className="text-emerald-600 hover:text-emerald-700">
+            clientservices@merrittwellness.net
           </a>
         </div>
       </div>
