@@ -25,7 +25,25 @@ export const STRIPE_FEE_PERCENTAGE = 3;            // % surcharge for card payme
 export const VALID_PROMO_CODES = {
   MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)' },
   EXTENDED15: { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
+  // Sponsored events: 100% off, zero fees, no payment collected. The renter is
+  // never sent to checkout — the booking is confirmed immediately. The
+  // `sponsored` flag is what the booking flow keys off of to skip payment and
+  // what the calendar / emails use to label the reservation "Sponsored".
+  MerrittSponsor100: { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
 };
+
+// Codes that comp the entire booking (no payment, no card). Kept as a derived
+// list so calendar / email modules can recognize a sponsored booking from its
+// stored promo_code without re-deriving the rule.
+export const SPONSORED_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
+  .filter(([, data]) => data.sponsored === true)
+  .map(([code]) => code);
+
+// True iff `code` is a recognized sponsored (fully comped) promo code.
+export function isSponsoredPromoCode(code) {
+  if (!code || typeof code !== 'string') return false;
+  return SPONSORED_PROMO_CODES.includes(code.trim());
+}
 
 // True iff `dateString` (YYYY-MM-DD) lands on a Saturday in local time. Parses
 // the parts directly so the result doesn't depend on the runtime timezone of
@@ -129,6 +147,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let promoDiscount = 0;
   let promoDescription = '';
   let validatedPromoCode = '';
+  let sponsored = false;
 
   if (clientPromoCode && VALID_PROMO_CODES[clientPromoCode]) {
     const promoData = VALID_PROMO_CODES[clientPromoCode];
@@ -138,6 +157,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
       promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
       promoDescription = promoData.description;
       validatedPromoCode = clientPromoCode;
+      sponsored = promoData.sponsored === true;
     }
   }
 
@@ -163,6 +183,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     promoCode: validatedPromoCode,
     promoDiscount,
     promoDescription,
+    sponsored,
     subtotal,
     stripeFee,
     total,

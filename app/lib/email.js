@@ -2,6 +2,7 @@
 // UPDATED VERSION - Includes home address in manager notification
 
 import { Resend } from 'resend';
+import { isSponsoredBooking } from './calendar-flags.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -52,6 +53,16 @@ const EMAIL_TEMPLATES = {
             <h1 style="color: #10b981; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
             <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
           </div>
+
+          ${isSponsoredBooking(booking) ? `
+          <!-- Sponsored Banner -->
+          <div style="background: #ecfdf5; border: 2px solid #10b981; padding: 18px; border-radius: 8px; margin: 0 0 20px 0; text-align: center;">
+            <p style="margin: 0; color: #065f46; font-size: 18px; font-weight: 700;">🎁 Sponsored Event</p>
+            <p style="margin: 8px 0 0 0; color: #047857; font-size: 14px; line-height: 1.5;">
+              This booking has been <strong>sponsored</strong> — there is <strong>no payment required</strong> and no card on file. Your total due is <strong>$0.00</strong>.
+            </p>
+          </div>
+          ` : ''}
 
           <!-- Booking Details -->
           <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -141,6 +152,13 @@ const EMAIL_TEMPLATES = {
           <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
         </div>
 
+        ${isSponsoredBooking(booking) ? `
+        <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="color: #065f46; margin: 0 0 8px 0;">🎁 SPONSORED — No Payment Collected</h2>
+          <p style="color: #047857; margin: 0;">This booking was comped with a sponsored promo code (<strong>${booking.promo_code || 'sponsored'}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
+        </div>
+        ` : ''}
+
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #1f2937; margin: 0 0 15px 0;">Event Details:</h3>
           <table style="width: 100%; border-collapse: collapse;">
@@ -166,7 +184,7 @@ const EMAIL_TEMPLATES = {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Amount:</td>
-              <td style="padding: 8px 0; color: #111827;">$${booking.total_amount}</td>
+              <td style="padding: 8px 0; color: #111827;">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}`}</td>
             </tr>
           </table>
 
@@ -230,7 +248,7 @@ const EMAIL_TEMPLATES = {
           <h3 style="color: #0369a1; margin: 0 0 10px 0;">Booking Details:</h3>
           <p style="margin: 5px 0; color: #0c4a6e;"><strong>Booking ID:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
           <p style="margin: 5px 0; color: #0c4a6e;"><strong>Status:</strong> ${booking.status || 'Confirmed'}</p>
-          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Payment Method:</strong> ${booking.payment_method === 'pay-later' ? 'Pay Later (No fees)' : 'Card Payment'}</p>
+          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Payment Method:</strong> ${isSponsoredBooking(booking) ? 'Sponsored — No Payment Required' : (booking.payment_method === 'pay-later' ? 'Pay Later (No fees)' : 'Card Payment')}</p>
           <p style="margin: 5px 0; color: #0c4a6e;"><strong>Created:</strong> ${new Date().toLocaleString()}</p>
         </div>
 
