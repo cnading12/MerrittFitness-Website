@@ -2157,12 +2157,13 @@ export default function BookingPage() {
                       the first for all recurring reservations.
                     </li>
                     <li>
-                      A copy of your Special Event Liability Insurance (see Insurance section below) is due no later than ten (10)
-                      days prior to your event. Otherwise, the credit card on file will be held for damages should they occur.
+                      Any event serving alcohol requires a Certificate of Insurance (COI) for general liability (see Insurance section
+                      below), due no later than ten (10) days prior to your event. For all events, the credit card on file will be held
+                      for damages should they occur.
                     </li>
                     <li>
-                      Alcohol service is permitted with the proper general liability insurance certificate provided by you, the Client.
-                      Alcohol must be served by TIPS certified bartenders and servers. Additional lawful requirements may apply.
+                      Alcohol service is permitted with the proper general liability insurance certificate (COI) provided by you, the
+                      Client. Alcohol must be served by TIPS certified bartenders and servers. Additional lawful requirements may apply.
                     </li>
                     <li>
                       The City of Denver's Registered Neighborhood Organization does not allow events to go past 10 P.M. However,
@@ -2173,11 +2174,41 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Payment Structure</h3>
 
                   <p>
-                    Client agrees to pay Merritt Wellness an hourly rental rate per hour for use of the Premises. Payment for recurring
-                    rentals is due on or before the first of each month. Failure to submit payment within 30 days of the due date will
-                    result in suspension or cancellation of the Client's scheduled class sessions and/or termination of this Agreement
-                    at the sole discretion of Merritt Wellness. Any outstanding balance must be paid in full prior to resuming use of
-                    the Premises.
+                    Client agrees to pay Merritt Wellness an hourly rental rate for use of the Premises. The standard rate is
+                    <strong> $95/hour</strong> with a two (2) hour minimum for all events. All Saturday events are billed at
+                    <strong> $200/hour</strong> with a two (2) hour minimum. Optional setup and/or teardown assistance is available at
+                    <strong> $50 each</strong> (one hour per service), or <strong>$100 for both</strong>. Payments made by credit card
+                    are subject to a 3% processing surcharge. Payment for recurring rentals is due on or before the first of each month.
+                    Failure to submit payment within 30 days of the due date will result in suspension or cancellation of the Client's
+                    scheduled class sessions and/or termination of this Agreement at the sole discretion of Merritt Wellness. Any
+                    outstanding balance must be paid in full prior to resuming use of the Premises.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">On-Site Assistance &amp; Event Supervision</h3>
+
+                  <p>
+                    To help with wifi, speakers, building access, and any questions, on-site support is provided as follows:
+                  </p>
+
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li>
+                      <strong>First-time renters with fewer than 40 attendees:</strong> On-site assistance is required at a flat
+                      <strong> $35</strong> per booking. Returning renters may optionally add this service.
+                    </li>
+                    <li>
+                      <strong>Events with 40 or more attendees:</strong> A dedicated Event Supervisor (Facility Host) is required at
+                      <strong> $30/hour</strong>, billed up to a maximum of four (4) hours, in place of standard on-site assistance —
+                      you are never charged for both. For events lasting up to four (4) hours, the Event Supervisor remains on site for
+                      the entire event. For events longer than four (4) hours, the Event Supervisor covers the first two (2) hours and
+                      the last two (2) hours to assist with arrival, setup, and close-out.
+                    </li>
+                  </ul>
+
+                  <p>
+                    The Event Supervisor / Facility Host requirement is determined by the expected attendee count you provide at the
+                    time of booking. Merritt Wellness reserves the right to require event supervision for any event in its sole
+                    discretion. The Event Supervisor's role is to safeguard the facility and assist with logistics and does not relieve
+                    the Client of responsibility for the conduct, supervision, and safety of their guests.
                   </p>
 
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Missed Class / Cancellation Policy</h3>
@@ -2200,18 +2231,27 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance</h3>
 
                   <p>
-                    Special Event Liability Insurance is required of ALL Clients and is due no later than ten (10) days prior to your
-                    event. The insurance must, at client's sole expense, provide and maintain public liability and personal property
-                    damage insurance, insuring Merritt Wellness LLC and Merritt Wellness employees, contractors and contracted vendors
-                    against all bodily injury, property damage, personal injury and other loss arising out of Client's use and occupancy
-                    of the premises, or any other occupant on the premises, including appurtenances to the premises and sidewalks.
+                    A Certificate of Insurance (COI) for general liability is required for any event at which alcohol is served, and is
+                    due no later than ten (10) days prior to your event. Merritt Wellness may also, at its sole discretion, require a COI
+                    for general liability for other higher-risk events. The insurance must, at client's sole expense, provide and
+                    maintain public liability and personal property damage insurance, insuring Merritt Wellness LLC and Merritt Wellness
+                    employees, contractors and contracted vendors against all bodily injury, property damage, personal injury and other
+                    loss arising out of Client's use and occupancy of the premises, or any other occupant on the premises, including
+                    appurtenances to the premises and sidewalks.
                   </p>
 
                   <p>
-                    The insurance required hereunder shall have a single limit liability of no less than <strong>$1 Million</strong>,
+                    When a COI is required, the insurance shall have a single limit liability of no less than <strong>$1 Million</strong>,
                     and general aggregate liability of not less than <strong>$2 Million</strong>. Merritt Wellness LLC shall be named
-                    as an additional insured of said policy. Any caterers and/or outside vendors, companies, and/or institutions MUST
-                    provide a copy of their Certificate and Catering License to Merritt Wellness at least one month prior to the event.
+                    as an additional insured of said policy. Any caterers and/or outside vendors, companies, and/or institutions serving
+                    or providing alcohol MUST provide a copy of their Certificate of Insurance and applicable Catering/Liquor License to
+                    Merritt Wellness at least one month prior to the event.
+                  </p>
+
+                  <p>
+                    Events that do not serve alcohol are not required to carry special event liability insurance. For all events,
+                    however, a valid credit card must remain on file for the duration of the event and may be held or charged for
+                    damages should they occur.
                   </p>
 
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Smoke-Free Facility</h3>
