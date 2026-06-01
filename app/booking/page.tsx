@@ -107,10 +107,13 @@ export default function BookingPage() {
   const [promoCodeApplied, setPromoCodeApplied] = useState(false);
   const [promoCodeError, setPromoCodeError] = useState('');
 
-  // Valid promo codes configuration
+  // Valid promo codes configuration. Mirrors VALID_PROMO_CODES in
+  // app/lib/booking-pricing.js (the server re-validates). The `sponsored` flag
+  // comps the entire booking — $0 total, no fees, no card required.
   const VALID_PROMO_CODES = {
     'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' },
-    'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 }
+    'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
+    'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true }
   };
 
   // Business-focused event types
@@ -598,12 +601,14 @@ export default function BookingPage() {
     // Apply promo code discount
     let promoDiscount = 0;
     let promoDescription = '';
+    let sponsored = false;
     if (promoCodeApplied && promoCode.trim() && VALID_PROMO_CODES[promoCode.trim()]) {
       const promoData = VALID_PROMO_CODES[promoCode.trim()];
       // Enforce minimum hours requirement (e.g., EXTENDED15 requires 8+ hours)
       if (!promoData.minHours || totalHours >= promoData.minHours) {
         promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
         promoDescription = promoData.description;
+        sponsored = promoData.sponsored === true;
       }
     }
 
@@ -632,6 +637,7 @@ export default function BookingPage() {
       preDiscountSubtotal,
       promoDiscount,
       promoDescription,
+      sponsored,
       promoCode: promoCodeApplied ? promoCode.trim() : '',
       subtotal,
       stripeFee,
@@ -1044,12 +1050,19 @@ export default function BookingPage() {
 
       if (bookingResponse.ok && bookingResult.success) {
         console.log('✅ Booking created successfully:', bookingResult);
+        // Sponsored bookings are comped and already confirmed server-side —
+        // skip checkout entirely and go straight to the confirmation page.
         // Recurring applications skip the single-payment checkout — pass an
         // `application_type` flag so the payment page can render the ACH
         // auto-debit setup flow instead of a one-time Stripe charge.
-        const redirect = applicationType === 'recurring'
-          ? `/booking/payment?booking_id=${bookingResult.id}&application_type=recurring`
-          : `/booking/payment?booking_id=${bookingResult.id}`;
+        let redirect;
+        if (bookingResult.sponsored) {
+          redirect = `/booking/success?booking_id=${bookingResult.id}`;
+        } else if (applicationType === 'recurring') {
+          redirect = `/booking/payment?booking_id=${bookingResult.id}&application_type=recurring`;
+        } else {
+          redirect = `/booking/payment?booking_id=${bookingResult.id}`;
+        }
         window.location.href = redirect;
       } else {
         throw new Error(bookingResult.error || 'Failed to create booking');
@@ -2407,10 +2420,12 @@ export default function BookingPage() {
                     <>
                       {applicationType === 'recurring'
                         ? <Banknote size={20} />
-                        : <CreditCard size={20} />}
+                        : (applicationType === 'single' && pricing.sponsored)
+                          ? <CheckCircle size={20} />
+                          : <CreditCard size={20} />}
                       {applicationType === 'recurring'
                         ? 'Submit Recurring Application'
-                        : 'Proceed to Secure Payment'}
+                        : (pricing.sponsored ? 'Confirm Sponsored Booking' : 'Proceed to Secure Payment')}
                       <ArrowRight size={20} />
                     </>
                   )}
@@ -2614,22 +2629,32 @@ export default function BookingPage() {
                 </span>
               </div>
 
-              {pricing.promoDiscount > 0 && (
-                <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-800">
-                    <strong>🎉 Promo Applied:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} with code &quot;{pricing.promoCode}&quot;
+              {pricing.sponsored ? (
+                <div className="mt-3 text-xs bg-emerald-50 border-2 border-emerald-300 rounded-lg p-3">
+                  <p className="text-emerald-900">
+                    <strong>🎁 Sponsored Event:</strong> This booking is fully sponsored — there are <strong>no fees</strong> and <strong>no card is required</strong>. Your total is <strong>$0.00</strong>. You&apos;ll be confirmed immediately, no payment step.
                   </p>
                 </div>
-              )}
+              ) : (
+                <>
+                  {pricing.promoDiscount > 0 && (
+                    <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-green-800">
+                        <strong>🎉 Promo Applied:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} with code &quot;{pricing.promoCode}&quot;
+                      </p>
+                    </div>
+                  )}
 
-              <div className="mt-3 text-xs">
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <p className="text-orange-800">
-                    <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
-                    Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
-                  </p>
-                </div>
-              </div>
+                  <div className="mt-3 text-xs">
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <p className="text-orange-800">
+                        <strong>💳 Card Payment:</strong> 3% processing fee applies (Stripe requirement).
+                        Total you pay: <strong>${pricing.total.toFixed(2)}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {pricing.minimumApplied && (
                 <div className="mt-3 text-xs bg-blue-50 border border-blue-200 rounded-lg p-3">

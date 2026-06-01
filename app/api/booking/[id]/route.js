@@ -1,5 +1,6 @@
 // app/api/booking/[id]/route.js
 import { getBooking } from '../../../lib/database.js';
+import { isSponsoredBooking } from '../../../lib/calendar-flags.js';
 
 export async function GET(request, context) {
   try {
@@ -62,6 +63,10 @@ export async function GET(request, context) {
       totalAmount: booking.total_amount, // Alias for frontend compatibility
       subtotal: booking.subtotal,
       stripe_fee: booking.stripe_fee,
+      promo_code: booking.promo_code ?? null,
+      // Sponsored = comped booking (no payment). Derived from the stored promo
+      // code (with support for an explicit is_sponsored column if ever added).
+      is_sponsored: booking.is_sponsored === true || isSponsoredBooking(booking),
       status: booking.status,
       created_at: booking.created_at,
       updated_at: booking.updated_at,

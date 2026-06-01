@@ -18,6 +18,21 @@
 export const SUPERVISION_GROUP_THRESHOLD = 40;
 export const SUPERVISION_MAX_HOURS = 4;
 
+// Codes that comp the entire booking (no payment collected). Mirrors
+// SPONSORED_PROMO_CODES in app/lib/booking-pricing.js — duplicated here so this
+// module stays dependency-free (same rationale as SUPERVISION_GROUP_THRESHOLD).
+export const SPONSORED_PROMO_CODES = ['MerrittSponsor100'];
+
+// A booking is "sponsored" when it was comped via a sponsored promo code (or an
+// explicit is_sponsored flag, if the column is ever added). Derived from the
+// stored promo_code so the calendar / emails don't depend on a DB migration.
+export function isSponsoredBooking(booking) {
+  if (!booking) return false;
+  if (booking.is_sponsored === true) return true;
+  const code = (booking.promo_code || '').trim();
+  return SPONSORED_PROMO_CODES.includes(code);
+}
+
 export function buildStaffAttentionFlags(booking) {
   const flags = [];
   if (!booking) return flags;
@@ -78,6 +93,19 @@ export function buildStaffAttentionFlags(booking) {
     });
   }
 
+  // Sponsored bookings are comped — surface this front and center so staff
+  // immediately understand no payment was collected. Unshifted to the front so
+  // the SPONSORED badge stays visible even when the calendar grid truncates the
+  // title.
+  if (isSponsoredBooking(booking)) {
+    flags.unshift({
+      tag: '🎁 SPONSORED',
+      detail:
+        'SPONSORED EVENT — fully comped, no payment was collected. Treat as a ' +
+        'confirmed reservation.',
+    });
+  }
+
   return flags;
 }
 
@@ -88,6 +116,8 @@ export function buildStaffAttentionFlags(booking) {
 // "booked" color when nothing extra is needed.
 export function pickCalendarColorId(flags) {
   if (!flags || flags.length === 0) return '11'; // Tomato — default booked
+  const hasSponsored = flags.some((f) => f.tag.includes('SPONSORED'));
+  if (hasSponsored) return '10';                 // Basil — comped / sponsored
   const hasSupervision = flags.some((f) => f.tag.includes('SUPERVISION'));
   if (hasSupervision) return '4';                // Flamingo — strongest alert
   const hasOnsite = flags.some(

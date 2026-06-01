@@ -45,6 +45,8 @@ function SuccessPageContent() {
     );
   }
 
+  const isSponsored = bookingData?.is_sponsored === true;
+
   const formatDate = (dateString) => {
     const [year, month, day] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day);
@@ -66,13 +68,24 @@ function SuccessPageContent() {
             <CheckCircle className="text-emerald-600" size={40} />
           </div>
 
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {isSponsored ? 'Booking Confirmed!' : 'Payment Successful!'}
+          </h1>
           <p className="text-xl text-gray-600 mb-2">
             Your wellness experience is confirmed
           </p>
           <p className="text-gray-500">
             Welcome to the Merritt Wellness community
           </p>
+
+          {isSponsored && (
+            <div className="mt-6 inline-flex flex-col items-center gap-1 bg-emerald-50 border-2 border-emerald-300 rounded-xl px-6 py-4">
+              <span className="text-emerald-900 font-semibold">🎁 Sponsored Event</span>
+              <span className="text-emerald-700 text-sm">
+                This booking was fully sponsored — no payment was required.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Booking Details */}

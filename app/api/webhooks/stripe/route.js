@@ -3,18 +3,8 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { createCalendarEvent } from '../../../lib/calendar.js';
-import {
-  sendBookingConfirmation,
-  sendManagerNotification,
-  sendClientOnboarding,
-  sendRecurringSetupEmails,
-} from '../../../lib/email.js';
-
-// Resend's free plan caps at ~2 requests/sec. Space individual sends out so a
-// group of bookings doesn't burst past the limit.
-const EMAIL_RATE_LIMIT_DELAY_MS = 1000;
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+import { sendRecurringSetupEmails } from '../../../lib/email.js';
+import { ensureCalendarEvent, sendBookingEmails } from '../../../lib/booking-fulfillment.js';
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 
 // Initialize Stripe
@@ -299,69 +289,6 @@ async function confirmBooking(booking, paymentIntent) {
   }
 
   return data[0];
-}
-
-async function ensureCalendarEvent(booking) {
-  if (booking.calendar_event_id) {
-    console.log(`📅 [WEBHOOK] Calendar event already exists for ${booking.id}:`, booking.calendar_event_id);
-    return;
-  }
-
-  try {
-    console.log(`📅 [WEBHOOK] Creating calendar event for ${booking.id} (${booking.event_date} ${booking.event_time})...`);
-    const calendarEvent = await createCalendarEvent(booking);
-
-    if (calendarEvent && calendarEvent.id) {
-      await supabase
-        .from('bookings')
-        .update({
-          calendar_event_id: calendarEvent.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id);
-      console.log(`✅ [WEBHOOK] Calendar event created for ${booking.id}:`, calendarEvent.id);
-    }
-  } catch (calendarError) {
-    // Calendar failure should not block other bookings or emails — log and continue.
-    console.error(`⚠️ [WEBHOOK] Calendar event failed for ${booking.id} (non-critical):`, calendarError.message);
-  }
-}
-
-async function sendBookingEmails(booking, { sendOnboarding }) {
-  const errors = [];
-
-  try {
-    await sendBookingConfirmation(booking);
-    console.log(`✅ [WEBHOOK] Customer confirmation sent for ${booking.id} (${booking.event_date})`);
-  } catch (err) {
-    console.error(`❌ [WEBHOOK] Customer confirmation failed for ${booking.id}:`, err.message);
-    errors.push(`customer:${booking.id}:${err.message}`);
-  }
-  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
-
-  try {
-    await sendManagerNotification(booking);
-    console.log(`✅ [WEBHOOK] Manager notification sent for ${booking.id} (${booking.event_date})`);
-  } catch (err) {
-    console.error(`❌ [WEBHOOK] Manager notification failed for ${booking.id}:`, err.message);
-    errors.push(`manager:${booking.id}:${err.message}`);
-  }
-  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
-
-  // The onboarding email is generic welcome / policy material — the renter
-  // only needs it once per booking group, not once per date.
-  if (sendOnboarding) {
-    try {
-      await sendClientOnboarding(booking);
-      console.log(`✅ [WEBHOOK] Client onboarding sent (once for group)`);
-    } catch (err) {
-      console.error(`❌ [WEBHOOK] Client onboarding failed:`, err.message);
-      errors.push(`onboarding:${booking.id}:${err.message}`);
-    }
-    await delay(EMAIL_RATE_LIMIT_DELAY_MS);
-  }
-
-  return errors;
 }
 
 async function handlePaymentSuccess(paymentIntent) {

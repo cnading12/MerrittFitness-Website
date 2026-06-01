@@ -10,10 +10,11 @@ import {
   calculateAccuratePricing,
   findRecurringSlotConflicts,
 } from '../../lib/booking-pricing.js';
-// NOTE: Calendar events are now created in the Stripe webhook after payment completion
-// import { createCalendarEvent } from '../../lib/calendar.js';
-// NOTE: Confirmation emails are now sent in the Stripe webhook after payment completion
-// import { sendConfirmationEmails } from '../../lib/email.js';
+// For PAID bookings, calendar events + confirmation emails are created in the
+// Stripe webhook after payment completes. SPONSORED (comped) bookings never hit
+// Stripe, so this route confirms them immediately and runs the same side
+// effects directly via the shared fulfillment helper.
+import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
 
 // Initialize Supabase
 const supabase = createClient(
@@ -512,6 +513,12 @@ async function bookingHandler(request) {
       clientPromoCode
     );
 
+    // Sponsored bookings are comped (100% off, no fees, no card). They are
+    // confirmed at insert time and never sent to checkout — there's no Stripe
+    // payment and therefore no webhook, so this route runs the calendar + email
+    // side effects itself further down.
+    const isSponsored = accuratePricing.sponsored === true && accuratePricing.total === 0;
+
     const masterBookingId = uuidv4();
     const createdBookings = [];
     let bookingErrors = [];
@@ -555,7 +562,9 @@ async function bookingHandler(request) {
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,
           idPhotoName: validatedData.idPhoto.name,
           idPhotoType: validatedData.idPhoto.type,
-          status: 'pending_payment' // All bookings require payment
+          // Sponsored bookings are comped — confirm immediately so the renter
+          // skips checkout. Everything else awaits payment.
+          status: isSponsored ? 'confirmed' : 'pending_payment'
         };
 
         // Create booking in database
@@ -588,13 +597,31 @@ async function bookingHandler(request) {
       }, { status: 500 });
     }
 
-    // Note: Confirmation emails are sent after successful payment via Stripe webhook
+    // For PAID bookings, confirmation emails + calendar events are sent after
+    // successful payment via the Stripe webhook. SPONSORED bookings are already
+    // confirmed and will never trigger a webhook, so run those side effects now.
+    if (isSponsored) {
+      try {
+        console.log('🎁 [SPONSORED] Fulfilling comped booking group (calendar + emails)...');
+        const fulfillmentErrors = await fulfillConfirmedBookings(createdBookings);
+        if (fulfillmentErrors.length > 0) {
+          console.error('⚠️ [SPONSORED] Some fulfillment side effects failed:', fulfillmentErrors);
+        } else {
+          console.log('✅ [SPONSORED] Calendar + emails completed');
+        }
+      } catch (fulfillError) {
+        // The booking is already saved + confirmed; a calendar/email hiccup
+        // must not turn the request into a failure for the renter. Log and move on.
+        console.error('⚠️ [SPONSORED] Fulfillment failed (booking still confirmed):', fulfillError);
+      }
+    }
 
     // Prepare success response
     const response = {
       success: true,
       id: createdBookings[0].id,
       masterBookingId: masterBookingId,
+      sponsored: isSponsored,
       bookings: createdBookings.map(b => ({
         id: b.id,
         eventName: b.event_name,
@@ -605,7 +632,9 @@ async function bookingHandler(request) {
       totalBookings: createdBookings.length,
       paymentMethod: validatedData.contactInfo.paymentMethod,
       totalAmount: accuratePricing.total,
-      message: 'Bookings created successfully. Proceed to payment.'
+      message: isSponsored
+        ? 'Sponsored booking confirmed. No payment required.'
+        : 'Bookings created successfully. Proceed to payment.'
     };
 
     if (bookingErrors.length > 0) {

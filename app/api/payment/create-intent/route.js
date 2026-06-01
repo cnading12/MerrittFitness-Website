@@ -38,8 +38,18 @@ export async function POST(request) {
 
     // Check if already confirmed
     if (booking.status === 'confirmed') {
-      return Response.json({ 
+      return Response.json({
         error: 'Booking is already confirmed',
+        redirect: `/booking/success?booking_id=${bookingId}`
+      }, { status: 400, headers: corsHeaders });
+    }
+
+    // Sponsored / zero-amount bookings never require payment. Guard against a
+    // Stripe PaymentIntent being created for them (Stripe rejects $0 anyway) and
+    // send the renter straight to the confirmation page.
+    if (parseFloat(booking.total_amount) <= 0) {
+      return Response.json({
+        error: 'No payment required for this booking',
         redirect: `/booking/success?booking_id=${bookingId}`
       }, { status: 400, headers: corsHeaders });
     }
