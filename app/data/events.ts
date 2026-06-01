@@ -15,6 +15,7 @@ export interface Event {
   practitionerName?: string;
   recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
   endDate?: string; // Optional ISO date — for recurring events, the last day occurrences should appear
+  sessionDates?: string[]; // Optional explicit list of session dates (ISO) for a fixed multi-session series with irregular spacing
 }
 
 // Add your events here - events with dates in the past will be automatically filtered out
@@ -271,6 +272,7 @@ export const events: Event[] = [
     id: "boy-mom-play-and-learn-2026",
     title: "Boy Mom Play & Learn",
     date: "2026-06-18",
+    sessionDates: ["2026-06-18", "2026-06-25", "2026-07-09", "2026-07-16"],
     time: "9:00 AM",
     description: "A small group led by Dr. Steph Bono (licensed psychologist + fellow boy mom) for moms in the thick of raising toddler boys (approx. 1-3 years old). Over 4 sessions, you'll tackle common toddlerhood challenges, learn how to nurture emotional intelligence in boys, and connect with other boy moms. A toddler or baby is welcome to join but not required. Sessions are held Thursday mornings starting June 18. Spots are limited — save yours and learn more at evergrowpsych.com/boymom.",
     imageUrl: "/images/events/community/Boy-Mom.png",
