@@ -107,7 +107,7 @@ export const events: Event[] = [
     time: "6:30 PM",
     endTime: "8:30 PM",
     description: "We will be starting a weekly 8 Week Absolute Beginner Class for salsa and bachata. Join us for two classes each Wednesday at 6:30-8:30PM: one hour of salsa and one hour of bachata. Our goal is to teach you the basics of social dancing so that you can feel confident joining Denver's growing social dance scene across many amazing venues in the city. By the end of the 8 weeks, you should have a basic working knowledge of social dancing within these dance styles, and will be able to go to any dance function and move confidently with a partner! $80 for the full 8-week series ($5 per class). March 11th through May 6th.",
-    imageUrl: "/images/events/dance/MHQ.webp",
+    imageUrl: "/images/events/dance/Ricky.JPG",
     imageFit: "contain",
     ticketUrl: "https://www.paypal.com/qrcodes/venmocs/03688acd-e9cd-4d15-a2c0-0a3ee4a1ecd8?created=1772574619.18876&printed=1",
     ticketLabel: "Pay via Venmo",
