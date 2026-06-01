@@ -279,6 +279,7 @@ export const events: Event[] = [
     imageFit: "contain",
     ticketUrl: "https://evergrowpsych.com/boymom",
     ticketLabel: "Save Your Spot",
+    instagramHandle: "evergrowpsychology",
     practitionerName: "Dr. Steph Bono"
   },
   {
