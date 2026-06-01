@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Book Yoga, Sound Baths & Wellness Classes | Merritt Wellness Denver Sloans Lake',
-  description: 'Book yoga classes, sound bath sessions, meditation retreats, and wellness events at Merritt Wellness in Sloans Lake Denver. Historic 1905 venue with 24-foot ceilings, perfect acoustics. $95/hour. Call (720) 357-9499.',
+  description: 'Book yoga classes, sound bath sessions, meditation retreats, and wellness events at Merritt Wellness in Sloans Lake Denver. Historic 1905 venue with 24-foot ceilings, perfect acoustics. $95/hour. Call (303) 359-8337.',
   keywords: 'book yoga class Denver, sound bath Denver booking, meditation class reservation Denver, wellness event space rental Denver, yoga studio rental Sloans Lake, sound healing session Denver, book wellness retreat Denver, private yoga session Denver, group meditation Denver, holistic healing Denver, mindfulness class Denver, breathwork session Denver, Denver yoga reservation, wellness workshop Denver',
   openGraph: {
     title: 'Book Your Wellness Experience | Merritt Wellness Denver',

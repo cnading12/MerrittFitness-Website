@@ -368,7 +368,7 @@ ${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
 ${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
 
 Booking ID: ${booking.id}
-Contact manager@merrittwellness.net for changes.
+Contact clientservices@merrittwellness.net for changes.
       `.trim(),
       start: {
         dateTime: startDateTimeString,

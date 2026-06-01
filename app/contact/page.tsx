@@ -34,7 +34,7 @@ export default function ContactPage() {
                 <h3 className="text-xl font-bold mb-6 text-[#4a3f3c] group-hover:text-[#735e59] transition-colors duration-300 font-serif">Reach Out</h3>
                 <div className="space-y-4">
                   <a
-                    href="tel:720-357-9499"
+                    href="tel:303-359-8337"
                     className="flex items-center gap-4 text-[#6b5f5b] hover:text-[#735e59] transition-colors group/link"
                   >
                     <div className="p-3 bg-[#735e59]/10 rounded-xl group-hover/link:bg-[#735e59]/20 transition-colors">
@@ -42,10 +42,10 @@ export default function ContactPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </div>
-                    <span className="font-medium text-lg">(720) 357-9499</span>
+                    <span className="font-medium text-lg">(303) 359-8337</span>
                   </a>
                   <a
-                    href="mailto:manager@merrittwellness.net"
+                    href="mailto:clientservices@merrittwellness.net"
                     className="flex items-center gap-4 text-[#6b5f5b] hover:text-[#735e59] transition-colors group/link"
                   >
                     <div className="p-3 bg-[#a08b84]/20 rounded-xl group-hover/link:bg-[#a08b84]/30 transition-colors">
@@ -53,7 +53,7 @@ export default function ContactPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <span className="font-medium text-lg">manager@merrittwellness.net</span>
+                    <span className="font-medium text-lg">clientservices@merrittwellness.net</span>
                   </a>
                 </div>
               </div>
