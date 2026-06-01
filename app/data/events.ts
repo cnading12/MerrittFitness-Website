@@ -270,10 +270,10 @@ export const events: Event[] = [
   {
     id: "boy-mom-play-and-learn-2026",
     title: "Boy Mom Play & Learn",
-    date: "2026-06-25",
+    date: "2026-06-18",
     time: "9:00 AM",
-    description: "A 4-session play + learn group for moms of boys, led by Dr. Steph Bono, licensed psychologist and fellow boy mom. There's room for toddlers to play, space for moms to share and connect, and expert advice plus science-backed tools for your boy mom journey. \"Boys will be boys — let's raise good ones.\" Sessions are held Thursday mornings beginning June 25. Spots are limited — save yours and learn more at evergrowpsych.com/boymom.",
-    imageUrl: "/images/events/community/Boy Mom Play & Learn.png",
+    description: "A small group led by Dr. Steph Bono (licensed psychologist + fellow boy mom) for moms in the thick of raising toddler boys (approx. 1-3 years old). Over 4 sessions, you'll tackle common toddlerhood challenges, learn how to nurture emotional intelligence in boys, and connect with other boy moms. A toddler or baby is welcome to join but not required. Sessions are held Thursday mornings starting June 18. Spots are limited — save yours and learn more at evergrowpsych.com/boymom.",
+    imageUrl: "/images/events/community/Boy-Mom.png",
     imageFit: "contain",
     ticketUrl: "https://evergrowpsych.com/boymom",
     ticketLabel: "Save Your Spot",
