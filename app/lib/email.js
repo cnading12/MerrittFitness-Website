@@ -138,7 +138,7 @@ const EMAIL_TEMPLATES = {
           <!-- Contact Info -->
           <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; margin: 0;">Questions? Contact us:</p>
-            <p style="color: #374151; margin: 5px 0;">📞 (303) 359-8337</p>
+            <p style="color: #374151; margin: 5px 0;">📞 (720) 357-9499</p>
             <p style="color: #374151; margin: 5px 0;">📧 clientservices@merrittwellness.net</p>
             <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
               (Simply reply to this email to reach us directly)
@@ -352,7 +352,7 @@ const EMAIL_TEMPLATES = {
 
             <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
+              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
               <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 
@@ -484,7 +484,7 @@ const EMAIL_TEMPLATES = {
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">clientservices@merrittwellness.net</a>
             </p>
             <p style="margin: 0;">
-              <a href="tel:+13033598337" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">303-359-8337</a>
+              <a href="tel:+17203579499" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">720-357-9499</a>
             </p>
             <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
               This inbox and phone line are actively monitored by our on-site team and are the fastest way to get support before and during your event.
@@ -528,7 +528,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>Need your access code?</strong> Please email
               <a href="mailto:clientservices@merrittwellness.net" style="color: #3b82f6; text-decoration: none;">clientservices@merrittwellness.net</a>
-              or call <a href="tel:+13033598337" style="color: #3b82f6; text-decoration: none;">303-359-8337</a>
+              or call <a href="tel:+17203579499" style="color: #3b82f6; text-decoration: none;">720-357-9499</a>
               to receive your personal access code before your event.
             </p>
           </div>
@@ -585,7 +585,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
               If anything comes up as you prepare, don't hesitate to reach out to
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a>
-              or call <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+              or call <a href="tel:+17203579499" style="color: #059669; text-decoration: none;">720-357-9499</a>
               — we're happy to help.
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
@@ -600,7 +600,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #6b7280; font-size: 14px; margin: 0;">
               <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a><br>
-              <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+              <a href="tel:+17203579499" style="color: #059669; text-decoration: none;">720-357-9499</a>
             </p>
           </div>
         </div>
@@ -704,7 +704,7 @@ const EMAIL_TEMPLATES = {
             <p style="color: #6b7280; font-size: 14px; margin: 0;">
               <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
               <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a><br>
-              <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+              <a href="tel:+17203579499" style="color: #059669; text-decoration: none;">720-357-9499</a>
             </p>
           </div>
 
@@ -808,7 +808,7 @@ const EMAIL_TEMPLATES = {
 
             <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
+              <p style="color: #374151; margin: 5px 0;">(720) 357-9499</p>
               <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 

@@ -48,7 +48,21 @@ The contact page skipped from `<h1>` straight to `<h3>` (no `<h2>`). Swapped the
 headings ("Reach Out", "Visit Our Sanctuary", "Stay Connected") from `<h3>` to `<h2>`,
 **keeping the exact same className** on each. Pure semantic fix; appearance unchanged.
 
-### 7. Manifest theme color consistency — `public/site.webmanifest`
+### 7. Corrected phone number — site-wide
+Updated the business phone from the old `303-359-8337` to **`720-357-9499`** everywhere it appeared
+(~30 spots): visible UI (header/footer, contact, booking, success/payment-complete pages), email
+templates (`app/lib/email.js`), per-route meta descriptions, and JSON-LD `telephone` fields — across
+display (`(720) 357-9499`), `tel:` links, and E.164 (`+1-720-357-9499`) formats.
+
+### 8. Removed fabricated review data — `app/layout.tsx`, `app/page.tsx`
+The structured data claimed `aggregateRating` of **5.0 with reviewCount "47"** plus a fake single
+review authored by "Denver Wellness Community". The business has a genuine 5.0 rating but **not** 47
+reviews, and Google requires aggregate ratings to reflect real, verifiable, on-page reviews — an
+invented count risks a structured-data manual penalty. Removed both the `aggregateRating` and the
+fabricated `review` from the home and root JSON-LD. Can be re-added cleanly once a real, verifiable
+count is available (ideally synced from the Google Business Profile).
+
+### 9. Manifest theme color consistency — `public/site.webmanifest`
 `theme_color` was `#10b981` (emerald green) while the app's `viewport.themeColor` is `#735e59`
 (brand taupe). Set the manifest to `#735e59` so they match. Affects the browser/OS chrome tint
 only, not page content.
@@ -77,9 +91,8 @@ only, not page content.
    but on-page copy is almost entirely yoga/sound-bath/meditation. Metadata + schema now cover these
    terms, but ranking for them needs real on-page content (a weddings/events section or page) — a
    content + visual decision, not done here.
-3. **NAP confirmation.** The brief left address/phone as `[FILL IN]`; the codebase uses
-   **2246 Irving St, Denver, CO 80211** and **(303) 359-8337**. Used as canonical — confirm these are
-   correct.
-4. **`sameAs` / aggregateRating.** Confirm the Instagram/Facebook URLs are live, and that the
-   `aggregateRating` (5.0, 47 reviews) reflects real, verifiable reviews (Google flags fabricated
-   ratings).
+3. **NAP confirmation.** Phone confirmed as **(720) 357-9499**. Address still uses
+   **2246 Irving St, Denver, CO 80211** from the codebase — confirm it's correct.
+4. **`sameAs` + reviews.** Confirm the Instagram/Facebook URLs are live. Aggregate rating was removed
+   (fabricated count); to re-add stars in search results, provide a real verifiable review count, or
+   connect the Google Business Profile so the rating shows there.

@@ -106,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Business-specific meta tags */}
         <meta name="business:type" content="wellness center" />
         <meta name="business:hours" content="Mo-Su 06:00-22:00" />
-        <meta name="business:phone" content="+1-303-359-8337" />
+        <meta name="business:phone" content="+1-720-357-9499" />
         <meta name="business:email" content="clientservices@merrittwellness.net" />
         <meta name="business:address" content="2246 Irving St, Denver, CO 80211" />
         
@@ -130,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "name": "Merritt Wellness",
               "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
               "url": "https://merrittwellness.net",
-              "telephone": "+1-303-359-8337",
+              "telephone": "+1-720-357-9499",
               "email": "clientservices@merrittwellness.net",
               "address": {
                 "@type": "PostalAddress",
@@ -158,13 +158,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "https://www.instagram.com/merrittwellnessdenver",
                 "https://www.facebook.com/merrittwellnessdenver"
               ],
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "5.0",
-                "reviewCount": "47",
-                "bestRating": "5",
-                "worstRating": "1"
-              },
               "hasOfferCatalog": {
                 "@type": "OfferCatalog",
                 "name": "Wellness Services",
@@ -247,7 +240,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "name": "Where can I find sound bath sessions in Denver?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (303) 359-8337."
+                    "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
                   }
                 },
                 {
@@ -263,7 +256,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "name": "How much does it cost to rent a wellness space in Denver?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (303) 359-8337 for custom quotes and availability."
+                    "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
                   }
                 },
                 {
@@ -287,7 +280,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "name": "Do you offer private yoga sessions in Denver?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (303) 359-8337 to schedule your private session."
+                    "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
                   }
                 }
               ]
