@@ -13,9 +13,10 @@ export default function Home() {
   // ENHANCED: More powerful local SEO structured data
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": ["ExerciseGym", "LocalBusiness", "EventVenue"],
+    "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
+    "@id": "https://merrittwellness.net/#business",
     "name": "Merritt Wellness",
-    "description": "Historic yoga studio and wellness sanctuary in Denver's Sloans Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
+    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
     "url": "https://merrittwellness.net",
     "telephone": "+1-303-359-8337",
     "email": "clientservices@merrittwellness.net",
@@ -101,6 +102,14 @@ export default function Home() {
       }
     ],
     "makesOffer": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Wedding Venue",
+          "description": "Historic 1905 church wedding venue in Denver's Sloans Lake neighborhood"
+        }
+      },
       {
         "@type": "Offer",
         "itemOffered": {

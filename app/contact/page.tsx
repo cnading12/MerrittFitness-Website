@@ -31,7 +31,7 @@ export default function ContactPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-6 text-[#4a3f3c] group-hover:text-[#735e59] transition-colors duration-300 font-serif">Reach Out</h3>
+                <h2 className="text-xl font-bold mb-6 text-[#4a3f3c] group-hover:text-[#735e59] transition-colors duration-300 font-serif">Reach Out</h2>
                 <div className="space-y-4">
                   <a
                     href="tel:303-359-8337"
@@ -66,7 +66,7 @@ export default function ContactPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-6 text-[#4a3f3c] group-hover:text-[#735e59] transition-colors duration-300 font-serif">Visit Our Sanctuary</h3>
+                <h2 className="text-xl font-bold mb-6 text-[#4a3f3c] group-hover:text-[#735e59] transition-colors duration-300 font-serif">Visit Our Sanctuary</h2>
                 <div className="flex items-start gap-4 text-[#6b5f5b]">
                   <div className="p-3 bg-amber-100/50 rounded-xl mt-1">
                     <svg className="w-5 h-5 text-[#735e59]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,7 +92,7 @@ export default function ContactPage() {
               <div className="grid md:grid-cols-2 gap-10 items-center">
                 {/* Social */}
                 <div className="text-center md:text-left">
-                  <h3 className="text-xl font-bold mb-4 text-[#4a3f3c] font-serif">Stay Connected</h3>
+                  <h2 className="text-xl font-bold mb-4 text-[#4a3f3c] font-serif">Stay Connected</h2>
                   <div className="flex justify-center md:justify-start gap-4">
                     <Link
                       href="https://www.instagram.com/merrittwellnessdenver"

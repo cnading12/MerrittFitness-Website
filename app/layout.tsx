@@ -5,14 +5,15 @@ import Footer from "@/components/Footer";
 import "./globals-ios.css";
 
 export const metadata: Metadata = {
-  title: 'Merritt Wellness | Yoga, Sound Baths & Meditation in Sloans Lake Denver CO',
-  description: 'Experience yoga classes, sound bath healing, meditation sessions, and wellness events at Merritt Wellness - a stunning 1905 historic venue in Denver\'s Sloans Lake. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
-  keywords: 'yoga Denver, sound bath Denver, meditation Denver, yoga Sloans Lake, sound healing Denver, wellness studio Denver, yoga class near me Denver, sound bath near me, meditation class Denver, holistic healing Denver, yoga retreat Denver, mindfulness Denver, breathwork Denver, wellness events Denver, yoga studio rental Denver, private yoga Denver, group meditation Denver, healing arts Denver, spiritual wellness Denver, yoga Highland Denver, yoga Berkeley Denver, wellness center Sloans Lake, sound therapy Denver, guided meditation Denver, restorative yoga Denver, vinyasa yoga Denver, yoga workshop Denver, wellness workshop Denver, historic yoga studio Denver',
+  metadataBase: new URL('https://merrittwellness.net'),
+  title: 'Merritt Wellness | Historic Event, Wedding & Wellness Venue in Sloans Lake Denver CO',
+  description: 'Merritt Wellness is a restored 1905 church in Denver\'s Sloans Lake neighborhood — a historic event, wedding, and wellness venue hosting weddings, sound baths, yoga, meditation, and private events. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
+  keywords: 'Denver wellness venue, event venue Sloans Lake, Denver wedding venue, historic church wedding venue, sound bath Denver, sound immersion Denver, yoga and meditation space rental Denver, meditation Denver, wellness events Denver, historic event venue Denver, Sloans Lake event space, Denver workshop venue',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
-      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
     ],
     apple: [
       { url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' },
@@ -124,10 +125,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": ["LocalBusiness", "HealthAndBeautyBusiness", "SportsActivityLocation"],
-              "@id": "https://merrittwellness.net",
+              "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
+              "@id": "https://merrittwellness.net/#business",
               "name": "Merritt Wellness",
-              "description": "Premier yoga studio and sound bath healing center in Denver's Sloans Lake neighborhood. Historic 1905 venue offering yoga classes, sound healing sessions, meditation, breathwork, and wellness events.",
+              "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
               "url": "https://merrittwellness.net",
               "telephone": "+1-303-359-8337",
               "email": "clientservices@merrittwellness.net",
