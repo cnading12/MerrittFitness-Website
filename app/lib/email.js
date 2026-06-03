@@ -12,11 +12,11 @@ const EMAIL_CONFIG = {
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
 
-// Absolute URL to the Merritt Wellness logo for email headers. Email clients
-// can't resolve relative paths, so this points at the live site asset. Override
-// the origin with NEXT_PUBLIC_SITE_URL if the domain ever changes.
-const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL || 'https://merrittwellness.net').replace(/\/$/, '');
-const LOGO_URL = `${SITE_ORIGIN}/images/hero/logo.png`;
+// Branded logo for email headers. Email clients can't load app-relative
+// asset paths, so we reference the same navbar logo via its absolute public
+// URL. Centers itself (display:block + margin auto) regardless of parent.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://merrittwellness.net';
+const LOGO_HEADER = `<img src="${SITE_URL}/images/hero/logo.png" alt="Merritt Wellness" width="180" style="display: block; margin: 0 auto 16px auto; width: 180px; max-width: 60%; height: auto;" />`;
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -55,6 +55,7 @@ const EMAIL_TEMPLATES = {
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 30px;">
+            ${LOGO_HEADER}
             <h1 style="color: #10b981; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
             <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
           </div>
@@ -152,6 +153,7 @@ const EMAIL_TEMPLATES = {
     subject: `🆕 New Booking: ${booking.event_name} on ${booking.event_date}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        ${LOGO_HEADER}
         <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
           <h2 style="color: #1e40af; margin: 0 0 15px 0;">🆕 New Booking Request</h2>
           <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
@@ -284,6 +286,7 @@ const EMAIL_TEMPLATES = {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 30px;">
+              ${LOGO_HEADER}
               <h1 style="color: #059669; margin: 0; font-size: 24px;">Recurring Booking Confirmed</h1>
               <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
             </div>
@@ -371,6 +374,7 @@ const EMAIL_TEMPLATES = {
       subject: `New recurring booking: ${booking.event_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          ${LOGO_HEADER}
           <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
             <h2 style="color: #1e40af; margin: 0 0 10px 0;">New Recurring Booking</h2>
             <p style="color: #1e3a8a; margin: 0;">A new recurring series is active at Historic Merritt Wellness. Auto-debit is set up and the first invoice will close on ${firstBillingDate}.</p>
@@ -435,6 +439,7 @@ const EMAIL_TEMPLATES = {
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 30px;">
+            ${LOGO_HEADER}
             <h1 style="color: #10b981; margin: 0; font-size: 24px;">Welcome to Merritt Wellness</h1>
             <p style="color: #6b7280; margin: 10px 0 0 0;">Important Information for Your Upcoming Event</p>
           </div>
@@ -739,6 +744,7 @@ const EMAIL_TEMPLATES = {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 30px;">
+              ${LOGO_HEADER}
               <h1 style="color: #059669; margin: 0; font-size: 24px;">${monthLabel} Invoice Ready</h1>
               <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
             </div>
@@ -859,6 +865,7 @@ const EMAIL_TEMPLATES = {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; background: #f9fafb;">
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            ${LOGO_HEADER}
             <h1 style="color: #111827; margin: 0 0 5px 0; font-size: 22px;">Monthly Recurring Billing Roll-Up</h1>
             <p style="color: #6b7280; margin: 0 0 20px 0;">Billing period: <strong>${monthLabel}</strong></p>
 
