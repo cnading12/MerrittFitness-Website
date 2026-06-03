@@ -4,7 +4,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
-import { ensureCalendarEvent, sendBookingEmails } from '../../../lib/booking-fulfillment.js';
+import { ensureCalendarEvent, sendBookingEmails, isPublicBooking } from '../../../lib/booking-fulfillment.js';
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 
 // Initialize Stripe
@@ -333,6 +333,7 @@ async function handlePaymentSuccess(paymentIntent) {
     }
 
     let onboardingPending = true;
+    let publicMarketingPending = true;
     const allEmailErrors = [];
     let confirmedCount = 0;
 
@@ -352,11 +353,16 @@ async function handlePaymentSuccess(paymentIntent) {
 
       await ensureCalendarEvent(confirmed);
 
+      const sendPublicMarketing = publicMarketingPending && isPublicBooking(confirmed);
       const emailErrors = await sendBookingEmails(confirmed, {
         sendOnboarding: onboardingPending,
+        sendPublicMarketing,
       });
       if (onboardingPending && emailErrors.every((e) => !e.startsWith('onboarding:'))) {
         onboardingPending = false;
+      }
+      if (sendPublicMarketing && emailErrors.every((e) => !e.startsWith('publicMarketing:'))) {
+        publicMarketingPending = false;
       }
       allEmailErrors.push(...emailErrors);
     }

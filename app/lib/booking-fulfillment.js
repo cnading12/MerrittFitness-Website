@@ -20,7 +20,14 @@ import {
   sendBookingConfirmation,
   sendManagerNotification,
   sendClientOnboarding,
+  sendPublicEventMarketing,
 } from './email.js';
+
+// A booking is public when the renter chose "public" on the form. Stored as a
+// boolean `is_public` column; tolerate the legacy/string shapes just in case.
+export function isPublicBooking(booking) {
+  return booking?.is_public === true || booking?.is_public === 'public';
+}
 
 // Resend's free plan caps at ~2 requests/sec. Space individual sends out so a
 // group of bookings doesn't burst past the limit.
@@ -65,7 +72,7 @@ export async function ensureCalendarEvent(booking) {
 // generic onboarding email when `sendOnboarding` is true (the renter only needs
 // onboarding once per group, not once per date). Returns an array of error
 // strings (empty when everything sent).
-export async function sendBookingEmails(booking, { sendOnboarding }) {
+export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMarketing = false }) {
   const errors = [];
 
   try {
@@ -85,6 +92,19 @@ export async function sendBookingEmails(booking, { sendOnboarding }) {
     errors.push(`manager:${booking.id}:${err.message}`);
   }
   await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+
+  // Public events get the collaborative-marketing email (flyer + website +
+  // social materials request). Sent once per group, like onboarding.
+  if (sendPublicMarketing) {
+    try {
+      await sendPublicEventMarketing(booking);
+      console.log(`✅ [FULFILL] Public-event marketing email sent for ${booking.id}`);
+    } catch (err) {
+      console.error(`❌ [FULFILL] Public-event marketing email failed for ${booking.id}:`, err.message);
+      errors.push(`publicMarketing:${booking.id}:${err.message}`);
+    }
+    await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+  }
 
   if (sendOnboarding) {
     try {
@@ -107,16 +127,22 @@ export async function sendBookingEmails(booking, { sendOnboarding }) {
 // never receives a Stripe webhook to trigger these.
 export async function fulfillConfirmedBookings(bookings) {
   let onboardingPending = true;
+  let publicMarketingPending = true;
   const allErrors = [];
 
   for (const booking of bookings) {
     await ensureCalendarEvent(booking);
 
+    const sendPublicMarketing = publicMarketingPending && isPublicBooking(booking);
     const emailErrors = await sendBookingEmails(booking, {
       sendOnboarding: onboardingPending,
+      sendPublicMarketing,
     });
     if (onboardingPending && emailErrors.every((e) => !e.startsWith('onboarding:'))) {
       onboardingPending = false;
+    }
+    if (sendPublicMarketing && emailErrors.every((e) => !e.startsWith('publicMarketing:'))) {
+      publicMarketingPending = false;
     }
     allErrors.push(...emailErrors);
   }

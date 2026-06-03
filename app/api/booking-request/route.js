@@ -34,6 +34,11 @@ const IndividualBookingSchema = z.object({
     'workshop', 'therapy', 'private-event', 'other'
   ]),
 
+  // Public events are open to the community and qualify for our collaborative
+  // marketing effort (bulletin-board flyer, website "Upcoming Events" feature,
+  // social media). Defaults to private if an older client omits it.
+  eventVisibility: z.enum(['public', 'private']).default('private'),
+
   selectedDate: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
     .refine(date => {
@@ -264,15 +269,31 @@ async function createBooking(bookingData) {
       id_photo_type: bookingData.idPhotoType || null
     };
 
+    // Public/private flag is the newest column. Layered on top so a pre-migration
+    // DB falls back to the id-photo record (preserving the ID photo) rather than
+    // dropping straight to the supervision fallback.
+    const recordWithPublicFlag = {
+      ...recordWithIdPhoto,
+      is_public: bookingData.eventVisibility === 'public'
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithIdPhoto])
+      .insert([recordWithPublicFlag])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
     // PGRST204 = column not found in Supabase.
     const isMissingColumnError = (err) =>
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ is_public column missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithIdPhoto])
+        .select());
+    }
 
     if (isMissingColumnError(error)) {
       console.warn('⚠️ ID photo columns missing from DB — falling back. Run the pending migration. Error:', error.message);
@@ -533,6 +554,7 @@ async function bookingHandler(request) {
           masterBookingId: masterBookingId,
           eventName: booking.eventName,
           eventType: booking.eventType,
+          eventVisibility: booking.eventVisibility,
           selectedDate: booking.selectedDate,
           selectedTime: booking.selectedTime,
           hoursRequested: booking.hoursRequested,
