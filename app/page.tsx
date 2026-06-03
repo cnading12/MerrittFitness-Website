@@ -13,11 +13,12 @@ export default function Home() {
   // ENHANCED: More powerful local SEO structured data
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": ["ExerciseGym", "LocalBusiness", "EventVenue"],
+    "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
+    "@id": "https://merrittwellness.net/#business",
     "name": "Merritt Wellness",
-    "description": "Historic yoga studio and wellness sanctuary in Denver's Sloans Lake neighborhood. Professional event venue for yoga classes, meditation, sound healing, workshops, and private events.",
+    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
     "url": "https://merrittwellness.net",
-    "telephone": "+1-303-359-8337",
+    "telephone": "+1-720-357-9499",
     "email": "clientservices@merrittwellness.net",
     "address": {
       "@type": "PostalAddress",
@@ -105,6 +106,14 @@ export default function Home() {
         "@type": "Offer",
         "itemOffered": {
           "@type": "Service",
+          "name": "Wedding Venue",
+          "description": "Historic 1905 church wedding venue in Denver's Sloans Lake neighborhood"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
           "name": "Yoga Classes",
           "description": "Professional yoga instruction in historic Denver venue"
         }
@@ -125,23 +134,7 @@ export default function Home() {
           "description": "Sound bath sessions with perfect church acoustics"
         }
       }
-    ],
-    "review": {
-      "@type": "Review",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Denver Wellness Community"
-      }
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5.0",
-      "reviewCount": "47"
-    }
+    ]
   };
 
   return (
@@ -586,7 +579,7 @@ export default function Home() {
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Connect with Us</h3>
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Ready to answer your call<br />
-                        <span className="text-sm text-[#a08b84]">(303) 359-8337 • clientservices@merrittwellness.net</span>
+                        <span className="text-sm text-[#a08b84]">(720) 357-9499 • clientservices@merrittwellness.net</span>
                       </p>
                     </div>
                   </div>

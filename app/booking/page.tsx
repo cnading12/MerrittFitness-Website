@@ -1139,7 +1139,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (303) 359-8337 for details.</span>
+                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
                 </li>
               </ul>
             </div>
@@ -2203,7 +2203,7 @@ export default function BookingPage() {
                       Regular partners booking 2+ hours per week can benefit from flexible pricing. We can start at a reduced rate and grow with your program to the full rate.
                     </p>
                     <p className="text-blue-800 text-sm font-medium">
-                      📞 Call (303) 359-8337 for partnership pricing details
+                      📞 Call (720) 357-9499 for partnership pricing details
                     </p>
                   </div>
                 </div>
@@ -2253,7 +2253,7 @@ export default function BookingPage() {
                       <span>Cancellations made 90+ days in advance receive a full refund.</span>
                     </p>
                     <p className="text-sm text-emerald-700">
-                      For cancellations within 90 days of your event, please contact us directly at (303) 359-8337 to discuss options.
+                      For cancellations within 90 days of your event, please contact us directly at (720) 357-9499 to discuss options.
                     </p>
                   </div>
                 </div>
@@ -2533,7 +2533,7 @@ export default function BookingPage() {
                       <strong>Contact Information:</strong><br />
                       Merritt Wellness<br />
                       2246 Irving St, Denver, CO 80211<br />
-                      Phone: (303) 359-8337<br />
+                      Phone: (720) 357-9499<br />
                       Email: clientservices@merrittwellness.net<br />
                       Web: MerrittWellness.net
                     </p>
@@ -2885,7 +2885,7 @@ export default function BookingPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Phone size={14} className="text-[#735e59]" />
-                  <span>(303) 359-8337</span>
+                  <span>(720) 357-9499</span>
                 </div>
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Mail size={14} className="text-[#735e59]" />
