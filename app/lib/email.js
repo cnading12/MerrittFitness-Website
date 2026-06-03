@@ -1051,10 +1051,15 @@ export async function sendPublicEventMarketing(booking) {
     // Copy ops so staff know to expect the renter's marketing materials.
     const ops = getOpsEmails();
 
+    // Public events are handled by the manager, so renter replies (and their
+    // marketing materials) should land in the manager's inbox rather than
+    // client services. Fall back to client services if no manager is configured.
+    const replyTo = ops.manager || EMAIL_CONFIG.clientServicesEmail;
+
     const payload = {
       from: EMAIL_CONFIG.from,
       to: [booking.email],
-      replyTo: EMAIL_CONFIG.clientServicesEmail,
+      replyTo,
       ...template
     };
     if (ops.addrs.length > 0) payload.bcc = ops.addrs;
