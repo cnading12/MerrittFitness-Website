@@ -34,6 +34,11 @@ const IndividualBookingSchema = z.object({
     'workshop', 'therapy', 'private-event', 'other'
   ]),
 
+  // Public events are open to the community and qualify for our collaborative
+  // marketing effort (bulletin-board flyer, website "Upcoming Events" feature,
+  // social media). Defaults to private if an older client omits it.
+  eventVisibility: z.enum(['public', 'private']).default('private'),
+
   selectedDate: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
     .refine(date => {
@@ -175,6 +180,9 @@ const RecurringScheduleSchema = z.object({
     'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
     'workshop', 'therapy', 'private-event', 'other'
   ]),
+  // Public series qualify for the collaborative marketing effort. Defaults to
+  // private if an older client omits it.
+  eventVisibility: z.enum(['public', 'private']).default('private'),
   expectedAttendees: z.coerce.number().int().min(1).max(130),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
@@ -264,15 +272,31 @@ async function createBooking(bookingData) {
       id_photo_type: bookingData.idPhotoType || null
     };
 
+    // Public/private flag is the newest column. Layered on top so a pre-migration
+    // DB falls back to the id-photo record (preserving the ID photo) rather than
+    // dropping straight to the supervision fallback.
+    const recordWithPublicFlag = {
+      ...recordWithIdPhoto,
+      is_public: bookingData.eventVisibility === 'public'
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithIdPhoto])
+      .insert([recordWithPublicFlag])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
     // PGRST204 = column not found in Supabase.
     const isMissingColumnError = (err) =>
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ is_public column missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithIdPhoto])
+        .select());
+    }
 
     if (isMissingColumnError(error)) {
       console.warn('⚠️ ID photo columns missing from DB — falling back. Run the pending migration. Error:', error.message);
@@ -353,6 +377,7 @@ async function createRecurringApplication(validatedData) {
     expected_attendees: recurringSchedule.expectedAttendees,
     event_supervision_fee: 0,
     event_supervision_hours: 0,
+    is_public: recurringSchedule.eventVisibility === 'public',
     id_photo_data: idPhoto.dataUrl,
     id_photo_name: idPhoto.name,
     id_photo_type: idPhoto.type,
@@ -385,7 +410,16 @@ async function createRecurringApplication(validatedData) {
     .select();
 
   // Fall back through the same column-dropping cascade as single-event bookings
-  // so applications still land in the DB pre-migration.
+  // so applications still land in the DB pre-migration. Drop is_public first so
+  // a missing public/private column doesn't take recurring_details down with it.
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ is_public column missing — falling back without it.');
+    const { is_public, ...withoutPublic } = withExtendedColumns;
+    ({ data, error } = await supabase
+      .from('bookings')
+      .insert([withoutPublic])
+      .select());
+  }
   if (isMissingColumnError(error)) {
     console.warn('⚠️ recurring_details column missing — falling back without it.');
     const { recurring_details, ...withoutRecurring } = withExtendedColumns;
@@ -533,6 +567,7 @@ async function bookingHandler(request) {
           masterBookingId: masterBookingId,
           eventName: booking.eventName,
           eventType: booking.eventType,
+          eventVisibility: booking.eventVisibility,
           selectedDate: booking.selectedDate,
           selectedTime: booking.selectedTime,
           hoursRequested: booking.hoursRequested,

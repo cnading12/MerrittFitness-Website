@@ -18,6 +18,14 @@ const EMAIL_CONFIG = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://merrittwellness.net';
 const LOGO_HEADER = `<img src="${SITE_URL}/images/hero/logo.png" alt="Merritt Wellness" width="180" style="display: block; margin: 0 auto 16px auto; width: 180px; max-width: 60%; height: auto;" />`;
 
+// A booking is public when the renter chose "public" on the form. Stored as a
+// boolean `is_public` column; tolerate string/legacy shapes. Kept local to this
+// module so the recurring email path can branch without importing from
+// booking-fulfillment.js (which imports from here — avoids a cycle).
+function isPublicBooking(booking) {
+  return booking?.is_public === true || booking?.is_public === 'public';
+}
+
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function parseRecurringDetails(raw) {
@@ -600,6 +608,118 @@ const EMAIL_TEMPLATES = {
     `
   }),
 
+  // Sent to the renter when they book a PUBLIC event. Walks them through the
+  // collaborative marketing we offer (bulletin-board flyer, website "Upcoming
+  // Events" feature, social media) and requests the materials we need from them
+  // to execute each channel. Includes the logo in the header.
+  publicEventMarketing: (booking) => ({
+    subject: `Let's promote ${booking.event_name} together — materials we need from you`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <!-- Header with Logo -->
+          <div style="text-align: center; margin-bottom: 30px;">
+            ${LOGO_HEADER}
+            <h1 style="color: #10b981; margin: 0; font-size: 24px;">Let's Promote Your Event Together</h1>
+            <p style="color: #6b7280; margin: 10px 0 0 0;">Collaborative Marketing for Public Events</p>
+          </div>
+
+          <!-- Intro -->
+          <div style="margin-bottom: 25px;">
+            <p style="color: #374151; line-height: 1.6; margin: 0;">
+              Hi ${booking.contact_name},
+            </p>
+            <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
+              Thank you for booking <strong>${booking.event_name}</strong> as a <strong>public event</strong> at Merritt Wellness. Because it's open to the community, we'd love to help you spread the word — at no extra cost — as part of a collaborative marketing effort. Here's exactly what we offer and the materials we'll need from you to make it happen.
+            </p>
+          </div>
+
+          <!-- What We Offer -->
+          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">What We Offer</h2>
+            <ul style="margin: 0; padding-left: 20px; color: #065f46; line-height: 1.8;">
+              <li><strong>A printed flyer</strong> hung on the community bulletin board in our wellness space.</li>
+              <li><strong>A feature on the "Upcoming Events" tab</strong> of our website.</li>
+              <li><strong>Social media support</strong> — we're happy to help advertise your event across our channels.</li>
+            </ul>
+          </div>
+
+          <!-- What We Need -->
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <h2 style="color: #92400e; margin: 0 0 8px 0; font-size: 18px;">What We Need From You</h2>
+            <p style="color: #451a03; line-height: 1.6; margin: 0 0 16px 0;">
+              To execute the three methods above, please reply to this email with the following:
+            </p>
+
+            <!-- For the bulletin board -->
+            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
+              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">1. For the Bulletin-Board Flyer</h3>
+              <p style="color: #451a03; line-height: 1.6; margin: 0;">
+                A <strong>print-ready PDF</strong> of your flyer that we can print and hang in our wellness space.
+              </p>
+            </div>
+
+            <!-- For the website -->
+            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
+              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">2. For Our Website's "Upcoming Events" Tab</h3>
+              <ul style="margin: 0 0 12px 0; padding-left: 20px; color: #451a03; line-height: 1.8;">
+                <li>An <strong>event description</strong></li>
+                <li>Your <strong>social media handles</strong></li>
+                <li>A <strong>link to purchase tickets</strong> (how customers can buy/register)</li>
+                <li>An <strong>event image</strong> (specs below)</li>
+              </ul>
+              <div style="background: #f0fdf4; padding: 14px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                <p style="color: #065f46; font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Image specs:</p>
+                <ul style="margin: 0; padding-left: 20px; color: #065f46; line-height: 1.7; font-size: 14px;">
+                  <li><strong>Aspect ratio: 16:10</strong> — most important. Off-ratio images get cropped.</li>
+                  <li><strong>Dimensions:</strong> 1600×1000px (or 1920×1200 for retina). A bigger source is fine — the site downscales.</li>
+                  <li><strong>Format:</strong> JPG or PNG are both fine — the site auto-converts to WebP/AVIF.</li>
+                  <li><strong>Keep the subject centered</strong> — we center-crop, and edges may trim on narrow screens.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- For social media -->
+            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
+              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">3. For Social Media Promotion</h3>
+              <p style="color: #451a03; line-height: 1.6; margin: 0;">
+                Either <strong>tag us as a collaborator</strong> on your post, <em>or</em> <strong>send us the content</strong> you'd like shared and we'll post it to our social media.
+              </p>
+            </div>
+          </div>
+
+          <!-- Closing -->
+          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
+              The sooner we receive these, the more runway we have to promote your event. Just reply to this email with your materials, or reach out to
+              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a>
+              with any questions — we're excited to help make your event a success.
+            </p>
+          </div>
+
+          <!-- Signature -->
+          <div style="margin-top: 25px;">
+            <p style="color: #374151; margin: 0 0 5px 0;">Warm regards,</p>
+            <p style="color: #111827; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a><br>
+              <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              Booking ID: <strong>${booking.id}</strong><br>
+              Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
+            </p>
+          </div>
+        </div>
+      </div>
+    `
+  }),
+
   // Sent to the renter immediately after the monthly invoicer writes the
   // upcoming-month invoice item. Tells them what will be billed, when it
   // will be charged, and against which payment method.
@@ -919,6 +1039,36 @@ export async function sendClientOnboarding(booking) {
   }
 }
 
+// Sent to the renter when their booking is marked as a PUBLIC event. Explains
+// the collaborative marketing we offer and requests the materials we need
+// (flyer PDF, website event details + image, social handles/ticket link).
+export async function sendPublicEventMarketing(booking) {
+  try {
+    console.log('📧 Sending public-event marketing email to:', booking.email);
+
+    const template = EMAIL_TEMPLATES.publicEventMarketing(booking);
+
+    // Copy ops so staff know to expect the renter's marketing materials.
+    const ops = getOpsEmails();
+
+    const payload = {
+      from: EMAIL_CONFIG.from,
+      to: [booking.email],
+      replyTo: EMAIL_CONFIG.clientServicesEmail,
+      ...template
+    };
+    if (ops.addrs.length > 0) payload.bcc = ops.addrs;
+
+    const result = await resend.emails.send(payload);
+
+    console.log('✅ Public-event marketing email sent successfully:', result.data?.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Failed to send public-event marketing email:', error);
+    throw new Error(`Public-event marketing email failed: ${error.message}`);
+  }
+}
+
 export async function sendRecurringSetupClient(booking) {
   try {
     console.log('📧 Sending recurring setup confirmation to:', booking.email);
@@ -974,7 +1124,7 @@ export async function sendRecurringSetupManager(booking) {
 }
 
 export async function sendRecurringSetupEmails(booking) {
-  const results = { clientEmail: null, managerEmail: null, errors: [] };
+  const results = { clientEmail: null, managerEmail: null, publicMarketingEmail: null, errors: [] };
   try {
     results.clientEmail = await sendRecurringSetupClient(booking);
   } catch (error) {
@@ -986,6 +1136,18 @@ export async function sendRecurringSetupEmails(booking) {
   } catch (error) {
     results.errors.push(`Manager email failed: ${error.message}`);
   }
+
+  // Public series get the collaborative-marketing email, sent once here as part
+  // of the one-time setup so the renter receives it exactly once.
+  if (isPublicBooking(booking)) {
+    await delay(1000);
+    try {
+      results.publicMarketingEmail = await sendPublicEventMarketing(booking);
+    } catch (error) {
+      results.errors.push(`Public-event marketing email failed: ${error.message}`);
+    }
+  }
+
   if (!results.clientEmail && !results.managerEmail) {
     throw new Error(results.errors.join(', ') || 'Both recurring setup emails failed');
   }
