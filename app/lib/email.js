@@ -18,6 +18,14 @@ const EMAIL_CONFIG = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://merrittwellness.net';
 const LOGO_HEADER = `<img src="${SITE_URL}/images/hero/logo.png" alt="Merritt Wellness" width="180" style="display: block; margin: 0 auto 16px auto; width: 180px; max-width: 60%; height: auto;" />`;
 
+// A booking is public when the renter chose "public" on the form. Stored as a
+// boolean `is_public` column; tolerate string/legacy shapes. Kept local to this
+// module so the recurring email path can branch without importing from
+// booking-fulfillment.js (which imports from here — avoids a cycle).
+function isPublicBooking(booking) {
+  return booking?.is_public === true || booking?.is_public === 'public';
+}
+
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function parseRecurringDetails(raw) {
@@ -611,7 +619,7 @@ const EMAIL_TEMPLATES = {
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <!-- Header with Logo -->
           <div style="text-align: center; margin-bottom: 30px;">
-            <img src="${LOGO_URL}" alt="Merritt Wellness" width="160" style="max-width: 160px; height: auto; margin: 0 auto 16px auto; display: block;" />
+            ${LOGO_HEADER}
             <h1 style="color: #10b981; margin: 0; font-size: 24px;">Let's Promote Your Event Together</h1>
             <p style="color: #6b7280; margin: 10px 0 0 0;">Collaborative Marketing for Public Events</p>
           </div>
@@ -1116,7 +1124,7 @@ export async function sendRecurringSetupManager(booking) {
 }
 
 export async function sendRecurringSetupEmails(booking) {
-  const results = { clientEmail: null, managerEmail: null, errors: [] };
+  const results = { clientEmail: null, managerEmail: null, publicMarketingEmail: null, errors: [] };
   try {
     results.clientEmail = await sendRecurringSetupClient(booking);
   } catch (error) {
@@ -1128,6 +1136,18 @@ export async function sendRecurringSetupEmails(booking) {
   } catch (error) {
     results.errors.push(`Manager email failed: ${error.message}`);
   }
+
+  // Public series get the collaborative-marketing email, sent once here as part
+  // of the one-time setup so the renter receives it exactly once.
+  if (isPublicBooking(booking)) {
+    await delay(1000);
+    try {
+      results.publicMarketingEmail = await sendPublicEventMarketing(booking);
+    } catch (error) {
+      results.errors.push(`Public-event marketing email failed: ${error.message}`);
+    }
+  }
+
   if (!results.clientEmail && !results.managerEmail) {
     throw new Error(results.errors.join(', ') || 'Both recurring setup emails failed');
   }

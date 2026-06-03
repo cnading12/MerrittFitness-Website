@@ -180,6 +180,9 @@ const RecurringScheduleSchema = z.object({
     'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
     'workshop', 'therapy', 'private-event', 'other'
   ]),
+  // Public series qualify for the collaborative marketing effort. Defaults to
+  // private if an older client omits it.
+  eventVisibility: z.enum(['public', 'private']).default('private'),
   expectedAttendees: z.coerce.number().int().min(1).max(130),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
@@ -374,6 +377,7 @@ async function createRecurringApplication(validatedData) {
     expected_attendees: recurringSchedule.expectedAttendees,
     event_supervision_fee: 0,
     event_supervision_hours: 0,
+    is_public: recurringSchedule.eventVisibility === 'public',
     id_photo_data: idPhoto.dataUrl,
     id_photo_name: idPhoto.name,
     id_photo_type: idPhoto.type,
@@ -406,7 +410,16 @@ async function createRecurringApplication(validatedData) {
     .select();
 
   // Fall back through the same column-dropping cascade as single-event bookings
-  // so applications still land in the DB pre-migration.
+  // so applications still land in the DB pre-migration. Drop is_public first so
+  // a missing public/private column doesn't take recurring_details down with it.
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ is_public column missing — falling back without it.');
+    const { is_public, ...withoutPublic } = withExtendedColumns;
+    ({ data, error } = await supabase
+      .from('bookings')
+      .insert([withoutPublic])
+      .select());
+  }
   if (isMissingColumnError(error)) {
     console.warn('⚠️ recurring_details column missing — falling back without it.');
     const { recurring_details, ...withoutRecurring } = withExtendedColumns;

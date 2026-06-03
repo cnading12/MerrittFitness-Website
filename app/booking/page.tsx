@@ -46,6 +46,7 @@ export default function BookingPage() {
   const [recurringDetails, setRecurringDetails] = useState({
     eventName: '',
     eventType: '',
+    eventVisibility: '', // Required: 'public' (community → collaborative marketing) or 'private'
     expectedAttendees: '',
     startDate: '',
     endDate: '',
@@ -379,6 +380,9 @@ export default function BookingPage() {
       }
       if (!recurringDetails.eventType) {
         errors.recurring_eventType = 'Event type is required';
+      }
+      if (!recurringDetails.eventVisibility) {
+        errors.recurring_eventVisibility = 'Please select whether this is a public or private event';
       }
       if (!recurringDetails.startDate) {
         errors.recurring_startDate = 'Start date is required';
@@ -999,6 +1003,7 @@ export default function BookingPage() {
           recurringSchedule: {
             eventName: recurringDetails.eventName,
             eventType: recurringDetails.eventType,
+            eventVisibility: recurringDetails.eventVisibility,
             expectedAttendees: parseInt(recurringDetails.expectedAttendees, 10) || 0,
             startDate: recurringDetails.startDate,
             endDate: recurringDetails.endDate || null,
@@ -1661,6 +1666,70 @@ export default function BookingPage() {
                   </select>
                   {validationErrors.recurring_eventType && (
                     <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_eventType}</p>
+                  )}
+                </div>
+
+                {/* Public vs Private — public series qualify for our collaborative marketing effort */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                    Event Type — Public or Private? *
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => updateRecurringDetails('eventVisibility', 'private')}
+                      className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                        recurringDetails.eventVisibility === 'private'
+                          ? 'border-[#735e59] bg-[#735e59]/5'
+                          : 'border-[#735e59]/20 hover:border-[#735e59]/40'
+                      }`}
+                    >
+                      <div className="font-semibold text-[#4a3f3c]">🔒 Private</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Invite-only or personal. Not promoted publicly.
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateRecurringDetails('eventVisibility', 'public')}
+                      className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                        recurringDetails.eventVisibility === 'public'
+                          ? 'border-[#10b981] bg-[#10b981]/5'
+                          : 'border-[#735e59]/20 hover:border-[#10b981]/40'
+                      }`}
+                    >
+                      <div className="font-semibold text-[#4a3f3c]">📣 Public</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Open to the community. Eligible for free collaborative marketing.
+                      </div>
+                    </button>
+                  </div>
+                  {validationErrors.recurring_eventVisibility && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.recurring_eventVisibility}</p>
+                  )}
+
+                  {/* Collaborative marketing details — shown once "Public" is chosen */}
+                  {recurringDetails.eventVisibility === 'public' && (
+                    <div className="mt-3 bg-[#10b981]/5 border border-[#10b981]/30 rounded-xl p-4">
+                      <div className="flex items-start gap-2">
+                        <Info className="text-[#059669] mt-0.5 flex-shrink-0" size={16} />
+                        <div className="text-sm text-[#374151]">
+                          <p className="font-semibold text-[#059669] mb-1">
+                            Great — we'd love to help promote your public event series, free of charge.
+                          </p>
+                          <p className="mb-2"><strong>What we offer:</strong></p>
+                          <ul className="list-disc pl-5 space-y-1 mb-2">
+                            <li>A printed flyer on the community bulletin board in our wellness space</li>
+                            <li>A feature on the "Upcoming Events" tab of our website</li>
+                            <li>Help advertising your event on our social media</li>
+                          </ul>
+                          <p className="mb-1"><strong>What we'll need from you:</strong> a print-ready PDF flyer; an event description, your social media handles, a ticket-purchase link, and an event image (16:10, ~1600×1000px) for the website; and either a collaborator tag or content to share on social.</p>
+                          <p className="text-xs text-gray-600 mt-2">
+                            No need to gather these now — once your series is set up, we'll email you these exact instructions and the image specs so you can reply with your materials.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
