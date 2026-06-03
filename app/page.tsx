@@ -45,7 +45,8 @@ export default function Home() {
     ],
     "sameAs": [
       "https://www.instagram.com/merrittwellnessdenver",
-      "https://www.facebook.com/merrittwellnessdenver"
+      "https://www.facebook.com/merrittwellnessdenver",
+      "https://share.google/02eBZ270Nc7QsgKKO"
     ],
     "amenityFeature": [
       {
@@ -74,7 +75,7 @@ export default function Home() {
         "value": true
       }
     ],
-    "hasMap": "https://maps.google.com/?q=2246+Irving+St,+Denver,+CO+80211",
+    "hasMap": "https://share.google/02eBZ270Nc7QsgKKO",
     "areaServed": [
       {
         "@type": "City",
