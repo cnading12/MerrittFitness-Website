@@ -269,6 +269,19 @@ export const events: Event[] = [
 
   // ============ JUNE 2026 ============
   {
+    id: "soften-unwind-yin-massage-sound-bath-jun-2026",
+    title: "Soften & Unwind: A Restorative Evening",
+    date: "2026-06-28",
+    time: "6:00 PM",
+    endTime: "8:30 PM",
+    description: "Join us for a special event designed to calm your nervous system and invite deep relaxation. Hosted by Anissa M. Cordova, PhD (Psychotherapist, Emotional Resilience Coach, Sound Bath Facilitator) and Courtney Greth, LMT (End-of-Life Doula, Reiki Practitioner, Biodynamic Craniosacral Therapist). Courtney will guide gentle yin yoga, with optional individualized massage offered to a limited number of participants. The evening will flow into a soothing sound bath led by Anissa, with reiki gently woven throughout to support your rest.",
+    imageUrl: "/images/events/yoga/Recenter (202).jpg",
+    ticketUrl: "https://www.recentertherapeuticmassage.com",
+    ticketLabel: "Reserve Your Spot",
+    instagramHandle: "recenterdenver",
+    practitionerName: "Anissa M. Cordova & Courtney Greth"
+  },
+  {
     id: "boy-mom-play-and-learn-2026",
     title: "Boy Mom Play & Learn",
     date: "2026-06-18",
