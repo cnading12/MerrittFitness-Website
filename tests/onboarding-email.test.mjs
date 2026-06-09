@@ -59,9 +59,9 @@ test('clientOnboarding template: greets the contact by name', () => {
   assert.ok(html.includes('Hi Jane Doe'), 'expected greeting with contact_name');
 });
 
-test('clientOnboarding template: includes client services phone 303-359-8337', () => {
+test('clientOnboarding template: includes client services phone 720-357-9499', () => {
   const { html } = EMAIL_TEMPLATES.clientOnboarding(sampleBooking);
-  assert.ok(html.includes('303-359-8337'), 'expected client services phone number');
+  assert.ok(html.includes('720-357-9499'), 'expected client services phone number');
   assert.ok(
     html.includes('clientservices@merrittwellness.net'),
     'expected client services email'

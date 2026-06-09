@@ -926,6 +926,75 @@ const EMAIL_TEMPLATES = {
 // Delay helper to avoid Resend free-plan rate limits (2 requests/second)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// The Resend SDK does NOT throw when the API rejects a send — it resolves to
+// `{ data: null, error: {...} }`. Only transport-level failures throw. That
+// means a rate-limit rejection (HTTP 429, `name: 'rate_limit_exceeded'`) comes
+// back in `error`, and if the caller only looks at `result.data` it logs a
+// phantom success while the email is silently dropped. This is exactly how a
+// booking confirmation / manager notification can go missing.
+//
+// `sendEmailWithRetry` centralizes the correct behavior for every send:
+//   1. Inspect `result.error` (not just `result.data`).
+//   2. Retry rate-limit errors with exponential backoff so a transient 429
+//      (the free plan caps at 2 req/sec) clears instead of dropping the email.
+//   3. Throw on any unrecoverable error so the caller logs + records it
+//      instead of reporting a false success.
+const RESEND_MAX_ATTEMPTS = 4;
+
+function isRateLimitError(error) {
+  if (!error) return false;
+  const code = error.statusCode || error.status || error.code;
+  const name = String(error.name || '').toLowerCase();
+  const message = String(error.message || '').toLowerCase();
+  return code === 429
+    || code === '429'
+    || name.includes('rate_limit')
+    || name.includes('too_many')
+    || message.includes('rate limit')
+    || message.includes('too many requests');
+}
+
+async function sendEmailWithRetry(payload, { label = 'email' } = {}) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt++) {
+    let result;
+    try {
+      result = await resend.emails.send(payload);
+    } catch (transportError) {
+      // Network/transport failure (SDK throws here, unlike API errors).
+      lastError = transportError;
+      if (attempt < RESEND_MAX_ATTEMPTS) {
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        console.warn(`⚠️ [RESEND] ${label} transport error (attempt ${attempt}/${RESEND_MAX_ATTEMPTS}) — retrying in ${backoff}ms: ${transportError.message}`);
+        await delay(backoff);
+        continue;
+      }
+      break;
+    }
+
+    const error = result?.error;
+    if (!error) {
+      return result;
+    }
+
+    lastError = error;
+    if (isRateLimitError(error) && attempt < RESEND_MAX_ATTEMPTS) {
+      // Exponential backoff: 1s, 2s, 4s. A short wait clears the per-second
+      // window so the resend succeeds rather than dropping the email.
+      const backoff = 1000 * Math.pow(2, attempt - 1);
+      console.warn(`⚠️ [RESEND] ${label} rate-limited (attempt ${attempt}/${RESEND_MAX_ATTEMPTS}) — retrying in ${backoff}ms`);
+      await delay(backoff);
+      continue;
+    }
+
+    // Non-retryable API error (bad request, invalid recipient, etc.).
+    break;
+  }
+
+  throw new Error(`Resend send failed for ${label}: ${lastError?.message || 'Unknown error'}`);
+}
+
 // Read the two ops addresses from env at call time (not at module load) so
 // the sender behaves correctly under env-var changes in hot-reloaded dev
 // environments. Returns { manager, clientServices, addrs } where `addrs` is
@@ -972,12 +1041,12 @@ export async function sendBookingConfirmation(booking) {
     
     const template = EMAIL_TEMPLATES.bookingConfirmation(booking);
     
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry({
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.replyTo,
       ...template
-    });
+    }, { label: `booking confirmation ${booking.id}` });
 
     console.log('✅ Booking confirmation sent successfully:', result.data?.id);
     return result;
@@ -1008,7 +1077,7 @@ export async function sendManagerNotification(booking) {
       console.warn('⚠️ No ID photo found on booking', booking.id, '- manager email will flag it as missing.');
     }
 
-    const result = await resend.emails.send(payload);
+    const result = await sendEmailWithRetry(payload, { label: `manager notification ${booking.id}` });
 
     console.log('✅ Manager notification sent successfully:', result.data?.id);
     return result;
@@ -1024,12 +1093,12 @@ export async function sendClientOnboarding(booking) {
 
     const template = EMAIL_TEMPLATES.clientOnboarding(booking);
 
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry({
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.clientServicesEmail,
       ...template
-    });
+    }, { label: `client onboarding ${booking.id}` });
 
     console.log('✅ Client onboarding email sent successfully:', result.data?.id);
     return result;
@@ -1064,7 +1133,7 @@ export async function sendPublicEventMarketing(booking) {
     };
     if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
-    const result = await resend.emails.send(payload);
+    const result = await sendEmailWithRetry(payload, { label: `public-event marketing ${booking.id}` });
 
     console.log('✅ Public-event marketing email sent successfully:', result.data?.id);
     return result;
@@ -1096,7 +1165,7 @@ export async function sendRecurringSetupClient(booking) {
     };
     if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
-    const result = await resend.emails.send(payload);
+    const result = await sendEmailWithRetry(payload, { label: `recurring setup client ${booking.id}` });
     console.log('✅ Recurring setup client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1119,7 +1188,7 @@ export async function sendRecurringSetupManager(booking) {
     if (idPhotoAttachment) {
       payload.attachments = [idPhotoAttachment];
     }
-    const result = await resend.emails.send(payload);
+    const result = await sendEmailWithRetry(payload, { label: `recurring setup manager ${booking.id}` });
     console.log('✅ Recurring setup manager email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1185,7 +1254,7 @@ export async function sendMonthlyBillingClientEmail(args) {
     };
     if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
-    const result = await resend.emails.send(payload);
+    const result = await sendEmailWithRetry(payload, { label: `monthly billing client ${booking.id}` });
     console.log('✅ Monthly billing client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1211,11 +1280,11 @@ export async function sendMonthlyBillingRollupEmail(args) {
 
     console.log('📧 Sending monthly billing rollup to:', ops.addrs.join(', '));
     const template = EMAIL_TEMPLATES.monthlyBillingRollup(args);
-    const result = await resend.emails.send({
+    const result = await sendEmailWithRetry({
       from: EMAIL_CONFIG.from,
       to: ops.addrs,
       ...template
-    });
+    }, { label: `monthly billing rollup ${args?.year || ''}-${args?.month || ''}` });
     console.log('✅ Monthly billing rollup sent:', result.data?.id);
     return result;
   } catch (error) {
