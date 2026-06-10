@@ -197,11 +197,8 @@ function findHostEmail(event, details) {
   }
 
   // Strategy 2: first non-excluded guest on the event
-  const guests = event.getGuestList();
-  for (const guest of guests) {
-    const email = guest.getEmail();
-    if (email && !excludeLower.includes(email.toLowerCase())) return email;
-  }
+  const guest = firstNonExcludedGuest(event);
+  if (guest) return guest.getEmail();
 
   // Strategy 3: any email in description (last resort)
   const desc = event.getDescription() || '';
@@ -211,6 +208,62 @@ function findHostEmail(event, details) {
   }
 
   return null;
+}
+
+// ============ NAME / EVENT-NAME RESOLUTION ============
+//
+// Website bookings carry "Organizer:" and "Event:" in the description, so we
+// always have a name. Manually-created or sponsored events made directly in
+// Google Calendar usually do not, so we fall back to the host added as a
+// guest, then to the event title, before giving up on a generic greeting.
+
+function firstWord(str) {
+  if (!str) return '';
+  const parts = str.trim().split(/\s+/);
+  return parts.length ? parts[0] : '';
+}
+
+function firstNonExcludedGuest(event) {
+  const excludeLower = EXCLUDE_EMAILS.map(e => e.toLowerCase());
+  const guests = event.getGuestList();
+  for (const guest of guests) {
+    const email = guest.getEmail();
+    if (email && !excludeLower.includes(email.toLowerCase())) return guest;
+  }
+  return null;
+}
+
+// Strips lock emoji, staff-attention flags, the "BOOKED:" prefix, and trailing
+// status tags like "(sponsored)" so the title reads like a real event name.
+function cleanEventTitle(title) {
+  return (title || '')
+    .replace(/^.*?BOOKED:\s*/is, '')
+    .replace(/\s*\((?:sponsored|public|private|recurring)\)\s*$/i, '')
+    .trim();
+}
+
+function resolveEventName(event, details) {
+  if (details && details.eventName) return details.eventName;
+  return cleanEventTitle(event.getTitle()) || 'your event';
+}
+
+function resolveRecipientName(event, details) {
+  // 1. "Organizer:" field from website bookings
+  if (details && details.organizer) {
+    const n = firstWord(details.organizer);
+    if (n) return n;
+  }
+  // 2. Display name of the first real guest (host added manually as a guest)
+  const guest = firstNonExcludedGuest(event);
+  if (guest && guest.getName && guest.getName()) {
+    const n = firstWord(guest.getName());
+    if (n) return n;
+  }
+  // 3. First word of the cleaned title, if it reads like a personal name
+  const t = firstWord(cleanEventTitle(event.getTitle()));
+  if (/^[A-Z][a-zA-Z'’\-]+$/.test(t)) return t;
+  // 4. Generic, still friendly
+  return 'there';
 }
 
 // ============ TRACKING ============
@@ -293,8 +346,8 @@ function mwParagraph(html) {
 
 function sendReviewEmail(toEmail, event, details) {
   details = details || {};
-  const firstName = (details.organizer && details.organizer.split(/\s+/)[0]) || 'there';
-  const eventName = details.eventName || event.getTitle().replace(/^[^A-Za-z]*BOOKED:\s*/i, '');
+  const firstName = resolveRecipientName(event, details);
+  const eventName = resolveEventName(event, details);
 
   const tz = Session.getScriptTimeZone();
   const eventDate = Utilities.formatDate(event.getStartTime(), tz, 'EEEE, MMMM d');
@@ -440,6 +493,7 @@ function testRun() {
     console.log('     Event:     ' + (details.eventName || '(none)'));
     console.log('     Organizer: ' + (details.organizer || '(none)'));
     console.log('     Business:  ' + (details.business || '(none)'));
-    console.log('     Host email -> ' + (host || 'NONE'));
+    console.log('     Greeting:  Hi ' + resolveRecipientName(event, details) + ',');
+    console.log('     Host email -> ' + (host || 'NONE — add the host as a guest or put their email in the description'));
   }
 }

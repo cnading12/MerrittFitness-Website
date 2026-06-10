@@ -142,8 +142,8 @@ function buildReminderLog(sheet) {
 
 function sendReminderEmail(toEmail, event, details) {
   details = details || {};
-  const firstName = (details.organizer && details.organizer.split(/\s+/)[0]) || 'there';
-  const eventName = details.eventName || event.getTitle().replace(/^[^A-Za-z]*BOOKED:\s*/i, '');
+  const firstName = resolveRecipientName(event, details);
+  const eventName = resolveEventName(event, details);
 
   const startTime = event.getStartTime();
   const tz = Session.getScriptTimeZone();
@@ -351,7 +351,7 @@ function testReminderRun() {
     const host = findHostEmail(event, details);
     const recurring = event.isRecurringEvent() ? '(recurring)' : '(one-off)';
     console.log(' - "' + event.getTitle() + '" ' + recurring);
-    console.log('     Organizer: ' + (details.organizer || '(none)'));
-    console.log('     Host email -> ' + (host || 'NONE'));
+    console.log('     Greeting:  Hi ' + resolveRecipientName(event, details) + ',');
+    console.log('     Host email -> ' + (host || 'NONE — add the host as a guest or put their email in the description'));
   }
 }
