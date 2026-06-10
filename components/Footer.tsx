@@ -5,41 +5,70 @@ export default function Footer() {
   return (
     <footer className="bg-[#f2eee9] border-t border-[#735e59]/10 py-8 px-4">
       <div className="max-w-4xl mx-auto flex flex-col items-center gap-4">
-        {/* Social & Contact Links */}
+        {/* Social Links */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-[#6b5f5b] text-sm font-sans">
           <Link
             href="https://www.instagram.com/merrittwellnessdenver/"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
-            target="_blank" 
+            target="_blank"
             rel="noopener"
           >
-            <Instagram size={18} /> 
+            <Instagram size={18} />
             <span className="hidden sm:inline">Instagram</span>
           </Link>
           <Link
             href="https://www.facebook.com/MerrittFitnessSpace/"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
-            target="_blank" 
+            target="_blank"
             rel="noopener"
           >
-            <Facebook size={18} /> 
+            <Facebook size={18} />
             <span className="hidden sm:inline">Facebook</span>
           </Link>
-          <a
-            href="tel:303-359-8337"
-            className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
-          >
-            <Phone size={18} />
-            <span>(303) 359-8337</span>
-          </a>
-          <a
-            href="mailto:clientservices@merrittwellness.net"
-            className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
-          >
-            <Mail size={18} /> 
-            <span className="hidden md:inline">clientservices@merrittwellness.net</span>
-            <span className="md:hidden">Email</span>
-          </a>
+        </div>
+
+        {/* Two points of contact: Manager (new events) vs Client Services (booked events) */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 sm:gap-10 text-[#6b5f5b] text-sm font-sans">
+          <div className="flex flex-col items-center sm:items-start gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[#a08b84]">New Events &amp; Tours</span>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <a
+                href="tel:720-357-9499"
+                className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
+              >
+                <Phone size={16} />
+                <span>(720) 357-9499</span>
+              </a>
+              <a
+                href="mailto:manager@merrittwellness.net"
+                className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
+              >
+                <Mail size={16} />
+                <span className="hidden md:inline">manager@merrittwellness.net</span>
+                <span className="md:hidden">Email</span>
+              </a>
+            </div>
+          </div>
+          <div className="flex flex-col items-center sm:items-start gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[#a08b84]">Client Services</span>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <a
+                href="tel:303-359-8337"
+                className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
+              >
+                <Phone size={16} />
+                <span>(303) 359-8337</span>
+              </a>
+              <a
+                href="mailto:clientservices@merrittwellness.net"
+                className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
+              >
+                <Mail size={16} />
+                <span className="hidden md:inline">clientservices@merrittwellness.net</span>
+                <span className="md:hidden">Email</span>
+              </a>
+            </div>
+          </div>
         </div>
         
         {/* Divider */}

@@ -2885,11 +2885,11 @@ export default function BookingPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Phone size={14} className="text-[#735e59]" />
-                  <span>(303) 359-8337</span>
+                  <span>(720) 357-9499</span>
                 </div>
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Mail size={14} className="text-[#735e59]" />
-                  <span>clientservices@merrittwellness.net</span>
+                  <span>manager@merrittwellness.net</span>
                 </div>
               </div>
               <p className="text-xs text-[#a08b84] mt-4">
