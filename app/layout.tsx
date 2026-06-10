@@ -107,7 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="business:type" content="wellness center" />
         <meta name="business:hours" content="Mo-Su 06:00-22:00" />
         <meta name="business:phone" content="+1-720-357-9499" />
-        <meta name="business:email" content="clientservices@merrittwellness.net" />
+        <meta name="business:email" content="manager@merrittwellness.net" />
         <meta name="business:address" content="2246 Irving St, Denver, CO 80211" />
         
         {/* Preconnect to external domains */}
@@ -131,7 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
               "url": "https://merrittwellness.net",
               "telephone": "+1-720-357-9499",
-              "email": "clientservices@merrittwellness.net",
+              "email": "manager@merrittwellness.net",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "2246 Irving St",
