@@ -19,7 +19,7 @@ export default function Home() {
     "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
     "url": "https://merrittwellness.net",
     "telephone": "+1-720-357-9499",
-    "email": "clientservices@merrittwellness.net",
+    "email": "manager@merrittwellness.net",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "2246 Irving St",
@@ -579,7 +579,7 @@ export default function Home() {
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Connect with Us</h3>
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Ready to answer your call<br />
-                        <span className="text-sm text-[#a08b84]">(720) 357-9499 • clientservices@merrittwellness.net</span>
+                        <span className="text-sm text-[#a08b84]">(720) 357-9499 • manager@merrittwellness.net</span>
                       </p>
                     </div>
                   </div>
