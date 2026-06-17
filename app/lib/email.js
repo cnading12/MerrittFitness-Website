@@ -7,10 +7,19 @@ import { isSponsoredBooking } from './calendar-flags.js';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_CONFIG = {
-  from: 'Merritt Wellness <bookings@merrittwellness.net>',
+  from: 'Merritt Wellness <clientservices@merrittwellness.net>',
   replyTo: 'clientservices@merrittwellness.net',
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
+
+// Every member of staff who MUST receive booking/operations notifications.
+// Used as the guaranteed fallback when the OPS_EMAIL_* env vars are missing or
+// blank, so a misconfiguration can never silently drop a staff recipient. The
+// configured ops list (see getStaffRecipients) takes precedence when present.
+const STAFF_FALLBACK_EMAILS = [
+  'manager@merrittwellness.net',
+  'clientservices@merrittwellness.net',
+];
 
 // Branded logo for email headers. Email clients can't load app-relative
 // asset paths, so we reference the same navbar logo via its absolute public
@@ -1006,6 +1015,23 @@ function getOpsEmails() {
   return { manager, clientServices, addrs };
 }
 
+// Recipients for staff-facing notifications (new booking, recurring setup).
+// These MUST reach the whole ops team — the manager AND client services — not a
+// single hardcoded address. Prefer the configured ops distribution list; fall
+// back to the known staff addresses if neither env var is set so staff are
+// never silently dropped from a booking notification. De-duplicated so a single
+// shared address (or an env value equal to the fallback) doesn't double-send.
+function getStaffRecipients() {
+  const ops = getOpsEmails();
+  const recipients = ops.addrs.length > 0 ? ops.addrs : STAFF_FALLBACK_EMAILS;
+  if (ops.addrs.length === 0) {
+    console.warn('⚠️ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — using built-in staff fallback list for notification recipients');
+  } else if (ops.addrs.length === 1) {
+    console.warn(`⚠️ Only one ops email configured (${ops.addrs[0]}) — staff notification will reach a single recipient`);
+  }
+  return [...new Set(recipients.map((a) => a.trim()).filter(Boolean))];
+}
+
 // Extract the raw base64 payload from a "data:<mime>;base64,<content>" URL.
 // Returns null if the input isn't a valid data URL so the email still sends.
 function extractBase64FromDataUrl(dataUrl) {
@@ -1058,14 +1084,15 @@ export async function sendBookingConfirmation(booking) {
 
 export async function sendManagerNotification(booking) {
   try {
-    console.log('📧 Sending manager notification to:', EMAIL_CONFIG.clientServicesEmail);
+    const recipients = getStaffRecipients();
+    console.log('📧 Sending manager notification to:', recipients.join(', '));
 
     const template = EMAIL_TEMPLATES.managerNotification(booking);
     const idPhotoAttachment = buildIdPhotoAttachment(booking);
 
     const payload = {
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.clientServicesEmail],
+      to: recipients,
       replyTo: booking.email,
       ...template
     };
@@ -1179,9 +1206,11 @@ export async function sendRecurringSetupManager(booking) {
     console.log('📧 Sending recurring setup manager notification');
     const template = EMAIL_TEMPLATES.recurringSetupManager(booking);
     const idPhotoAttachment = buildIdPhotoAttachment(booking);
+    const recipients = getStaffRecipients();
+    console.log('📧 Sending recurring setup manager notification to:', recipients.join(', '));
     const payload = {
       from: EMAIL_CONFIG.from,
-      to: [EMAIL_CONFIG.clientServicesEmail],
+      to: recipients,
       replyTo: booking.email,
       ...template
     };
