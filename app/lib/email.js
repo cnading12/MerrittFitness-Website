@@ -7,7 +7,7 @@ import { isSponsoredBooking } from './calendar-flags.js';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EMAIL_CONFIG = {
-  from: 'Merritt Wellness <bookings@merrittwellness.net>',
+  from: 'Merritt Wellness <clientservices@merrittwellness.net>',
   replyTo: 'clientservices@merrittwellness.net',
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
