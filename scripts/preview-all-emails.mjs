@@ -27,8 +27,6 @@ const sampleBooking = {
   phone: '555-555-1212',
   home_address: '123 Maple Ave, Denver, CO 80211',
   business_name: 'Bloom Wellness Co.',
-  needs_setup_help: true,
-  needs_teardown_help: false,
   special_requests: 'Would love access to the side room for a quiet changing area.',
   total_amount: 285,
   subtotal: 285,

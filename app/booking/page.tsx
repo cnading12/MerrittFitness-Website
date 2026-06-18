@@ -37,8 +37,6 @@ export default function BookingPage() {
     selectedTime: '',
     hoursRequested: '',
     specialRequests: '',
-    needsSetupHelp: false,
-    needsTeardownHelp: false,
     needsTables: false,
     needsChairs: false,
     needsMat: false, // Optional: rent the full-floor roll-out mat ($100, waived for partners)
@@ -569,10 +567,9 @@ export default function BookingPage() {
     setPromoCodeError('');
   };
 
-  // Pricing calculations with Saturday rates and setup/teardown
+  // Pricing calculations with Saturday rates
   const HOURLY_RATE = 95;
   const SATURDAY_RATE = 200; // All Saturday events
-  const SETUP_TEARDOWN_FEE = 50; // Per service
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
   const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
@@ -587,7 +584,6 @@ export default function BookingPage() {
     let totalBookings = 0;
     let minimumApplied = false;
     let saturdayCharges = 0;
-    let setupTeardownFees = 0;
     let onsiteAssistanceFee = 0;
     let eventSupervisionFee = 0;
     let eventSupervisionHours = 0;
@@ -629,14 +625,6 @@ export default function BookingPage() {
         // Calculate Saturday charges ($200/hr for all Saturday events)
         if (isSat) {
           saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
-        }
-
-        // Calculate setup/teardown fees
-        if (booking.needsSetupHelp) {
-          setupTeardownFees += SETUP_TEARDOWN_FEE;
-        }
-        if (booking.needsTeardownHelp) {
-          setupTeardownFees += SETUP_TEARDOWN_FEE;
         }
 
         // Full-floor mat rental ($100/booking, waived for partners)
@@ -682,7 +670,7 @@ export default function BookingPage() {
     }
 
     const baseAmount = totalHours * HOURLY_RATE;
-    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -710,7 +698,6 @@ export default function BookingPage() {
       hourlyRate: HOURLY_RATE,
       baseAmount,
       saturdayCharges,
-      setupTeardownFees,
       onsiteAssistanceFee,
       eventSupervisionFee,
       eventSupervisionHours,
@@ -916,8 +903,6 @@ export default function BookingPage() {
       selectedTime: '',
       hoursRequested: '',
       specialRequests: '',
-      needsSetupHelp: false,
-      needsTeardownHelp: false,
       needsTables: false,
       needsChairs: false,
       needsMat: false,
@@ -1279,10 +1264,6 @@ export default function BookingPage() {
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Setup & Cleanup:</strong> All rental times must include your own setup and cleanup. Space must be returned in the condition you found it.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Assistance Available:</strong> Need help? Setup and/or teardown assistance available for $50 each (1 hour per service) or $100 for both.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -1701,36 +1682,6 @@ export default function BookingPage() {
                             </div>
                           </div>
                         )}
-                    </div>
-
-                    {/* NEW: Setup/Teardown Options */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Setup & Teardown Assistance
-                      </label>
-                      <div className="space-y-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={booking.needsSetupHelp}
-                            onChange={(e) => updateBooking(booking.id, 'needsSetupHelp', e.target.checked)}
-                            className="mr-3 text-[#735e59]"
-                          />
-                          <span>Setup assistance needed (+$50)</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={booking.needsTeardownHelp}
-                            onChange={(e) => updateBooking(booking.id, 'needsTeardownHelp', e.target.checked)}
-                            className="mr-3 text-[#735e59]"
-                          />
-                          <span>Teardown assistance needed (+$50)</span>
-                        </label>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Each service includes up to 1 hour of labor assistance during your booking—not before. All setup and breakdown must occur within your reserved time. By default, you're responsible for your own setup/cleanup.
-                      </p>
                     </div>
 
                     {/* Tables & Chairs equipment fees. Each item type is $25 for
@@ -2679,8 +2630,7 @@ export default function BookingPage() {
                   <p>
                     Client agrees to pay Merritt Wellness an hourly rental rate for use of the Premises. The standard rate is
                     <strong> $95/hour</strong> with a two (2) hour minimum for all events. All Saturday events are billed at
-                    <strong> $200/hour</strong> with a two (2) hour minimum. Optional setup and/or teardown assistance is available at
-                    <strong> $50 each</strong> (one hour per service), or <strong>$100 for both</strong>. Payments made by credit card
+                    <strong> $200/hour</strong> with a two (2) hour minimum. Payments made by credit card
                     are subject to a 3% processing surcharge. Payment for recurring rentals is due on or before the first of each month.
                     Failure to submit payment within 30 days of the due date will result in suspension or cancellation of the Client's
                     scheduled class sessions and/or termination of this Agreement at the sole discretion of Merritt Wellness. Any
@@ -3123,13 +3073,6 @@ export default function BookingPage() {
                   <div className="flex justify-between text-amber-600">
                     <span>Saturday Charges</span>
                     <span>+${pricing.saturdayCharges.toFixed(2)}</span>
-                  </div>
-                )}
-
-                {pricing.setupTeardownFees > 0 && (
-                  <div className="flex justify-between text-purple-600">
-                    <span>Setup/Teardown Assistance</span>
-                    <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
                   </div>
                 )}
 

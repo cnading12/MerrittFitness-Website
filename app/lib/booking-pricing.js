@@ -12,7 +12,6 @@
 // always update both.
 export const HOURLY_RATE = 95;
 export const SATURDAY_RATE = 200;
-export const SETUP_TEARDOWN_FEE = 50;
 export const ON_SITE_ASSISTANCE_FEE = 35;          // First-hour onboarding/setup help (flat, once per submission)
 export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee events — billed for the ENTIRE event (no cap)
 export const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
@@ -121,7 +120,6 @@ export function endsBy10PM(startTime, hoursRequested) {
 // Mirrors the production rules:
 //   * $95/hr base, $200/hr Saturdays (delta charged on top of base hours).
 //   * 2-hour minimum per booking unless the renter is recurring.
-//   * Setup or teardown help is $50 each, per booking.
 //   * Tables and chairs each add an equipment fee, per booking, scaled by group
 //     size: <40 attendees = $25, 40+ = $50. Tables and chairs stack (a 60-person
 //     event using both pays $50 + $50 = $100). Renters on the MerrittMagic
@@ -148,7 +146,6 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let totalHours = 0;
   let totalBookings = 0;
   let saturdayCharges = 0;
-  let setupTeardownFees = 0;
   let onsiteAssistanceFee = 0;
   let eventSupervisionFee = 0;
   let eventSupervisionHours = 0;
@@ -184,9 +181,6 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     if (isSat) {
       saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
     }
-
-    if (booking.needsSetupHelp) setupTeardownFees += SETUP_TEARDOWN_FEE;
-    if (booking.needsTeardownHelp) setupTeardownFees += SETUP_TEARDOWN_FEE;
 
     if (booking.needsMat) {
       matRentalCount++;
@@ -225,7 +219,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
   const baseAmount = totalHours * HOURLY_RATE;
   const preDiscountSubtotal =
-    baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
+    baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
   let promoDiscount = 0;
   let promoDescription = '';
@@ -256,7 +250,6 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     hourlyRate: HOURLY_RATE,
     baseAmount,
     saturdayCharges,
-    setupTeardownFees,
     onsiteAssistanceFee,
     eventSupervisionFee,
     eventSupervisionHours,

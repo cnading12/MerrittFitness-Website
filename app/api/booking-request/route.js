@@ -60,9 +60,6 @@ const IndividualBookingSchema = z.object({
     .optional()
     .default(''),
 
-  needsSetupHelp: z.boolean().default(false),
-  needsTeardownHelp: z.boolean().default(false),
-
   // Tables / chairs equipment usage. Drives the per-booking equipment fee
   // ($25 under 40 attendees, $50 for 40+, per item type) computed server-side.
   needsTables: z.boolean().default(false),
@@ -127,7 +124,6 @@ const PricingSchema = z.object({
   totalBookings: z.number(),
   baseAmount: z.number(),
   saturdayCharges: z.number().optional().default(0),
-  setupTeardownFees: z.number().optional().default(0),
   onsiteAssistanceFee: z.number().optional().default(0),
   eventSupervisionFee: z.number().optional().default(0),
   eventSupervisionHours: z.number().optional().default(0),
@@ -279,14 +275,16 @@ async function createBooking(bookingData) {
       business_name: bookingData.businessName || '',
       website_url: bookingData.websiteUrl || '',
       special_requests: bookingData.specialRequests || '',
-      needs_setup_help: bookingData.needsSetupHelp || false,
-      needs_teardown_help: bookingData.needsTeardownHelp || false,
+      // Setup/teardown assistance was retired; these legacy columns are written
+      // as false/0 to satisfy any NOT NULL constraint on existing rows.
+      needs_setup_help: false,
+      needs_teardown_help: false,
       payment_method: bookingData.paymentMethod,
       total_amount: parseFloat(bookingData.total),
       subtotal: parseFloat(bookingData.subtotal),
       stripe_fee: parseFloat(bookingData.stripeFee || 0),
       saturday_charges: parseFloat(bookingData.saturdayCharges || 0),
-      setup_teardown_fees: parseFloat(bookingData.setupTeardownFees || 0),
+      setup_teardown_fees: 0,
       onsite_assistance_fee: parseFloat(bookingData.onsiteAssistanceFee || 0),
       is_first_event: bookingData.isFirstEvent,
       wants_onsite_assistance: bookingData.wantsOnsiteAssistance || false,
@@ -671,8 +669,6 @@ async function bookingHandler(request) {
           selectedTime: booking.selectedTime,
           hoursRequested: booking.hoursRequested,
           specialRequests: booking.specialRequests,
-          needsSetupHelp: booking.needsSetupHelp,
-          needsTeardownHelp: booking.needsTeardownHelp,
           needsTables: booking.needsTables,
           needsChairs: booking.needsChairs,
           needsMat: booking.needsMat,
@@ -690,7 +686,6 @@ async function bookingHandler(request) {
           subtotal: accuratePricing.subtotal,
           stripeFee: accuratePricing.stripeFee,
           saturdayCharges: accuratePricing.saturdayCharges,
-          setupTeardownFees: accuratePricing.setupTeardownFees,
           onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
           eventSupervisionFee: accuratePricing.eventSupervisionFee,
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
