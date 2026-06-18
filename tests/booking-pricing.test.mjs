@@ -26,6 +26,8 @@ import {
   SATURDAY_RATE,
   ON_SITE_ASSISTANCE_FEE,
   EVENT_SUPERVISION_RATE,
+  TABLES_CHAIRS_FEE_SMALL,
+  TABLES_CHAIRS_FEE_LARGE,
   MAT_RENTAL_FEE,
 } from '../app/lib/booking-pricing.js';
 
@@ -312,6 +314,99 @@ test('pricing: setup help adds $50; teardown adds $50; both add $100', () => {
     ''
   );
   assert.equal(setupOnly.setupTeardownFees, 50);
+});
+
+// ---------- Tables / chairs equipment fees ----------
+
+test('pricing: tables only, under 40 attendees, adds $25', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20, needsTables: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.tablesChairsFees, TABLES_CHAIRS_FEE_SMALL);
+});
+
+test('pricing: chairs only, under 40 attendees, adds $25', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20, needsChairs: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.tablesChairsFees, TABLES_CHAIRS_FEE_SMALL);
+});
+
+test('pricing: tables AND chairs under 40 attendees stack to $50', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 30,
+       needsTables: true, needsChairs: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.tablesChairsFees, 2 * TABLES_CHAIRS_FEE_SMALL); // $50
+});
+
+test('pricing: 40+ attendees bumps each equipment fee to $50', () => {
+  const tablesOnly = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 40, needsTables: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(tablesOnly.tablesChairsFees, TABLES_CHAIRS_FEE_LARGE);
+});
+
+test('pricing: 60-person event with tables AND chairs adds $100', () => {
+  // The worked example from the rules: 60 attendees (40+), both items, $50 each.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 60,
+       needsTables: true, needsChairs: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.tablesChairsFees, 2 * TABLES_CHAIRS_FEE_LARGE); // $100
+});
+
+test('pricing: MerrittMagic waives the tables/chairs equipment fees entirely', () => {
+  // Even on a 60-person event using both items, a MerrittMagic renter pays $0
+  // in equipment fees — and the waiver applies on the first event too.
+  const repeat = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 60,
+       needsTables: true, needsChairs: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(repeat.tablesChairsFees, 0);
+
+  const firstEvent = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 60,
+       needsTables: true, needsChairs: true }],
+    { isFirstEvent: true, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(firstEvent.tablesChairsFees, 0);
+});
+
+test('pricing: equipment fees accumulate per booking across a multi-booking submission', () => {
+  const result = calculateAccuratePricing(
+    [
+      { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20, needsTables: true }, // $25
+      { selectedDate: '2026-11-05', hoursRequested: 2, expectedAttendees: 60,
+        needsTables: true, needsChairs: true }, // $100
+    ],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.tablesChairsFees, TABLES_CHAIRS_FEE_SMALL + 2 * TABLES_CHAIRS_FEE_LARGE); // $125
+});
+
+test('pricing: equipment fees flow into the pre-discount subtotal', () => {
+  // 2 hrs base ($190) + $35 onboarding + $50 tables = $275 pre-discount.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20, needsTables: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.preDiscountSubtotal, 190 + ON_SITE_ASSISTANCE_FEE + TABLES_CHAIRS_FEE_SMALL);
 });
 
 // ---------- Full-floor mat rental ----------

@@ -18,6 +18,13 @@ export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee even
 export const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
 export const STRIPE_FEE_PERCENTAGE = 3;            // % surcharge for card payments
 
+// Equipment fees for tables and chairs. Charged per item type, per booking, and
+// scaled by group size. Renters on the MerrittMagic partnership code are waived
+// these fees entirely (see calculateAccuratePricing).
+export const TABLES_CHAIRS_FEE_SMALL = 25;         // < 40 attendees, per item type (tables / chairs)
+export const TABLES_CHAIRS_FEE_LARGE = 50;         // 40+ attendees, per item type (tables / chairs)
+export const TABLES_CHAIRS_GROUP_THRESHOLD = 40;   // Attendee count that bumps each fee from $25 to $50
+
 // Full-floor roll-out mat. One mat that fills the main hall, used for martial
 // arts, yoga, sound baths, etc. Renters can add it per booking. A flat $100
 // covers use of the mat PLUS our staff setting it up and breaking it down. The
@@ -115,6 +122,10 @@ export function endsBy10PM(startTime, hoursRequested) {
 //   * $95/hr base, $200/hr Saturdays (delta charged on top of base hours).
 //   * 2-hour minimum per booking unless the renter is recurring.
 //   * Setup or teardown help is $50 each, per booking.
+//   * Tables and chairs each add an equipment fee, per booking, scaled by group
+//     size: <40 attendees = $25, 40+ = $50. Tables and chairs stack (a 60-person
+//     event using both pays $50 + $50 = $100). Renters on the MerrittMagic
+//     partnership code are waived these fees entirely.
 //   * On-site staff coverage is REQUIRED for every renter who isn't an exempt
 //     recurring partner (see below):
 //       - >=40 attendees: an on-site supervisor at $30/hr for the ENTIRE event
@@ -141,6 +152,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let onsiteAssistanceFee = 0;
   let eventSupervisionFee = 0;
   let eventSupervisionHours = 0;
+  let tablesChairsFees = 0;
   let matRentalFee = 0;
   let matRentalCount = 0;
 
@@ -153,6 +165,11 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   // first event — everyone pays the first time. Being a returning renter alone
   // does not grant the exemption; only the partnership code does.
   const isRecurringPartner = isPartnerPromoCode(clientPromoCode);
+
+  // The MerrittMagic partnership code also waives the tables/chairs equipment
+  // fees. Unlike the staff-coverage exemption, this waiver has no first-event
+  // caveat — anyone on MerrittMagic pays no equipment fee.
+  const waivesEquipmentFees = isPartnerPromoCode(clientPromoCode);
   const exemptFromStaffCoverage =
     isRecurringPartner && contactInfo.isFirstEvent !== true;
 
@@ -183,6 +200,17 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
       eventSupervisionHours += hours;
     }
 
+    // Tables / chairs equipment fees. Each item type is billed separately and
+    // scaled by group size; they stack when both are used. Waived for renters on
+    // the MerrittMagic partnership code.
+    if (!waivesEquipmentFees) {
+      const equipmentFeePerItem = attendees >= TABLES_CHAIRS_GROUP_THRESHOLD
+        ? TABLES_CHAIRS_FEE_LARGE
+        : TABLES_CHAIRS_FEE_SMALL;
+      if (booking.needsTables) tablesChairsFees += equipmentFeePerItem;
+      if (booking.needsChairs) tablesChairsFees += equipmentFeePerItem;
+    }
+
     totalHours += hours;
     totalBookings++;
   });
@@ -197,7 +225,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
   const baseAmount = totalHours * HOURLY_RATE;
   const preDiscountSubtotal =
-    baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + matRentalFee;
+    baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
   let promoDiscount = 0;
   let promoDescription = '';
@@ -232,6 +260,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     onsiteAssistanceFee,
     eventSupervisionFee,
     eventSupervisionHours,
+    tablesChairsFees,
     matRentalFee,
     matRentalCount,
     matWaived: matWaived && matRentalCount > 0,
