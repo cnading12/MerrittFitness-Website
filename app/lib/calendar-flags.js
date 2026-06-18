@@ -8,6 +8,8 @@
 //      (4hr max) — supersedes the FIRST EVENT badge
 //   3. Returning renter who opted into on-site assistance → "ON-SITE ASSIST"
 //   4. Paid setup / breakdown → "SETUP" / "BREAKDOWN" / combined badge
+//   5. Full-floor mat → "MAT — STAFF SETUP" (paid) or "MAT (renter setup)"
+//      (comped for a partner)
 //
 // Tag ordering matters: supervision is the highest-stakes flag, so it goes
 // first to stay visible even when calendar grid views truncate the title.
@@ -46,6 +48,8 @@ export function buildStaffAttentionFlags(booking) {
   const onsiteFee = parseFloat(booking.onsite_assistance_fee) || 0;
   const needsSetup = booking.needs_setup_help === true;
   const needsTeardown = booking.needs_teardown_help === true;
+  const needsMat = booking.needs_mat === true;
+  const matFee = parseFloat(booking.mat_rental_fee) || 0;
 
   const supervisionTriggered =
     isFirstEvent && attendees >= SUPERVISION_GROUP_THRESHOLD;
@@ -91,6 +95,27 @@ export function buildStaffAttentionFlags(booking) {
       tag: '🧹 BREAKDOWN',
       detail: 'Breakdown assistance paid — staff handles event teardown.',
     });
+  }
+
+  // Full-floor mat. When it's paid ($100) WE roll it out and break it down;
+  // when it's comped for a partner the renter does. Either way, the work must
+  // stay inside the renter's booked window so bookings can be stacked.
+  if (needsMat) {
+    if (matFee > 0) {
+      flags.push({
+        tag: '🟦 MAT — STAFF SETUP',
+        detail:
+          `Full-floor mat rented ($${matFee.toFixed(2)}). Staff rolls it out and ` +
+          `breaks it down — entirely within the booked window (do not run over).`,
+      });
+    } else {
+      flags.push({
+        tag: '🟦 MAT (renter setup)',
+        detail:
+          'Full-floor mat in use — comped for partner. The renter handles their ' +
+          'own setup and breakdown, within the booked window.',
+      });
+    }
   }
 
   // Sponsored bookings are comped — surface this front and center so staff

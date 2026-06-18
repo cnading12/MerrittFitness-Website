@@ -127,6 +127,51 @@ test('combines supervision and setup+breakdown flags', () => {
   assert.match(flags[1].tag, /SETUP/);
 });
 
+test('paid mat rental flags MAT — STAFF SETUP with the fee', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_mat: true,
+    mat_rental_fee: 100,
+  });
+  assert.equal(flags.length, 1);
+  assert.match(flags[0].tag, /MAT — STAFF SETUP/);
+  assert.match(flags[0].detail, /\$100\.00/);
+  assert.match(flags[0].detail, /within the booked window/);
+});
+
+test('comped mat (partner) flags renter-setup, no fee', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_mat: true,
+    mat_rental_fee: 0,
+  });
+  assert.equal(flags.length, 1);
+  assert.match(flags[0].tag, /MAT \(renter setup\)/);
+  assert.match(flags[0].detail, /renter handles/i);
+});
+
+test('mat flag coexists with setup/breakdown', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_setup_help: true,
+    needs_teardown_help: true,
+    needs_mat: true,
+    mat_rental_fee: 100,
+  });
+  assert.equal(flags.length, 2);
+  assert.match(flags[0].tag, /SETUP/);
+  assert.match(flags[1].tag, /MAT/);
+});
+
+test('no mat flag when mat not requested', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_mat: false,
+    mat_rental_fee: 0,
+  });
+  assert.deepEqual(flags, []);
+});
+
 test('first event under threshold without paid assist produces no flag', () => {
   // The pricing engine charges on-site assistance for first events even when
   // attendees < 40, but if the persisted fields say no fee was charged we

@@ -63,6 +63,11 @@ const IndividualBookingSchema = z.object({
   needsSetupHelp: z.boolean().default(false),
   needsTeardownHelp: z.boolean().default(false),
 
+  // Whether the renter wants the full-floor roll-out mat for this booking.
+  // Pricing ($100, waived for partners) is recomputed server-side in
+  // calculateAccuratePricing — this flag is the only trusted input.
+  needsMat: z.boolean().default(false),
+
   // Expected attendee count — used server-side to determine whether first-time
   // on-site event supervision ($30/hr, 4hr cap) should be applied.
   expectedAttendees: z.coerce.number()
@@ -121,6 +126,7 @@ const PricingSchema = z.object({
   onsiteAssistanceFee: z.number().optional().default(0),
   eventSupervisionFee: z.number().optional().default(0),
   eventSupervisionHours: z.number().optional().default(0),
+  matRentalFee: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
@@ -214,6 +220,9 @@ const RecurringScheduleSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   paymentPreference: z.enum(['ach', 'card']).default('ach'),
   specialRequests: z.string().max(500).optional().default(''),
+  // Full-floor mat — included free for recurring partners; they handle their own
+  // setup/breakdown. Persisted inside recurring_details (no charge applied).
+  needsMat: z.boolean().default(false),
   slots: z.array(RecurringSlotSchema).min(1, 'At least one slot required').max(20, 'Too many slots'),
   exceptions: z.array(RecurringExceptionSchema).max(200).optional().default([]),
 });
@@ -318,15 +327,33 @@ async function createBooking(bookingData) {
       coi_document_type: bookingData.coiDocumentType || null
     };
 
+    // Full-floor mat rental columns are the newest. Layered on top so a
+    // pre-migration DB falls back to the COI record rather than dropping any of
+    // the other newer columns. `needs_mat` records the request; `mat_rental_fee`
+    // is $0 for partners (waived) or $100 per booking otherwise.
+    const recordWithMat = {
+      ...recordWithCoi,
+      needs_mat: bookingData.needsMat || false,
+      mat_rental_fee: parseFloat(bookingData.matRentalFee || 0)
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithCoi])
+      .insert([recordWithMat])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
     // PGRST204 = column not found in Supabase.
     const isMissingColumnError = (err) =>
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ mat rental columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithCoi])
+        .select());
+    }
 
     if (isMissingColumnError(error)) {
       console.warn('⚠️ alcohol/COI columns missing from DB — falling back. Run the pending migration. Error:', error.message);
@@ -437,6 +464,9 @@ async function createRecurringApplication(validatedData) {
       paymentPreference: recurringSchedule.paymentPreference,
       startDate: recurringSchedule.startDate,
       endDate: recurringSchedule.endDate || null,
+      // Full-floor mat is included free for partners; flag it so staff and the
+      // confirmation emails know to expect the renter handling their own setup.
+      needsMat: recurringSchedule.needsMat === true,
       slots: recurringSchedule.slots,
       // Per-date overrides chosen during the conflict-resolution step. The
       // monthly invoicer reads this list and either skips or moves the
@@ -633,6 +663,7 @@ async function bookingHandler(request) {
           specialRequests: booking.specialRequests,
           needsSetupHelp: booking.needsSetupHelp,
           needsTeardownHelp: booking.needsTeardownHelp,
+          needsMat: booking.needsMat,
           expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
@@ -651,6 +682,7 @@ async function bookingHandler(request) {
           onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
           eventSupervisionFee: accuratePricing.eventSupervisionFee,
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
+          matRentalFee: accuratePricing.matRentalFee,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,
