@@ -10,8 +10,43 @@
 // booking page. Changing any of these without updating the UI copy will create
 // a discrepancy between what the renter sees and what they're charged, so
 // always update both.
-export const HOURLY_RATE = 95;
-export const SATURDAY_RATE = 200;
+export const HOURLY_RATE = 95;            // Base weekday rate (0–30 guests)
+export const SATURDAY_RATE = 200;         // Base Saturday rate (0–30 guests)
+
+// Guest-based rate tiers. The venue prices in three attendee bands and each
+// band up adds a fixed increment to the base hourly rate. On Saturdays the
+// per-band increment doubles (on top of the higher Saturday base), so large
+// Saturday events scale up twice as fast:
+//
+//   Guests   Weekday   Saturday
+//   ------    -------   --------
+//   0–30      $95       $200
+//   30–60     $125      $260
+//   60+       $155      $320
+//
+// Thresholds use >= (matching the supervision/equipment thresholds below), so a
+// 30-guest event sits in the middle band and a 60-guest event in the top band.
+export const RATE_TIER_INCREMENT = 30;       // Per-band increase, weekdays
+export const SATURDAY_RATE_INCREMENT = 60;   // Per-band increase, Saturdays
+export const RATE_TIER_MID_THRESHOLD = 30;   // >= this many guests → middle band
+export const RATE_TIER_HIGH_THRESHOLD = 60;  // >= this many guests → top band
+
+// Number of rate bands above the base for `attendees` guests: 0, 1, or 2.
+export function rateTierFor(attendees) {
+  const n = parseInt(attendees, 10) || 0;
+  if (n >= RATE_TIER_HIGH_THRESHOLD) return 2;
+  if (n >= RATE_TIER_MID_THRESHOLD) return 1;
+  return 0;
+}
+
+// Hourly rate for a booking with `attendees` guests, on a Saturday or a weekday.
+export function hourlyRateFor(attendees, isSat = false) {
+  const tier = rateTierFor(attendees);
+  return isSat
+    ? SATURDAY_RATE + tier * SATURDAY_RATE_INCREMENT
+    : HOURLY_RATE + tier * RATE_TIER_INCREMENT;
+}
+
 export const SETUP_TEARDOWN_FEE = 50;
 export const ON_SITE_ASSISTANCE_FEE = 35;          // First-hour onboarding/setup help (flat, once per submission)
 export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee events — billed for the ENTIRE event (no cap)
@@ -119,7 +154,10 @@ export function endsBy10PM(startTime, hoursRequested) {
 
 // Compute the totals for one or more single-event bookings sharing a contact.
 // Mirrors the production rules:
-//   * $95/hr base, $200/hr Saturdays (delta charged on top of base hours).
+//   * Guest-tiered base rate (see hourlyRateFor): $95/$125/$155 per hour on
+//     weekdays for the 0–30 / 30–60 / 60+ attendee bands, and $200/$260/$320
+//     on Saturdays. The Saturday premium is charged as a delta on top of the
+//     weekday base for the same band.
 //   * 2-hour minimum per booking unless the renter is recurring.
 //   * Setup or teardown help is $50 each, per booking.
 //   * Tables and chairs each add an equipment fee, per booking, scaled by group
@@ -147,6 +185,8 @@ export function endsBy10PM(startTime, hoursRequested) {
 export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode = '') {
   let totalHours = 0;
   let totalBookings = 0;
+  let baseAmount = 0;
+  let topHourlyRate = HOURLY_RATE; // Highest weekday band rate seen — used for display
   let saturdayCharges = 0;
   let setupTeardownFees = 0;
   let onsiteAssistanceFee = 0;
@@ -176,13 +216,20 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   bookings.forEach((booking) => {
     let hours = parseFloat(booking.hoursRequested) || 0;
     const isSat = isSaturday(booking.selectedDate);
+    const attendees = parseInt(booking.expectedAttendees, 10) || 0;
 
     if (!contactInfo.isRecurring && hours < 2) {
       hours = 2; // 2-hour minimum on single events
     }
 
+    // Base venue time is billed at the weekday rate for the booking's guest
+    // band; Saturdays add the band's Saturday premium as a separate surcharge.
+    const weekdayRate = hourlyRateFor(attendees, false);
+    baseAmount += hours * weekdayRate;
+    if (weekdayRate > topHourlyRate) topHourlyRate = weekdayRate;
+
     if (isSat) {
-      saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
+      saturdayCharges += hours * (hourlyRateFor(attendees, true) - weekdayRate);
     }
 
     if (booking.needsSetupHelp) setupTeardownFees += SETUP_TEARDOWN_FEE;
@@ -193,7 +240,6 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
       if (!matWaived) matRentalFee += MAT_RENTAL_FEE;
     }
 
-    const attendees = parseInt(booking.expectedAttendees, 10) || 0;
     if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
       // Supervisor stays for the entire event — bill the full requested hours.
       eventSupervisionFee += hours * EVENT_SUPERVISION_RATE;
@@ -223,7 +269,6 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
   }
 
-  const baseAmount = totalHours * HOURLY_RATE;
   const preDiscountSubtotal =
     baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
@@ -253,7 +298,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   return {
     totalHours,
     totalBookings,
-    hourlyRate: HOURLY_RATE,
+    hourlyRate: topHourlyRate,
     baseAmount,
     saturdayCharges,
     setupTeardownFees,
