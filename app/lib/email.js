@@ -265,6 +265,26 @@ const EMAIL_TEMPLATES = {
                   : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter</span>'}
               </td>
             </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol:</td>
+              <td style="padding: 8px 0; color: #111827;">
+                ${booking.serving_alcohol === true
+                  ? '<strong style="color: #b45309;">Yes — alcohol will be present</strong>'
+                  : booking.serving_alcohol === false
+                    ? 'No'
+                    : 'Not specified'}
+              </td>
+            </tr>
+            ${booking.serving_alcohol === true ? `
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td>
+              <td style="padding: 8px 0; color: #111827;">
+                ${booking.coi_document_data
+                  ? `Attached to this email (<code>${booking.coi_document_name || 'coi'}</code>)`
+                  : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter before the event</span>'}
+              </td>
+            </tr>
+            ` : ''}
           </table>
         </div>
 
@@ -429,6 +449,8 @@ const EMAIL_TEMPLATES = {
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td><td style="padding: 8px 0; color: #111827;">${booking.home_address || 'Not provided'}</td></tr>
               ${booking.business_name ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td><td style="padding: 8px 0; color: #111827;">${booking.business_name}</td></tr>` : ''}
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td><td style="padding: 8px 0; color: #111827;">${booking.id_photo_data ? `Attached (<code>${booking.id_photo_name || 'id-photo'}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter</span>'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol:</td><td style="padding: 8px 0; color: #111827;">${booking.serving_alcohol === true ? '<strong style="color: #b45309;">Yes — alcohol present</strong>' : booking.serving_alcohol === false ? 'No' : 'Not specified'}</td></tr>
+              ${booking.serving_alcohol === true ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td><td style="padding: 8px 0; color: #111827;">${booking.coi_document_data ? `Attached (<code>${booking.coi_document_name || 'coi'}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter before the event</span>'}</td></tr>` : ''}
             </table>
           </div>
 
@@ -1060,6 +1082,30 @@ function buildIdPhotoAttachment(booking) {
   };
 }
 
+// Build a Resend attachment object from the COI columns on a booking row, or
+// null if no COI is present. The COI may be a PDF or an image.
+function buildCoiAttachment(booking) {
+  const base64 = extractBase64FromDataUrl(booking?.coi_document_data);
+  if (!base64) return null;
+
+  const mime = booking.coi_document_type || 'application/pdf';
+  const ext = mime === 'application/pdf' ? 'pdf' : (mime.split('/')[1]?.split('+')[0] || 'pdf');
+  const rawName = (booking.coi_document_name || `coi-${booking.id}`).trim();
+  const filename = /\.[a-z0-9]+$/i.test(rawName) ? rawName : `${rawName}.${ext}`;
+
+  return {
+    filename,
+    content: base64,
+    contentType: mime
+  };
+}
+
+// Collect every document attachment (ID photo + COI when present) for the
+// manager-facing emails.
+function buildManagerAttachments(booking) {
+  return [buildIdPhotoAttachment(booking), buildCoiAttachment(booking)].filter(Boolean);
+}
+
 // Email sending functions
 export async function sendBookingConfirmation(booking) {
   try {
@@ -1088,7 +1134,7 @@ export async function sendManagerNotification(booking) {
     console.log('📧 Sending manager notification to:', recipients.join(', '));
 
     const template = EMAIL_TEMPLATES.managerNotification(booking);
-    const idPhotoAttachment = buildIdPhotoAttachment(booking);
+    const attachments = buildManagerAttachments(booking);
 
     const payload = {
       from: EMAIL_CONFIG.from,
@@ -1097,10 +1143,11 @@ export async function sendManagerNotification(booking) {
       ...template
     };
 
-    if (idPhotoAttachment) {
-      payload.attachments = [idPhotoAttachment];
-      console.log('📎 Attaching renter ID photo:', idPhotoAttachment.filename);
-    } else {
+    if (attachments.length > 0) {
+      payload.attachments = attachments;
+      console.log('📎 Attaching renter documents:', attachments.map(a => a.filename).join(', '));
+    }
+    if (!buildIdPhotoAttachment(booking)) {
       console.warn('⚠️ No ID photo found on booking', booking.id, '- manager email will flag it as missing.');
     }
 
@@ -1205,7 +1252,7 @@ export async function sendRecurringSetupManager(booking) {
   try {
     console.log('📧 Sending recurring setup manager notification');
     const template = EMAIL_TEMPLATES.recurringSetupManager(booking);
-    const idPhotoAttachment = buildIdPhotoAttachment(booking);
+    const attachments = buildManagerAttachments(booking);
     const recipients = getStaffRecipients();
     console.log('📧 Sending recurring setup manager notification to:', recipients.join(', '));
     const payload = {
@@ -1214,8 +1261,8 @@ export async function sendRecurringSetupManager(booking) {
       replyTo: booking.email,
       ...template
     };
-    if (idPhotoAttachment) {
-      payload.attachments = [idPhotoAttachment];
+    if (attachments.length > 0) {
+      payload.attachments = attachments;
     }
     const result = await sendEmailWithRetry(payload, { label: `recurring setup manager ${booking.id}` });
     console.log('✅ Recurring setup manager email sent:', result.data?.id);
