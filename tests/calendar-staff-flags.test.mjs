@@ -1,9 +1,11 @@
 // Tests for buildStaffAttentionFlags — the helper that decides which
-// staff-attention badges show on a Google Calendar booking. The three flags
-// the manager cares about are:
-//   1. First event + paid on-site assistance
-//   2. Guest count >= 40 on a first event → mandatory supervision (4hr max)
-//   3. Paid setup / breakdown
+// staff-attention badges show on a Google Calendar booking. The flags the
+// manager cares about are:
+//   1. A paid supervision fee → mandatory supervision for the entire event
+//      (fee-driven; applies to any renter the pricing engine charged)
+//   2. First event + paid onboarding assistance
+//   3. Any other paid onboarding (first-hour) assistance
+//   4. Paid setup / breakdown
 // Run with: npm test
 
 import test from 'node:test';
@@ -41,19 +43,33 @@ test('first event with paid on-site assistance flags FIRST EVENT', () => {
   assert.match(flags[0].detail, /\$35\.00/);
 });
 
-test('first event with 40+ attendees flags SUPERVISION REQUIRED', () => {
+test('a paid supervision fee flags SUPERVISION REQUIRED for the entire event', () => {
   const flags = buildStaffAttentionFlags({
     ...baseBooking,
     is_first_event: true,
     expected_attendees: 55,
-    event_supervision_fee: 120,
-    event_supervision_hours: 4,
+    event_supervision_fee: 180,
+    event_supervision_hours: 6,
   });
   assert.equal(flags.length, 1);
   assert.match(flags[0].tag, /SUPERVISION REQUIRED/);
   assert.match(flags[0].detail, /55 expected attendees/);
-  assert.match(flags[0].detail, /4hr/);
-  assert.match(flags[0].detail, /\$120\.00/);
+  assert.match(flags[0].detail, /entire 6hr event/);
+  assert.match(flags[0].detail, /\$180\.00/);
+});
+
+test('supervision flag is fee-driven — fires for a returning (non-first) renter too', () => {
+  // A returning non-partner with 40+ attendees is now charged supervision; the
+  // calendar must surface it even though is_first_event is false.
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    is_first_event: false,
+    expected_attendees: 50,
+    event_supervision_fee: 90,
+    event_supervision_hours: 3,
+  });
+  assert.equal(flags.length, 1);
+  assert.match(flags[0].tag, /SUPERVISION REQUIRED/);
 });
 
 test('supervision takes priority over first-event-assist', () => {

@@ -13,26 +13,29 @@
 export const HOURLY_RATE = 95;
 export const SATURDAY_RATE = 200;
 export const SETUP_TEARDOWN_FEE = 50;
-export const ON_SITE_ASSISTANCE_FEE = 35;
-export const EVENT_SUPERVISION_RATE = 30;          // $/hr for first-time 40+ attendee bookings
-export const EVENT_SUPERVISION_MAX_HOURS = 4;
+export const ON_SITE_ASSISTANCE_FEE = 35;          // First-hour onboarding/setup help (flat, once per submission)
+export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee events — billed for the ENTIRE event (no cap)
 export const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
 export const STRIPE_FEE_PERCENTAGE = 3;            // % surcharge for card payments
 
 // Full-floor roll-out mat. One mat that fills the main hall, used for martial
 // arts, yoga, sound baths, etc. Renters can add it per booking. A flat $100
 // covers use of the mat PLUS our staff setting it up and breaking it down. The
-// fee is waived for recurring partners (see PARTNER_PROMO_CODE below) — they use
-// the mat for free but are then responsible for their own setup and breakdown.
-// In every case the mat setup and breakdown happen INSIDE the renter's booked
-// window (never before or after it) so bookings can be stacked back-to-back.
+// fee is waived for recurring partners (the partnership promo code — see
+// isPartnerPromoCode below) — they use the mat for free but are then
+// responsible for their own setup and breakdown. In every case the mat setup
+// and breakdown happen INSIDE the renter's booked window (never before or after
+// it) so bookings can be stacked back-to-back.
 export const MAT_RENTAL_FEE = 100;                 // $/booking, waived for partners
 
 // Promo codes. These must stay in sync with the client-side dictionary in
 // app/booking/page.tsx — the server is the source of truth, but the UI shows
 // the discount before submit, so any drift is user-visible.
 export const VALID_PROMO_CODES = {
-  MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)' },
+  // The 20% partnership discount also flags the renter as a "recurring partner"
+  // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
+  // coverage — except on their very first event, which everyone pays for.
+  MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
   EXTENDED15: { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
   // Sponsored events: 100% off, zero fees, no payment collected. The renter is
   // never sent to checkout — the booking is confirmed immediately. The
@@ -40,19 +43,6 @@ export const VALID_PROMO_CODES = {
   // what the calendar / emails use to label the reservation "Sponsored".
   MerrittSponsor100: { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
 };
-
-// The partnership promo code. It is issued to renters who use the space 8+
-// hours/month, i.e. our recurring partners. Booking with it both applies the
-// 20% partnership discount and marks the renter as a partner — which is what
-// the full-floor mat fee keys off of: partners use the mat at no charge (and
-// handle their own setup/breakdown), everyone else pays the $100 flat fee.
-export const PARTNER_PROMO_CODE = 'MerrittMagic';
-
-// True iff `code` is the partnership promo code (a recurring partner).
-export function isPartnerPromoCode(code) {
-  if (!code || typeof code !== 'string') return false;
-  return code.trim() === PARTNER_PROMO_CODE;
-}
 
 // Codes that comp the entire booking (no payment, no card). Kept as a derived
 // list so calendar / email modules can recognize a sponsored booking from its
@@ -65,6 +55,21 @@ export const SPONSORED_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
 export function isSponsoredPromoCode(code) {
   if (!code || typeof code !== 'string') return false;
   return SPONSORED_PROMO_CODES.includes(code.trim());
+}
+
+// Codes that identify a "recurring partner" (8+ hrs/month, 20% partnership
+// discount). Derived from the promo dictionary so callers don't hard-code the
+// partner code. A recurring partner is exempt from mandatory on-site staff
+// coverage on repeat events — see calculateAccuratePricing.
+export const PARTNER_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
+  .filter(([, data]) => data.partner === true)
+  .map(([code]) => code);
+
+// True iff `code` is the partnership (recurring-partner) promo code. The
+// renter applying it qualifies for the supervision exemption on repeat events.
+export function isPartnerPromoCode(code) {
+  if (!code || typeof code !== 'string') return false;
+  return PARTNER_PROMO_CODES.includes(code.trim());
 }
 
 // True iff `dateString` (YYYY-MM-DD) lands on a Saturday in local time. Parses
@@ -110,10 +115,18 @@ export function endsBy10PM(startTime, hoursRequested) {
 //   * $95/hr base, $200/hr Saturdays (delta charged on top of base hours).
 //   * 2-hour minimum per booking unless the renter is recurring.
 //   * Setup or teardown help is $50 each, per booking.
-//   * First-event renters with >=40 attendees: facility-host supervision at
-//     $30/hr capped at 4 hrs.
-//   * Otherwise (first-event <40 attendees, or returning renter who opted in):
-//     $35 on-site assistance, billed once per submission.
+//   * On-site staff coverage is REQUIRED for every renter who isn't an exempt
+//     recurring partner (see below):
+//       - >=40 attendees: an on-site supervisor at $30/hr for the ENTIRE event
+//         (no hour cap).
+//       - <40 attendees: onboarding/setup assistance for the first hour, billed
+//         as a flat $35 once per submission.
+//     Supervision and the $35 onboarding fee are mutually exclusive — a
+//     submission never pays for both.
+//   * Recurring partners (renters on the 20% partnership code) are EXEMPT from
+//     this coverage — but only on repeat events. Everyone, partners included,
+//     pays on their first event. An exempt partner may still opt in to the $35
+//     onboarding help.
 //   * Promo discount applies to the pre-discount subtotal; minHours is enforced.
 //   * Card adds a 3% surcharge; ACH does not.
 //
@@ -134,6 +147,14 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   // Recurring partners (booking with the partnership promo code) get the mat at
   // no charge; everyone else pays the flat fee per booking that uses it.
   const matWaived = isPartnerPromoCode(clientPromoCode);
+
+  // A recurring partner is a renter on the 20% partnership code. They're exempt
+  // from mandatory staff coverage, but the exemption does NOT apply to their
+  // first event — everyone pays the first time. Being a returning renter alone
+  // does not grant the exemption; only the partnership code does.
+  const isRecurringPartner = isPartnerPromoCode(clientPromoCode);
+  const exemptFromStaffCoverage =
+    isRecurringPartner && contactInfo.isFirstEvent !== true;
 
   bookings.forEach((booking) => {
     let hours = parseFloat(booking.hoursRequested) || 0;
@@ -156,20 +177,21 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     }
 
     const attendees = parseInt(booking.expectedAttendees, 10) || 0;
-    if (contactInfo.isFirstEvent === true && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
-      const supervisedHours = Math.min(hours, EVENT_SUPERVISION_MAX_HOURS);
-      eventSupervisionFee += supervisedHours * EVENT_SUPERVISION_RATE;
-      eventSupervisionHours += supervisedHours;
+    if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
+      // Supervisor stays for the entire event — bill the full requested hours.
+      eventSupervisionFee += hours * EVENT_SUPERVISION_RATE;
+      eventSupervisionHours += hours;
     }
 
     totalHours += hours;
     totalBookings++;
   });
 
-  // On-site assistance is mutually exclusive with the facility host. Either
-  // (a) the renter is first-time AND no supervision was triggered (under
-  // threshold), so they need on-site help, or (b) returning renter opted in.
-  if (eventSupervisionFee === 0 && (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance)) {
+  // On-site (first-hour) onboarding assistance is mutually exclusive with the
+  // supervisor. Charge it once when no supervision applied AND either the renter
+  // is required to have coverage (not an exempt partner) or an exempt partner
+  // opted in.
+  if (eventSupervisionFee === 0 && (!exemptFromStaffCoverage || contactInfo.wantsOnsiteAssistance)) {
     onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
   }
 
@@ -214,6 +236,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     matRentalCount,
     matWaived: matWaived && matRentalCount > 0,
     isFirstEvent: contactInfo.isFirstEvent,
+    isRecurringPartner,
     wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
     preDiscountSubtotal,
     promoCode: validatedPromoCode,

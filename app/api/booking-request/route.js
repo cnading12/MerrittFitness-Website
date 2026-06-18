@@ -68,8 +68,8 @@ const IndividualBookingSchema = z.object({
   // calculateAccuratePricing — this flag is the only trusted input.
   needsMat: z.boolean().default(false),
 
-  // Expected attendee count — used server-side to determine whether first-time
-  // on-site event supervision ($30/hr, 4hr cap) should be applied.
+  // Expected attendee count — used server-side to determine whether on-site
+  // event supervision ($30/hr for the entire event) should be applied.
   expectedAttendees: z.coerce.number()
     .int('Attendee count must be a whole number')
     .min(1, 'At least one attendee is required')

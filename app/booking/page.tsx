@@ -127,7 +127,11 @@ export default function BookingPage() {
   // app/lib/booking-pricing.js (the server re-validates). The `sponsored` flag
   // comps the entire booking — $0 total, no fees, no card required.
   const VALID_PROMO_CODES = {
-    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)' },
+    // `partner: true` marks the 20% partnership code as a "recurring partner"
+    // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
+    // coverage on repeat events — but everyone, partners included, pays on their
+    // first event. Mirrors VALID_PROMO_CODES in app/lib/booking-pricing.js.
+    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
     'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
     'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true }
   };
@@ -567,10 +571,9 @@ export default function BookingPage() {
   const HOURLY_RATE = 95;
   const SATURDAY_RATE = 200; // All Saturday events
   const SETUP_TEARDOWN_FEE = 50; // Per service
-  const ON_SITE_ASSISTANCE_FEE = 35; // First-time event or optional add-on
+  const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
   const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
-  const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site event supervisor for first-time bookings with 40+ attendees
-  const EVENT_SUPERVISION_MAX_HOURS = 4; // Cap: supervisor covers first 2hr + last 2hr on events >4hr
+  const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
   const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
   const STRIPE_FEE_PERCENTAGE = 3;
 
@@ -587,10 +590,20 @@ export default function BookingPage() {
     let matRentalFee = 0;
     let matRentalCount = 0;
 
-    // Recurring partners (MerrittMagic) get the full-floor mat for free; everyone
-    // else pays the flat fee per booking that uses it. Mirrors the server in
-    // app/lib/booking-pricing.js.
-    const matWaived = promoCodeApplied && promoCode.trim() === 'MerrittMagic';
+    // A recurring partner (renter on the 20% partnership code) is exempt from
+    // mandatory on-site staff coverage — but NOT on their first event, which
+    // everyone pays for. Returning-renter status alone does not grant the
+    // exemption; only the partnership code does.
+    const appliedPromo = promoCodeApplied && promoCode.trim()
+      ? VALID_PROMO_CODES[promoCode.trim() as keyof typeof VALID_PROMO_CODES]
+      : undefined;
+    const isRecurringPartner = (appliedPromo as { partner?: boolean } | undefined)?.partner === true;
+    const exemptFromStaffCoverage = isRecurringPartner && formData.isFirstEvent !== true;
+
+    // Recurring partners get the full-floor mat for free (regardless of whether
+    // it's their first event); everyone else pays the flat fee per booking that
+    // uses it. Mirrors the server in app/lib/booking-pricing.js.
+    const matWaived = isRecurringPartner;
 
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
@@ -624,15 +637,13 @@ export default function BookingPage() {
           }
         }
 
-        // Calculate on-site event supervision fee: required when the renter is a
-        // first-time user AND any booking has 40+ expected attendees.
-        // Supervisor covers the full event, capped at 4 hours total. Over 4 hours
-        // they cover the first 2 and last 2 (still billed as 4hrs flat at $30/hr).
+        // On-site event supervision: required when any booking has 40+ expected
+        // attendees and the renter isn't an exempt recurring partner. The
+        // supervisor stays for the ENTIRE event — bill the full requested hours.
         const attendees = parseInt(booking.expectedAttendees, 10) || 0;
-        if (formData.isFirstEvent === true && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
-          const supervisedHours = Math.min(hours, EVENT_SUPERVISION_MAX_HOURS);
-          eventSupervisionFee += supervisedHours * EVENT_SUPERVISION_RATE;
-          eventSupervisionHours += supervisedHours;
+        if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
+          eventSupervisionFee += hours * EVENT_SUPERVISION_RATE;
+          eventSupervisionHours += hours;
           eventSupervisionApplies = true;
         }
 
@@ -641,10 +652,11 @@ export default function BookingPage() {
       }
     });
 
-    // On-site assistance: required for first-time renters with fewer than 40
-    // attendees, optional add-on for returning renters. Mutually exclusive with
-    // the Facility Host — a booking never pays for both.
-    if (!eventSupervisionApplies && (formData.isFirstEvent === true || formData.wantsOnsiteAssistance)) {
+    // First-hour onboarding/setup assistance ($35, once): required for every
+    // renter who isn't an exempt recurring partner and isn't already getting a
+    // supervisor; an exempt partner may still opt in. Mutually exclusive with
+    // the supervisor — a booking never pays for both.
+    if (!eventSupervisionApplies && (!exemptFromStaffCoverage || formData.wantsOnsiteAssistance)) {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
@@ -686,9 +698,9 @@ export default function BookingPage() {
       matRentalCount,
       matWaived: matWaived && matRentalCount > 0,
       eventSupervisionRate: EVENT_SUPERVISION_RATE,
-      eventSupervisionMaxHours: EVENT_SUPERVISION_MAX_HOURS,
       eventSupervisionThreshold: EVENT_SUPERVISION_GROUP_THRESHOLD,
       isFirstEvent: formData.isFirstEvent,
+      isRecurringPartner,
       wantsOnsiteAssistance: formData.wantsOnsiteAssistance,
       preDiscountSubtotal,
       promoDiscount,
@@ -1030,6 +1042,11 @@ export default function BookingPage() {
   const pricing = calculatePricing();
   const recurringPricing = calculateRecurringPricing();
 
+  // A renter is exempt from mandatory on-site staff coverage only as a recurring
+  // partner (20% partnership code) on a repeat event — never on a first event.
+  // Drives the live per-booking supervision/assistance notices below.
+  const exemptFromStaffCoverage = pricing.isRecurringPartner && formData.isFirstEvent !== true;
+
   const getFieldError = (fieldName) => {
     return validationErrors[fieldName];
   };
@@ -1225,11 +1242,11 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>First-Time Users (under 40 attendees):</strong> On-site assistance ($35) is required to help with wifi, speakers, building access, and any questions. Returning users can optionally add this service.</span>
+                  <span><strong>Events Under 40 Attendees:</strong> Onboarding/setup assistance ($35) is required for the first hour to help with wifi, speakers, building access, and any questions. Recurring partners are exempt on repeat events.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Large First-Time Events (40+ attendees):</strong> A Facility Host is required at $30/hour (4-hour maximum) in place of on-site assistance — you are never charged for both. For events up to 4 hours, the Facility Host stays the entire time. For events longer than 4 hours, the Facility Host covers the first 2 hours and the last 2 hours to help with arrival and close-out.</span>
+                  <span><strong>Events With 40+ Attendees:</strong> A Facility Host is required at $30/hour for the entire event, in place of onboarding assistance — you are never charged for both. Recurring partners (8+ hrs/month, 20% partner discount) are exempt on repeat events, but every renter pays for their first event.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -1640,10 +1657,10 @@ export default function BookingPage() {
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_expectedAttendees`)}</p>
                       )}
                       <p className="text-xs text-gray-500 mt-2">
-                        Venue capacity: 100 seated / 130 standing. First-time bookings with <strong>40+ attendees</strong> include a Facility Host (+$30/hr, 4-hour max) to help the event run smoothly.
+                        Venue capacity: 100 seated / 130 standing. Bookings with <strong>40+ attendees</strong> include a Facility Host (+$30/hr for the entire event) to help the event run smoothly. Recurring partners are exempt on repeat events.
                       </p>
                       {/* Live notice when supervision will apply for this specific booking */}
-                      {formData.isFirstEvent === true &&
+                      {!exemptFromStaffCoverage &&
                         parseInt(booking.expectedAttendees, 10) >= 40 &&
                         booking.hoursRequested && (
                           <div className="mt-3 bg-teal-50 border border-teal-200 rounded-xl p-3">
@@ -1651,9 +1668,7 @@ export default function BookingPage() {
                               <Users className="text-teal-700 mt-0.5 flex-shrink-0" size={16} />
                               <p className="text-xs text-teal-800">
                                 <strong>Facility Host included for this event.</strong>{' '}
-                                {parseFloat(booking.hoursRequested) <= 4
-                                  ? `A Facility Host will be on-site for the full ${booking.hoursRequested}-hour event (+$${(Math.min(parseFloat(booking.hoursRequested), 4) * 30).toFixed(0)}).`
-                                  : `A Facility Host will be on-site for the first 2 hours and the last 2 hours of your ${booking.hoursRequested}-hour event (+$120, 4-hour max).`}
+                                {`A Facility Host will be on-site for the entire ${booking.hoursRequested}-hour event (+$${(parseFloat(booking.hoursRequested) * 30).toFixed(0)}).`}
                               </p>
                             </div>
                           </div>
@@ -2259,7 +2274,7 @@ export default function BookingPage() {
                         Is this your first event at Merritt Wellness? *
                       </label>
                       <p className="text-xs text-[#6b5f5b]">
-                        First-time events include on-site assistance ($35) to help with wifi, speakers, building access, and any questions during setup.
+                        On-site staff coverage is required for all events except recurring partners&apos; repeat events: first-hour onboarding assistance ($35), or an on-site supervisor ($30/hr for the entire event) for 40+ attendees. Everyone pays for their first event.
                       </p>
                     </div>
                   </div>
@@ -2303,26 +2318,31 @@ export default function BookingPage() {
                     <p className="text-red-600 text-sm mt-3 ml-11">{validationErrors.isFirstEvent}</p>
                   )}
 
-                  {/* First event info box — hidden when any booking has 40+
-                      attendees, since the Facility Host replaces On-Site
-                      Assistance for those events. */}
-                  {formData.isFirstEvent === true &&
+                  {/* Required first-hour onboarding box — shown for every renter
+                      who isn't an exempt recurring partner. Hidden when any
+                      booking has 40+ attendees, since the Facility Host replaces
+                      onboarding assistance for those events (surfaced inline by
+                      the per-booking supervision notice). */}
+                  {!exemptFromStaffCoverage &&
+                    formData.isFirstEvent !== null &&
                     !bookings.some(b => parseInt(b.expectedAttendees, 10) >= EVENT_SUPERVISION_GROUP_THRESHOLD) && (
                     <div className="mt-4 ml-11 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                       <div className="flex items-start gap-2">
                         <CheckCircle className="text-emerald-600 mt-0.5 flex-shrink-0" size={16} />
                         <div>
-                          <p className="text-sm font-medium text-emerald-800">On-Site Assistance Included (+$35)</p>
+                          <p className="text-sm font-medium text-emerald-800">First-Hour Onboarding Assistance Included (+$35)</p>
                           <p className="text-xs text-emerald-700 mt-1">
-                            A staff member will be available to assist with wifi setup, speaker connections, building access, and answer any questions during your event setup. We want your first experience to be seamless!
+                            {formData.isFirstEvent === true
+                              ? 'A staff member will be available for the first hour to assist with wifi setup, speaker connections, building access, and any questions. We want your first experience to be seamless!'
+                              : 'On-site coverage is required for all renters except recurring partners. A staff member will be on-site for the first hour to help with wifi, speakers, building access, and questions. Recurring partners (8+ hrs/month, 20% partner discount) are exempt on repeat events — apply your partner code to remove this.'}
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Optional on-site assistance for returning clients */}
-                  {formData.isFirstEvent === false && (
+                  {/* Exempt recurring partners on a repeat event may still opt in. */}
+                  {formData.isFirstEvent === false && exemptFromStaffCoverage && (
                     <div className="mt-4 ml-11">
                       <label className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all ${
                         formData.wantsOnsiteAssistance
@@ -2338,7 +2358,7 @@ export default function BookingPage() {
                         <div>
                           <span className="font-medium text-[#4a3f3c]">Add On-Site Assistance (+$35)</span>
                           <p className="text-xs text-[#6b5f5b] mt-1">
-                            Optional: Have a staff member available to help with wifi, speakers, building access, and any questions during setup. Recommended for events with new equipment or special requirements.
+                            Optional for recurring partners: have a staff member available to help with wifi, speakers, building access, and any questions during setup. Recommended for events with new equipment or special requirements.
                           </p>
                         </div>
                       </label>
@@ -2607,15 +2627,19 @@ export default function BookingPage() {
 
                   <ul className="list-disc pl-5 space-y-2">
                     <li>
-                      <strong>First-time renters with fewer than 40 attendees:</strong> On-site assistance is required at a flat
-                      <strong> $35</strong> per booking. Returning renters may optionally add this service.
+                      <strong>Events with fewer than 40 attendees:</strong> Onboarding/setup assistance is required for the first hour
+                      at a flat <strong> $35</strong> per booking, to help with wifi, speakers, building access, and any questions.
                     </li>
                     <li>
                       <strong>Events with 40 or more attendees:</strong> A dedicated Event Supervisor (Facility Host) is required at
-                      <strong> $30/hour</strong>, billed up to a maximum of four (4) hours, in place of standard on-site assistance —
-                      you are never charged for both. For events lasting up to four (4) hours, the Event Supervisor remains on site for
-                      the entire event. For events longer than four (4) hours, the Event Supervisor covers the first two (2) hours and
-                      the last two (2) hours to assist with arrival, setup, and close-out.
+                      <strong> $30/hour</strong> for the entire duration of the event, in place of standard onboarding assistance —
+                      you are never charged for both. The Event Supervisor remains on site for the full length of the event.
+                    </li>
+                    <li>
+                      <strong>Recurring partners:</strong> Renters who use the space 8+ hours per month and qualify for the 20%
+                      partnership discount are exempt from these requirements on their repeat events. This exemption does not apply to a
+                      renter&apos;s first event — every renter, including recurring partners, pays for on-site coverage on their first event.
+                      Being a returning renter alone does not make you a recurring partner.
                     </li>
                   </ul>
 
@@ -3057,7 +3081,7 @@ export default function BookingPage() {
 
                 {pricing.onsiteAssistanceFee > 0 && (
                   <div className="flex justify-between text-teal-600">
-                    <span>On-Site Assistance {pricing.isFirstEvent ? '(First Event)' : ''}</span>
+                    <span>Onboarding Assistance (First Hour){pricing.isFirstEvent ? ' — First Event' : ''}</span>
                     <span>+${pricing.onsiteAssistanceFee.toFixed(2)}</span>
                   </div>
                 )}
@@ -3065,7 +3089,7 @@ export default function BookingPage() {
                 {pricing.eventSupervisionFee > 0 && (
                   <div className="flex justify-between text-teal-700">
                     <span>
-                      Facility Host ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
+                      Facility Host — entire event ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
                     </span>
                     <span>+${pricing.eventSupervisionFee.toFixed(2)}</span>
                   </div>
@@ -3136,7 +3160,7 @@ export default function BookingPage() {
               {pricing.eventSupervisionFee > 0 && (
                 <div className="mt-3 text-xs bg-teal-50 border border-teal-200 rounded-lg p-3">
                   <p className="text-teal-800">
-                    <strong>👥 Facility Host Included:</strong> Because this is your first booking with {pricing.eventSupervisionThreshold}+ attendees, a Facility Host is included at ${pricing.eventSupervisionRate}/hr (4-hour max). For events over 4 hours, they cover the first 2 and last 2 hours.
+                    <strong>👥 Facility Host Included:</strong> Because this booking has {pricing.eventSupervisionThreshold}+ attendees, a Facility Host is included at ${pricing.eventSupervisionRate}/hr for the entire event. Recurring partners are exempt on repeat events.
                   </p>
                 </div>
               )}
