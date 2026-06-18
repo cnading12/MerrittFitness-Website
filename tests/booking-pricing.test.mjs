@@ -28,6 +28,7 @@ import {
   EVENT_SUPERVISION_RATE,
   TABLES_CHAIRS_FEE_SMALL,
   TABLES_CHAIRS_FEE_LARGE,
+  MAT_RENTAL_FEE,
 } from '../app/lib/booking-pricing.js';
 
 // ---------- isSaturday ----------
@@ -406,6 +407,64 @@ test('pricing: equipment fees flow into the pre-discount subtotal', () => {
     ''
   );
   assert.equal(result.preDiscountSubtotal, 190 + ON_SITE_ASSISTANCE_FEE + TABLES_CHAIRS_FEE_SMALL);
+});
+
+// ---------- Full-floor mat rental ----------
+
+test('mat: non-partner pays the flat $100 mat fee on top of the booking', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsMat: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.matRentalFee, MAT_RENTAL_FEE); // $100
+  assert.equal(result.matRentalCount, 1);
+  assert.equal(result.matWaived, false);
+  // 2 hrs * $95 = $190 base, + $100 mat, + $35 mandatory onboarding (non-partner,
+  // <40 attendees, no supervision) = $325.
+  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.preDiscountSubtotal, 190 + MAT_RENTAL_FEE + ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.subtotal, 325);
+});
+
+test('mat: partner (MerrittMagic) uses the mat at no charge', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsMat: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.matRentalFee, 0);   // waived for partners
+  assert.equal(result.matRentalCount, 1); // still recorded as requested
+  assert.equal(result.matWaived, true);
+  // No mat fee in the subtotal: $190 base, 20% partnership discount = $38 off.
+  assert.equal(result.preDiscountSubtotal, 190);
+  assert.equal(result.promoDiscount, 38);
+  assert.equal(result.subtotal, 152);
+});
+
+test('mat: fee accumulates per booking for non-partners', () => {
+  const result = calculateAccuratePricing(
+    [
+      { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsMat: true },
+      { selectedDate: '2026-11-05', hoursRequested: 2, expectedAttendees: 5, needsMat: true },
+      { selectedDate: '2026-11-06', hoursRequested: 2, expectedAttendees: 5, needsMat: false },
+    ],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.matRentalCount, 2);
+  assert.equal(result.matRentalFee, 2 * MAT_RENTAL_FEE); // $200
+});
+
+test('mat: not requested means no fee and matWaived stays false', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.matRentalFee, 0);
+  assert.equal(result.matRentalCount, 0);
+  assert.equal(result.matWaived, false); // waived flag only when a mat was actually requested
 });
 
 // ---------- Promo codes ----------

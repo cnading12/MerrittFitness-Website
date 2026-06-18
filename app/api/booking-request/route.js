@@ -68,6 +68,11 @@ const IndividualBookingSchema = z.object({
   needsTables: z.boolean().default(false),
   needsChairs: z.boolean().default(false),
 
+  // Whether the renter wants the full-floor roll-out mat for this booking.
+  // Pricing ($100, waived for partners) is recomputed server-side in
+  // calculateAccuratePricing — this flag is the only trusted input.
+  needsMat: z.boolean().default(false),
+
   // Expected attendee count — used server-side to determine whether on-site
   // event supervision ($30/hr for the entire event) should be applied.
   expectedAttendees: z.coerce.number()
@@ -127,6 +132,7 @@ const PricingSchema = z.object({
   eventSupervisionFee: z.number().optional().default(0),
   eventSupervisionHours: z.number().optional().default(0),
   tablesChairsFees: z.number().optional().default(0),
+  matRentalFee: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
@@ -220,6 +226,9 @@ const RecurringScheduleSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   paymentPreference: z.enum(['ach', 'card']).default('ach'),
   specialRequests: z.string().max(500).optional().default(''),
+  // Full-floor mat — included free for recurring partners; they handle their own
+  // setup/breakdown. Persisted inside recurring_details (no charge applied).
+  needsMat: z.boolean().default(false),
   slots: z.array(RecurringSlotSchema).min(1, 'At least one slot required').max(20, 'Too many slots'),
   exceptions: z.array(RecurringExceptionSchema).max(200).optional().default([]),
 });
@@ -324,19 +333,23 @@ async function createBooking(bookingData) {
       coi_document_type: bookingData.coiDocumentType || null
     };
 
-    // Tables/chairs equipment columns are the newest. Layered on top so a
-    // pre-migration DB falls back to the COI record rather than dropping the
-    // other newer columns.
-    const recordWithTablesChairs = {
+    // Tables/chairs equipment + full-floor mat rental columns are the newest.
+    // Layered on top so a pre-migration DB falls back to the COI record rather
+    // than dropping any of the other newer columns. `mat_rental_fee` is $0 for
+    // partners (waived) or $100 per booking otherwise; tables/chairs fees scale
+    // by group size ($25 under 40 attendees, $50 for 40+, per item type).
+    const recordWithEquipment = {
       ...recordWithCoi,
       needs_tables: bookingData.needsTables || false,
       needs_chairs: bookingData.needsChairs || false,
-      tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0)
+      tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0),
+      needs_mat: bookingData.needsMat || false,
+      mat_rental_fee: parseFloat(bookingData.matRentalFee || 0)
     };
 
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithTablesChairs])
+      .insert([recordWithEquipment])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
@@ -345,7 +358,7 @@ async function createBooking(bookingData) {
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
 
     if (isMissingColumnError(error)) {
-      console.warn('⚠️ tables/chairs columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      console.warn('⚠️ tables/chairs/mat columns missing from DB — falling back. Run the pending migration. Error:', error.message);
       ({ data, error } = await supabase
         .from('bookings')
         .insert([recordWithCoi])
@@ -461,6 +474,9 @@ async function createRecurringApplication(validatedData) {
       paymentPreference: recurringSchedule.paymentPreference,
       startDate: recurringSchedule.startDate,
       endDate: recurringSchedule.endDate || null,
+      // Full-floor mat is included free for partners; flag it so staff and the
+      // confirmation emails know to expect the renter handling their own setup.
+      needsMat: recurringSchedule.needsMat === true,
       slots: recurringSchedule.slots,
       // Per-date overrides chosen during the conflict-resolution step. The
       // monthly invoicer reads this list and either skips or moves the
@@ -659,6 +675,7 @@ async function bookingHandler(request) {
           needsTeardownHelp: booking.needsTeardownHelp,
           needsTables: booking.needsTables,
           needsChairs: booking.needsChairs,
+          needsMat: booking.needsMat,
           expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
@@ -678,6 +695,7 @@ async function bookingHandler(request) {
           eventSupervisionFee: accuratePricing.eventSupervisionFee,
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
           tablesChairsFees: accuratePricing.tablesChairsFees,
+          matRentalFee: accuratePricing.matRentalFee,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,

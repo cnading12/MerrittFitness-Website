@@ -41,6 +41,7 @@ export default function BookingPage() {
     needsTeardownHelp: false,
     needsTables: false,
     needsChairs: false,
+    needsMat: false, // Optional: rent the full-floor roll-out mat ($100, waived for partners)
     expectedAttendees: '' // Required: used to determine if on-site event supervision is needed (40+ attendees on first booking)
   }]);
 
@@ -53,7 +54,8 @@ export default function BookingPage() {
     startDate: '',
     endDate: '',
     paymentPreference: 'ach' as PaymentPreference,
-    specialRequests: ''
+    specialRequests: '',
+    needsMat: false // Optional: full-floor mat. Free for partners (recurring renters); they handle their own setup/breakdown within booked time.
   });
   const [recurringSlots, setRecurringSlots] = useState<RecurringSlot[]>([
     { id: 1, dayOfWeek: 3, startTime: '6:00 PM', durationHours: '2', frequency: 'weekly' }
@@ -572,6 +574,7 @@ export default function BookingPage() {
   const SATURDAY_RATE = 200; // All Saturday events
   const SETUP_TEARDOWN_FEE = 50; // Per service
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
+  const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
   const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
   const TABLES_CHAIRS_FEE_SMALL = 25; // Tables/chairs equipment fee per item type, <40 attendees
@@ -590,6 +593,8 @@ export default function BookingPage() {
     let eventSupervisionHours = 0;
     let eventSupervisionApplies = false;
     let tablesChairsFees = 0;
+    let matRentalFee = 0;
+    let matRentalCount = 0;
 
     // A recurring partner (renter on the 20% partnership code) is exempt from
     // mandatory on-site staff coverage — but NOT on their first event, which
@@ -604,6 +609,11 @@ export default function BookingPage() {
     // The MerrittMagic partnership code waives the tables/chairs equipment fees
     // for everyone who applies it — no first-event caveat, unlike staff coverage.
     const waivesEquipmentFees = isRecurringPartner;
+
+    // Recurring partners get the full-floor mat for free (regardless of whether
+    // it's their first event); everyone else pays the flat fee per booking that
+    // uses it. Mirrors the server in app/lib/booking-pricing.js.
+    const matWaived = isRecurringPartner;
 
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
@@ -627,6 +637,14 @@ export default function BookingPage() {
         }
         if (booking.needsTeardownHelp) {
           setupTeardownFees += SETUP_TEARDOWN_FEE;
+        }
+
+        // Full-floor mat rental ($100/booking, waived for partners)
+        if (booking.needsMat) {
+          matRentalCount++;
+          if (!matWaived) {
+            matRentalFee += MAT_RENTAL_FEE;
+          }
         }
 
         // On-site event supervision: required when any booking has 40+ expected
@@ -664,7 +682,7 @@ export default function BookingPage() {
     }
 
     const baseAmount = totalHours * HOURLY_RATE;
-    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -697,6 +715,9 @@ export default function BookingPage() {
       eventSupervisionFee,
       eventSupervisionHours,
       eventSupervisionApplies,
+      matRentalFee,
+      matRentalCount,
+      matWaived: matWaived && matRentalCount > 0,
       eventSupervisionRate: EVENT_SUPERVISION_RATE,
       eventSupervisionThreshold: EVENT_SUPERVISION_GROUP_THRESHOLD,
       tablesChairsFees,
@@ -804,7 +825,7 @@ export default function BookingPage() {
     setRecurringSlots(slots => slots.map(s => (s.id === id ? { ...s, [field]: value } : s)));
   };
 
-  const updateRecurringDetails = (field: keyof typeof recurringDetails, value: string) => {
+  const updateRecurringDetails = (field: keyof typeof recurringDetails, value: string | boolean) => {
     setRecurringDetails(prev => ({ ...prev, [field]: value }));
     if (validationErrors[`recurring_${field}`]) {
       const next = { ...validationErrors };
@@ -899,6 +920,7 @@ export default function BookingPage() {
       needsTeardownHelp: false,
       needsTables: false,
       needsChairs: false,
+      needsMat: false,
       expectedAttendees: ''
     }]);
   };
@@ -1131,6 +1153,7 @@ export default function BookingPage() {
             endDate: recurringDetails.endDate || null,
             paymentPreference: recurringDetails.paymentPreference,
             specialRequests: recurringDetails.specialRequests,
+            needsMat: recurringDetails.needsMat,
             slots: recurringSlots.map(s => ({
               dayOfWeek: s.dayOfWeek,
               startTime: s.startTime,
@@ -1750,6 +1773,35 @@ export default function BookingPage() {
                       );
                     })()}
 
+                    {/* Full-floor mat rental. $100/booking — covers our staff setting
+                        up and breaking down the mat — unless the renter is a partner
+                        (MerrittMagic), in which case it's free but self-serviced. Either
+                        way the setup/breakdown happens within the booked window. */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Full-Floor Mat
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={booking.needsMat}
+                          onChange={(e) => updateBooking(booking.id, 'needsMat', e.target.checked)}
+                          className="mr-3 text-[#735e59]"
+                        />
+                        <span>
+                          Rent the full-floor roll-out mat{' '}
+                          {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
+                            ? '(included with partnership)'
+                            : '(+$100)'}
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
+                          ? 'Included at no charge for partners. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.'
+                          : 'A traditional roll-out mat that fills the main hall — great for martial arts, yoga, and sound baths. The $100 fee includes our team setting it up and breaking it down, all within your reserved time.'}
+                      </p>
+                    </div>
+
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
                         Special Notes for This Class
@@ -2066,6 +2118,26 @@ export default function BookingPage() {
                   className="w-full p-3 border border-[#735e59]/20 rounded-xl focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59] resize-none"
                   maxLength={500}
                 />
+              </div>
+
+              {/* Full-floor mat — free for recurring partners. They handle their
+                  own setup/breakdown, always within their reserved time. */}
+              <div>
+                <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                  Full-Floor Mat
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={recurringDetails.needsMat}
+                    onChange={(e) => updateRecurringDetails('needsMat', e.target.checked)}
+                    className="mr-3 text-[#735e59]"
+                  />
+                  <span>Use the full-floor roll-out mat (included for partners)</span>
+                </label>
+                <p className="text-xs text-[#6b5f5b] mt-2">
+                  The traditional roll-out mat that fills the main hall is included at no charge with your recurring partnership. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.
+                </p>
               </div>
 
               {/* Payment preference — push ACH because it avoids the monthly 3% fee. */}
@@ -3058,6 +3130,20 @@ export default function BookingPage() {
                   <div className="flex justify-between text-purple-600">
                     <span>Setup/Teardown Assistance</span>
                     <span>+${pricing.setupTeardownFees.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pricing.matRentalFee > 0 && (
+                  <div className="flex justify-between text-indigo-600">
+                    <span>Full-Floor Mat{pricing.matRentalCount > 1 ? ` (×${pricing.matRentalCount})` : ''}</span>
+                    <span>+${pricing.matRentalFee.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pricing.matWaived && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Full-Floor Mat (partner)</span>
+                    <span>Included</span>
                   </div>
                 )}
 

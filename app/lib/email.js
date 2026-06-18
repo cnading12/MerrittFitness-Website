@@ -118,11 +118,16 @@ const EMAIL_TEMPLATES = {
             </table>
           </div>
 
-          ${booking.needs_setup_help || booking.needs_teardown_help ? `
+          ${booking.needs_setup_help || booking.needs_teardown_help || booking.needs_mat ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 18px;">🤝 Assistance Services</h3>
             ${booking.needs_setup_help ? '<p style="margin: 5px 0; color: #451a03;">✓ Setup assistance included</p>' : ''}
             ${booking.needs_teardown_help ? '<p style="margin: 5px 0; color: #451a03;">✓ Teardown assistance included</p>' : ''}
+            ${booking.needs_mat ? (
+              Number(booking.mat_rental_fee) > 0
+                ? '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included — our team will set it up and break it down within your reserved time.</p>'
+                : '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included (partner) — setup and breakdown are your responsibility, within your reserved time.</p>'
+            ) : ''}
           </div>
           ` : ''}
 
@@ -212,11 +217,16 @@ const EMAIL_TEMPLATES = {
             </tr>
           </table>
 
-          ${booking.needs_setup_help || booking.needs_teardown_help ? `
+          ${booking.needs_setup_help || booking.needs_teardown_help || booking.needs_mat ? `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
               <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Assistance Requested:</p>
               ${booking.needs_setup_help ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Setup assistance (+$50)</p>' : ''}
               ${booking.needs_teardown_help ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Teardown assistance (+$50)</p>' : ''}
+              ${booking.needs_mat ? (
+                Number(booking.mat_rental_fee) > 0
+                  ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (+$100) — WE set up &amp; break down, within the booked window.</p>'
+                  : '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (partner — no charge) — RENTER handles setup &amp; breakdown, within the booked window.</p>'
+              ) : ''}
             </div>
           ` : ''}
 
@@ -372,6 +382,15 @@ const EMAIL_TEMPLATES = {
             </div>
             ` : ''}
 
+            ${details?.needsMat ? `
+            <div style="background: #eef2ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #3730a3; margin: 0 0 10px 0; font-size: 16px;">Full-Floor Mat</h3>
+              <p style="margin: 0; color: #312e81; line-height: 1.6;">
+                The full-floor roll-out mat is included with your partnership at no extra charge. Please note that setup and breakdown of the mat are your responsibility, and—like everything else—must happen within your reserved time so we can keep the calendar open for other bookings.
+              </p>
+            </div>
+            ` : ''}
+
             <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">Note on Monthly Totals</h3>
               <p style="margin: 0; color: #451a03; line-height: 1.6;">
@@ -437,6 +456,14 @@ const EMAIL_TEMPLATES = {
             <ul style="margin: 0; padding-left: 20px; color: #0c4a6e; line-height: 1.8;">
               ${slots.map(s => `<li>${describeSlot(s)}</li>`).join('')}
             </ul>
+          </div>
+          ` : ''}
+
+          ${details?.needsMat ? `
+          <div style="background: #eef2ff; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #3730a3; font-size: 14px;">
+              <strong>Full-floor mat:</strong> Included (partner — no charge). The renter handles their own mat setup &amp; breakdown, within their reserved time.
+            </p>
           </div>
           ` : ''}
 
