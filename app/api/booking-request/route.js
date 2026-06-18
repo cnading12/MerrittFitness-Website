@@ -63,8 +63,8 @@ const IndividualBookingSchema = z.object({
   needsSetupHelp: z.boolean().default(false),
   needsTeardownHelp: z.boolean().default(false),
 
-  // Expected attendee count — used server-side to determine whether first-time
-  // on-site event supervision ($30/hr, 4hr cap) should be applied.
+  // Expected attendee count — used server-side to determine whether on-site
+  // event supervision ($30/hr for the entire event) should be applied.
   expectedAttendees: z.coerce.number()
     .int('Attendee count must be a whole number')
     .min(1, 'At least one attendee is required')
@@ -106,7 +106,7 @@ const ContactInfoSchema = z.object({
   // through Stripe ACH.
   paymentMethod: z.enum(['card', 'ach']).default('card'),
   isFirstEvent: z.boolean().nullable().optional(), // Required for single events; ignored for recurring
-  wantsOnsiteAssistance: z.boolean().default(false) // Optional: Add on-site assistance if not first event
+  wantsOnsiteAssistance: z.boolean().default(false) // Opt-in onboarding assistance for exempt recurring partners
 });
 
 const PricingSchema = z.object({

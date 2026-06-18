@@ -2,12 +2,17 @@
 // booking, and which Google Calendar color the event should use. Kept free of
 // googleapis / Supabase imports so tests can exercise it without those deps.
 //
-// The three flags the manager cares about (per business rules):
-//   1. First event + paid on-site assistance → "FIRST EVENT" badge
-//   2. First event with >=40 expected attendees → mandatory SUPERVISION
-//      (4hr max) — supersedes the FIRST EVENT badge
-//   3. Returning renter who opted into on-site assistance → "ON-SITE ASSIST"
+// The flags the manager cares about (per business rules):
+//   1. Paid event supervision (>=40 attendees, non-exempt renter) → mandatory
+//      SUPERVISION badge — supervisor stays for the entire event.
+//   2. First event + paid on-site assistance → "FIRST EVENT" badge
+//   3. Any other paid on-site (first-hour onboarding) assistance → "ON-SITE
+//      ASSIST" badge
 //   4. Paid setup / breakdown → "SETUP" / "BREAKDOWN" / combined badge
+//
+// Whether coverage is required is decided by the pricing engine, so these flags
+// key off the persisted fees (event_supervision_fee / onsite_assistance_fee)
+// rather than re-deriving the first-event / partner rules here.
 //
 // Tag ordering matters: supervision is the highest-stakes flag, so it goes
 // first to stay visible even when calendar grid views truncate the title.
@@ -16,7 +21,6 @@
 // duplicated so this module stays dependency-free; the booking-pricing tests
 // still guard the canonical value.
 export const SUPERVISION_GROUP_THRESHOLD = 40;
-export const SUPERVISION_MAX_HOURS = 4;
 
 // Codes that comp the entire booking (no payment collected). Mirrors
 // SPONSORED_PROMO_CODES in app/lib/booking-pricing.js — duplicated here so this
@@ -41,37 +45,40 @@ export function buildStaffAttentionFlags(booking) {
   const attendees = parseInt(booking.expected_attendees, 10) || 0;
   const supervisionFee = parseFloat(booking.event_supervision_fee) || 0;
   const supervisionHours =
-    parseFloat(booking.event_supervision_hours) || SUPERVISION_MAX_HOURS;
-  const wantsOnsite = booking.wants_onsite_assistance === true;
+    parseFloat(booking.event_supervision_hours) ||
+    parseFloat(booking.hours_requested) ||
+    0;
   const onsiteFee = parseFloat(booking.onsite_assistance_fee) || 0;
   const needsSetup = booking.needs_setup_help === true;
   const needsTeardown = booking.needs_teardown_help === true;
 
-  const supervisionTriggered =
-    isFirstEvent && attendees >= SUPERVISION_GROUP_THRESHOLD;
+  // The pricing engine only charges a supervision fee when an on-site
+  // supervisor is required, so the fee is the authoritative trigger.
+  const supervisionTriggered = supervisionFee > 0;
+  const hoursLabel = supervisionHours > 0 ? `the entire ${supervisionHours}hr event` : 'the entire event';
 
   if (supervisionTriggered) {
     flags.push({
       tag: '🛡️ SUPERVISION REQUIRED',
       detail:
-        `MANDATORY ON-SITE SUPERVISION — first-event renter with ${attendees} ` +
-        `expected attendees (threshold ${SUPERVISION_GROUP_THRESHOLD}+). ` +
-        `Staff must be present for up to ${supervisionHours}hr. ` +
-        `Supervision fee paid: $${supervisionFee.toFixed(2)}.`,
+        `MANDATORY ON-SITE SUPERVISION — ${attendees} expected attendees ` +
+        `(threshold ${SUPERVISION_GROUP_THRESHOLD}+). Staff must be present for ` +
+        `${hoursLabel}. Supervision fee paid: $${supervisionFee.toFixed(2)}.`,
     });
   } else if (isFirstEvent && onsiteFee > 0) {
     flags.push({
       tag: '🌟 FIRST EVENT — ON-SITE ASSIST',
       detail:
-        `FIRST EVENT for this renter. On-site assistance has been paid ` +
-        `($${onsiteFee.toFixed(2)}). Staff must be present to onboard them.`,
+        `FIRST EVENT for this renter. First-hour onboarding/setup assistance ` +
+        `has been paid ($${onsiteFee.toFixed(2)}). Staff must be present to ` +
+        `onboard them.`,
     });
-  } else if (wantsOnsite && onsiteFee > 0) {
+  } else if (onsiteFee > 0) {
     flags.push({
       tag: '🤝 ON-SITE ASSIST',
       detail:
-        `On-site assistance paid ($${onsiteFee.toFixed(2)}). ` +
-        `Staff must be present during the event.`,
+        `First-hour onboarding/setup assistance paid ($${onsiteFee.toFixed(2)}). ` +
+        `Staff must be present for the first hour.`,
     });
   }
 

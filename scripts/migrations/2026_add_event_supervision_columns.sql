@@ -1,10 +1,10 @@
 -- Migration: Add on-site Event Supervision fee tracking to `bookings` table.
 --
 -- What this enables:
---   First-time renters with 40+ expected attendees are automatically charged
---   $30/hr for an on-site Event Supervisor, capped at 4 hours per event.
---   (For events <=4hr the supervisor stays the whole time; for longer events
---   they cover the first 2hr + last 2hr, billed flat as 4hr × $30 = $120.)
+--   Renters with 40+ expected attendees are automatically charged $30/hr for an
+--   on-site Event Supervisor for the ENTIRE duration of the event (no hour cap).
+--   Recurring partners are exempt on repeat events, but every renter pays on
+--   their first event.
 --
 -- Safe to run multiple times (uses IF NOT EXISTS).
 --
@@ -20,10 +20,10 @@ ALTER TABLE bookings
   ADD COLUMN IF NOT EXISTS event_supervision_hours NUMERIC(4, 2) DEFAULT 0;
 
 COMMENT ON COLUMN bookings.expected_attendees IS
-  'Number of expected attendees for the event. Used to determine if on-site Event Supervision is required for first-time bookings.';
+  'Number of expected attendees for the event. Used to determine if on-site Event Supervision is required.';
 
 COMMENT ON COLUMN bookings.event_supervision_fee IS
-  'On-site Event Supervision fee for first-time bookings with 40+ attendees ($30/hr, 4hr max).';
+  'On-site Event Supervision fee for bookings with 40+ attendees ($30/hr for the entire event). Recurring partners exempt except on their first event.';
 
 COMMENT ON COLUMN bookings.event_supervision_hours IS
-  'Number of hours of on-site Event Supervision billed (0-4 per booking).';
+  'Number of hours of on-site Event Supervision billed (full event duration).';

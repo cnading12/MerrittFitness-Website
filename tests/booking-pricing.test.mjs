@@ -4,6 +4,13 @@
 // rental rules so a regression that changes a rate or fee causes a clear,
 // human-readable failure.
 //
+// On-site staff coverage policy exercised below:
+//   * >=40 attendees → on-site supervisor at $30/hr for the ENTIRE event (no cap).
+//   * <40 attendees  → first-hour onboarding assistance, flat $35 once.
+//   * Required for EVERY renter who isn't an exempt recurring partner.
+//   * A recurring partner = the 20% partnership promo code (MerrittMagic). They
+//     are exempt on repeat events, but pay on their first event like anyone.
+//
 // Run with: npm test
 
 import test from 'node:test';
@@ -14,11 +21,11 @@ import {
   endsBy10PM,
   calculateAccuratePricing,
   findRecurringSlotConflicts,
+  isPartnerPromoCode,
   HOURLY_RATE,
   SATURDAY_RATE,
   ON_SITE_ASSISTANCE_FEE,
   EVENT_SUPERVISION_RATE,
-  EVENT_SUPERVISION_MAX_HOURS,
 } from '../app/lib/booking-pricing.js';
 
 // ---------- isSaturday ----------
@@ -73,9 +80,24 @@ test('endsBy10PM: returns true when inputs are missing (validated elsewhere)', (
   assert.equal(endsBy10PM('6:00 PM', 0), true);
 });
 
+// ---------- isPartnerPromoCode ----------
+
+test('isPartnerPromoCode: MerrittMagic is the partnership (recurring-partner) code', () => {
+  assert.equal(isPartnerPromoCode('MerrittMagic'), true);
+});
+
+test('isPartnerPromoCode: other codes and junk are not partner codes', () => {
+  assert.equal(isPartnerPromoCode('EXTENDED15'), false);
+  assert.equal(isPartnerPromoCode('MerrittSponsor100'), false);
+  assert.equal(isPartnerPromoCode(''), false);
+  assert.equal(isPartnerPromoCode(null), false);
+});
+
 // ---------- calculateAccuratePricing — single weekday booking ----------
 
-test('pricing: weekday, 2 hours, returning renter, ACH = $190 even', () => {
+test('pricing: weekday, 2 hours, returning non-partner pays base + required onboarding ($35)', () => {
+  // A returning renter who is NOT a recurring partner still owes first-hour
+  // onboarding assistance under the new policy.
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 10 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
@@ -84,11 +106,11 @@ test('pricing: weekday, 2 hours, returning renter, ACH = $190 even', () => {
   assert.equal(result.totalHours, 2);
   assert.equal(result.baseAmount, 2 * HOURLY_RATE);
   assert.equal(result.saturdayCharges, 0);
-  assert.equal(result.onsiteAssistanceFee, 0);
+  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
   assert.equal(result.eventSupervisionFee, 0);
-  assert.equal(result.subtotal, 190);
+  assert.equal(result.subtotal, 190 + 35);
   assert.equal(result.stripeFee, 0);
-  assert.equal(result.total, 190);
+  assert.equal(result.total, 225);
 });
 
 test('pricing: card adds 3% Stripe fee on top of subtotal', () => {
@@ -97,9 +119,10 @@ test('pricing: card adds 3% Stripe fee on top of subtotal', () => {
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'card' },
     ''
   );
-  // 190 * 0.03 = 5.7 -> rounded to 6
-  assert.equal(result.stripeFee, 6);
-  assert.equal(result.total, 196);
+  // Subtotal 225 (190 + 35 onboarding). 225 * 0.03 = 6.75 -> rounded to 7.
+  assert.equal(result.subtotal, 225);
+  assert.equal(result.stripeFee, 7);
+  assert.equal(result.total, 232);
 });
 
 // ---------- 2-hour minimum ----------
@@ -111,7 +134,7 @@ test('pricing: 1-hour booking is bumped to the 2-hour single-event minimum', () 
     ''
   );
   assert.equal(result.totalHours, 2);
-  assert.equal(result.subtotal, 190);
+  assert.equal(result.baseAmount, 2 * HOURLY_RATE); // minimum applied to base
 });
 
 test('pricing: minimum does NOT apply when isRecurring=true', () => {
@@ -123,7 +146,7 @@ test('pricing: minimum does NOT apply when isRecurring=true', () => {
     ''
   );
   assert.equal(result.totalHours, 1);
-  assert.equal(result.subtotal, HOURLY_RATE);
+  assert.equal(result.baseAmount, HOURLY_RATE);
 });
 
 // ---------- Saturday surcharge ----------
@@ -137,13 +160,13 @@ test('pricing: Saturday booking charges $200/hr', () => {
   assert.equal(result.totalHours, 3);
   assert.equal(result.baseAmount, 3 * HOURLY_RATE); // $285 base
   assert.equal(result.saturdayCharges, 3 * (SATURDAY_RATE - HOURLY_RATE)); // +$315 surcharge
-  assert.equal(result.subtotal, 3 * SATURDAY_RATE); // $600 total
-  assert.equal(result.total, 600);
+  // $600 venue time + $35 required onboarding.
+  assert.equal(result.subtotal, 3 * SATURDAY_RATE + ON_SITE_ASSISTANCE_FEE);
 });
 
 // ---------- On-site assistance vs. event supervision ----------
 
-test('pricing: first-time renter under 40 attendees pays $35 on-site assistance', () => {
+test('pricing: first-time renter under 40 attendees pays $35 onboarding', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
     { isFirstEvent: true, paymentMethod: 'ach' },
@@ -154,39 +177,70 @@ test('pricing: first-time renter under 40 attendees pays $35 on-site assistance'
   assert.equal(result.subtotal, 190 + 35);
 });
 
-test('pricing: returning renter who opts in pays $35 on-site assistance', () => {
-  const result = calculateAccuratePricing(
-    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
-    { isFirstEvent: false, wantsOnsiteAssistance: true, paymentMethod: 'ach' },
-    ''
-  );
-  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
-  assert.equal(result.subtotal, 190 + 35);
-});
-
-test('pricing: returning renter who declines is NOT charged on-site assistance', () => {
-  const result = calculateAccuratePricing(
+test('pricing: returning non-partner under 40 attendees is REQUIRED to pay $35 onboarding', () => {
+  // New policy: being a returning renter no longer makes coverage optional.
+  // wantsOnsiteAssistance is irrelevant — they owe it either way.
+  const declined = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
     ''
   );
-  assert.equal(result.onsiteAssistanceFee, 0);
-  assert.equal(result.subtotal, 190);
+  assert.equal(declined.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(declined.subtotal, 190 + 35);
 });
 
-test('pricing: first-event with 40+ attendees triggers $30/hr facility host (capped at 4 hrs)', () => {
+test('pricing: recurring partner on a repeat event is EXEMPT from onboarding', () => {
+  // MerrittMagic = 20% partnership code = recurring partner. On a non-first
+  // event they owe no coverage fee (just the 20% discount on base time).
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
+    { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.isRecurringPartner, true);
+  assert.equal(result.onsiteAssistanceFee, 0);
+  assert.equal(result.eventSupervisionFee, 0);
+  assert.equal(result.preDiscountSubtotal, 190); // base only, no fee
+  assert.equal(result.promoDiscount, 38); // 20% of 190
+  assert.equal(result.subtotal, 152);
+});
+
+test('pricing: recurring partner who opts in still pays the $35 onboarding', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
+    { isFirstEvent: false, wantsOnsiteAssistance: true, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.preDiscountSubtotal, 190 + 35);
+});
+
+test('pricing: recurring partner STILL pays for their first event', () => {
+  // The exemption never applies to a first event — everyone pays the first time.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
+    { isFirstEvent: true, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.isRecurringPartner, true);
+  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.preDiscountSubtotal, 190 + 35);
+});
+
+test('pricing: first-event with 40+ attendees triggers $30/hr supervision for the ENTIRE event', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 6, expectedAttendees: 60 }],
     { isFirstEvent: true, paymentMethod: 'ach' },
     ''
   );
-  assert.equal(result.eventSupervisionHours, EVENT_SUPERVISION_MAX_HOURS); // capped at 4
-  assert.equal(result.eventSupervisionFee, EVENT_SUPERVISION_MAX_HOURS * EVENT_SUPERVISION_RATE); // $120
-  // Facility host and on-site assistance are mutually exclusive.
+  // No 4-hour cap — supervisor covers all 6 hours.
+  assert.equal(result.eventSupervisionHours, 6);
+  assert.equal(result.eventSupervisionFee, 6 * EVENT_SUPERVISION_RATE); // $180
+  // Supervision and the $35 onboarding fee are mutually exclusive.
   assert.equal(result.onsiteAssistanceFee, 0);
 });
 
-test('pricing: facility host scales to actual hours when below the 4-hour cap', () => {
+test('pricing: supervision scales to the full requested hours', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 40 }],
     { isFirstEvent: true, paymentMethod: 'ach' },
@@ -196,19 +250,40 @@ test('pricing: facility host scales to actual hours when below the 4-hour cap', 
   assert.equal(result.eventSupervisionFee, 3 * EVENT_SUPERVISION_RATE); // $90
 });
 
-test('pricing: 40+ attendees on a RETURNING renter does NOT trigger facility host', () => {
-  // The supervision rule is gated on isFirstEvent=true. Returning renters are
-  // assumed to know the venue.
+test('pricing: 40+ attendees on a RETURNING NON-PARTNER DOES trigger supervision', () => {
+  // New policy: returning status alone does not exempt anyone. A casual
+  // returning renter with a large event still gets the supervisor.
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 60 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
     ''
   );
+  assert.equal(result.eventSupervisionHours, 3);
+  assert.equal(result.eventSupervisionFee, 3 * EVENT_SUPERVISION_RATE); // $90
+  assert.equal(result.onsiteAssistanceFee, 0);
+});
+
+test('pricing: 40+ attendees on a recurring partner repeat event is EXEMPT from supervision', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 60 }],
+    { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
   assert.equal(result.eventSupervisionFee, 0);
   assert.equal(result.onsiteAssistanceFee, 0);
 });
 
-test('pricing: 39 attendees first-event is below the supervision threshold', () => {
+test('pricing: 40+ attendees on a recurring partner FIRST event still triggers supervision', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 60 }],
+    { isFirstEvent: true, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.eventSupervisionHours, 3);
+  assert.equal(result.eventSupervisionFee, 3 * EVENT_SUPERVISION_RATE);
+});
+
+test('pricing: 39 attendees first-event takes the onboarding path, not supervision', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 39 }],
     { isFirstEvent: true, paymentMethod: 'ach' },
@@ -240,13 +315,13 @@ test('pricing: setup help adds $50; teardown adds $50; both add $100', () => {
 
 // ---------- Promo codes ----------
 
-test('pricing: MerrittMagic discounts the pre-discount subtotal by 20%', () => {
+test('pricing: MerrittMagic discounts the pre-discount subtotal by 20% (partner exempt, base only)', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
     'MerrittMagic'
   );
-  assert.equal(result.preDiscountSubtotal, 190);
+  assert.equal(result.preDiscountSubtotal, 190); // exempt partner → no onboarding fee
   assert.equal(result.promoDiscount, 38); // 20% of 190
   assert.equal(result.subtotal, 152);
   assert.equal(result.promoCode, 'MerrittMagic');
@@ -262,16 +337,18 @@ test('pricing: EXTENDED15 is rejected when total hours < 8', () => {
   assert.equal(result.promoCode, '');
 });
 
-test('pricing: EXTENDED15 applies once total hours reaches 8', () => {
+test('pricing: EXTENDED15 applies once total hours reaches 8 (not a partner code)', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
     'EXTENDED15'
   );
-  // 8 hrs * $95 = $760, 15% = $114.
-  assert.equal(result.preDiscountSubtotal, 760);
-  assert.equal(result.promoDiscount, 114);
-  assert.equal(result.subtotal, 646);
+  // EXTENDED15 is NOT a recurring-partner code, so the $35 onboarding still
+  // applies: 8 * $95 + $35 = $795 pre-discount, 15% = $119 (round(119.25)).
+  assert.equal(result.isRecurringPartner, false);
+  assert.equal(result.preDiscountSubtotal, 760 + 35);
+  assert.equal(result.promoDiscount, 119);
+  assert.equal(result.subtotal, 676);
   assert.equal(result.promoCode, 'EXTENDED15');
 });
 
@@ -283,21 +360,22 @@ test('pricing: invalid promo codes are silently ignored, not errored', () => {
   );
   assert.equal(result.promoDiscount, 0);
   assert.equal(result.promoCode, '');
-  assert.equal(result.subtotal, 190);
+  // Returning non-partner still owes the $35 onboarding fee.
+  assert.equal(result.subtotal, 190 + 35);
 });
 
 // ---------- Multi-booking aggregation ----------
 
-test('pricing: multi-booking sums hours and applies fees once per submission', () => {
-  // Three bookings on weekdays, returning renter who wants assistance. The
-  // $35 on-site fee is charged once (not per booking).
+test('pricing: multi-booking sums hours and applies the onboarding fee once per submission', () => {
+  // Three bookings on weekdays, returning non-partner. The $35 onboarding fee
+  // is charged once (not per booking).
   const result = calculateAccuratePricing(
     [
       { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 },
       { selectedDate: '2026-11-05', hoursRequested: 3, expectedAttendees: 5 },
       { selectedDate: '2026-11-06', hoursRequested: 4, expectedAttendees: 5 },
     ],
-    { isFirstEvent: false, wantsOnsiteAssistance: true, paymentMethod: 'ach' },
+    { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
     ''
   );
   assert.equal(result.totalBookings, 3);
@@ -334,8 +412,11 @@ test('pricing: mixed weekday + Saturday correctly applies surcharge only once', 
   assert.equal(result.totalHours, 4);
   // 2 Saturday hours * ($200 - $95) = $210 surcharge.
   assert.equal(result.saturdayCharges, 2 * (SATURDAY_RATE - HOURLY_RATE));
-  // Base 4 * 95 = $380, plus $210 surcharge = $590.
-  assert.equal(result.subtotal, 4 * HOURLY_RATE + 2 * (SATURDAY_RATE - HOURLY_RATE));
+  // Base 4 * 95 = $380, plus $210 surcharge, plus $35 required onboarding.
+  assert.equal(
+    result.subtotal,
+    4 * HOURLY_RATE + 2 * (SATURDAY_RATE - HOURLY_RATE) + ON_SITE_ASSISTANCE_FEE
+  );
 });
 
 // ---------- findRecurringSlotConflicts ----------
