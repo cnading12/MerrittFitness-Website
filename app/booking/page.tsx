@@ -39,6 +39,8 @@ export default function BookingPage() {
     specialRequests: '',
     needsSetupHelp: false,
     needsTeardownHelp: false,
+    needsTables: false,
+    needsChairs: false,
     expectedAttendees: '' // Required: used to determine if on-site event supervision is needed (40+ attendees on first booking)
   }]);
 
@@ -572,6 +574,9 @@ export default function BookingPage() {
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
   const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
+  const TABLES_CHAIRS_FEE_SMALL = 25; // Tables/chairs equipment fee per item type, <40 attendees
+  const TABLES_CHAIRS_FEE_LARGE = 50; // Tables/chairs equipment fee per item type, 40+ attendees
+  const TABLES_CHAIRS_GROUP_THRESHOLD = 40; // Attendee count that bumps each equipment fee from $25 to $50
   const STRIPE_FEE_PERCENTAGE = 3;
 
   const calculatePricing = () => {
@@ -584,6 +589,7 @@ export default function BookingPage() {
     let eventSupervisionFee = 0;
     let eventSupervisionHours = 0;
     let eventSupervisionApplies = false;
+    let tablesChairsFees = 0;
 
     // A recurring partner (renter on the 20% partnership code) is exempt from
     // mandatory on-site staff coverage — but NOT on their first event, which
@@ -594,6 +600,10 @@ export default function BookingPage() {
       : undefined;
     const isRecurringPartner = (appliedPromo as { partner?: boolean } | undefined)?.partner === true;
     const exemptFromStaffCoverage = isRecurringPartner && formData.isFirstEvent !== true;
+
+    // The MerrittMagic partnership code waives the tables/chairs equipment fees
+    // for everyone who applies it — no first-event caveat, unlike staff coverage.
+    const waivesEquipmentFees = isRecurringPartner;
 
     bookings.forEach(booking => {
       if (booking.hoursRequested) {
@@ -629,6 +639,17 @@ export default function BookingPage() {
           eventSupervisionApplies = true;
         }
 
+        // Tables / chairs equipment fees: each item type is billed separately and
+        // scaled by group size, and they stack when both are used. Waived for
+        // renters on the MerrittMagic partnership code.
+        if (!waivesEquipmentFees) {
+          const equipmentFeePerItem = attendees >= TABLES_CHAIRS_GROUP_THRESHOLD
+            ? TABLES_CHAIRS_FEE_LARGE
+            : TABLES_CHAIRS_FEE_SMALL;
+          if (booking.needsTables) tablesChairsFees += equipmentFeePerItem;
+          if (booking.needsChairs) tablesChairsFees += equipmentFeePerItem;
+        }
+
         totalHours += hours;
         totalBookings++;
       }
@@ -643,7 +664,7 @@ export default function BookingPage() {
     }
 
     const baseAmount = totalHours * HOURLY_RATE;
-    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -678,6 +699,7 @@ export default function BookingPage() {
       eventSupervisionApplies,
       eventSupervisionRate: EVENT_SUPERVISION_RATE,
       eventSupervisionThreshold: EVENT_SUPERVISION_GROUP_THRESHOLD,
+      tablesChairsFees,
       isFirstEvent: formData.isFirstEvent,
       isRecurringPartner,
       wantsOnsiteAssistance: formData.wantsOnsiteAssistance,
@@ -875,6 +897,8 @@ export default function BookingPage() {
       specialRequests: '',
       needsSetupHelp: false,
       needsTeardownHelp: false,
+      needsTables: false,
+      needsChairs: false,
       expectedAttendees: ''
     }]);
   };
@@ -1024,6 +1048,10 @@ export default function BookingPage() {
   // partner (20% partnership code) on a repeat event — never on a first event.
   // Drives the live per-booking supervision/assistance notices below.
   const exemptFromStaffCoverage = pricing.isRecurringPartner && formData.isFirstEvent !== true;
+
+  // MerrittMagic (the partnership code) waives the tables/chairs equipment fees
+  // for everyone who applies it — drives the live per-booking fee labels below.
+  const waivesEquipmentFees = pricing.isRecurringPartner;
 
   const getFieldError = (fieldName) => {
     return validationErrors[fieldName];
@@ -1681,6 +1709,46 @@ export default function BookingPage() {
                         Each service includes up to 1 hour of labor assistance during your booking—not before. All setup and breakdown must occur within your reserved time. By default, you're responsible for your own setup/cleanup.
                       </p>
                     </div>
+
+                    {/* Tables & Chairs equipment fees. Each item type is $25 for
+                        events under 40 attendees and $50 for 40+, billed per
+                        booking and stacking when both are used. Waived on
+                        MerrittMagic. */}
+                    {(() => {
+                      const equipmentFee = (parseInt(booking.expectedAttendees, 10) || 0) >= 40 ? 50 : 25;
+                      return (
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Tables & Chairs
+                          </label>
+                          <div className="space-y-2">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={booking.needsTables}
+                                onChange={(e) => updateBooking(booking.id, 'needsTables', e.target.checked)}
+                                className="mr-3 text-[#735e59]"
+                              />
+                              <span>Tables needed{waivesEquipmentFees ? '' : ` (+$${equipmentFee})`}</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={booking.needsChairs}
+                                onChange={(e) => updateBooking(booking.id, 'needsChairs', e.target.checked)}
+                                className="mr-3 text-[#735e59]"
+                              />
+                              <span>Chairs needed{waivesEquipmentFees ? '' : ` (+$${equipmentFee})`}</span>
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {waivesEquipmentFees
+                              ? 'Tables and chairs are included at no extra charge with your MerrittMagic partnership.'
+                              : 'Each is $25 for events under 40 attendees and $50 for 40+ attendees. Fees stack if you use both.'}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
@@ -3006,6 +3074,13 @@ export default function BookingPage() {
                       Facility Host — entire event ({pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate})
                     </span>
                     <span>+${pricing.eventSupervisionFee.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {pricing.tablesChairsFees > 0 && (
+                  <div className="flex justify-between text-purple-600">
+                    <span>Tables &amp; Chairs</span>
+                    <span>+${pricing.tablesChairsFees.toFixed(2)}</span>
                   </div>
                 )}
 

@@ -63,6 +63,11 @@ const IndividualBookingSchema = z.object({
   needsSetupHelp: z.boolean().default(false),
   needsTeardownHelp: z.boolean().default(false),
 
+  // Tables / chairs equipment usage. Drives the per-booking equipment fee
+  // ($25 under 40 attendees, $50 for 40+, per item type) computed server-side.
+  needsTables: z.boolean().default(false),
+  needsChairs: z.boolean().default(false),
+
   // Expected attendee count — used server-side to determine whether on-site
   // event supervision ($30/hr for the entire event) should be applied.
   expectedAttendees: z.coerce.number()
@@ -121,6 +126,7 @@ const PricingSchema = z.object({
   onsiteAssistanceFee: z.number().optional().default(0),
   eventSupervisionFee: z.number().optional().default(0),
   eventSupervisionHours: z.number().optional().default(0),
+  tablesChairsFees: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
@@ -318,15 +324,33 @@ async function createBooking(bookingData) {
       coi_document_type: bookingData.coiDocumentType || null
     };
 
+    // Tables/chairs equipment columns are the newest. Layered on top so a
+    // pre-migration DB falls back to the COI record rather than dropping the
+    // other newer columns.
+    const recordWithTablesChairs = {
+      ...recordWithCoi,
+      needs_tables: bookingData.needsTables || false,
+      needs_chairs: bookingData.needsChairs || false,
+      tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0)
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithCoi])
+      .insert([recordWithTablesChairs])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
     // PGRST204 = column not found in Supabase.
     const isMissingColumnError = (err) =>
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ tables/chairs columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithCoi])
+        .select());
+    }
 
     if (isMissingColumnError(error)) {
       console.warn('⚠️ alcohol/COI columns missing from DB — falling back. Run the pending migration. Error:', error.message);
@@ -633,6 +657,8 @@ async function bookingHandler(request) {
           specialRequests: booking.specialRequests,
           needsSetupHelp: booking.needsSetupHelp,
           needsTeardownHelp: booking.needsTeardownHelp,
+          needsTables: booking.needsTables,
+          needsChairs: booking.needsChairs,
           expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
@@ -651,6 +677,7 @@ async function bookingHandler(request) {
           onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
           eventSupervisionFee: accuratePricing.eventSupervisionFee,
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
+          tablesChairsFees: accuratePricing.tablesChairsFees,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,
