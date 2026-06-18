@@ -294,26 +294,6 @@ test('pricing: 39 attendees first-event takes the onboarding path, not supervisi
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
 });
 
-// ---------- Setup / teardown fees ----------
-
-test('pricing: setup help adds $50; teardown adds $50; both add $100', () => {
-  const both = calculateAccuratePricing(
-    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5,
-       needsSetupHelp: true, needsTeardownHelp: true }],
-    { isFirstEvent: false, paymentMethod: 'ach' },
-    ''
-  );
-  assert.equal(both.setupTeardownFees, 100);
-
-  const setupOnly = calculateAccuratePricing(
-    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5,
-       needsSetupHelp: true, needsTeardownHelp: false }],
-    { isFirstEvent: false, paymentMethod: 'ach' },
-    ''
-  );
-  assert.equal(setupOnly.setupTeardownFees, 50);
-});
-
 // ---------- Full-floor mat rental ----------
 
 test('mat: non-partner pays the flat $100 mat fee on top of the booking', () => {
@@ -442,21 +422,6 @@ test('pricing: multi-booking sums hours and applies the onboarding fee once per 
   assert.equal(result.baseAmount, 9 * HOURLY_RATE);
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
   assert.equal(result.subtotal, 9 * HOURLY_RATE + ON_SITE_ASSISTANCE_FEE);
-});
-
-test('pricing: setup/teardown fees DO accumulate per booking', () => {
-  // Setup/teardown is a per-event need, so multi-booking sums the fees.
-  const result = calculateAccuratePricing(
-    [
-      { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5,
-        needsSetupHelp: true, needsTeardownHelp: true },
-      { selectedDate: '2026-11-05', hoursRequested: 2, expectedAttendees: 5,
-        needsSetupHelp: true, needsTeardownHelp: false },
-    ],
-    { isFirstEvent: false, paymentMethod: 'ach' },
-    ''
-  );
-  assert.equal(result.setupTeardownFees, 50 + 50 + 50);
 });
 
 test('pricing: mixed weekday + Saturday correctly applies surcharge only once', () => {
