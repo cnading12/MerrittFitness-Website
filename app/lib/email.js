@@ -1150,6 +1150,9 @@ export async function sendManagerNotification(booking) {
     if (!buildIdPhotoAttachment(booking)) {
       console.warn('⚠️ No ID photo found on booking', booking.id, '- manager email will flag it as missing.');
     }
+    if (booking.serving_alcohol === true && !buildCoiAttachment(booking)) {
+      console.warn('⚠️ Alcohol present but no COI found on booking', booking.id, '- manager email will flag it as missing.');
+    }
 
     const result = await sendEmailWithRetry(payload, { label: `manager notification ${booking.id}` });
 
