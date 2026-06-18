@@ -60,6 +60,11 @@ const IndividualBookingSchema = z.object({
     .optional()
     .default(''),
 
+  // Tables / chairs equipment usage. Drives the per-booking equipment fee
+  // ($25 under 40 attendees, $50 for 40+, per item type) computed server-side.
+  needsTables: z.boolean().default(false),
+  needsChairs: z.boolean().default(false),
+
   // Whether the renter wants the full-floor roll-out mat for this booking.
   // Pricing ($100, waived for partners) is recomputed server-side in
   // calculateAccuratePricing — this flag is the only trusted input.
@@ -122,6 +127,7 @@ const PricingSchema = z.object({
   onsiteAssistanceFee: z.number().optional().default(0),
   eventSupervisionFee: z.number().optional().default(0),
   eventSupervisionHours: z.number().optional().default(0),
+  tablesChairsFees: z.number().optional().default(0),
   matRentalFee: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
@@ -325,19 +331,23 @@ async function createBooking(bookingData) {
       coi_document_type: bookingData.coiDocumentType || null
     };
 
-    // Full-floor mat rental columns are the newest. Layered on top so a
-    // pre-migration DB falls back to the COI record rather than dropping any of
-    // the other newer columns. `needs_mat` records the request; `mat_rental_fee`
-    // is $0 for partners (waived) or $100 per booking otherwise.
-    const recordWithMat = {
+    // Tables/chairs equipment + full-floor mat rental columns are the newest.
+    // Layered on top so a pre-migration DB falls back to the COI record rather
+    // than dropping any of the other newer columns. `mat_rental_fee` is $0 for
+    // partners (waived) or $100 per booking otherwise; tables/chairs fees scale
+    // by group size ($25 under 40 attendees, $50 for 40+, per item type).
+    const recordWithEquipment = {
       ...recordWithCoi,
+      needs_tables: bookingData.needsTables || false,
+      needs_chairs: bookingData.needsChairs || false,
+      tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0),
       needs_mat: bookingData.needsMat || false,
       mat_rental_fee: parseFloat(bookingData.matRentalFee || 0)
     };
 
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithMat])
+      .insert([recordWithEquipment])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
@@ -346,7 +356,7 @@ async function createBooking(bookingData) {
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
 
     if (isMissingColumnError(error)) {
-      console.warn('⚠️ mat rental columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      console.warn('⚠️ tables/chairs/mat columns missing from DB — falling back. Run the pending migration. Error:', error.message);
       ({ data, error } = await supabase
         .from('bookings')
         .insert([recordWithCoi])
@@ -659,6 +669,8 @@ async function bookingHandler(request) {
           selectedTime: booking.selectedTime,
           hoursRequested: booking.hoursRequested,
           specialRequests: booking.specialRequests,
+          needsTables: booking.needsTables,
+          needsChairs: booking.needsChairs,
           needsMat: booking.needsMat,
           expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
@@ -677,6 +689,7 @@ async function bookingHandler(request) {
           onsiteAssistanceFee: accuratePricing.onsiteAssistanceFee,
           eventSupervisionFee: accuratePricing.eventSupervisionFee,
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
+          tablesChairsFees: accuratePricing.tablesChairsFees,
           matRentalFee: accuratePricing.matRentalFee,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
