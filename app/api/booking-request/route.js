@@ -106,7 +106,10 @@ const ContactInfoSchema = z.object({
   // through Stripe ACH.
   paymentMethod: z.enum(['card', 'ach']).default('card'),
   isFirstEvent: z.boolean().nullable().optional(), // Required for single events; ignored for recurring
-  wantsOnsiteAssistance: z.boolean().default(false) // Optional: Add on-site assistance if not first event
+  wantsOnsiteAssistance: z.boolean().default(false), // Optional: Add on-site assistance if not first event
+  // Whether alcohol will be present at the event. When true, a Certificate of
+  // Insurance (COI) is required (enforced at the top-level schema via refine).
+  hasAlcohol: z.boolean().nullable().optional()
 });
 
 const PricingSchema = z.object({
@@ -141,6 +144,28 @@ const IdPhotoSchema = z.object({
   size: z.number().int().min(1).max(ID_PHOTO_MAX_BYTES, 'ID photo must be smaller than 8 MB')
 });
 
+// Certificate of Insurance (COI) for general liability incl. liquor. Required
+// whenever the renter indicates alcohol will be present. Accepts a PDF or an
+// image (COIs are commonly multi-page PDFs). Persisted on the booking row and
+// attached to the manager notification email.
+const COI_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const CoiDocumentSchema = z.object({
+  dataUrl: z.string()
+    .regex(/^data:(application\/pdf|image\/[a-zA-Z0-9.+-]+);base64,/, 'COI must be a base64-encoded PDF or image')
+    .refine(val => val.length < Math.ceil(COI_MAX_BYTES * 4 / 3) + 100, 'COI must be smaller than 10 MB'),
+  name: z.string().min(1).max(255),
+  type: z.string().regex(/^(application\/pdf|image\/)/, 'COI must be a PDF or image'),
+  size: z.number().int().min(1).max(COI_MAX_BYTES, 'COI must be smaller than 10 MB')
+});
+
+// Shared rule: when alcohol is present, a COI must accompany the application.
+const requireCoiWhenAlcohol = (data) =>
+  data.contactInfo?.hasAlcohol === true ? !!data.coiDocument : true;
+const coiRefinement = {
+  message: 'A Certificate of Insurance (COI) is required when alcohol is present at the event',
+  path: ['coiDocument'],
+};
+
 const MultipleBookingSchema = z.object({
   applicationType: z.literal('single').optional(),
   bookings: z.array(IndividualBookingSchema)
@@ -148,8 +173,9 @@ const MultipleBookingSchema = z.object({
     .max(10, 'Maximum 10 bookings allowed'),
   contactInfo: ContactInfoSchema,
   pricing: PricingSchema,
-  idPhoto: IdPhotoSchema
-});
+  idPhoto: IdPhotoSchema,
+  coiDocument: CoiDocumentSchema.nullable().optional()
+}).refine(requireCoiWhenAlcohol, coiRefinement);
 
 // Recurring-series application. One row per weekday/time/frequency slot. All
 // slots share the same renter, series name, and event type. Pricing is
@@ -209,8 +235,9 @@ const RecurringBookingSchema = z.object({
     hourlyRate: z.number(),
     paymentPreference: z.enum(['ach', 'card'])
   }),
-  idPhoto: IdPhotoSchema
-});
+  idPhoto: IdPhotoSchema,
+  coiDocument: CoiDocumentSchema.nullable().optional()
+}).refine(requireCoiWhenAlcohol, coiRefinement);
 
 // Pricing helpers (calculateAccuratePricing, isSaturday, endsBy10PM,
 // findRecurringSlotConflicts) live in app/lib/booking-pricing.js so they can
@@ -280,15 +307,34 @@ async function createBooking(bookingData) {
       is_public: bookingData.eventVisibility === 'public'
     };
 
+    // Alcohol flag + COI document are the newest columns. Layered on top so a
+    // pre-migration DB falls back to the public-flag record rather than dropping
+    // any of the other newer columns.
+    const recordWithCoi = {
+      ...recordWithPublicFlag,
+      serving_alcohol: typeof bookingData.hasAlcohol === 'boolean' ? bookingData.hasAlcohol : null,
+      coi_document_data: bookingData.coiDocumentDataUrl || null,
+      coi_document_name: bookingData.coiDocumentName || null,
+      coi_document_type: bookingData.coiDocumentType || null
+    };
+
     let { data, error } = await supabase
       .from('bookings')
-      .insert([recordWithPublicFlag])
+      .insert([recordWithCoi])
       .select();
 
     // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
     // PGRST204 = column not found in Supabase.
     const isMissingColumnError = (err) =>
       err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
+
+    if (isMissingColumnError(error)) {
+      console.warn('⚠️ alcohol/COI columns missing from DB — falling back. Run the pending migration. Error:', error.message);
+      ({ data, error } = await supabase
+        .from('bookings')
+        .insert([recordWithPublicFlag])
+        .select());
+    }
 
     if (isMissingColumnError(error)) {
       console.warn('⚠️ is_public column missing from DB — falling back. Run the pending migration. Error:', error.message);
@@ -332,7 +378,7 @@ async function createBooking(bookingData) {
 // the occurrence list. ACH setup + Stripe subscription creation is handled
 // separately on the payment page (not in this request).
 async function createRecurringApplication(validatedData) {
-  const { contactInfo, recurringSchedule, pricing, idPhoto } = validatedData;
+  const { contactInfo, recurringSchedule, pricing, idPhoto, coiDocument } = validatedData;
   const applicationId = uuidv4();
   const masterBookingId = applicationId; // Recurring series = one master record.
 
@@ -381,6 +427,10 @@ async function createRecurringApplication(validatedData) {
     id_photo_data: idPhoto.dataUrl,
     id_photo_name: idPhoto.name,
     id_photo_type: idPhoto.type,
+    serving_alcohol: typeof contactInfo.hasAlcohol === 'boolean' ? contactInfo.hasAlcohol : null,
+    coi_document_data: coiDocument?.dataUrl || null,
+    coi_document_name: coiDocument?.name || null,
+    coi_document_type: coiDocument?.type || null,
     // Persist the full recurring schedule so the monthly invoicer can
     // regenerate occurrences and charge the correct hours each month.
     recurring_details: JSON.stringify({
@@ -410,11 +460,20 @@ async function createRecurringApplication(validatedData) {
     .select();
 
   // Fall back through the same column-dropping cascade as single-event bookings
-  // so applications still land in the DB pre-migration. Drop is_public first so
-  // a missing public/private column doesn't take recurring_details down with it.
+  // so applications still land in the DB pre-migration. Drop alcohol/COI columns
+  // first (newest), then is_public, so a missing newer column doesn't take
+  // recurring_details down with it.
+  if (isMissingColumnError(error)) {
+    console.warn('⚠️ alcohol/COI columns missing — falling back without them.');
+    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, ...withoutCoi } = withExtendedColumns;
+    ({ data, error } = await supabase
+      .from('bookings')
+      .insert([withoutCoi])
+      .select());
+  }
   if (isMissingColumnError(error)) {
     console.warn('⚠️ is_public column missing — falling back without it.');
-    const { is_public, ...withoutPublic } = withExtendedColumns;
+    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, is_public, ...withoutPublic } = withExtendedColumns;
     ({ data, error } = await supabase
       .from('bookings')
       .insert([withoutPublic])
@@ -422,7 +481,7 @@ async function createRecurringApplication(validatedData) {
   }
   if (isMissingColumnError(error)) {
     console.warn('⚠️ recurring_details column missing — falling back without it.');
-    const { recurring_details, ...withoutRecurring } = withExtendedColumns;
+    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, recurring_details, ...withoutRecurring } = withExtendedColumns;
     ({ data, error } = await supabase
       .from('bookings')
       .insert([withoutRecurring])
@@ -430,7 +489,7 @@ async function createRecurringApplication(validatedData) {
   }
   if (isMissingColumnError(error)) {
     console.warn('⚠️ ID photo columns missing — falling back.');
-    const { id_photo_data, id_photo_name, id_photo_type, recurring_details, ...trimmed } = withExtendedColumns;
+    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, id_photo_data, id_photo_name, id_photo_type, recurring_details, ...trimmed } = withExtendedColumns;
     ({ data, error } = await supabase
       .from('bookings')
       .insert([trimmed])
@@ -597,6 +656,10 @@ async function bookingHandler(request) {
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,
           idPhotoName: validatedData.idPhoto.name,
           idPhotoType: validatedData.idPhoto.type,
+          hasAlcohol: validatedData.contactInfo.hasAlcohol ?? null,
+          coiDocumentDataUrl: validatedData.coiDocument?.dataUrl || null,
+          coiDocumentName: validatedData.coiDocument?.name || null,
+          coiDocumentType: validatedData.coiDocument?.type || null,
           // Sponsored bookings are comped — confirm immediately so the renter
           // skips checkout. Everything else awaits payment.
           status: isSponsored ? 'confirmed' : 'pending_payment'
