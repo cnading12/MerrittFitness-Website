@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText } from 'lucide-react';
 
 type ApplicationType = 'single' | 'recurring';
 type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
@@ -92,7 +92,8 @@ export default function BookingPage() {
     paymentMethod: 'card',
     agreedToTerms: false, // NEW: Terms agreement
     isFirstEvent: null as boolean | null, // Required: Is this their first event?
-    wantsOnsiteAssistance: false // Optional: Add on-site assistance if not first event
+    wantsOnsiteAssistance: false, // Optional: Add on-site assistance if not first event
+    hasAlcohol: null as boolean | null // Required: Will alcohol be present at the event? Drives the COI requirement.
   });
 
   // Required government-issued ID photo (base64 data URL + metadata)
@@ -103,6 +104,17 @@ export default function BookingPage() {
     size: number;
   } | null>(null);
   const ID_PHOTO_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+
+  // Certificate of Insurance (COI) for general liability incl. liquor — required
+  // before submission whenever the renter answers "yes" to alcohol at the event.
+  // Accepts a PDF or an image (base64 data URL + metadata).
+  const [coiDocument, setCoiDocument] = useState<{
+    dataUrl: string;
+    name: string;
+    type: string;
+    size: number;
+  } | null>(null);
+  const COI_MAX_BYTES = 10 * 1024 * 1024; // 10 MB — COIs are often multi-page PDFs
 
   // Promo code state
   const [promoCode, setPromoCode] = useState('');
@@ -375,6 +387,21 @@ export default function BookingPage() {
       errors.idPhoto = 'ID photo must be an image file (JPG, PNG, HEIC, etc.)';
     } else if (idPhoto.size > ID_PHOTO_MAX_BYTES) {
       errors.idPhoto = 'ID photo must be smaller than 8 MB';
+    }
+
+    // Alcohol at the event is a required yes/no question. When the renter
+    // answers "yes", a Certificate of Insurance (general liability incl. liquor)
+    // must be uploaded before they can submit/pay.
+    if (formData.hasAlcohol === null) {
+      errors.hasAlcohol = 'Please indicate whether alcohol will be present at your event';
+    } else if (formData.hasAlcohol === true) {
+      if (!coiDocument) {
+        errors.coiDocument = 'A Certificate of Insurance (COI) is required when alcohol is present at your event';
+      } else if (!(coiDocument.type === 'application/pdf' || coiDocument.type.startsWith('image/'))) {
+        errors.coiDocument = 'COI must be a PDF or image file';
+      } else if (coiDocument.size > COI_MAX_BYTES) {
+        errors.coiDocument = 'COI must be smaller than 10 MB';
+      }
     }
 
     // Recurring-path validation short-circuits the per-date booking checks.
@@ -948,6 +975,48 @@ export default function BookingPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleCoiDocumentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setCoiDocument(null);
+      return;
+    }
+
+    const isAllowedType = file.type === 'application/pdf' || file.type.startsWith('image/');
+    if (!isAllowedType) {
+      setValidationErrors(prev => ({ ...prev, coiDocument: 'Please upload a PDF or image file' }));
+      setCoiDocument(null);
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > COI_MAX_BYTES) {
+      setValidationErrors(prev => ({ ...prev, coiDocument: 'COI must be smaller than 10 MB' }));
+      setCoiDocument(null);
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCoiDocument({
+        dataUrl: String(reader.result || ''),
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      if (validationErrors.coiDocument) {
+        const newErrors = { ...validationErrors };
+        delete newErrors.coiDocument;
+        setValidationErrors(newErrors);
+      }
+    };
+    reader.onerror = () => {
+      setValidationErrors(prev => ({ ...prev, coiDocument: 'Failed to read the selected file. Please try again.' }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const pricing = calculatePricing();
   const recurringPricing = calculateRecurringPricing();
 
@@ -1006,6 +1075,14 @@ export default function BookingPage() {
         size: idPhoto.size
       } : null;
 
+      // COI is only sent when the renter indicated alcohol will be present.
+      const coiDocumentPayload = (formData.hasAlcohol === true && coiDocument) ? {
+        dataUrl: coiDocument.dataUrl,
+        name: coiDocument.name,
+        type: coiDocument.type,
+        size: coiDocument.size
+      } : null;
+
       let submissionData;
 
       if (applicationType === 'recurring') {
@@ -1035,7 +1112,8 @@ export default function BookingPage() {
             exceptions: recurringExceptions
           },
           pricing: recurringPricing,
-          idPhoto: idPhotoPayload
+          idPhoto: idPhotoPayload,
+          coiDocument: coiDocumentPayload
         };
       } else {
         const validBookings = bookings.filter(booking =>
@@ -1055,7 +1133,8 @@ export default function BookingPage() {
           bookings: validBookings,
           contactInfo: formData,
           pricing: pricing,
-          idPhoto: idPhotoPayload
+          idPhoto: idPhotoPayload,
+          coiDocument: coiDocumentPayload
         };
       }
 
@@ -2255,6 +2334,132 @@ export default function BookingPage() {
                     </div>
                   </div>
                 </div>
+                )}
+              </div>
+            </div>
+
+            {/* Alcohol & Insurance (COI) Section */}
+            <div className="bg-white rounded-3xl shadow-lg border border-[#735e59]/10 p-6 mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-[#735e59]/10 rounded-xl">
+                  <Wine className="text-[#735e59]" size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Alcohol at Your Event</h2>
+                <div className="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
+                  Required
+                </div>
+              </div>
+
+              <div className={`border-2 rounded-2xl p-5 ${validationErrors.hasAlcohol ? 'border-red-500 bg-red-50' : 'border-[#735e59]/20 bg-[#faf8f5]'}`}>
+                <label className="block text-sm font-medium text-[#4a3f3c] mb-1">
+                  Will alcohol be present at your event? *
+                </label>
+                <p className="text-xs text-[#6b5f5b] mb-4">
+                  This includes alcohol that is served, provided, or brought by guests (BYOB).
+                </p>
+
+                <div className="flex gap-4">
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                    formData.hasAlcohol === false
+                      ? 'bg-[#735e59] text-white'
+                      : 'bg-white border border-[#735e59]/20 text-[#4a3f3c] hover:border-[#735e59]/40'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="hasAlcohol"
+                      checked={formData.hasAlcohol === false}
+                      onChange={() => {
+                        handleInputChange('hasAlcohol', false);
+                        // Drop any uploaded COI + its error when alcohol is no longer present.
+                        setCoiDocument(null);
+                        setValidationErrors(prev => {
+                          const next = { ...prev };
+                          delete next.coiDocument;
+                          return next;
+                        });
+                      }}
+                      className="sr-only"
+                    />
+                    <span className="font-medium">No alcohol</span>
+                  </label>
+
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                    formData.hasAlcohol === true
+                      ? 'bg-[#735e59] text-white'
+                      : 'bg-white border border-[#735e59]/20 text-[#4a3f3c] hover:border-[#735e59]/40'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="hasAlcohol"
+                      checked={formData.hasAlcohol === true}
+                      onChange={() => handleInputChange('hasAlcohol', true)}
+                      className="sr-only"
+                    />
+                    <span className="font-medium">Yes, alcohol will be present</span>
+                  </label>
+                </div>
+
+                {validationErrors.hasAlcohol && (
+                  <p className="text-red-600 text-sm mt-3">{validationErrors.hasAlcohol}</p>
+                )}
+
+                {/* Rules + COI requirement — shown only when alcohol is present. */}
+                {formData.hasAlcohol === true && (
+                  <div className="mt-5 space-y-4">
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="text-amber-600 mt-0.5 flex-shrink-0" size={18} />
+                        <div className="text-sm text-amber-900">
+                          <p className="font-semibold mb-2">Our alcohol policy</p>
+                          <ul className="list-disc pl-5 space-y-1.5 text-amber-800">
+                            <li><strong>No sales.</strong> Alcohol may not be sold in any way, to any extent, on the premises.</li>
+                            <li><strong>Service.</strong> If alcohol is being served, it must be served by a TIPS-certified bartender.</li>
+                            <li><strong>BYOB.</strong> Bring-your-own-beverage is allowed.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
+                        Certificate of Insurance (COI) *
+                      </label>
+                      <p className="text-xs text-[#6b5f5b] mb-2">
+                        Because alcohol will be present, you must upload a Certificate of Insurance for general
+                        liability that explicitly includes liquor liability, naming Merritt Wellness LLC as an
+                        additional insured. This document is required before you can submit and pay for your booking.
+                        Accepted formats: PDF or image (max 10 MB).
+                      </p>
+                      <input
+                        type="file"
+                        accept="application/pdf,image/*"
+                        onChange={handleCoiDocumentChange}
+                        className={getInputClassName('coiDocument', 'w-full p-3 border rounded-xl transition-colors bg-white file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-[#735e59] file:text-white file:cursor-pointer')}
+                      />
+                      {coiDocument && (
+                        <div className="mt-2 flex items-center gap-3">
+                          {coiDocument.type.startsWith('image/') ? (
+                            <img
+                              src={coiDocument.dataUrl}
+                              alt="COI preview"
+                              className="h-16 w-16 object-cover rounded-lg border border-[#735e59]/30"
+                            />
+                          ) : (
+                            <div className="h-16 w-16 flex items-center justify-center rounded-lg border border-[#735e59]/30 bg-[#faf8f5]">
+                              <FileText className="text-[#735e59]" size={28} />
+                            </div>
+                          )}
+                          <div className="text-xs text-[#4a3f3c]">
+                            <div className="font-medium">{coiDocument.name}</div>
+                            <div className="text-[#6b5f5b]">{(coiDocument.size / 1024).toFixed(0)} KB</div>
+                          </div>
+                        </div>
+                      )}
+                      {getFieldError('coiDocument') && (
+                        <p className="text-red-600 text-sm mt-1">{getFieldError('coiDocument')}</p>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
