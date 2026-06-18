@@ -18,6 +18,16 @@ export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee even
 export const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
 export const STRIPE_FEE_PERCENTAGE = 3;            // % surcharge for card payments
 
+// Full-floor roll-out mat. One mat that fills the main hall, used for martial
+// arts, yoga, sound baths, etc. Renters can add it per booking. A flat $100
+// covers use of the mat PLUS our staff setting it up and breaking it down. The
+// fee is waived for recurring partners (the partnership promo code — see
+// isPartnerPromoCode below) — they use the mat for free but are then
+// responsible for their own setup and breakdown. In every case the mat setup
+// and breakdown happen INSIDE the renter's booked window (never before or after
+// it) so bookings can be stacked back-to-back.
+export const MAT_RENTAL_FEE = 100;                 // $/booking, waived for partners
+
 // Promo codes. These must stay in sync with the client-side dictionary in
 // app/booking/page.tsx — the server is the source of truth, but the UI shows
 // the discount before submit, so any drift is user-visible.
@@ -131,6 +141,12 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let onsiteAssistanceFee = 0;
   let eventSupervisionFee = 0;
   let eventSupervisionHours = 0;
+  let matRentalFee = 0;
+  let matRentalCount = 0;
+
+  // Recurring partners (booking with the partnership promo code) get the mat at
+  // no charge; everyone else pays the flat fee per booking that uses it.
+  const matWaived = isPartnerPromoCode(clientPromoCode);
 
   // A recurring partner is a renter on the 20% partnership code. They're exempt
   // from mandatory staff coverage, but the exemption does NOT apply to their
@@ -155,6 +171,11 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     if (booking.needsSetupHelp) setupTeardownFees += SETUP_TEARDOWN_FEE;
     if (booking.needsTeardownHelp) setupTeardownFees += SETUP_TEARDOWN_FEE;
 
+    if (booking.needsMat) {
+      matRentalCount++;
+      if (!matWaived) matRentalFee += MAT_RENTAL_FEE;
+    }
+
     const attendees = parseInt(booking.expectedAttendees, 10) || 0;
     if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
       // Supervisor stays for the entire event — bill the full requested hours.
@@ -176,7 +197,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
   const baseAmount = totalHours * HOURLY_RATE;
   const preDiscountSubtotal =
-    baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee;
+    baseAmount + saturdayCharges + setupTeardownFees + onsiteAssistanceFee + eventSupervisionFee + matRentalFee;
 
   let promoDiscount = 0;
   let promoDescription = '';
@@ -211,6 +232,9 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     onsiteAssistanceFee,
     eventSupervisionFee,
     eventSupervisionHours,
+    matRentalFee,
+    matRentalCount,
+    matWaived: matWaived && matRentalCount > 0,
     isFirstEvent: contactInfo.isFirstEvent,
     isRecurringPartner,
     wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
