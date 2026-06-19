@@ -568,8 +568,29 @@ export default function BookingPage() {
   };
 
   // Pricing calculations with Saturday rates
-  const HOURLY_RATE = 95;
-  const SATURDAY_RATE = 200; // All Saturday events
+  const HOURLY_RATE = 95;    // Base weekday rate (0–30 guests)
+  const SATURDAY_RATE = 200; // Base Saturday rate (0–30 guests)
+  // Guest-based rate tiers (mirror app/lib/booking-pricing.js):
+  //   Guests   Weekday   Saturday
+  //   0–30      $95       $200
+  //   30–60     $125      $260
+  //   60+       $155      $320
+  const RATE_TIER_INCREMENT = 30;      // Per-band increase, weekdays
+  const SATURDAY_RATE_INCREMENT = 60;  // Per-band increase, Saturdays
+  const RATE_TIER_MID_THRESHOLD = 30;  // >= this many guests → middle band
+  const RATE_TIER_HIGH_THRESHOLD = 60; // >= this many guests → top band
+  const rateTierFor = (attendees) => {
+    const n = parseInt(attendees, 10) || 0;
+    if (n >= RATE_TIER_HIGH_THRESHOLD) return 2;
+    if (n >= RATE_TIER_MID_THRESHOLD) return 1;
+    return 0;
+  };
+  const hourlyRateFor = (attendees, isSat = false) => {
+    const tier = rateTierFor(attendees);
+    return isSat
+      ? SATURDAY_RATE + tier * SATURDAY_RATE_INCREMENT
+      : HOURLY_RATE + tier * RATE_TIER_INCREMENT;
+  };
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
   const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
@@ -583,6 +604,8 @@ export default function BookingPage() {
     let totalHours = 0;
     let totalBookings = 0;
     let minimumApplied = false;
+    let baseAmount = 0;
+    let topHourlyRate = HOURLY_RATE; // Highest weekday band rate seen — used for display
     let saturdayCharges = 0;
     let onsiteAssistanceFee = 0;
     let eventSupervisionFee = 0;
@@ -615,6 +638,7 @@ export default function BookingPage() {
       if (booking.hoursRequested) {
         let hours = parseFloat(booking.hoursRequested) || 0;
         const isSat = isSaturday(booking.selectedDate);
+        const attendees = parseInt(booking.expectedAttendees, 10) || 0;
 
         // Apply minimums per booking (2-hour minimum for all events)
         if (!formData.isRecurring && hours < 2) {
@@ -622,9 +646,14 @@ export default function BookingPage() {
           minimumApplied = true;
         }
 
-        // Calculate Saturday charges ($200/hr for all Saturday events)
+        // Base venue time billed at the weekday rate for the booking's guest
+        // band; Saturdays add that band's Saturday premium as a surcharge.
+        const weekdayRate = hourlyRateFor(attendees, false);
+        baseAmount += hours * weekdayRate;
+        if (weekdayRate > topHourlyRate) topHourlyRate = weekdayRate;
+
         if (isSat) {
-          saturdayCharges += hours * (SATURDAY_RATE - HOURLY_RATE);
+          saturdayCharges += hours * (hourlyRateFor(attendees, true) - weekdayRate);
         }
 
         // Full-floor mat rental ($100/booking, waived for partners)
@@ -638,7 +667,6 @@ export default function BookingPage() {
         // On-site event supervision: required when any booking has 40+ expected
         // attendees and the renter isn't an exempt recurring partner. The
         // supervisor stays for the ENTIRE event — bill the full requested hours.
-        const attendees = parseInt(booking.expectedAttendees, 10) || 0;
         if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
           eventSupervisionFee += hours * EVENT_SUPERVISION_RATE;
           eventSupervisionHours += hours;
@@ -669,7 +697,6 @@ export default function BookingPage() {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
-    const baseAmount = totalHours * HOURLY_RATE;
     const preDiscountSubtotal = baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
 
     // Apply promo code discount
@@ -695,7 +722,7 @@ export default function BookingPage() {
     return {
       totalHours,
       totalBookings,
-      hourlyRate: HOURLY_RATE,
+      hourlyRate: topHourlyRate,
       baseAmount,
       saturdayCharges,
       onsiteAssistanceFee,
@@ -768,10 +795,42 @@ export default function BookingPage() {
     const monthlyRange = calculateMonthlyHourRange();
     const firstMonthHours = calculateFirstMonthHours();
 
-    const monthlyMinCharge = monthlyRange.min * HOURLY_RATE;
-    const monthlyMaxCharge = monthlyRange.max * HOURLY_RATE;
+    // Recurring billing is keyed to the typical guest band: a larger class is
+    // billed at the higher tier. Slots that land on a Saturday (dayOfWeek 6)
+    // carry the Saturday premium; every other day uses the weekday rate.
+    const recurringHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, false);
+    const saturdayHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, true);
+    const hasSaturdaySlot = recurringSlots.some(slot => Number(slot.dayOfWeek) === 6);
+    const rateForSlot = (slot) =>
+      Number(slot.dayOfWeek) === 6 ? saturdayHourlyRate : recurringHourlyRate;
+
+    // Monthly charge range: each slot's hours × its per-day rate, summed across
+    // the band of 4–5 (weekly) / 2–3 (biweekly) / 1 (monthly) occurrences.
+    let monthlyMinCharge = 0;
+    let monthlyMaxCharge = 0;
+    recurringSlots.forEach(slot => {
+      const hours = parseFloat(slot.durationHours) || 0;
+      const rate = rateForSlot(slot);
+      const [minOcc, maxOcc] = slot.frequency === 'weekly'
+        ? [4, 5]
+        : slot.frequency === 'biweekly'
+        ? [2, 3]
+        : [1, 1];
+      monthlyMinCharge += hours * minOcc * rate;
+      monthlyMaxCharge += hours * maxOcc * rate;
+    });
     const monthlyAvgCharge = (monthlyMinCharge + monthlyMaxCharge) / 2;
-    const firstMonthCharge = firstMonthHours * HOURLY_RATE;
+
+    // First (possibly partial) month: actual occurrences per slot × its rate.
+    const start = parseLocalDate(recurringDetails.startDate);
+    let firstMonthCharge = 0;
+    if (start) {
+      const end = lastOfMonth(start);
+      recurringSlots.forEach(slot => {
+        const occurrences = countOccurrencesInRange(slot.dayOfWeek, slot.frequency, start, end);
+        firstMonthCharge += occurrences * (parseFloat(slot.durationHours) || 0) * rateForSlot(slot);
+      });
+    }
 
     // ACH avoids the 3% card fee; monthly auto-debit is the recommended default.
     const firstMonthFee = recurringDetails.paymentPreference === 'card'
@@ -789,7 +848,9 @@ export default function BookingPage() {
       firstMonthCharge,
       firstMonthFee,
       firstMonthTotal: firstMonthCharge + firstMonthFee,
-      hourlyRate: HOURLY_RATE,
+      hourlyRate: recurringHourlyRate,
+      saturdayHourlyRate,
+      hasSaturdaySlot,
       paymentPreference: recurringDetails.paymentPreference
     };
   };
@@ -1234,7 +1295,7 @@ export default function BookingPage() {
           <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-6"></div>
           <p className="text-xl text-[#6b5f5b] max-w-3xl mx-auto">
             Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
-            <span className="font-semibold text-[#735e59]"> $95/hour • Flexible pricing for partners</span>
+            <span className="font-semibold text-[#735e59]"> From $95/hour • Flexible pricing for partners</span>
           </p>
         </div>
 
@@ -1247,11 +1308,11 @@ export default function BookingPage() {
               <ul className="space-y-2 text-amber-800">
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Standard Rate:</strong> $95/hour with a 2-hour minimum for all events.</span>
+                  <span><strong>Standard Rate (by guest count):</strong> $95/hour for 0–30 guests, $125/hour for 30–60, and $155/hour for 60+. A 2-hour minimum applies to all events.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Saturday Rentals:</strong> All Saturday events are $200/hour with a 2-hour minimum.</span>
+                  <span><strong>Saturday Rentals:</strong> $200/hour for 0–30 guests, $260/hour for 30–60, and $320/hour for 60+ (2-hour minimum).</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -2628,9 +2689,11 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Payment Structure</h3>
 
                   <p>
-                    Client agrees to pay Merritt Wellness an hourly rental rate for use of the Premises. The standard rate is
-                    <strong> $95/hour</strong> with a two (2) hour minimum for all events. All Saturday events are billed at
-                    <strong> $200/hour</strong> with a two (2) hour minimum. Payments made by credit card
+                    Client agrees to pay Merritt Wellness an hourly rental rate for use of the Premises, based on the number of
+                    guests. The standard weekday rate is <strong>$95/hour</strong> for 0–30 guests, <strong>$125/hour</strong> for
+                    30–60 guests, and <strong>$155/hour</strong> for 60+ guests, with a two (2) hour minimum for all events.
+                    Saturday events are billed at <strong>$200/hour</strong> for 0–30 guests, <strong>$260/hour</strong> for 30–60
+                    guests, and <strong>$320/hour</strong> for 60+ guests, with a two (2) hour minimum. Payments made by credit card
                     are subject to a 3% processing surcharge. Payment for recurring rentals is due on or before the first of each month.
                     Failure to submit payment within 30 days of the due date will result in suspension or cancellation of the Client's
                     scheduled class sessions and/or termination of this Agreement at the sole discretion of Merritt Wellness. Any
@@ -2956,7 +3019,7 @@ export default function BookingPage() {
                   <span className="text-xl font-bold text-[#735e59]">{pricing.totalBookings}</span>
                 </div>
                 <p className="text-sm text-[#6b5f5b] mt-1">
-                  {pricing.totalHours} total hours • $95/hour base
+                  {pricing.totalHours} total hours • $95–$155/hour by guest count
                 </p>
               </div>
               )}
@@ -2968,7 +3031,7 @@ export default function BookingPage() {
                     <span className="font-medium text-[#4a3f3c]">Weekly Hours</span>
                     <span className="text-xl font-bold text-[#735e59]">{recurringPricing.weeklyHours.toFixed(1)}</span>
                   </div>
-                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${HOURLY_RATE}/hr</p>
+                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${recurringPricing.hourlyRate}/hr{recurringPricing.hasSaturdaySlot ? ` • $${recurringPricing.saturdayHourlyRate}/hr Saturdays` : ''}</p>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-[#735e59]/10">
@@ -2986,7 +3049,7 @@ export default function BookingPage() {
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                     <p className="text-sm font-medium text-emerald-900 mb-1">First Month (Prorated)</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-emerald-800">{recurringPricing.firstMonthHours.toFixed(1)} hrs × ${HOURLY_RATE}</span>
+                      <span className="text-sm text-emerald-800">{recurringPricing.firstMonthHours.toFixed(1)} hrs{recurringPricing.hasSaturdaySlot ? ' (incl. Saturday rate)' : ` × $${recurringPricing.hourlyRate}`}</span>
                       <span className="font-bold text-emerald-900">${recurringPricing.firstMonthCharge.toFixed(2)}</span>
                     </div>
                     {recurringPricing.firstMonthFee > 0 && (
@@ -3065,7 +3128,7 @@ export default function BookingPage() {
               <>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span>Base Amount ({pricing.totalHours} hrs × $95)</span>
+                  <span>Base Amount ({pricing.totalHours} hrs)</span>
                   <span className="font-medium">${pricing.baseAmount.toFixed(2)}</span>
                 </div>
 

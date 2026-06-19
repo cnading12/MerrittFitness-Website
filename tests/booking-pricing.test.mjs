@@ -22,6 +22,10 @@ import {
   calculateAccuratePricing,
   findRecurringSlotConflicts,
   isPartnerPromoCode,
+  rateTierFor,
+  hourlyRateFor,
+  saturdayRateForWeekdayRate,
+  recurringOccurrencesAmount,
   HOURLY_RATE,
   SATURDAY_RATE,
   ON_SITE_ASSISTANCE_FEE,
@@ -165,6 +169,121 @@ test('pricing: Saturday booking charges $200/hr', () => {
   assert.equal(result.saturdayCharges, 3 * (SATURDAY_RATE - HOURLY_RATE)); // +$315 surcharge
   // $600 venue time + $35 required onboarding.
   assert.equal(result.subtotal, 3 * SATURDAY_RATE + ON_SITE_ASSISTANCE_FEE);
+});
+
+// ---------- Guest-based rate tiers ----------
+
+test('rateTierFor: bands split at 30 and 60 guests (>= thresholds)', () => {
+  assert.equal(rateTierFor(0), 0);
+  assert.equal(rateTierFor(29), 0);
+  assert.equal(rateTierFor(30), 1); // 30 sits in the middle band
+  assert.equal(rateTierFor(59), 1);
+  assert.equal(rateTierFor(60), 2); // 60 sits in the top band
+  assert.equal(rateTierFor(130), 2);
+});
+
+test('hourlyRateFor: weekday rates step $95 / $125 / $155 by band', () => {
+  assert.equal(hourlyRateFor(10, false), 95);
+  assert.equal(hourlyRateFor(45, false), 125);
+  assert.equal(hourlyRateFor(80, false), 155);
+});
+
+test('hourlyRateFor: Saturday rates step $200 / $260 / $320 by band', () => {
+  assert.equal(hourlyRateFor(10, true), 200);
+  assert.equal(hourlyRateFor(45, true), 260);
+  assert.equal(hourlyRateFor(80, true), 320);
+});
+
+test('pricing: weekday 30–60 guest event is billed at $125/hr base', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 45 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.baseAmount, 3 * 125); // $375
+  assert.equal(result.hourlyRate, 125);
+  assert.equal(result.saturdayCharges, 0);
+});
+
+test('pricing: weekday 60+ guest event is billed at $155/hr base', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 80 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.baseAmount, 3 * 155); // $465
+  assert.equal(result.hourlyRate, 155);
+});
+
+test('pricing: Saturday 30–60 guest event surcharges to $260/hr', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-01-03', hoursRequested: 2, expectedAttendees: 45 }], // Saturday
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  // Base at the weekday band ($125) plus the Saturday premium for that band.
+  assert.equal(result.baseAmount, 2 * 125);
+  assert.equal(result.saturdayCharges, 2 * (260 - 125));
+});
+
+test('pricing: Saturday 60+ guest event surcharges to $320/hr', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-01-03', hoursRequested: 2, expectedAttendees: 80 }], // Saturday
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.baseAmount, 2 * 155);
+  assert.equal(result.saturdayCharges, 2 * (320 - 155));
+});
+
+test('pricing: multi-booking reports the highest band as the representative hourly rate', () => {
+  const result = calculateAccuratePricing(
+    [
+      { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 10 }, // $95
+      { selectedDate: '2026-11-05', hoursRequested: 2, expectedAttendees: 45 }, // $125
+    ],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.baseAmount, 2 * 95 + 2 * 125);
+  assert.equal(result.hourlyRate, 125);
+});
+
+// ---------- Recurring billing rates (Saturday premium) ----------
+
+test('saturdayRateForWeekdayRate: maps each weekday band to its Saturday rate', () => {
+  assert.equal(saturdayRateForWeekdayRate(95), 200);
+  assert.equal(saturdayRateForWeekdayRate(125), 260);
+  assert.equal(saturdayRateForWeekdayRate(155), 320);
+});
+
+test('recurringOccurrencesAmount: weekday-only month bills at the weekday rate', () => {
+  const occurrences = [
+    { date: '2026-11-04', hours: 2 }, // Wednesday
+    { date: '2026-11-11', hours: 2 }, // Wednesday
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 125, 260), 4 * 125); // $500
+});
+
+test('recurringOccurrencesAmount: Saturday occurrences bill at the Saturday rate', () => {
+  const occurrences = [
+    { date: '2026-11-07', hours: 3 }, // Saturday
+    { date: '2026-11-14', hours: 3 }, // Saturday
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 95, 200), 6 * 200); // $1200
+});
+
+test('recurringOccurrencesAmount: mixed weekday + Saturday applies each rate', () => {
+  const occurrences = [
+    { date: '2026-11-04', hours: 2 }, // Wednesday @ $125
+    { date: '2026-11-07', hours: 3 }, // Saturday  @ $260
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 125, 260), 2 * 125 + 3 * 260); // $1030
+});
+
+test('recurringOccurrencesAmount: empty / non-array input is $0', () => {
+  assert.equal(recurringOccurrencesAmount([], 95, 200), 0);
+  assert.equal(recurringOccurrencesAmount(null, 95, 200), 0);
 });
 
 // ---------- On-site assistance vs. event supervision ----------
