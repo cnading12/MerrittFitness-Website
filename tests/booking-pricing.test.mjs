@@ -24,6 +24,8 @@ import {
   isPartnerPromoCode,
   rateTierFor,
   hourlyRateFor,
+  saturdayRateForWeekdayRate,
+  recurringOccurrencesAmount,
   HOURLY_RATE,
   SATURDAY_RATE,
   ON_SITE_ASSISTANCE_FEE,
@@ -245,6 +247,43 @@ test('pricing: multi-booking reports the highest band as the representative hour
   );
   assert.equal(result.baseAmount, 2 * 95 + 2 * 125);
   assert.equal(result.hourlyRate, 125);
+});
+
+// ---------- Recurring billing rates (Saturday premium) ----------
+
+test('saturdayRateForWeekdayRate: maps each weekday band to its Saturday rate', () => {
+  assert.equal(saturdayRateForWeekdayRate(95), 200);
+  assert.equal(saturdayRateForWeekdayRate(125), 260);
+  assert.equal(saturdayRateForWeekdayRate(155), 320);
+});
+
+test('recurringOccurrencesAmount: weekday-only month bills at the weekday rate', () => {
+  const occurrences = [
+    { date: '2026-11-04', hours: 2 }, // Wednesday
+    { date: '2026-11-11', hours: 2 }, // Wednesday
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 125, 260), 4 * 125); // $500
+});
+
+test('recurringOccurrencesAmount: Saturday occurrences bill at the Saturday rate', () => {
+  const occurrences = [
+    { date: '2026-11-07', hours: 3 }, // Saturday
+    { date: '2026-11-14', hours: 3 }, // Saturday
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 95, 200), 6 * 200); // $1200
+});
+
+test('recurringOccurrencesAmount: mixed weekday + Saturday applies each rate', () => {
+  const occurrences = [
+    { date: '2026-11-04', hours: 2 }, // Wednesday @ $125
+    { date: '2026-11-07', hours: 3 }, // Saturday  @ $260
+  ];
+  assert.equal(recurringOccurrencesAmount(occurrences, 125, 260), 2 * 125 + 3 * 260); // $1030
+});
+
+test('recurringOccurrencesAmount: empty / non-array input is $0', () => {
+  assert.equal(recurringOccurrencesAmount([], 95, 200), 0);
+  assert.equal(recurringOccurrencesAmount(null, 95, 200), 0);
 });
 
 // ---------- On-site assistance vs. event supervision ----------

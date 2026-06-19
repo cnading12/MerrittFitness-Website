@@ -47,6 +47,32 @@ export function hourlyRateFor(attendees, isSat = false) {
     : HOURLY_RATE + tier * RATE_TIER_INCREMENT;
 }
 
+// Recover the Saturday rate from a stored weekday band rate. Used by the
+// monthly invoicer for older recurring records persisted before the Saturday
+// rate was stored alongside the weekday rate.
+export function saturdayRateForWeekdayRate(weekdayRate) {
+  const tier = Math.max(
+    0,
+    Math.min(2, Math.round((Number(weekdayRate) - HOURLY_RATE) / RATE_TIER_INCREMENT)),
+  );
+  return SATURDAY_RATE + tier * SATURDAY_RATE_INCREMENT;
+}
+
+// Total dollar charge for a month's recurring occurrences, applying the
+// Saturday premium to any occurrence landing on a Saturday. `occurrences` is
+// the array produced by computeOccurrences (each entry has a `date` and
+// `hours`). Saturday occurrences bill at `saturdayRate`, all others at
+// `weekdayRate`. Returns dollars rounded to the cent.
+export function recurringOccurrencesAmount(occurrences, weekdayRate, saturdayRate) {
+  if (!Array.isArray(occurrences)) return 0;
+  const total = occurrences.reduce((sum, occ) => {
+    const hours = Number(occ?.hours) || 0;
+    const rate = isSaturday(occ?.date) ? saturdayRate : weekdayRate;
+    return sum + hours * rate;
+  }, 0);
+  return Math.round(total * 100) / 100;
+}
+
 export const SETUP_TEARDOWN_FEE = 50;
 export const ON_SITE_ASSISTANCE_FEE = 35;          // First-hour onboarding/setup help (flat, once per submission)
 export const EVENT_SUPERVISION_RATE = 30;          // $/hr for 40+ attendee events — billed for the ENTIRE event (no cap)

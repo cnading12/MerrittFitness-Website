@@ -808,14 +808,42 @@ export default function BookingPage() {
     const monthlyRange = calculateMonthlyHourRange();
     const firstMonthHours = calculateFirstMonthHours();
 
-    // Recurring billing uses the weekday rate for the typical guest band — a
-    // larger class is billed at the higher tier. Saturday premiums don't apply
-    // to recurring slots (billing is a monthly average across weekdays).
+    // Recurring billing is keyed to the typical guest band: a larger class is
+    // billed at the higher tier. Slots that land on a Saturday (dayOfWeek 6)
+    // carry the Saturday premium; every other day uses the weekday rate.
     const recurringHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, false);
-    const monthlyMinCharge = monthlyRange.min * recurringHourlyRate;
-    const monthlyMaxCharge = monthlyRange.max * recurringHourlyRate;
+    const saturdayHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, true);
+    const hasSaturdaySlot = recurringSlots.some(slot => Number(slot.dayOfWeek) === 6);
+    const rateForSlot = (slot) =>
+      Number(slot.dayOfWeek) === 6 ? saturdayHourlyRate : recurringHourlyRate;
+
+    // Monthly charge range: each slot's hours × its per-day rate, summed across
+    // the band of 4–5 (weekly) / 2–3 (biweekly) / 1 (monthly) occurrences.
+    let monthlyMinCharge = 0;
+    let monthlyMaxCharge = 0;
+    recurringSlots.forEach(slot => {
+      const hours = parseFloat(slot.durationHours) || 0;
+      const rate = rateForSlot(slot);
+      const [minOcc, maxOcc] = slot.frequency === 'weekly'
+        ? [4, 5]
+        : slot.frequency === 'biweekly'
+        ? [2, 3]
+        : [1, 1];
+      monthlyMinCharge += hours * minOcc * rate;
+      monthlyMaxCharge += hours * maxOcc * rate;
+    });
     const monthlyAvgCharge = (monthlyMinCharge + monthlyMaxCharge) / 2;
-    const firstMonthCharge = firstMonthHours * recurringHourlyRate;
+
+    // First (possibly partial) month: actual occurrences per slot × its rate.
+    const start = parseLocalDate(recurringDetails.startDate);
+    let firstMonthCharge = 0;
+    if (start) {
+      const end = lastOfMonth(start);
+      recurringSlots.forEach(slot => {
+        const occurrences = countOccurrencesInRange(slot.dayOfWeek, slot.frequency, start, end);
+        firstMonthCharge += occurrences * (parseFloat(slot.durationHours) || 0) * rateForSlot(slot);
+      });
+    }
 
     // ACH avoids the 3% card fee; monthly auto-debit is the recommended default.
     const firstMonthFee = recurringDetails.paymentPreference === 'card'
@@ -834,6 +862,8 @@ export default function BookingPage() {
       firstMonthFee,
       firstMonthTotal: firstMonthCharge + firstMonthFee,
       hourlyRate: recurringHourlyRate,
+      saturdayHourlyRate,
+      hasSaturdaySlot,
       paymentPreference: recurringDetails.paymentPreference
     };
   };
@@ -3051,7 +3081,7 @@ export default function BookingPage() {
                     <span className="font-medium text-[#4a3f3c]">Weekly Hours</span>
                     <span className="text-xl font-bold text-[#735e59]">{recurringPricing.weeklyHours.toFixed(1)}</span>
                   </div>
-                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${recurringPricing.hourlyRate}/hr</p>
+                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${recurringPricing.hourlyRate}/hr{recurringPricing.hasSaturdaySlot ? ` • $${recurringPricing.saturdayHourlyRate}/hr Saturdays` : ''}</p>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-[#735e59]/10">
@@ -3069,7 +3099,7 @@ export default function BookingPage() {
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                     <p className="text-sm font-medium text-emerald-900 mb-1">First Month (Prorated)</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-emerald-800">{recurringPricing.firstMonthHours.toFixed(1)} hrs × ${recurringPricing.hourlyRate}</span>
+                      <span className="text-sm text-emerald-800">{recurringPricing.firstMonthHours.toFixed(1)} hrs{recurringPricing.hasSaturdaySlot ? ' (incl. Saturday rate)' : ` × $${recurringPricing.hourlyRate}`}</span>
                       <span className="font-bold text-emerald-900">${recurringPricing.firstMonthCharge.toFixed(2)}</span>
                     </div>
                     {recurringPricing.firstMonthFee > 0 && (

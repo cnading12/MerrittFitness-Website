@@ -184,6 +184,7 @@ export async function finalizeRecurringSetup({ bookingId, setupIntentId }) {
   const mergedDetails = {
     ...(details || {}),
     hourlyRate: details?.pricing?.hourlyRate || details?.hourlyRate || 95,
+    saturdayHourlyRate: details?.pricing?.saturdayHourlyRate ?? details?.saturdayHourlyRate ?? null,
     slots: details?.slots || [],
     startDate,
     endDate: details?.endDate || null,

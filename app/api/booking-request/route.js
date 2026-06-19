@@ -248,6 +248,8 @@ const RecurringBookingSchema = z.object({
     firstMonthFee: z.number().optional().default(0),
     firstMonthTotal: z.number(),
     hourlyRate: z.number(),
+    saturdayHourlyRate: z.number().optional(),
+    hasSaturdaySlot: z.boolean().optional(),
     paymentPreference: z.enum(['ach', 'card'])
   }),
   idPhoto: IdPhotoSchema,
@@ -486,7 +488,10 @@ async function createRecurringApplication(validatedData) {
         monthlyMinCharge: pricing.monthlyMinCharge,
         monthlyMaxCharge: pricing.monthlyMaxCharge,
         weeklyHours: pricing.weeklyHours,
-        hourlyRate: pricing.hourlyRate
+        hourlyRate: pricing.hourlyRate,
+        // Saturday band rate so the monthly invoicer can apply the premium to
+        // any occurrence that lands on a Saturday.
+        saturdayHourlyRate: pricing.saturdayHourlyRate
       }
     })
   };

@@ -22,6 +22,11 @@ import { createClient } from '@supabase/supabase-js';
 
 import { computeOccurrences, summarizeOccurrences } from './recurring-occurrences.js';
 import {
+  isSaturday,
+  saturdayRateForWeekdayRate,
+  recurringOccurrencesAmount,
+} from './booking-pricing.js';
+import {
   sendMonthlyBillingClientEmail,
   sendMonthlyBillingRollupEmail,
 } from './email.js';
@@ -74,10 +79,13 @@ async function findExistingInvoiceItem({ subscriptionId, customerId, billingPeri
   ) || null;
 }
 
-function describeInvoiceItem({ year, month, summary, hourlyRate }) {
+function describeInvoiceItem({ year, month, summary, hourlyRate, saturdayHourlyRate, hasSaturday }) {
   const monthLabel = new Date(Date.UTC(year, month - 1, 1))
     .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-  return `${monthLabel} — ${summary.text} @ $${Number(hourlyRate).toFixed(0)}/hr`;
+  const rateLabel = hasSaturday
+    ? `$${Number(hourlyRate).toFixed(0)}/hr ($${Number(saturdayHourlyRate).toFixed(0)}/hr Sat)`
+    : `$${Number(hourlyRate).toFixed(0)}/hr`;
+  return `${monthLabel} — ${summary.text} @ ${rateLabel}`;
 }
 
 // Bookings that should be considered for billing in the target month:
@@ -129,8 +137,16 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
     return { status: 'failed', ...base, error: 'recurring_details missing or has no slots' };
   }
 
+  // Weekday band rate (the headline recurring rate) plus its Saturday
+  // counterpart. The Saturday rate is stored alongside the weekday rate for
+  // new records; older records fall back to deriving it from the band.
   const hourlyRate = Number(
     details.hourlyRate ?? details.pricing?.hourlyRate ?? DEFAULT_HOURLY_RATE,
+  );
+  const saturdayHourlyRate = Number(
+    details.saturdayHourlyRate
+      ?? details.pricing?.saturdayHourlyRate
+      ?? saturdayRateForWeekdayRate(hourlyRate),
   );
   const startDate = details.startDate || details.start_date || null;
   const endDate = details.endDate || details.end_date || null;
@@ -179,15 +195,22 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
 
   const summary = summarizeOccurrences(occurrences);
   const totalHours = summary.totalHours;
-  const amountCents = Math.round(totalHours * hourlyRate * 100);
-  const amountDollars = amountCents / 100;
-  const description = describeInvoiceItem({ year, month, summary, hourlyRate });
+  // Saturday occurrences bill at the Saturday band rate; everything else at the
+  // weekday rate. amountDollars is the exact charge for the month.
+  const hasSaturday = occurrences.some((occ) => isSaturday(occ.date));
+  const amountDollars = recurringOccurrencesAmount(occurrences, hourlyRate, saturdayHourlyRate);
+  const amountCents = Math.round(amountDollars * 100);
+  const description = describeInvoiceItem({
+    year, month, summary, hourlyRate, saturdayHourlyRate, hasSaturday,
+  });
 
   const plan = {
     ...base,
     year,
     month,
     hourlyRate,
+    saturdayHourlyRate,
+    hasSaturday,
     totalHours,
     amount: amountDollars,
     occurrenceCount: occurrences.length,
@@ -231,6 +254,7 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
         occurrence_count: String(occurrences.length),
         total_hours: String(totalHours),
         hourly_rate: String(hourlyRate),
+        saturday_hourly_rate: String(saturdayHourlyRate),
         kind: 'monthly_recurring',
       },
     });
@@ -265,6 +289,8 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
       totalHours,
       amount: amountDollars,
       hourlyRate,
+      saturdayHourlyRate,
+      hasSaturday,
       chargeDate,
       paymentMethod: plan.paymentMethod,
       summaryText: summary.text,

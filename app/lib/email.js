@@ -3,6 +3,7 @@
 
 import { Resend } from 'resend';
 import { isSponsoredBooking } from './calendar-flags.js';
+import { saturdayRateForWeekdayRate } from './booking-pricing.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -320,6 +321,12 @@ const EMAIL_TEMPLATES = {
     const details = parseRecurringDetails(booking.recurring_details);
     const slots = details?.slots || [];
     const hourlyRate = details?.hourlyRate || details?.pricing?.hourlyRate || 95;
+    // Saturday slots (dayOfWeek 6) bill at the Saturday band rate; surface it
+    // alongside the weekday rate when the schedule includes any.
+    const hasSaturdaySlot = slots.some((s) => Number(s?.dayOfWeek) === 6);
+    const saturdayHourlyRate = details?.saturdayHourlyRate
+      ?? details?.pricing?.saturdayHourlyRate
+      ?? saturdayRateForWeekdayRate(hourlyRate);
     const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
     const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
     const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
@@ -368,7 +375,7 @@ const EMAIL_TEMPLATES = {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
-                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr</td>
+                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}</td>
                 </tr>
               </table>
             </div>
@@ -781,7 +788,7 @@ const EMAIL_TEMPLATES = {
   // Sent to the renter immediately after the monthly invoicer writes the
   // upcoming-month invoice item. Tells them what will be billed, when it
   // will be charged, and against which payment method.
-  monthlyBillingClient: ({ booking, year, month, occurrences, totalHours, amount, hourlyRate, chargeDate, paymentMethod, summaryText }) => {
+  monthlyBillingClient: ({ booking, year, month, occurrences, totalHours, amount, hourlyRate, saturdayHourlyRate, hasSaturday, chargeDate, paymentMethod, summaryText }) => {
     const monthLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
     const chargeLabel = formatBillingDate(chargeDate);
     const paymentLabel = paymentMethod === 'ach'
@@ -833,7 +840,7 @@ const EMAIL_TEMPLATES = {
                 </tr>
                 <tr>
                   <td style="padding: 6px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
-                  <td style="padding: 6px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr</td>
+                  <td style="padding: 6px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturday ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}</td>
                 </tr>
                 <tr>
                   <td style="padding: 6px 0; color: #374151; font-weight: 600;">Amount due:</td>
