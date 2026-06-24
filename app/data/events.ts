@@ -280,6 +280,20 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ JULY 2026 ============
+  {
+    id: "foundations-healthy-back-donna-farhi-jul-2026",
+    title: "Foundations of a Healthy Back: A Yoga Intensive with Donna Farhi",
+    date: "2026-07-10",
+    sessionDates: ["2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"],
+    time: "12:00 PM",
+    description: "Internationally renowned yoga teacher and author Donna Farhi returns to Colorado for Foundations of a Healthy Back, an immersive five-day intensive for dedicated students and teachers. Explore a whole-body approach to spinal health, posture, core stability, and pain-free practice through experiential learning and accessible anatomy. This is Donna's only Western Hemisphere teaching engagement in 2026. The intensive runs July 10–14, 2026. Sign language interpretation will be provided. For questions, contact Tiffany Bucknam at tiffany@myevolition.com.",
+    imageUrl: "/images/event-banners/Foundations of a Healthy Back Banner image.jpg",
+    ticketUrl: "https://www.myevolition.com/donna-farhi-intensive-2026",
+    ticketLabel: "Register",
+    practitionerName: "Donna Farhi"
+  },
+
   // ============ JUNE 2026 ============
   {
     id: "soften-unwind-yin-massage-sound-bath-jun-2026",
