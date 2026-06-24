@@ -85,6 +85,19 @@ export const events: Event[] = [
   practitionerName: "Stephanie Miller"
 },
 
+  // ============ SOUND IMMERSION WITH THE HARMONIC QUINTESSENCE ============
+  {
+    id: "sound-immersion-harmonic-quintessence-jul-2026",
+    title: "Sound Immersion with the Harmonic Quintessence",
+    date: "2026-07-28",
+    time: "7:00 PM",
+    description: "Join us for a deeply restorative evening of sound, healing, and connection at Merritt Wellness Center at Sloan's Lake. Experience a unique Sound Immersion created by five talented sound practitioners working together to weave a rich tapestry of healing vibrations. Through gongs, crystal singing bowls, metal bowls, drums, chimes, flutes, and sacred instruments, you will be invited into a space of relaxation, reflection, and energetic renewal. As the sounds surround you, allow yourself to release stress, quiet the mind, and reconnect with the wisdom within. This immersive experience is designed to support balance, peace, and a deeper connection to yourself and the present moment. Following the immersion, guests are invited to enjoy tea and connect with our sacred community. Come as you are. Leave feeling grounded, refreshed, and renewed.",
+    imageUrl: "/images/event-banners/Sound Immersion Event Header 2026.png",
+    imageFit: "contain",
+    ticketUrl: "https://link.automationonamission.com/widget/bookings/sound-immersion-hq",
+    ticketLabel: "Reserve Your Space"
+  },
+
   // ============ RECURRING: YOGA WITH TERRI STAFFORD ============
   {
     id: "terri-stafford-yoga",
