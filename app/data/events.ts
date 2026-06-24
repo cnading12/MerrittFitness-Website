@@ -282,6 +282,42 @@ export const events: Event[] = [
 
   // ============ JULY 2026 ============
   {
+    id: "holosomatic-breathwork-jul-08-2026",
+    title: "Holosomatic Breathwork",
+    date: "2026-07-08",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Anxiety. Looping thoughts. Self-doubt. Harmful patterns. None of that is your true nature. Holosomatic Breathwork cuts through all of it. Through breath, movement, and sound, your body becomes the guide—back to the truth of who you are, back to the one who knows exactly what you need, what you want, what you're here for. This is body-led healing, and it will change everything. Doors open at 5:50 PM. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+  {
+    id: "holosomatic-breathwork-jul-23-2026",
+    title: "Holosomatic Breathwork",
+    date: "2026-07-23",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Anxiety. Looping thoughts. Self-doubt. Harmful patterns. None of that is your true nature. Holosomatic Breathwork cuts through all of it. Through breath, movement, and sound, your body becomes the guide—back to the truth of who you are, back to the one who knows exactly what you need, what you want, what you're here for. This is body-led healing, and it will change everything. Doors open at 5:50 PM. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+  {
+    id: "sunday-reset-breathwork-cold-plunge-sauna-jul-2026",
+    title: "Sunday Reset: Breathwork, Cold Plunge + Sauna",
+    date: "2026-07-26",
+    time: "5:00 PM",
+    endTime: "7:00 PM",
+    description: "Join Somatic Jules for an afternoon of energizing breathwork, movement, contrast therapy, community, and snacks. This Sunday Reset pairs Holosomatic Breathwork with a cold plunge and sauna experience to leave you refreshed, grounded, and renewed. All experience levels welcome. $60 per ticket.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+  {
     id: "foundations-healthy-back-donna-farhi-jul-2026",
     title: "Foundations of a Healthy Back: A Yoga Intensive with Donna Farhi",
     date: "2026-07-10",
