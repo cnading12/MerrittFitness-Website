@@ -12,6 +12,7 @@ export interface Event {
   ticketLabel?: string; // Custom label for ticket button, defaults to "Get Tickets"
   whatsappUrl?: string; // Optional WhatsApp group invite link
   instagramHandle?: string; // Without @ symbol
+  facebookHandle?: string; // Without @ symbol
   practitionerName?: string;
   recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
   endDate?: string; // Optional ISO date — for recurring events, the last day occurrences should appear
@@ -322,11 +323,14 @@ export const events: Event[] = [
     title: "Foundations of a Healthy Back: A Yoga Intensive with Donna Farhi",
     date: "2026-07-10",
     sessionDates: ["2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"],
-    time: "12:00 PM",
-    description: "Internationally renowned yoga teacher and author Donna Farhi returns to Colorado for Foundations of a Healthy Back, an immersive five-day intensive for dedicated students and teachers. Explore a whole-body approach to spinal health, posture, core stability, and pain-free practice through experiential learning and accessible anatomy. This is Donna's only Western Hemisphere teaching engagement in 2026. The intensive runs July 10–14, 2026. Sign language interpretation will be provided. For questions, contact Tiffany Bucknam at tiffany@myevolition.com.",
+    time: "6:00 PM",
+    endTime: "5:00 PM",
+    description: "Internationally renowned yoga teacher and author Donna Farhi returns to Colorado for Foundations of a Healthy Back, an immersive five-day intensive for dedicated students and teachers. Explore a whole-body approach to spinal health, posture, core stability, and pain-free practice through experiential learning and accessible anatomy. This is Donna's only Western Hemisphere teaching engagement in 2026. The intensive runs Friday, July 10 (6:00 PM) through Tuesday, July 14 (5:00 PM), 2026. Sign language interpretation will be provided. For questions, contact Tiffany Bucknam at tiffany@myevolition.com.",
     imageUrl: "/images/event-banners/Foundations of a Healthy Back Banner image.jpg",
     ticketUrl: "https://www.myevolition.com/donna-farhi-intensive-2026",
     ticketLabel: "Register",
+    instagramHandle: "myevolition",
+    facebookHandle: "myevolition",
     practitionerName: "Donna Farhi"
   },
 
