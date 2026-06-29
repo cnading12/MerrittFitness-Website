@@ -1324,7 +1324,19 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Setup & Cleanup:</strong> All rental times must include your own setup and cleanup. Space must be returned in the condition you found it.</span>
+                  <span><strong>Tables &amp; Chairs:</strong> Add tables and/or chairs per booking. Each is $25 for events under 40 guests and $50 for 40+ guests, charged separately (so a 40+ event using both adds $100). Waived for partners.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Full-Floor Mat:</strong> Our roll-out mat that fills the main hall is $100 per booking — our team sets it up and breaks it down within your reserved time. Included free for partners, who handle their own setup and breakdown.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Alcohol:</strong> If alcohol will be present, a Certificate of Insurance (COI) for general liability including liquor is required and must be uploaded with your application before the booking can be confirmed.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Setup & Cleanup:</strong> All rental times must include your own setup and cleanup. Space must be returned in the condition you found it. There is no arriving early or staying late — please keep everything within your booked window.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>

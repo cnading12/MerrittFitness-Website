@@ -61,6 +61,86 @@ function describeSlot(slot) {
   return `${freq} ${day} at ${slot.startTime} for ${slot.durationHours} hrs`;
 }
 
+// Format a dollar value for email display.
+function money(n) {
+  return `$${(Number(n) || 0).toFixed(2)}`;
+}
+
+// "Tables + Chairs" / "Tables" / "Chairs" / "None" — what equipment the renter
+// requested. Used in both the client and manager event-detail tables.
+function equipmentSummary(booking) {
+  const parts = [];
+  if (booking.needs_tables) parts.push('Tables');
+  if (booking.needs_chairs) parts.push('Chairs');
+  return parts.length ? parts.join(' + ') : 'None';
+}
+
+// Whether the renter chose to make the event public (community-facing).
+function publicLabel(booking) {
+  return isPublicBooking(booking) ? 'Public (open to the community)' : 'Private';
+}
+
+// Build an itemized cost-breakdown block from the persisted booking columns.
+// Shared by the client confirmation (their receipt) and manager notification
+// (so staff see exactly what was charged for). The `bookings` table stores the
+// computed fees but NOT the base venue charge, so we derive it:
+//   preDiscountSubtotal = base + saturday + onsite + supervision + equipment + mat
+//   subtotal            = preDiscountSubtotal - promoDiscount
+// → base = (subtotal + promoDiscount) - (saturday + onsite + supervision + equipment + mat)
+// Sponsored bookings (100% comped) end at a $0.00 total.
+function renderCostBreakdown(booking, { heading = 'Cost Breakdown' } = {}) {
+  const sponsored = isSponsoredBooking(booking);
+  const num = (v) => Number(v) || 0;
+  const saturday = num(booking.saturday_charges);
+  const onsite = num(booking.onsite_assistance_fee);
+  const supervision = num(booking.event_supervision_fee);
+  const supervisionHours = num(booking.event_supervision_hours);
+  const equipment = num(booking.tables_chairs_fees);
+  const mat = num(booking.mat_rental_fee);
+  const promo = num(booking.promo_discount);
+  const subtotal = num(booking.subtotal);
+  const stripeFee = num(booking.stripe_fee);
+  const total = num(booking.total_amount);
+  const base = (subtotal + promo) - (saturday + onsite + supervision + equipment + mat);
+
+  const row = (label, value, opts = {}) => {
+    if (opts.skip) return '';
+    const color = opts.color || '#111827';
+    const weight = opts.bold ? '700' : '400';
+    const border = opts.border ? 'border-top: 1px solid #d1fae5;' : '';
+    return `<tr>
+      <td style="padding: 6px 0; color: #374151; ${border}">${label}</td>
+      <td style="padding: 6px 0; color: ${color}; text-align: right; font-weight: ${weight}; ${border}">${value}</td>
+    </tr>`;
+  };
+
+  const paymentLabel = sponsored
+    ? 'Sponsored — no payment collected'
+    : booking.payment_method === 'ach'
+      ? 'ACH bank transfer (no processing fee)'
+      : booking.payment_method === 'pay-later'
+        ? 'Pay later'
+        : 'Card';
+
+  return `
+    <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 20px;">${heading}</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        ${row('Venue rental (base)', money(base))}
+        ${row('Saturday surcharge', `+${money(saturday)}`, { skip: saturday <= 0, color: '#b45309' })}
+        ${row('Full-floor mat', `+${money(mat)}`, { skip: mat <= 0, color: '#4f46e5' })}
+        ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: '#7c3aed' })}
+        ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: '#0d9488' })}
+        ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: '#0f766e' })}
+        ${row(booking.promo_code ? `Discount (${booking.promo_code})` : 'Discount', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
+        ${row('Subtotal', money(subtotal), { bold: true, border: true })}
+        ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: '#ea580c' })}
+        ${row('Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}
+      </table>
+      <p style="color: #6b7280; font-size: 13px; margin: 12px 0 0 0;">Payment method: ${paymentLabel}</p>
+    </div>`;
+}
+
 // Enhanced email templates
 // Exported (also referenced as `EMAIL_TEMPLATES` below) so tests can render
 // individual templates without dispatching real emails through Resend.
@@ -113,11 +193,32 @@ const EMAIL_TEMPLATES = {
                 <td style="padding: 8px 0; color: #111827;">${booking.hours_requested} hours</td>
               </tr>
               <tr>
+                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Guest count:</td>
+                <td style="padding: 8px 0; color: #111827;">${booking.expected_attendees ?? 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Tables &amp; chairs:</td>
+                <td style="padding: 8px 0; color: #111827;">${equipmentSummary(booking)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Event visibility:</td>
+                <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
+              </tr>
+              ${booking.serving_alcohol === true ? `
+              <tr>
+                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol service:</td>
+                <td style="padding: 8px 0; color: #111827;">Yes — you confirmed alcohol will be present</td>
+              </tr>
+              ` : ''}
+              <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Location:</td>
                 <td style="padding: 8px 0; color: #111827;">2246 Irving St, Denver, CO 80211</td>
               </tr>
             </table>
           </div>
+
+          <!-- Cost Breakdown / Receipt -->
+          ${renderCostBreakdown(booking, { heading: 'Your Receipt' })}
 
           ${booking.needs_mat ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -211,6 +312,22 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #111827;">${booking.hours_requested} hours</td>
             </tr>
             <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Guest count:</td>
+              <td style="padding: 8px 0; color: #111827;">${booking.expected_attendees ?? 'Not specified'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Tables &amp; chairs:</td>
+              <td style="padding: 8px 0; color: #111827;">${equipmentSummary(booking)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Full-floor mat:</td>
+              <td style="padding: 8px 0; color: #111827;">${booking.needs_mat ? (Number(booking.mat_rental_fee) > 0 ? 'Yes — staff sets up &amp; breaks down (within booked window)' : 'Yes — partner handles own setup &amp; breakdown') : 'No'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Visibility:</td>
+              <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
+            </tr>
+            <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Amount:</td>
               <td style="padding: 8px 0; color: #111827;">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}`}</td>
             </tr>
@@ -234,6 +351,9 @@ const EMAIL_TEMPLATES = {
             </div>
           ` : ''}
         </div>
+
+        <!-- Itemized cost breakdown so staff see exactly what the client paid for -->
+        ${renderCostBreakdown(booking, { heading: 'Cost Breakdown' })}
 
         <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #059669; margin: 0 0 15px 0;">Customer Information:</h3>
