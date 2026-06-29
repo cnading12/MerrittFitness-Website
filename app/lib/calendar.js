@@ -2,7 +2,7 @@
 // Properly handles Denver timezone without shifting issues
 
 import { google } from 'googleapis';
-import { buildStaffAttentionFlags, pickCalendarColorId } from './calendar-flags.js';
+import { buildStaffAttentionFlags, pickCalendarColorId, isSponsoredBooking } from './calendar-flags.js';
 
 // Re-export so callers (and tests that already use the full path) keep working.
 export { buildStaffAttentionFlags, pickCalendarColorId };
@@ -352,6 +352,42 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
           .join('\n')}\n\n`
       : '';
 
+    // Human-readable summaries of the booking's logistics so on-site staff can
+    // see at a glance — directly on the calendar event — exactly what the client
+    // expects (guest count, equipment, mat, alcohol, public/private, cost).
+    const sponsored = isSponsoredBooking(booking);
+    const visibilityLine =
+      booking.is_public === true || booking.is_public === 'public'
+        ? 'PUBLIC — open to the community'
+        : 'Private';
+    const equipmentParts = [];
+    if (booking.needs_tables) equipmentParts.push('Tables');
+    if (booking.needs_chairs) equipmentParts.push('Chairs');
+    const equipmentLine = equipmentParts.length ? equipmentParts.join(' + ') : 'None requested';
+    const matLine = booking.needs_mat
+      ? Number(booking.mat_rental_fee) > 0
+        ? 'Yes — staff sets up & breaks down (within the booked window)'
+        : 'Yes — partner handles their own setup & breakdown'
+      : 'No';
+    const alcoholLine =
+      booking.serving_alcohol === true
+        ? booking.coi_document_data
+          ? 'Yes — COI on file'
+          : 'Yes — ⚠️ COI MISSING (contact renter)'
+        : booking.serving_alcohol === false
+          ? 'No'
+          : 'Not specified';
+    const paymentLabel =
+      booking.payment_method === 'card' ? 'Card'
+      : booking.payment_method === 'ach' ? 'ACH'
+      : booking.payment_method === 'pay-later' ? 'Pay later'
+      : booking.payment_method || 'n/a';
+    const amountLine = sponsored
+      ? '$0.00 — Sponsored (no payment collected)'
+      : booking.total_amount != null
+        ? `$${Number(booking.total_amount).toFixed(2)} (${paymentLabel})`
+        : 'n/a';
+
     const event = {
       summary: `🔒 ${titlePrefix}BOOKED: ${booking.event_name}`,
       description: `
@@ -359,14 +395,19 @@ BOOKING CONFIRMED - This Time Slot is RESERVED
 
 ${flagBlock}Event: ${booking.event_name}
 Type: ${booking.event_type || 'Not specified'}
-Organizer: ${booking.contact_name}
-Email: ${booking.email}
+Visibility: ${visibilityLine}
+Organizer (event host): ${booking.contact_name}
+${booking.business_name ? `Business: ${booking.business_name}\n` : ''}Email: ${booking.email}
 Phone: ${booking.phone || 'Not provided'}
 Duration: ${duration} hours
-Expected attendees: ${booking.expected_attendees ?? 'n/a'}
-${booking.business_name ? `Business: ${booking.business_name}\n` : ''}
-${booking.special_requests ? `Special Requests: ${booking.special_requests}\n` : ''}
+Guest count: ${booking.expected_attendees ?? 'n/a'}
 
+— Setup & logistics —
+Tables / Chairs: ${equipmentLine}
+Full-floor mat: ${matLine}
+Alcohol: ${alcoholLine}
+Amount: ${amountLine}
+${booking.special_requests ? `\nSpecial Requests: ${booking.special_requests}\n` : ''}
 Booking ID: ${booking.id}
 Contact clientservices@merrittwellness.net for changes.
       `.trim(),
