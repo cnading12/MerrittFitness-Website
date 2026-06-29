@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getBlurDataURL } from '@/lib/blur-data';
 import { events, Event } from '@/app/data/events';
-import { Calendar, Clock, Ticket, Instagram, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays, MessageCircle } from 'lucide-react';
+import { Calendar, Clock, Ticket, Instagram, Facebook, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays, MessageCircle } from 'lucide-react';
 
 // A display event that may carry multiple occurrence dates for recurring events
 interface DisplayEvent extends Event {
@@ -344,17 +344,30 @@ function EventCard({ event }: { event: DisplayEvent }) {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-[#4a3f3c]">{event.practitionerName}</p>
-              {event.instagramHandle && (
-                <a
-                  href={`https://instagram.com/${event.instagramHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-[#735e59] hover:text-[#5a4a46] transition-colors"
-                >
-                  <Instagram className="w-3 h-3" />
-                  @{event.instagramHandle}
-                </a>
-              )}
+              <div className="flex items-center gap-3">
+                {event.instagramHandle && (
+                  <a
+                    href={`https://instagram.com/${event.instagramHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-[#735e59] hover:text-[#5a4a46] transition-colors"
+                  >
+                    <Instagram className="w-3 h-3" />
+                    @{event.instagramHandle}
+                  </a>
+                )}
+                {event.facebookHandle && (
+                  <a
+                    href={`https://facebook.com/${event.facebookHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-[#735e59] hover:text-[#5a4a46] transition-colors"
+                  >
+                    <Facebook className="w-3 h-3" />
+                    @{event.facebookHandle}
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -388,6 +401,18 @@ function EventCard({ event }: { event: DisplayEvent }) {
                 aria-label={`Follow @${event.instagramHandle} on Instagram`}
               >
                 <Instagram className="w-5 h-5" />
+              </a>
+            )}
+
+            {event.facebookHandle && !event.practitionerName && (
+              <a
+                href={`https://facebook.com/${event.facebookHandle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#735e59]/20 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9] hover:border-[#735e59] transition-all duration-300"
+                aria-label={`Follow @${event.facebookHandle} on Facebook`}
+              >
+                <Facebook className="w-5 h-5" />
               </a>
             )}
           </div>
