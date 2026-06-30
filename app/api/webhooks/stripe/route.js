@@ -357,6 +357,9 @@ async function handlePaymentSuccess(paymentIntent) {
       const emailErrors = await sendBookingEmails(confirmed, {
         sendOnboarding: onboardingPending,
         sendPublicMarketing,
+        // Pass the whole group so multi-event emails can show "event X of N"
+        // and clarify the amount is the combined, charged-once total.
+        group: bookings,
       });
       if (onboardingPending && emailErrors.every((e) => !e.startsWith('onboarding:'))) {
         onboardingPending = false;
