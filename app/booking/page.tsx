@@ -1720,6 +1720,9 @@ export default function BookingPage() {
                       {getFieldError(`booking_${index}_hoursRequested`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_hoursRequested`)}</p>
                       )}
+                      <p className="text-xs text-gray-500 mt-2">
+                        Please include <strong>all setup and breakdown time</strong> within your booked window. Arriving early or staying past your reserved time may incur additional fees. We share this space as one community—being mindful of your window helps the next group enjoy theirs, just as others will respect yours.
+                      </p>
                     </div>
 
                     {/* Expected Attendees */}
