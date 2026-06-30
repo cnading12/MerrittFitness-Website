@@ -689,11 +689,12 @@ export default function BookingPage() {
       }
     });
 
-    // First-hour onboarding/setup assistance ($35, once): required for every
-    // renter who isn't an exempt recurring partner and isn't already getting a
-    // supervisor; an exempt partner may still opt in. Mutually exclusive with
-    // the supervisor — a booking never pays for both.
-    if (!eventSupervisionApplies && (!exemptFromStaffCoverage || formData.wantsOnsiteAssistance)) {
+    // First-hour onboarding/setup assistance ($35, once) is a one-time
+    // first-event fee, charged when no supervisor applies. Required on the
+    // renter's first event; returning renters (who've been to the space before)
+    // are not charged unless they opt in. Mutually exclusive with the
+    // supervisor — a booking never pays for both.
+    if (!eventSupervisionApplies && (formData.isFirstEvent === true || formData.wantsOnsiteAssistance)) {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
@@ -1316,7 +1317,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Events Under 40 Attendees:</strong> Onboarding/setup assistance ($35) is required for the first hour to help with wifi, speakers, building access, and any questions. Recurring partners are exempt on repeat events.</span>
+                  <span><strong>Events Under 40 Attendees:</strong> First-hour onboarding/setup assistance ($35) helps with wifi, speakers, building access, and any questions. This is a one-time fee charged on your first event only — returning renters who&apos;ve been here before are not charged, though they can opt in.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -2366,7 +2367,7 @@ export default function BookingPage() {
                         Is this your first event at Merritt Wellness? *
                       </label>
                       <p className="text-xs text-[#6b5f5b]">
-                        On-site staff coverage is required for all events except recurring partners&apos; repeat events: first-hour onboarding assistance ($35), or an on-site supervisor ($30/hr for the entire event) for 40+ attendees. Everyone pays for their first event.
+                        First-hour onboarding assistance ($35) is a one-time fee charged on your first event only — returning renters aren&apos;t charged. Events with 40+ attendees require an on-site supervisor ($30/hr for the entire event) instead. Everyone pays for their first event.
                       </p>
                     </div>
                   </div>
@@ -2410,13 +2411,13 @@ export default function BookingPage() {
                     <p className="text-red-600 text-sm mt-3 ml-11">{validationErrors.isFirstEvent}</p>
                   )}
 
-                  {/* Required first-hour onboarding box — shown for every renter
-                      who isn't an exempt recurring partner. Hidden when any
-                      booking has 40+ attendees, since the Facility Host replaces
-                      onboarding assistance for those events (surfaced inline by
-                      the per-booking supervision notice). */}
-                  {!exemptFromStaffCoverage &&
-                    formData.isFirstEvent !== null &&
+                  {/* Required first-hour onboarding box — the $35 onboarding fee
+                      is a one-time first-event charge, so this only shows on a
+                      first event. Hidden when any booking has 40+ attendees,
+                      since the Facility Host replaces onboarding assistance for
+                      those events (surfaced inline by the per-booking
+                      supervision notice). */}
+                  {formData.isFirstEvent === true &&
                     !bookings.some(b => parseInt(b.expectedAttendees, 10) >= EVENT_SUPERVISION_GROUP_THRESHOLD) && (
                     <div className="mt-4 ml-11 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                       <div className="flex items-start gap-2">
@@ -2424,17 +2425,18 @@ export default function BookingPage() {
                         <div>
                           <p className="text-sm font-medium text-emerald-800">First-Hour Onboarding Assistance Included (+$35)</p>
                           <p className="text-xs text-emerald-700 mt-1">
-                            {formData.isFirstEvent === true
-                              ? 'A staff member will be available for the first hour to assist with wifi setup, speaker connections, building access, and any questions. We want your first experience to be seamless!'
-                              : 'On-site coverage is required for all renters except recurring partners. A staff member will be on-site for the first hour to help with wifi, speakers, building access, and questions. Recurring partners (8+ hrs/month, 20% partner discount) are exempt on repeat events — apply your partner code to remove this.'}
+                            A staff member will be available for the first hour to assist with wifi setup, speaker connections, building access, and any questions. We want your first experience to be seamless! This first-event onboarding fee is a one-time charge — you won&apos;t pay it on return visits.
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Exempt recurring partners on a repeat event may still opt in. */}
-                  {formData.isFirstEvent === false && exemptFromStaffCoverage && (
+                  {/* Returning renters aren't charged the onboarding fee, but may
+                      opt in to first-hour assistance (unless a 40+ Facility Host
+                      already applies). */}
+                  {formData.isFirstEvent === false &&
+                    !bookings.some(b => parseInt(b.expectedAttendees, 10) >= EVENT_SUPERVISION_GROUP_THRESHOLD) && (
                     <div className="mt-4 ml-11">
                       <label className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all ${
                         formData.wantsOnsiteAssistance
@@ -2450,7 +2452,7 @@ export default function BookingPage() {
                         <div>
                           <span className="font-medium text-[#4a3f3c]">Add On-Site Assistance (+$35)</span>
                           <p className="text-xs text-[#6b5f5b] mt-1">
-                            Optional for recurring partners: have a staff member available to help with wifi, speakers, building access, and any questions during setup. Recommended for events with new equipment or special requirements.
+                            Optional for returning renters: the first-event onboarding fee doesn&apos;t apply to you, but you can still have a staff member available to help with wifi, speakers, building access, and any questions during setup. Recommended for events with new equipment or special requirements.
                           </p>
                         </div>
                       </label>
@@ -2720,8 +2722,10 @@ export default function BookingPage() {
 
                   <ul className="list-disc pl-5 space-y-2">
                     <li>
-                      <strong>Events with fewer than 40 attendees:</strong> Onboarding/setup assistance is required for the first hour
-                      at a flat <strong> $35</strong> per booking, to help with wifi, speakers, building access, and any questions.
+                      <strong>Events with fewer than 40 attendees:</strong> First-hour onboarding/setup assistance is a flat
+                      <strong> $35</strong>, charged once on your first event only, to help with wifi, speakers, building access, and any
+                      questions. Returning renters who have been to the space before are not charged this fee, though they may opt in to
+                      first-hour assistance.
                     </li>
                     <li>
                       <strong>Events with 40 or more attendees:</strong> A dedicated Event Supervisor (Facility Host) is required at
@@ -2730,9 +2734,9 @@ export default function BookingPage() {
                     </li>
                     <li>
                       <strong>Recurring partners:</strong> Renters who use the space 8+ hours per month and qualify for the 20%
-                      partnership discount are exempt from these requirements on their repeat events. This exemption does not apply to a
-                      renter&apos;s first event — every renter, including recurring partners, pays for on-site coverage on their first event.
-                      Being a returning renter alone does not make you a recurring partner.
+                      partnership discount are exempt from the 40+ Event Supervisor requirement on their repeat events. This exemption
+                      does not apply to a renter&apos;s first event — every renter, including recurring partners, pays for on-site
+                      coverage on their first event. Being a returning renter alone does not make you a recurring partner.
                     </li>
                   </ul>
 
