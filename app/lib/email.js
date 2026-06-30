@@ -88,8 +88,13 @@ function publicLabel(booking) {
 //   subtotal            = preDiscountSubtotal - promoDiscount
 // → base = (subtotal + promoDiscount) - (saturday + onsite + supervision + equipment + mat)
 // Sponsored bookings (100% comped) end at a $0.00 total.
-function renderCostBreakdown(booking, { heading = 'Cost Breakdown' } = {}) {
+function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext = null } = {}) {
   const sponsored = isSponsoredBooking(booking);
+  // In a multi-event booking every row stores the SAME group-wide pricing, so
+  // this breakdown is the combined charge for the whole group — not this one
+  // event. Relabel the total and add a note so the figure can't be misread as a
+  // per-event price.
+  const isGroup = !!groupContext && groupContext.total > 1;
   const num = (v) => Number(v) || 0;
   const saturday = num(booking.saturday_charges);
   const onsite = num(booking.onsite_assistance_fee);
@@ -135,9 +140,86 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown' } = {}) {
         ${row(booking.promo_code ? `Discount (${booking.promo_code})` : 'Discount', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
         ${row('Subtotal', money(subtotal), { bold: true, border: true })}
         ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: '#ea580c' })}
-        ${row('Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}
+        ${row(isGroup ? `Total (all ${groupContext.total} events)` : 'Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}
       </table>
+      ${isGroup ? `<p style="color: #4338ca; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">This is the <strong>combined total for all ${groupContext.total} events</strong> in this booking, charged <strong>once</strong>. The same amount appears on every event's email — it is <strong>not</strong> billed again for each event.</p>` : ''}
       <p style="color: #6b7280; font-size: 13px; margin: 12px 0 0 0;">Payment method: ${paymentLabel}</p>
+    </div>`;
+}
+
+// Format a booking's event_date ("YYYY-MM-DD") for the multi-event list. Parsed
+// as UTC so the day never shifts under the server's local timezone.
+function formatEventDateShort(value) {
+  if (!value) return 'TBD';
+  const iso = String(value).length === 10 ? `${value}T00:00:00Z` : String(value);
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
+  });
+}
+
+// When a renter books several events in one transaction, every booking row in
+// the group stores the SAME group-wide pricing (one combined total, one shared
+// discount, one Stripe fee). Each event still gets its own confirmation/manager
+// email, so without context each email looks like a standalone charge — which
+// makes the shared combined total read as a per-event price (the exact
+// confusion staff hit). buildGroupContext surfaces the group so the templates
+// can label the email "event X of N" and spell out that the amount is the
+// combined, charged-once total. Returns null for single bookings (a group of
+// one) so those emails render exactly as before.
+export function buildGroupContext(booking, group) {
+  if (!Array.isArray(group) || group.length <= 1) return null;
+  const ordered = [...group].sort((a, b) =>
+    String(a?.event_date || '').localeCompare(String(b?.event_date || ''))
+  );
+  const idx = ordered.findIndex((b) => b && b.id === booking.id);
+  return {
+    total: ordered.length,
+    position: idx === -1 ? null : idx + 1,
+    // Each row carries the group-wide total, so this booking's own total_amount
+    // IS the combined charge — never sum the siblings or it multiplies.
+    combinedTotal: Number(booking.total_amount) || 0,
+    events: ordered.map((b) => ({
+      id: b.id,
+      date: b.event_date,
+      time: b.event_time,
+      name: b.event_name,
+      isCurrent: b.id === booking.id,
+    })),
+  };
+}
+
+// Bulleted list of every event in a multi-event booking, with the current
+// email's event flagged so the reader can place this notification in the group.
+function renderGroupEventList(groupContext) {
+  return groupContext.events.map((e) => {
+    const when = `${formatEventDateShort(e.date)}${e.time ? ` &middot; ${e.time}` : ''}`;
+    const current = e.isCurrent ? ' <strong>(this email)</strong>' : '';
+    return `<li style="margin-bottom: 4px;">${when}${current}</li>`;
+  }).join('');
+}
+
+// Prominent banner that opens both the client and manager emails for a
+// multi-event booking. States the position in the group, that there is a single
+// shared payment, and lists every event date. `audience` only tweaks wording.
+function renderMultiEventBanner(groupContext, { audience }) {
+  if (!groupContext || groupContext.total <= 1) return '';
+  const { total, position, combinedTotal } = groupContext;
+  const positionLabel = position ? `Event ${position} of ${total}` : `One of ${total} events`;
+  const intro = audience === 'manager'
+    ? `This renter booked <strong>${total} events</strong> in a single transaction. You receive one notification per event date, and they all refer to the <strong>same single payment</strong>.`
+    : `You booked <strong>${total} events</strong> together in a single transaction. You receive one confirmation per event date, and they all refer to the <strong>same single payment</strong>.`;
+  return `
+    <div style="background: #eef2ff; border: 2px solid #6366f1; padding: 18px 20px; border-radius: 8px; margin: 0 0 20px 0;">
+      <p style="margin: 0 0 8px 0; color: #3730a3; font-size: 16px; font-weight: 700;">📅 Multi-event booking — ${positionLabel}</p>
+      <p style="margin: 0 0 12px 0; color: #312e81; font-size: 14px; line-height: 1.5;">
+        ${intro} The amount below is the <strong>combined total for all ${total} events (${money(combinedTotal)}), charged once</strong> — it is <strong>not</strong> billed separately for each event.
+      </p>
+      <p style="margin: 0 0 6px 0; color: #3730a3; font-size: 13px; font-weight: 600;">All ${total} events in this booking:</p>
+      <ul style="margin: 0; padding-left: 20px; color: #312e81; font-size: 13px; line-height: 1.6;">
+        ${renderGroupEventList(groupContext)}
+      </ul>
     </div>`;
 }
 
@@ -146,8 +228,8 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown' } = {}) {
 // individual templates without dispatching real emails through Resend.
 export
 const EMAIL_TEMPLATES = {
-  bookingConfirmation: (booking) => ({
-    subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}`,
+  bookingConfirmation: (booking, groupContext = null) => ({
+    subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -167,6 +249,8 @@ const EMAIL_TEMPLATES = {
             </p>
           </div>
           ` : ''}
+
+          ${renderMultiEventBanner(groupContext, { audience: 'client' })}
 
           <!-- Booking Details -->
           <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -218,7 +302,7 @@ const EMAIL_TEMPLATES = {
           </div>
 
           <!-- Cost Breakdown / Receipt -->
-          ${renderCostBreakdown(booking, { heading: 'Your Receipt' })}
+          ${renderCostBreakdown(booking, { heading: 'Your Receipt', groupContext })}
 
           ${booking.needs_mat ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -271,8 +355,8 @@ const EMAIL_TEMPLATES = {
     `
   }),
 
-  managerNotification: (booking) => ({
-    subject: `🆕 New Booking: ${booking.event_name} on ${booking.event_date}`,
+  managerNotification: (booking, groupContext = null) => ({
+    subject: `🆕 New Booking: ${booking.event_name} on ${booking.event_date}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         ${LOGO_HEADER}
@@ -287,6 +371,8 @@ const EMAIL_TEMPLATES = {
           <p style="color: #047857; margin: 0;">This booking was comped with a sponsored promo code (<strong>${booking.promo_code || 'sponsored'}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
         </div>
         ` : ''}
+
+        ${renderMultiEventBanner(groupContext, { audience: 'manager' })}
 
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #1f2937; margin: 0 0 15px 0;">Event Details:</h3>
@@ -329,7 +415,7 @@ const EMAIL_TEMPLATES = {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Amount:</td>
-              <td style="padding: 8px 0; color: #111827;">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}`}</td>
+              <td style="padding: 8px 0; color: #111827;">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}${groupContext?.total > 1 ? ` <span style="color: #4338ca;">— combined total for all ${groupContext.total} events (charged once, not per event)</span>` : ''}`}</td>
             </tr>
           </table>
 
@@ -353,7 +439,7 @@ const EMAIL_TEMPLATES = {
         </div>
 
         <!-- Itemized cost breakdown so staff see exactly what the client paid for -->
-        ${renderCostBreakdown(booking, { heading: 'Cost Breakdown' })}
+        ${renderCostBreakdown(booking, { heading: 'Cost Breakdown', groupContext })}
 
         <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #059669; margin: 0 0 15px 0;">Customer Information:</h3>
@@ -1257,11 +1343,12 @@ function buildManagerAttachments(booking) {
 }
 
 // Email sending functions
-export async function sendBookingConfirmation(booking) {
+export async function sendBookingConfirmation(booking, { group } = {}) {
   try {
     console.log('📧 Sending booking confirmation to:', booking.email);
-    
-    const template = EMAIL_TEMPLATES.bookingConfirmation(booking);
+
+    const groupContext = buildGroupContext(booking, group);
+    const template = EMAIL_TEMPLATES.bookingConfirmation(booking, groupContext);
     
     const result = await sendEmailWithRetry({
       from: EMAIL_CONFIG.from,
@@ -1278,12 +1365,13 @@ export async function sendBookingConfirmation(booking) {
   }
 }
 
-export async function sendManagerNotification(booking) {
+export async function sendManagerNotification(booking, { group } = {}) {
   try {
     const recipients = getStaffRecipients();
     console.log('📧 Sending manager notification to:', recipients.join(', '));
 
-    const template = EMAIL_TEMPLATES.managerNotification(booking);
+    const groupContext = buildGroupContext(booking, group);
+    const template = EMAIL_TEMPLATES.managerNotification(booking, groupContext);
     const attachments = buildManagerAttachments(booking);
 
     const payload = {

@@ -70,13 +70,15 @@ export async function ensureCalendarEvent(booking) {
 
 // Send the customer confirmation + manager notification for a booking, plus the
 // generic onboarding email when `sendOnboarding` is true (the renter only needs
-// onboarding once per group, not once per date). Returns an array of error
-// strings (empty when everything sent).
-export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMarketing = false }) {
+// onboarding once per group, not once per date). Pass `group` (every booking
+// sharing this booking's master_booking_id) so multi-event emails can spell out
+// "event X of N" and that the amount is the combined, charged-once total.
+// Returns an array of error strings (empty when everything sent).
+export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMarketing = false, group } = {}) {
   const errors = [];
 
   try {
-    await sendBookingConfirmation(booking);
+    await sendBookingConfirmation(booking, { group });
     console.log(`✅ [FULFILL] Customer confirmation sent for ${booking.id} (${booking.event_date})`);
   } catch (err) {
     console.error(`❌ [FULFILL] Customer confirmation failed for ${booking.id}:`, err.message);
@@ -85,7 +87,7 @@ export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMar
   await delay(EMAIL_RATE_LIMIT_DELAY_MS);
 
   try {
-    await sendManagerNotification(booking);
+    await sendManagerNotification(booking, { group });
     console.log(`✅ [FULFILL] Manager notification sent for ${booking.id} (${booking.event_date})`);
   } catch (err) {
     console.error(`❌ [FULFILL] Manager notification failed for ${booking.id}:`, err.message);
@@ -137,6 +139,7 @@ export async function fulfillConfirmedBookings(bookings) {
     const emailErrors = await sendBookingEmails(booking, {
       sendOnboarding: onboardingPending,
       sendPublicMarketing,
+      group: bookings,
     });
     if (onboardingPending && emailErrors.every((e) => !e.startsWith('onboarding:'))) {
       onboardingPending = false;

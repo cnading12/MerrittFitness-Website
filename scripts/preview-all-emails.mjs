@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 process.env.RESEND_API_KEY = process.env.RESEND_API_KEY || 'preview_only';
 
-const { EMAIL_TEMPLATES } = await import('../app/lib/email.js');
+const { EMAIL_TEMPLATES, buildGroupContext } = await import('../app/lib/email.js');
 
 // Embed the real navbar logo so the preview displays it without network.
 const logoBase64 = readFileSync('public/images/hero/logo.png').toString('base64');
@@ -84,10 +84,61 @@ const rollupArgs = {
   },
 };
 
+// A multi-event booking: two events booked + paid in one transaction. Every row
+// stores the SAME group-wide pricing, so each event's email shows the combined
+// total. These mirror the real "Soften & Unwind" pair that prompted the clearer
+// multi-event messaging (combined $489 across both events, not $489 each).
+const multiEventGroup = [
+  {
+    id: 'preview_multi_1',
+    master_booking_id: 'preview_master',
+    contact_name: 'Jane Doe',
+    event_name: 'Soften & Unwind: A Restorative Evening',
+    event_type: 'therapy',
+    event_date: '2026-08-13',
+    event_time: '6:00 PM',
+    hours_requested: 2.5,
+    email: 'jane@example.com',
+    phone: '555-555-1212',
+    home_address: '123 Maple Ave, Denver, CO 80211',
+    expected_attendees: 20,
+    is_public: false,
+    total_amount: 489,
+    subtotal: 475,
+    stripe_fee: 14,
+    payment_method: 'card',
+    status: 'confirmed',
+  },
+  {
+    id: 'preview_multi_2',
+    master_booking_id: 'preview_master',
+    contact_name: 'Jane Doe',
+    event_name: 'Soften & Unwind: A Restorative Evening',
+    event_type: 'therapy',
+    event_date: '2026-09-17',
+    event_time: '6:00 PM',
+    hours_requested: 2.5,
+    email: 'jane@example.com',
+    phone: '555-555-1212',
+    home_address: '123 Maple Ave, Denver, CO 80211',
+    expected_attendees: 20,
+    is_public: false,
+    total_amount: 489,
+    subtotal: 475,
+    stripe_fee: 14,
+    payment_method: 'card',
+    status: 'confirmed',
+  },
+];
+const multiBooking = multiEventGroup[0];
+const multiGroupContext = buildGroupContext(multiBooking, multiEventGroup);
+
 const templates = [
   ['Booking Confirmation (customer)', EMAIL_TEMPLATES.bookingConfirmation(sampleBooking)],
+  ['Booking Confirmation — Multi-Event (customer, event 1 of 2)', EMAIL_TEMPLATES.bookingConfirmation(multiBooking, multiGroupContext)],
   ['Client Onboarding (customer)', EMAIL_TEMPLATES.clientOnboarding(sampleBooking)],
   ['Manager Notification (staff)', EMAIL_TEMPLATES.managerNotification(sampleBooking)],
+  ['Manager Notification — Multi-Event (staff, event 1 of 2)', EMAIL_TEMPLATES.managerNotification(multiBooking, multiGroupContext)],
   ['Recurring Setup — Client', EMAIL_TEMPLATES.recurringSetupClient(sampleBooking)],
   ['Recurring Setup — Manager (staff)', EMAIL_TEMPLATES.recurringSetupManager(sampleBooking)],
   ['Monthly Billing Invoice (customer)', EMAIL_TEMPLATES.monthlyBillingClient(billingArgs)],
