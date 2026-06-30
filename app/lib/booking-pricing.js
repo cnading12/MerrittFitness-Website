@@ -188,18 +188,21 @@ export function endsBy10PM(startTime, hoursRequested) {
 //     size: <40 attendees = $25, 40+ = $50. Tables and chairs stack (a 60-person
 //     event using both pays $50 + $50 = $100). Renters on the MerrittMagic
 //     partnership code are waived these fees entirely.
-//   * On-site staff coverage is REQUIRED for every renter who isn't an exempt
-//     recurring partner (see below):
+//   * On-site staff coverage rules:
 //       - >=40 attendees: an on-site supervisor at $30/hr for the ENTIRE event
-//         (no hour cap).
-//       - <40 attendees: onboarding/setup assistance for the first hour, billed
-//         as a flat $35 once per submission.
+//         (no hour cap). REQUIRED for every renter who isn't an exempt recurring
+//         partner.
+//       - <40 attendees: first-hour onboarding/setup assistance, a flat $35
+//         charged once per submission. This is a ONE-TIME FIRST-EVENT fee — it's
+//         required only on the renter's first event. Renters who have been to
+//         the space before (not their first event) are NOT charged it, though
+//         they may opt in to first-hour assistance.
 //     Supervision and the $35 onboarding fee are mutually exclusive — a
 //     submission never pays for both.
 //   * Recurring partners (renters on the 20% partnership code) are EXEMPT from
-//     this coverage — but only on repeat events. Everyone, partners included,
-//     pays on their first event. An exempt partner may still opt in to the $35
-//     onboarding help.
+//     the >=40 supervisor coverage on repeat events. Everyone, partners
+//     included, pays on their first event. A renter on a repeat event may still
+//     opt in to the $35 onboarding help.
 //   * Promo discount applies to the pre-discount subtotal; minHours is enforced.
 //   * Card adds a 3% surcharge; ACH does not.
 //
@@ -282,10 +285,11 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   });
 
   // On-site (first-hour) onboarding assistance is mutually exclusive with the
-  // supervisor. Charge it once when no supervision applied AND either the renter
-  // is required to have coverage (not an exempt partner) or an exempt partner
-  // opted in.
-  if (eventSupervisionFee === 0 && (!exemptFromStaffCoverage || contactInfo.wantsOnsiteAssistance)) {
+  // supervisor and is a one-time first-event fee. Charge it once when no
+  // supervision applied AND either it's the renter's first event (required) or a
+  // returning renter opted in. Renters who have been to the space before are not
+  // charged unless they opt in.
+  if (eventSupervisionFee === 0 && (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance)) {
     onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
   }
 
