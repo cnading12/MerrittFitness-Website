@@ -283,6 +283,18 @@ export const events: Event[] = [
 
   // ============ JULY 2026 ============
   {
+    id: "sacred-pause-breathwork-jul-2026",
+    title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
+    date: "2026-07-19",
+    time: "5:00 PM",
+    description: "Transformational breathwork is a beautiful practice that helps us slow down, quiet the noise, release what our bodies have been carrying, and become more present to God, ourselves, and others. While breathwork is practiced in many different ways, these gatherings are intentionally Christ-centered. My hope is that this becomes a monthly place for women to pause, breathe, reconnect, and remember they are deeply loved. Hosted by Julie Roebken, certified trauma-informed breathwork facilitator. Doors open at 4:45 PM — come early to find your spot and get settled. $25 registration, with 20% going to Re-fined, a local nonprofit supporting women impacted by sexual exploitation. For more info: julie@mindfulhaus.com, 303-717-4442, or www.mindfulhaus.com.",
+    imageUrl: "/images/event-banners/Julie_headshot2.jpeg",
+    imagePosition: "center 20%",
+    ticketUrl: "https://mindfulhaus.as.me/JulyGathering",
+    ticketLabel: "Register",
+    practitionerName: "Julie Roebken"
+  },
+  {
     id: "holosomatic-breathwork-jul-08-2026",
     title: "Holosomatic Breathwork",
     date: "2026-07-08",
