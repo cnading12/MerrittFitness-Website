@@ -99,11 +99,12 @@ export const events: Event[] = [
     ticketLabel: "Reserve Your Space"
   },
 
-  // ============ RECURRING: YOGA WITH TERRI STAFFORD ============
+  // ============ PAST: YOGA WITH TERRI STAFFORD (ENDED JUNE 5, 2026) ============
   {
     id: "terri-stafford-yoga",
     title: "Yoga with Terri Stafford",
     date: "2026-04-03",
+    endDate: "2026-06-05",
     time: "7:00 PM",
     endTime: "8:00 PM",
     description: "Join Terri Stafford for a monthly yoga experience in our beautiful historic sanctuary. $35 per person — limited space available. Reserve your spot via Venmo. Please include the number of people and date in your Venmo notes. Bring a mat, towel, and water bottle. Blocks and bolsters are welcome but not necessary.",
