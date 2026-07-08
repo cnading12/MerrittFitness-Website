@@ -61,6 +61,22 @@ export const events: Event[] = [
     recurrence: "Every Thursday"
   },
 
+  // ============ RECURRING: FULL MIND BODY SPIRIT COUNSELING (BASEMENT STUDIO OFFICE) ============
+  {
+    id: "full-mind-body-spirit-counseling",
+    title: "Somatic Therapy with Full Mind Body Spirit Counseling",
+    date: "2026-07-06",
+    time: "Mon & Wed 10:00 AM – 8:00 PM · Fri 10:00 AM – 4:00 PM",
+    description: "Please note: these are private one-on-one and couples therapy sessions held in Cayla's studio office on the lower level of Merritt Wellness — not gatherings in the main hall. \"Healing doesn't always begin with words. Sometimes it starts with noticing — a tension you carry, an emotion just beneath the surface, a way of moving through the world that no longer fits. Dance/Movement Therapy is the psychotherapeutic use of dance, movement, body awareness, and embodied communication, to foster healing and wellness. The wisdom you're looking for is already within you. My work is simply to help you find your way back to it!\" Cayla Chambers MA, LPC, R-DMT is a Dance/Movement Therapist offering somatic therapy for individuals and couples 18+. She is EMDR trained, PACT Level 1 couples therapy trained, and RYT 200. Cayla is in office Mondays and Wednesdays 10 AM – 8 PM and Fridays 10 AM – 4 PM. Learn more and book a free 15-minute consultation!",
+    imageUrl: "/images/event-banners/Cayla-Headshot.jpg",
+    imagePosition: "center 30%",
+    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/",
+    ticketLabel: "Book a Free Consultation",
+    instagramHandle: "full.mind.body.spirit",
+    practitionerName: "Cayla Chambers MA, LPC, R-DMT",
+    recurrence: "Every Monday, Wednesday & Friday"
+  },
+
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
   {
     id: "sloans-lake-citizens-group",
