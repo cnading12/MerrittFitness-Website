@@ -117,28 +117,30 @@ function getNthWeekdayOfMonth(year: number, month: number, weekday: number, n: n
 // Compute occurrence dates for a recurring event within a date range (without expanding into multiple events)
 function getRecurringOccurrences(event: Event, start: Date, end: Date): string[] {
   const dates: string[] = [];
-  const weeklyMatch = event.recurrence?.match(/^Every\s+(\w+)$/i);
+  // Weekly recurrence supports one or more days, e.g. "Every Thursday" or "Every Monday, Wednesday & Friday"
+  const weeklyMatch = event.recurrence?.match(/^Every\s+([\w\s,&]+)$/i);
   const monthlyMatch = event.recurrence?.match(/^(\w+)\s+(\w+)\s+of\s+every\s+month$/i);
 
   const recurrenceEnd = event.endDate ? new Date(event.endDate + 'T00:00:00') : null;
   const effectiveEnd = recurrenceEnd && recurrenceEnd < end ? recurrenceEnd : end;
 
   if (weeklyMatch) {
-    const dayName = weeklyMatch[1].toLowerCase();
-    const targetDay = dayNameToNumber[dayName];
+    const targetDays = weeklyMatch[1]
+      .toLowerCase()
+      .split(/,|&|\band\b/)
+      .map((name) => dayNameToNumber[name.trim()])
+      .filter((day): day is number => day !== undefined);
 
-    if (targetDay !== undefined) {
+    if (targetDays.length > 0) {
       const eventStartDate = new Date(event.date + 'T00:00:00');
       const effectiveStart = start > eventStartDate ? start : eventStartDate;
       const current = new Date(effectiveStart);
 
-      while (current.getDay() !== targetDay) {
-        current.setDate(current.getDate() + 1);
-      }
-
       while (current <= effectiveEnd) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 7);
+        if (targetDays.includes(current.getDay())) {
+          dates.push(current.toISOString().split('T')[0]);
+        }
+        current.setDate(current.getDate() + 1);
       }
     }
   } else if (monthlyMatch) {
