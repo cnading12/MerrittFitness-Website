@@ -30,8 +30,10 @@ const IndividualBookingSchema = z.object({
     .max(100, 'Event name too long'),
 
   eventType: z.enum([
+    'wellness', 'fitness-class', 'social-event', 'private-event', 'other',
+    // Legacy values, still accepted so cached clients don't fail validation
     'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
-    'workshop', 'therapy', 'private-event', 'other'
+    'workshop', 'therapy'
   ]),
 
   // Public events are open to the community and qualify for our collaborative
@@ -211,8 +213,10 @@ const RecurringExceptionSchema = z.object({
 const RecurringScheduleSchema = z.object({
   eventName: z.string().min(1, 'Series name is required').max(100, 'Series name too long'),
   eventType: z.enum([
+    'wellness', 'fitness-class', 'social-event', 'private-event', 'other',
+    // Legacy values, still accepted so cached clients don't fail validation
     'yoga-class', 'meditation', 'fitness', 'martial-arts', 'dance',
-    'workshop', 'therapy', 'private-event', 'other'
+    'workshop', 'therapy'
   ]),
   // Public series qualify for the collaborative marketing effort. Defaults to
   // private if an older client omits it.
