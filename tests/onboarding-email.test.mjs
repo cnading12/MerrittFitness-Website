@@ -200,10 +200,12 @@ test('sendConfirmationEmails: includes the onboarding email in the booking flow'
 });
 
 test('sendConfirmationEmails: spaces sends out to stay under Resend rate limit', async () => {
-  // Resend's free plan caps at 2 requests/second. We send 3 emails per
-  // booking, so the flow must insert ~1s pauses between sends. Record the
-  // wall-clock timestamp of each Resend invocation and assert the gaps are
-  // present — without this, bursts of bookings would hit a 429.
+  // Resend's free plan caps at 2 requests/second (≥500ms between sends). We
+  // send 3 emails per booking with a nominal 600ms pause between them — big
+  // enough for the rate limit, small enough not to burn the serverless
+  // function's maxDuration budget. Record the wall-clock timestamp of each
+  // Resend invocation and assert the gaps are present — without this, bursts
+  // of bookings would hit a 429.
   sentEmails.length = 0;
   const sendTimestamps = [];
   const realNow = Date.now.bind(Date);
@@ -227,13 +229,14 @@ test('sendConfirmationEmails: spaces sends out to stay under Resend rate limit',
   const gap1 = sendTimestamps[1] - sendTimestamps[0];
   const gap2 = sendTimestamps[2] - sendTimestamps[1];
 
-  // Allow a small clock-jitter tolerance below the nominal 1000ms delay.
+  // Resend needs ≥500ms between sends; allow clock jitter below the nominal
+  // 600ms spacing but never below the real rate-limit floor.
   assert.ok(
-    gap1 >= 900,
-    `expected ≥900ms between customer and manager sends, got ${gap1}ms`
+    gap1 >= 500,
+    `expected ≥500ms between customer and onboarding sends, got ${gap1}ms`
   );
   assert.ok(
-    gap2 >= 900,
-    `expected ≥900ms between manager and onboarding sends, got ${gap2}ms`
+    gap2 >= 500,
+    `expected ≥500ms between onboarding and manager sends, got ${gap2}ms`
   );
 });

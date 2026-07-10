@@ -16,6 +16,12 @@ import {
 // effects directly via the shared fulfillment helper.
 import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
 
+// CRITICAL: The sponsored path sends the calendar + email pipeline inline.
+// Without this, Vercel's default (~10s) function timeout kills the handler
+// mid-pipeline and the later emails (onboarding, marketing) silently never
+// send. Every route that sends email MUST export a maxDuration.
+export const maxDuration = 60;
+
 // Initialize Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
