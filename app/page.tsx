@@ -45,7 +45,7 @@ export default function Home() {
     ],
     "sameAs": [
       "https://www.instagram.com/merrittwellnessdenver",
-      "https://www.facebook.com/merrittwellnessdenver"
+      "https://www.facebook.com/MerrittWellnessDenver/"
     ],
     "amenityFeature": [
       {

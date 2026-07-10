@@ -156,7 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ],
               "sameAs": [
                 "https://www.instagram.com/merrittwellnessdenver",
-                "https://www.facebook.com/merrittwellnessdenver"
+                "https://www.facebook.com/MerrittWellnessDenver/"
               ],
               "hasOfferCatalog": {
                 "@type": "OfferCatalog",

@@ -17,7 +17,7 @@ export default function Footer() {
             <span className="hidden sm:inline">Instagram</span>
           </Link>
           <Link
-            href="https://www.facebook.com/MerrittFitnessSpace/"
+            href="https://www.facebook.com/MerrittWellnessDenver/"
             className="flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
             target="_blank"
             rel="noopener"

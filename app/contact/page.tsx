@@ -149,7 +149,7 @@ export default function ContactPage() {
                       </svg>
                     </Link>
                     <Link
-                      href="https://www.facebook.com/merrittwellnessdenver"
+                      href="https://www.facebook.com/MerrittWellnessDenver/"
                       className="group p-4 bg-[#735e59]/10 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-[#735e59] hover:bg-[#735e59] hover:text-[#f2eee9]"
                       target="_blank"
                       rel="noopener"
