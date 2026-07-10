@@ -511,8 +511,10 @@ export default function BookingPage() {
           errors[`recurring_slot_${idx}_startTime`] = 'Start time is required';
         }
         const duration = parseFloat(slot.durationHours);
-        if (!slot.durationHours || isNaN(duration) || duration < 0.5) {
-          errors[`recurring_slot_${idx}_durationHours`] = 'Duration must be at least 30 minutes';
+        // The venue-wide 2-hour minimum per booking applies to each recurring
+        // occurrence too (mirrors RecurringSlotSchema on the server).
+        if (!slot.durationHours || isNaN(duration) || duration < 2) {
+          errors[`recurring_slot_${idx}_durationHours`] = 'Each event has a 2-hour minimum';
         } else if (!endsBy10PM(slot.startTime, slot.durationHours)) {
           errors[`recurring_slot_${idx}_durationHours`] = 'All events must end by 10 PM';
         }
@@ -2211,7 +2213,7 @@ export default function BookingPage() {
                         <input
                           type="number"
                           step="0.5"
-                          min="0.5"
+                          min="2"
                           max="12"
                           value={slot.durationHours}
                           onChange={(e) => updateRecurringSlot(slot.id, 'durationHours', e.target.value)}

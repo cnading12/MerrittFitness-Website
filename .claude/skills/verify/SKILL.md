@@ -30,5 +30,6 @@ scratchpad, don't run `playwright install`):
   is a number input. Attendee count inputs are findable by label text.
 
 Gotchas: the default recurring slot (Wednesday 6:00 PM, 2h weekly) already
-qualifies for the 8+ hrs/month volume discount, so to see undiscounted rates
-drop the duration below 2h first.
+qualifies for the 8+ hrs/month volume discount — and every weekly slot does,
+since the 2-hour minimum per booking applies to recurring slots too. To see
+undiscounted rates, switch the slot frequency to biweekly or monthly.

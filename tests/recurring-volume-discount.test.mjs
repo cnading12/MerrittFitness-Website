@@ -57,15 +57,19 @@ test('recurringMonthlyMinHours: handles empty and malformed input', () => {
 // ---------- recurringVolumeDiscountApplies ----------
 
 test('volume discount: 8 guaranteed hours/month qualifies (weekly 2h)', () => {
+  // With the venue's 2-hour minimum per booking, EVERY weekly slot qualifies:
+  // 2h × 4 guaranteed occurrences = 8 hrs/month.
   assert.equal(recurringVolumeDiscountApplies([weeklySlot(2)]), true);
 });
 
 test('volume discount: below 8 guaranteed hours does not qualify', () => {
-  // Weekly 1.75h → 7 guaranteed hours (even though 5-week months reach 8.75).
-  assert.equal(recurringVolumeDiscountApplies([weeklySlot(1.75)]), false);
-  // Biweekly 3h → 6 guaranteed hours.
+  // Biweekly 3h → 6 guaranteed hours (even though 3-occurrence months reach 9).
   assert.equal(recurringVolumeDiscountApplies([
     { dayOfWeek: 2, durationHours: '3', frequency: 'biweekly' },
+  ]), false);
+  // Monthly 4h → 4 guaranteed hours.
+  assert.equal(recurringVolumeDiscountApplies([
+    { dayOfWeek: 5, durationHours: '4', frequency: 'monthly' },
   ]), false);
 });
 
@@ -101,7 +105,10 @@ test('recurringRatesFor: discount stacks on the attendee tier (60+ band)', () =>
 });
 
 test('recurringRatesFor: non-qualifying schedule keeps the full tiered rate', () => {
-  const rates = recurringRatesFor(45, [weeklySlot(1)]); // 4 hrs/month min
+  // Biweekly 2h → 4 hrs/month guaranteed, under the 8-hour threshold.
+  const rates = recurringRatesFor(45, [
+    { dayOfWeek: 3, durationHours: '2', frequency: 'biweekly' },
+  ]);
   assert.equal(rates.volumeDiscountApplied, false);
   assert.equal(rates.hourlyRate, 125);
   assert.equal(rates.saturdayHourlyRate, 260);
@@ -165,14 +172,19 @@ test('intake pricing: Saturday slots bill at the discounted Saturday band rate',
 
 test('intake pricing: non-qualifying schedule keeps the full tiered rate', () => {
   const pricing = computeRecurringIntakePricing({
-    slots: [weeklySlot(1.5, 3)], // 6 hrs/month guaranteed — under the threshold
+    // Biweekly Wednesday 2h → 4 hrs/month guaranteed — under the threshold.
+    slots: [{ dayOfWeek: 3, startTime: '6:00 PM', durationHours: '2', frequency: 'biweekly' }],
     expectedAttendees: 45,
     startDate: '2026-08-10',
     paymentPreference: 'ach',
   });
   assert.equal(pricing.volumeDiscountApplied, false);
   assert.equal(pricing.hourlyRate, 125);
-  assert.equal(pricing.firstMonthCharge, 3 * 1.5 * 125); // $562.50
+  assert.equal(pricing.monthlyMinCharge, 4 * 125);   // $500
+  assert.equal(pricing.monthlyMaxCharge, 6 * 125);   // $750
+  // Biweekly anchored at the start date: Aug 12 + Aug 26 → 2 × 2h.
+  assert.equal(pricing.firstMonthHours, 4);
+  assert.equal(pricing.firstMonthCharge, 4 * 125);   // $500
 });
 
 test('intake pricing: renter-chosen skip exceptions reduce the first-month charge', () => {

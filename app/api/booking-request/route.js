@@ -201,7 +201,9 @@ const MultipleBookingSchema = z.object({
 const RecurringSlotSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
   startTime: z.string().regex(/^\d{1,2}:\d{2} (AM|PM)$/, 'Invalid time format'),
-  durationHours: z.coerce.number().min(0.5, 'Minimum 0.5 hours').max(12, 'Maximum 12 hours per slot'),
+  // The venue-wide 2-hour minimum per booking applies to each recurring
+  // occurrence too — a slot IS a booking, repeated.
+  durationHours: z.coerce.number().min(2, 'Minimum 2 hours per booking').max(12, 'Maximum 12 hours per slot'),
   frequency: z.enum(['weekly', 'biweekly', 'monthly'])
 });
 
