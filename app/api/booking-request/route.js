@@ -256,12 +256,71 @@ const RecurringBookingSchema = z.object({
 // findRecurringSlotConflicts) live in app/lib/booking-pricing.js so they can
 // be unit-tested without spinning up the request layer.
 
+// PostgREST reports a column the schema doesn't have as PGRST204 ("Could not
+// find the 'needs_mat' column of 'bookings' in the schema cache"); raw
+// Postgres phrases it `column "needs_mat" of relation "bookings" does not
+// exist`. Returns the offending column name, or null when the error is
+// something other than a missing column.
+function missingColumnFromError(err) {
+  if (!err) return null;
+  const msg = err.message || '';
+  if (err.code !== 'PGRST204' && !/column .* does not exist/i.test(msg)) return null;
+  const match =
+    msg.match(/Could not find the '([^']+)' column/i) ||
+    msg.match(/column "([^"]+)"(?: of relation "[^"]+")? does not exist/i) ||
+    msg.match(/column (?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+) does not exist/i);
+  return match ? match[1] : null;
+}
+
+// Insert a bookings row, retrying without any column the DB reports as
+// missing (a pre-migration deploy). The previous staged fallback dropped
+// entire "newest columns" groups, so ONE missing column from an unrelated
+// migration silently discarded other data — e.g. the renter's tables/chairs/
+// mat selections vanished (and showed as "not selected" on the calendar and
+// confirmation emails) when a different migration hadn't been run yet. Now
+// only the genuinely missing columns are skipped, each with a loud warning.
+//
+// Returns the inserted row backfilled with any skipped values so consumers in
+// the same request (the sponsored calendar/email fulfillment) still see the
+// renter's actual selections even when a column couldn't be persisted.
+async function insertBookingRow(fullRecord) {
+  const attempt = { ...fullRecord };
+  const dropped = [];
+  // Bounded: every retry removes one column, so this cannot loop forever.
+  for (let remaining = Object.keys(attempt).length; remaining > 0; remaining--) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([attempt])
+      .select();
+
+    if (!error) {
+      if (dropped.length > 0) {
+        console.warn(
+          `⚠️ Booking ${fullRecord.id} stored WITHOUT [${dropped.join(', ')}] — ` +
+          'these columns are missing from the bookings table. Run the pending migrations in scripts/migrations/.'
+        );
+      }
+      return { ...fullRecord, ...data[0] };
+    }
+
+    const missingColumn = missingColumnFromError(error);
+    if (!missingColumn || !(missingColumn in attempt)) {
+      throw error;
+    }
+    console.warn(`⚠️ Column "${missingColumn}" missing from bookings table — retrying insert without it.`);
+    delete attempt[missingColumn];
+    dropped.push(missingColumn);
+  }
+  throw new Error('bookings insert failed: no columns left to retry');
+}
+
 // Create booking in database with enhanced fields
 async function createBooking(bookingData) {
   try {
-    // Build insert record. The optional columns `expected_attendees` and
-    // `event_supervision_fee` are added to the payload but retried without them
-    // if the DB has not yet been migrated (see migrations/*.sql).
+    // Build the full insert record. Columns added by later migrations (see
+    // scripts/migrations/*.sql) are included unconditionally; if the DB hasn't
+    // been migrated yet, insertBookingRow retries without exactly the columns
+    // PostgREST reports as missing.
     const baseRecord = {
       id: bookingData.id,
       master_booking_id: bookingData.masterBookingId,
@@ -297,49 +356,25 @@ async function createBooking(bookingData) {
       updated_at: new Date().toISOString()
     };
 
-    const recordWithNewColumns = {
+    const fullRecord = {
       ...baseRecord,
       expected_attendees: parseInt(bookingData.expectedAttendees, 10) || 0,
       event_supervision_fee: parseFloat(bookingData.eventSupervisionFee || 0),
-      event_supervision_hours: parseFloat(bookingData.eventSupervisionHours || 0)
-    };
-
-    // ID photo columns are applied on top of the supervision columns. They are
-    // populated from IdPhotoSchema; the dataUrl holds the full "data:image/...;base64,..."
-    // string which the email layer splits apart to attach to manager notifications.
-    const recordWithIdPhoto = {
-      ...recordWithNewColumns,
+      event_supervision_hours: parseFloat(bookingData.eventSupervisionHours || 0),
+      // ID photo columns are populated from IdPhotoSchema; the dataUrl holds the
+      // full "data:image/...;base64,..." string which the email layer splits
+      // apart to attach to manager notifications.
       id_photo_data: bookingData.idPhotoDataUrl || null,
       id_photo_name: bookingData.idPhotoName || null,
-      id_photo_type: bookingData.idPhotoType || null
-    };
-
-    // Public/private flag is the newest column. Layered on top so a pre-migration
-    // DB falls back to the id-photo record (preserving the ID photo) rather than
-    // dropping straight to the supervision fallback.
-    const recordWithPublicFlag = {
-      ...recordWithIdPhoto,
-      is_public: bookingData.eventVisibility === 'public'
-    };
-
-    // Alcohol flag + COI document are the newest columns. Layered on top so a
-    // pre-migration DB falls back to the public-flag record rather than dropping
-    // any of the other newer columns.
-    const recordWithCoi = {
-      ...recordWithPublicFlag,
+      id_photo_type: bookingData.idPhotoType || null,
+      is_public: bookingData.eventVisibility === 'public',
       serving_alcohol: typeof bookingData.hasAlcohol === 'boolean' ? bookingData.hasAlcohol : null,
       coi_document_data: bookingData.coiDocumentDataUrl || null,
       coi_document_name: bookingData.coiDocumentName || null,
-      coi_document_type: bookingData.coiDocumentType || null
-    };
-
-    // Tables/chairs equipment + full-floor mat rental columns are the newest.
-    // Layered on top so a pre-migration DB falls back to the COI record rather
-    // than dropping any of the other newer columns. `mat_rental_fee` is $0 for
-    // partners (waived) or $100 per booking otherwise; tables/chairs fees scale
-    // by group size ($25 under 40 attendees, $50 for 40+, per item type).
-    const recordWithEquipment = {
-      ...recordWithCoi,
+      coi_document_type: bookingData.coiDocumentType || null,
+      // `mat_rental_fee` is $0 for partners (waived) or $100 per booking
+      // otherwise; tables/chairs fees scale by group size ($25 under 40
+      // attendees, $50 for 40+, per item type).
       needs_tables: bookingData.needsTables || false,
       needs_chairs: bookingData.needsChairs || false,
       tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0),
@@ -347,62 +382,9 @@ async function createBooking(bookingData) {
       mat_rental_fee: parseFloat(bookingData.matRentalFee || 0)
     };
 
-    let { data, error } = await supabase
-      .from('bookings')
-      .insert([recordWithEquipment])
-      .select();
-
-    // Staged fallbacks so bookings don't fail if the DB hasn't been migrated yet.
-    // PGRST204 = column not found in Supabase.
-    const isMissingColumnError = (err) =>
-      err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
-
-    if (isMissingColumnError(error)) {
-      console.warn('⚠️ tables/chairs/mat columns missing from DB — falling back. Run the pending migration. Error:', error.message);
-      ({ data, error } = await supabase
-        .from('bookings')
-        .insert([recordWithCoi])
-        .select());
-    }
-
-    if (isMissingColumnError(error)) {
-      console.warn('⚠️ alcohol/COI columns missing from DB — falling back. Run the pending migration. Error:', error.message);
-      ({ data, error } = await supabase
-        .from('bookings')
-        .insert([recordWithPublicFlag])
-        .select());
-    }
-
-    if (isMissingColumnError(error)) {
-      console.warn('⚠️ is_public column missing from DB — falling back. Run the pending migration. Error:', error.message);
-      ({ data, error } = await supabase
-        .from('bookings')
-        .insert([recordWithIdPhoto])
-        .select());
-    }
-
-    if (isMissingColumnError(error)) {
-      console.warn('⚠️ ID photo columns missing from DB — falling back. Run the pending migration. Error:', error.message);
-      ({ data, error } = await supabase
-        .from('bookings')
-        .insert([recordWithNewColumns])
-        .select());
-    }
-
-    if (isMissingColumnError(error)) {
-      console.warn('⚠️ New supervision columns missing from DB — falling back. Run the pending migration. Error:', error.message);
-      ({ data, error } = await supabase
-        .from('bookings')
-        .insert([baseRecord])
-        .select());
-    }
-
-    if (error) {
-      console.error('❌ Database error:', error);
-      throw error;
-    }
-
-    return data[0];
+    // Insert with per-column fallback: a pre-migration DB only loses the
+    // columns it genuinely doesn't have, never unrelated data.
+    return await insertBookingRow(fullRecord);
   } catch (error) {
     console.error('❌ Create booking error:', error);
     throw error;
@@ -494,60 +476,15 @@ async function createRecurringApplication(validatedData) {
     })
   };
 
-  const isMissingColumnError = (err) =>
-    err && (err.code === 'PGRST204' || /column .* does not exist/i.test(err.message || ''));
-
-  let { data, error } = await supabase
-    .from('bookings')
-    .insert([withExtendedColumns])
-    .select();
-
-  // Fall back through the same column-dropping cascade as single-event bookings
-  // so applications still land in the DB pre-migration. Drop alcohol/COI columns
-  // first (newest), then is_public, so a missing newer column doesn't take
-  // recurring_details down with it.
-  if (isMissingColumnError(error)) {
-    console.warn('⚠️ alcohol/COI columns missing — falling back without them.');
-    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, ...withoutCoi } = withExtendedColumns;
-    ({ data, error } = await supabase
-      .from('bookings')
-      .insert([withoutCoi])
-      .select());
-  }
-  if (isMissingColumnError(error)) {
-    console.warn('⚠️ is_public column missing — falling back without it.');
-    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, is_public, ...withoutPublic } = withExtendedColumns;
-    ({ data, error } = await supabase
-      .from('bookings')
-      .insert([withoutPublic])
-      .select());
-  }
-  if (isMissingColumnError(error)) {
-    console.warn('⚠️ recurring_details column missing — falling back without it.');
-    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, recurring_details, ...withoutRecurring } = withExtendedColumns;
-    ({ data, error } = await supabase
-      .from('bookings')
-      .insert([withoutRecurring])
-      .select());
-  }
-  if (isMissingColumnError(error)) {
-    console.warn('⚠️ ID photo columns missing — falling back.');
-    const { serving_alcohol, coi_document_data, coi_document_name, coi_document_type, id_photo_data, id_photo_name, id_photo_type, recurring_details, ...trimmed } = withExtendedColumns;
-    ({ data, error } = await supabase
-      .from('bookings')
-      .insert([trimmed])
-      .select());
-  }
-  if (isMissingColumnError(error)) {
-    console.warn('⚠️ Supervision columns missing — falling back.');
-    ({ data, error } = await supabase.from('bookings').insert([record]).select());
-  }
-
-  if (error) {
+  // Insert with per-column fallback (see insertBookingRow): a pre-migration DB
+  // only loses the columns it genuinely doesn't have — a missing alcohol/COI
+  // column can no longer take recurring_details or the ID photo down with it.
+  try {
+    return await insertBookingRow(withExtendedColumns);
+  } catch (error) {
     console.error('❌ Recurring application insert failed:', error);
     throw error;
   }
-  return data[0];
 }
 
 async function bookingHandler(request) {
