@@ -280,9 +280,11 @@ function missingColumnFromError(err) {
 // confirmation emails) when a different migration hadn't been run yet. Now
 // only the genuinely missing columns are skipped, each with a loud warning.
 //
-// Returns the inserted row backfilled with any skipped values so consumers in
-// the same request (the sponsored calendar/email fulfillment) still see the
-// renter's actual selections even when a column couldn't be persisted.
+// Returns { row, droppedColumns }: the inserted row backfilled with any
+// skipped values so consumers in the same request (the sponsored
+// calendar/email fulfillment) still see the renter's actual selections even
+// when a column couldn't be persisted, plus the names of the columns that
+// were skipped so the caller can surface them in the API response.
 async function insertBookingRow(fullRecord) {
   const attempt = { ...fullRecord };
   const dropped = [];
@@ -295,12 +297,13 @@ async function insertBookingRow(fullRecord) {
 
     if (!error) {
       if (dropped.length > 0) {
-        console.warn(
-          `⚠️ Booking ${fullRecord.id} stored WITHOUT [${dropped.join(', ')}] — ` +
-          'these columns are missing from the bookings table. Run the pending migrations in scripts/migrations/.'
+        console.error(
+          `🚨 SCHEMA GAP: booking ${fullRecord.id} stored WITHOUT [${dropped.join(', ')}] — ` +
+          'these columns are missing from the bookings table this deployment points at. ' +
+          'Run scripts/migrations/2026_verify_and_repair_bookings_columns.sql in the SAME Supabase project as SUPABASE_URL.'
         );
       }
-      return { ...fullRecord, ...data[0] };
+      return { row: { ...fullRecord, ...data[0] }, droppedColumns: dropped };
     }
 
     const missingColumn = missingColumnFromError(error);
@@ -383,7 +386,8 @@ async function createBooking(bookingData) {
     };
 
     // Insert with per-column fallback: a pre-migration DB only loses the
-    // columns it genuinely doesn't have, never unrelated data.
+    // columns it genuinely doesn't have, never unrelated data. Returns
+    // { row, droppedColumns } so the handler can surface schema gaps.
     return await insertBookingRow(fullRecord);
   } catch (error) {
     console.error('❌ Create booking error:', error);
@@ -487,6 +491,22 @@ async function createRecurringApplication(validatedData) {
   }
 }
 
+// Attach a schema-gap warning to an API response when any columns could not
+// be persisted, so a tester sees the problem in the browser (network tab /
+// console) instead of having to dig through server logs.
+function withSchemaWarnings(response, droppedColumns) {
+  if (droppedColumns.length === 0) return response;
+  return {
+    ...response,
+    schemaWarnings: {
+      droppedColumns: [...new Set(droppedColumns)],
+      message:
+        'These fields could NOT be stored — the bookings table is missing the columns. ' +
+        'Run scripts/migrations/2026_verify_and_repair_bookings_columns.sql in the Supabase project this deployment uses.',
+    },
+  };
+}
+
 async function bookingHandler(request) {
   try {
     const rawData = await request.json();
@@ -523,13 +543,13 @@ async function bookingHandler(request) {
       }
 
       try {
-        const created = await createRecurringApplication(validatedRecurring);
+        const { row: created, droppedColumns } = await createRecurringApplication(validatedRecurring);
         console.log('✅ Recurring application created:', {
           id: created.id,
           paymentPreference: validatedRecurring.recurringSchedule.paymentPreference,
           slots: validatedRecurring.recurringSchedule.slots.length
         });
-        return Response.json({
+        return Response.json(withSchemaWarnings({
           success: true,
           id: created.id,
           masterBookingId: created.master_booking_id,
@@ -537,7 +557,7 @@ async function bookingHandler(request) {
           paymentPreference: validatedRecurring.recurringSchedule.paymentPreference,
           firstMonthTotal: validatedRecurring.pricing.firstMonthTotal,
           message: 'Recurring application created. Proceed to set up auto-pay.'
-        });
+        }, droppedColumns));
       } catch (error) {
         console.error('❌ Recurring application creation error:', error);
         return Response.json({
@@ -594,6 +614,7 @@ async function bookingHandler(request) {
 
     const masterBookingId = uuidv4();
     const createdBookings = [];
+    const allDroppedColumns = [];
     let bookingErrors = [];
 
     // Create ALL bookings in database FIRST
@@ -648,8 +669,9 @@ async function bookingHandler(request) {
         };
 
         // Create booking in database
-        const createdBooking = await createBooking(bookingData);
+        const { row: createdBooking, droppedColumns } = await createBooking(bookingData);
         createdBookings.push(createdBooking);
+        allDroppedColumns.push(...droppedColumns);
 
         console.log('✅ Booking created in DB:', {
           id: individualBookingId,
@@ -697,7 +719,7 @@ async function bookingHandler(request) {
     }
 
     // Prepare success response
-    const response = {
+    let response = {
       success: true,
       id: createdBookings[0].id,
       masterBookingId: masterBookingId,
@@ -723,6 +745,8 @@ async function bookingHandler(request) {
         message: `${bookingErrors.length} bookings failed to create`
       };
     }
+
+    response = withSchemaWarnings(response, allDroppedColumns);
 
     console.log('🎉 Bookings created successfully:', {
       masterBookingId: masterBookingId,

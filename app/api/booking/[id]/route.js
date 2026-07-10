@@ -63,7 +63,23 @@ export async function GET(request, context) {
       totalAmount: booking.total_amount, // Alias for frontend compatibility
       subtotal: booking.subtotal,
       stripe_fee: booking.stripe_fee,
+      // Attendee count + equipment selections AS STORED in the DB row. The
+      // success page renders these so a renter (or a tester) can immediately
+      // see whether their selections were actually persisted. Deliberately
+      // tri-state (`?? null`): true/false is what was stored, null means the
+      // column doesn't exist on the row — i.e. the migration hasn't reached
+      // the database this deployment points at.
+      expected_attendees: booking.expected_attendees ?? null,
+      attendees: booking.expected_attendees ?? null, // Alias for frontend compatibility
+      needs_tables: booking.needs_tables ?? null,
+      needs_chairs: booking.needs_chairs ?? null,
+      needs_mat: booking.needs_mat ?? null,
+      tables_chairs_fees: booking.tables_chairs_fees ?? null,
+      mat_rental_fee: booking.mat_rental_fee ?? null,
+      is_public: booking.is_public ?? null,
+      serving_alcohol: booking.serving_alcohol ?? null,
       promo_code: booking.promo_code ?? null,
+      promo_discount: booking.promo_discount ?? null,
       // Sponsored = comped booking (no payment). Derived from the stored promo
       // code (with support for an explicit is_sponsored column if ever added).
       is_sponsored: booking.is_sponsored === true || isSponsoredBooking(booking),

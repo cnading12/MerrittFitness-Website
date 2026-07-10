@@ -124,10 +124,29 @@ function SuccessPageContent() {
 
                 <div className="p-4 bg-amber-50 rounded-xl">
                   <h3 className="font-semibold text-amber-900 mb-2">Attendees</h3>
-                  <p className="text-amber-800 font-medium">{bookingData.attendees} people</p>
+                  <p className="text-amber-800 font-medium">
+                    {bookingData.attendees != null ? `${bookingData.attendees} people` : '—'}
+                  </p>
                   <p className="text-amber-700 text-sm">Booking ID: {bookingData.id}</p>
                 </div>
               </div>
+            </div>
+
+            {/* Equipment & setup, exactly as stored on the booking record — so
+                what you see here is what staff will see on the calendar and in
+                their notification email. */}
+            <div className="mt-6 p-4 bg-indigo-50 rounded-xl">
+              <h3 className="font-semibold text-indigo-900 mb-2">Equipment & Setup</h3>
+              <ul className="text-indigo-800 space-y-1">
+                <li>Tables: <span className="font-medium">{bookingData.needs_tables === true ? 'Yes' : bookingData.needs_tables === false ? 'No' : 'Not recorded'}</span></li>
+                <li>Chairs: <span className="font-medium">{bookingData.needs_chairs === true ? 'Yes' : bookingData.needs_chairs === false ? 'No' : 'Not recorded'}</span></li>
+                <li>Full-floor mat: <span className="font-medium">{bookingData.needs_mat === true ? 'Yes' : bookingData.needs_mat === false ? 'No' : 'Not recorded'}</span></li>
+              </ul>
+              {(bookingData.needs_tables == null || bookingData.needs_chairs == null || bookingData.needs_mat == null) && (
+                <p className="text-red-700 text-sm mt-2">
+                  ⚠️ "Not recorded" means the booking database is missing these columns — the selections could not be saved. Please contact us to confirm your equipment needs.
+                </p>
+              )}
             </div>
 
             {bookingData.special_requests && (

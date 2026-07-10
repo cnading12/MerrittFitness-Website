@@ -287,6 +287,7 @@ test('sponsored booking: equipment flags are persisted to the DB row', async () 
   assert.equal(row.needs_chairs, true, 'needs_chairs must be persisted as true');
   assert.equal(row.needs_mat, true, 'needs_mat must be persisted as true');
   assert.equal(row.status, 'confirmed', 'sponsored booking is confirmed at insert');
+  assert.equal(body.schemaWarnings, undefined, 'fully-migrated DB should produce no schema warnings');
 });
 
 test('sponsored booking: calendar event lists tables, chairs, and mat', async () => {
@@ -332,6 +333,11 @@ test('partially-migrated DB: a missing UNRELATED column must not drop the equipm
   assert.equal(stored.needs_mat, true, 'needs_mat must survive an unrelated missing column');
   assert.equal('serving_alcohol' in stored, false, 'the genuinely missing column is skipped');
 
+  // The response must surface the schema gap so a tester sees it in the
+  // browser instead of needing server logs.
+  assert.ok(body.schemaWarnings, 'response should carry schemaWarnings for the dropped column');
+  assert.deepEqual(body.schemaWarnings.droppedColumns, ['serving_alcohol']);
+
   const description = calendarInserts[0]?.description || '';
   assert.match(description, /Tables \/ Chairs: Tables \+ Chairs/, `calendar should still list the equipment, got:\n${description}`);
   assert.match(description, /Full-floor mat: Yes/, 'calendar should still show the mat');
@@ -354,6 +360,11 @@ test('equipment columns missing entirely: sponsored calendar + emails still refl
   const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
+  assert.ok(body.schemaWarnings, 'response should carry schemaWarnings for the dropped equipment columns');
+  assert.deepEqual(
+    [...body.schemaWarnings.droppedColumns].sort(),
+    ['mat_rental_fee', 'needs_chairs', 'needs_mat', 'needs_tables', 'tables_chairs_fees'],
+  );
 
   const description = calendarInserts[0]?.description || '';
   assert.match(description, /Tables \/ Chairs: Tables \+ Chairs/, `calendar should list the requested equipment even pre-migration, got:\n${description}`);
