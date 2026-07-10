@@ -2,11 +2,10 @@
 // ENHANCED VERSION - Better connection handling and error diagnosis
 
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from './lazy-client.js';
 
 // Enhanced Supabase connection with better error handling
-let supabase;
-
-try {
+const supabase = lazyClient(() => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
     throw new Error('Missing Supabase environment variables');
   }
@@ -14,7 +13,7 @@ try {
   console.log('🔗 Initializing Supabase connection...');
   console.log('📍 Supabase URL:', process.env.SUPABASE_URL?.substring(0, 30) + '...');
 
-  supabase = createClient(
+  const client = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY,
     {
@@ -34,11 +33,8 @@ try {
   );
 
   console.log('✅ Supabase client initialized');
-
-} catch (error) {
-  console.error('❌ Supabase initialization failed:', error);
-  throw error;
-}
+  return client;
+});
 
 // Enhanced test connection with detailed diagnostics
 export async function testDatabaseConnection() {

@@ -3,20 +3,21 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from '../../../lib/lazy-client.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { ensureCalendarEvent, sendBookingEmails, isPublicBooking } from '../../../lib/booking-fulfillment.js';
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 
 // Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
-});
+}));
 
 // Initialize Supabase
-const supabase = createClient(
+const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
-);
+));
 
 // CRITICAL: Configuration to prevent Next.js issues
 export const dynamic = 'force-dynamic';

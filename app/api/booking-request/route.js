@@ -3,6 +3,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from '../../lib/lazy-client.js';
 import { z } from 'zod';
 import {
   isSaturday,
@@ -23,10 +24,10 @@ import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
 export const maxDuration = 60;
 
 // Initialize Supabase
-const supabase = createClient(
+const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
-);
+));
 
 // UPDATED: Enhanced validation schema with setup/teardown and home address
 const IndividualBookingSchema = z.object({

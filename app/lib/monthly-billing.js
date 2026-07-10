@@ -19,6 +19,7 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from './lazy-client.js';
 
 import { computeOccurrences, summarizeOccurrences } from './recurring-occurrences.js';
 import {
@@ -31,15 +32,15 @@ import {
   sendMonthlyBillingRollupEmail,
 } from './email.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
-});
+}));
 
-const supabase = createClient(
+const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY,
-);
+));
 
 const DEFAULT_HOURLY_RATE = 95;
 

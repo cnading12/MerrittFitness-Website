@@ -8,16 +8,17 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from '../../../lib/lazy-client.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
-});
+}));
 
-const supabase = createClient(
+const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
-);
+));
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
