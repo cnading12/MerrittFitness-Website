@@ -155,6 +155,9 @@ export default function RecurringPaymentSetup({ bookingId }) {
   const monthlyMin = details?.pricing?.monthlyMinCharge ?? details?.monthlyMinCharge;
   const monthlyMax = details?.pricing?.monthlyMaxCharge ?? details?.monthlyMaxCharge;
   const hourlyRate = details?.pricing?.hourlyRate ?? details?.hourlyRate ?? 95;
+  // The stored rate already includes the automatic 20% volume discount for
+  // schedules guaranteeing 8+ hrs/month — label it, never re-apply it.
+  const volumeDiscountApplied = details?.pricing?.volumeDiscountApplied === true;
   const firstMonthCharge = Number(booking.subtotal ?? 0);
   const startDate = details?.startDate || booking.event_date;
 
@@ -326,7 +329,12 @@ export default function RecurringPaymentSetup({ bookingId }) {
           <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Hourly rate</span>
-              <span className="text-gray-900">${Number(hourlyRate).toFixed(0)}/hr</span>
+              <span className="text-gray-900">
+                ${Number(hourlyRate).toFixed(0)}/hr
+                {volumeDiscountApplied && (
+                  <span className="ml-1 text-xs font-medium text-emerald-600">(20% volume discount)</span>
+                )}
+              </span>
             </div>
             {monthlyMin !== undefined && monthlyMax !== undefined && (
               <div className="flex justify-between">

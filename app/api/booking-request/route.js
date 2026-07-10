@@ -9,6 +9,7 @@ import {
   isSaturday,
   endsBy10PM,
   calculateAccuratePricing,
+  computeRecurringIntakePricing,
   findRecurringSlotConflicts,
 } from '../../lib/booking-pricing.js';
 // For PAID bookings, calendar events + confirmation emails are created in the
@@ -408,9 +409,29 @@ async function createBooking(bookingData) {
 // the occurrence list. ACH setup + Stripe subscription creation is handled
 // separately on the payment page (not in this request).
 async function createRecurringApplication(validatedData) {
-  const { contactInfo, recurringSchedule, pricing, idPhoto, coiDocument } = validatedData;
+  const { contactInfo, recurringSchedule, idPhoto, coiDocument } = validatedData;
   const applicationId = uuidv4();
   const masterBookingId = applicationId; // Recurring series = one master record.
+
+  // Recompute pricing server-side from the schedule itself — the client-sent
+  // pricing block is display-only and never trusted (same posture as single
+  // events). This is where the attendee-tiered rate and the automatic 20%
+  // volume discount (8+ hrs/month) are decided and baked into the stored
+  // rates that the monthly invoicer bills from.
+  const pricing = computeRecurringIntakePricing({
+    slots: recurringSchedule.slots,
+    expectedAttendees: recurringSchedule.expectedAttendees,
+    startDate: recurringSchedule.startDate,
+    endDate: recurringSchedule.endDate || null,
+    exceptions: recurringSchedule.exceptions,
+    paymentPreference: recurringSchedule.paymentPreference,
+  });
+
+  const clientTotal = Number(validatedData.pricing?.firstMonthTotal);
+  if (Number.isFinite(clientTotal) && Math.abs(clientTotal - pricing.firstMonthTotal) > 1) {
+    console.warn('⚠️ Recurring pricing drift: client showed', clientTotal,
+      'server computed', pricing.firstMonthTotal, '— server value wins.');
+  }
 
   const record = {
     id: applicationId,
@@ -479,10 +500,18 @@ async function createRecurringApplication(validatedData) {
         monthlyMinCharge: pricing.monthlyMinCharge,
         monthlyMaxCharge: pricing.monthlyMaxCharge,
         weeklyHours: pricing.weeklyHours,
+        // Billed rates: attendee-tiered band rate, 20% off when the schedule
+        // guarantees 8+ hrs/month (volumeDiscountApplied). The monthly
+        // invoicer bills straight from these, so the discount is already
+        // baked in — never re-apply it downstream.
         hourlyRate: pricing.hourlyRate,
         // Saturday band rate so the monthly invoicer can apply the premium to
         // any occurrence that lands on a Saturday.
-        saturdayHourlyRate: pricing.saturdayHourlyRate
+        saturdayHourlyRate: pricing.saturdayHourlyRate,
+        volumeDiscountApplied: pricing.volumeDiscountApplied,
+        volumeDiscountPercent: pricing.volumeDiscountPercent,
+        undiscountedHourlyRate: pricing.undiscountedHourlyRate,
+        undiscountedSaturdayHourlyRate: pricing.undiscountedSaturdayHourlyRate
       }
     })
   };
@@ -546,7 +575,9 @@ async function bookingHandler(request) {
           masterBookingId: created.master_booking_id,
           applicationType: 'recurring',
           paymentPreference: validatedRecurring.recurringSchedule.paymentPreference,
-          firstMonthTotal: validatedRecurring.pricing.firstMonthTotal,
+          // Server-computed at insert time (createRecurringApplication) — the
+          // client-sent pricing block is display-only.
+          firstMonthTotal: created.total_amount,
           message: 'Recurring application created. Proceed to set up auto-pay.'
         });
       } catch (error) {
