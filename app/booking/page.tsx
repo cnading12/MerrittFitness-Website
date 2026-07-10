@@ -303,6 +303,83 @@ export default function BookingPage() {
     return phoneRegex.test(phone.trim());
   };
 
+  // Parse a fetch Response body defensively. Infrastructure-level failures
+  // (e.g. the host rejecting an oversized upload with a 413) return HTML or
+  // plain-text bodies — calling response.json() on those throws, and Safari
+  // surfaces it as the cryptic "The string did not match the expected
+  // pattern." Returns null when the body isn't valid JSON so callers can
+  // build a real message from the status code instead.
+  const parseJsonSafely = async (response: Response) => {
+    try {
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // The hosting platform (Vercel) rejects request bodies over ~4.5 MB before
+  // our API route ever runs, so uploads are downscaled client-side and the
+  // final payload is checked against this slightly-lower ceiling.
+  const MAX_REQUEST_BYTES = 4 * 1024 * 1024; // 4 MB
+  const IMAGE_MAX_DIMENSION = 1600; // px, longest edge — plenty for a legible ID
+  const IMAGE_JPEG_QUALITY = 0.8;
+
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Failed to read the selected file'));
+      reader.readAsDataURL(file);
+    });
+
+  // Downscale + re-encode an image file as JPEG. Phone photos are routinely
+  // 3–8 MB, and base64-encoding inflates that by ~33% — enough to blow past
+  // the request body limit on its own. An ID photo or COI scan only needs to
+  // be legible, not print-resolution.
+  const compressImageToDataUrl = async (file: File) => {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Could not decode image'));
+        img.src = objectUrl;
+      });
+      const scale = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas unavailable');
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', IMAGE_JPEG_QUALITY);
+      const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
+      const size = Math.floor((base64Length * 3) / 4);
+      return { dataUrl, type: 'image/jpeg', size };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  // Prepare an uploaded document for submission: images are downscaled and
+  // re-encoded (keeping whichever version is smaller); PDFs and images the
+  // browser can't decode (e.g. HEIC outside Safari) pass through as-is.
+  const prepareUploadedFile = async (file: File) => {
+    if (file.type.startsWith('image/')) {
+      try {
+        const compressed = await compressImageToDataUrl(file);
+        if (compressed.size < file.size) {
+          return { dataUrl: compressed.dataUrl, name: file.name, type: compressed.type, size: compressed.size };
+        }
+      } catch {
+        // Fall through to the uncompressed original.
+      }
+    }
+    const dataUrl = await readFileAsDataUrl(file);
+    return { dataUrl, name: file.name, type: file.type, size: file.size };
+  };
+
   // CRITICAL: Enhanced availability checking with strict error handling
   const checkAvailability = async (date) => {
     if (!date) return;
@@ -313,9 +390,9 @@ export default function BookingPage() {
     try {
       console.log('🔍 Checking availability for:', date);
       const response = await fetch(`/api/check-availability?date=${date}`);
-      const data = await response.json();
+      const data = await parseJsonSafely(response);
 
-      if (response.ok && data.availability) {
+      if (response.ok && data?.availability) {
         setAvailableSlots(data.availability);
         console.log('✅ Availability loaded:', data.availability);
 
@@ -327,7 +404,7 @@ export default function BookingPage() {
         setAvailableSlots({});
         setValidationErrors(prev => ({
           ...prev,
-          calendar: data.message || 'Unable to check availability. Please try a different date or contact us.'
+          calendar: data?.message || 'Unable to check availability. Please try a different date or contact us.'
         }));
       }
     } catch (error) {
@@ -930,11 +1007,11 @@ export default function BookingPage() {
           horizonMonths: 3,
         }),
       });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
+      const data = await parseJsonSafely(response);
+      if (!response.ok || !data?.success) {
         // Calendar service hiccup: don't block the renter, just let them
         // submit. The monthly invoicer will still expand occurrences correctly.
-        console.warn('Conflict check unavailable:', data.error || data.details);
+        console.warn('Conflict check unavailable:', data?.error || data?.details || response.status);
         setRecurringConflicts(null);
         return true;
       }
@@ -1027,7 +1104,7 @@ export default function BookingPage() {
     }
   };
 
-  const handleIdPhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIdPhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       setIdPhoto(null);
@@ -1048,27 +1125,23 @@ export default function BookingPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setIdPhoto({
-        dataUrl: String(reader.result || ''),
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
-      if (validationErrors.idPhoto) {
-        const newErrors = { ...validationErrors };
+    try {
+      // Downscale/re-encode so the photo fits within the request body limit.
+      const prepared = await prepareUploadedFile(file);
+      setIdPhoto(prepared);
+      setValidationErrors(prev => {
+        if (!prev.idPhoto) return prev;
+        const newErrors = { ...prev };
         delete newErrors.idPhoto;
-        setValidationErrors(newErrors);
-      }
-    };
-    reader.onerror = () => {
+        return newErrors;
+      });
+    } catch {
+      setIdPhoto(null);
       setValidationErrors(prev => ({ ...prev, idPhoto: 'Failed to read the selected file. Please try again.' }));
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
-  const handleCoiDocumentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoiDocumentChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       setCoiDocument(null);
@@ -1090,24 +1163,20 @@ export default function BookingPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCoiDocument({
-        dataUrl: String(reader.result || ''),
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
-      if (validationErrors.coiDocument) {
-        const newErrors = { ...validationErrors };
+    try {
+      // Images are downscaled/re-encoded; PDFs pass through unchanged.
+      const prepared = await prepareUploadedFile(file);
+      setCoiDocument(prepared);
+      setValidationErrors(prev => {
+        if (!prev.coiDocument) return prev;
+        const newErrors = { ...prev };
         delete newErrors.coiDocument;
-        setValidationErrors(newErrors);
-      }
-    };
-    reader.onerror = () => {
+        return newErrors;
+      });
+    } catch {
+      setCoiDocument(null);
       setValidationErrors(prev => ({ ...prev, coiDocument: 'Failed to read the selected file. Please try again.' }));
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const pricing = calculatePricing();
@@ -1242,17 +1311,31 @@ export default function BookingPage() {
         paymentMethod: applicationType === 'recurring' ? recurringDetails.paymentPreference : formData.paymentMethod
       });
 
+      const requestBody = JSON.stringify(submissionData);
+
+      // Catch oversized uploads before the platform rejects the request with a
+      // non-JSON 413 error page (which Safari surfaces as "The string did not
+      // match the expected pattern").
+      if (requestBody.length > MAX_REQUEST_BYTES) {
+        throw new Error(
+          'Your uploaded documents are too large to submit together (about 4 MB max). ' +
+          'Please upload a smaller or lower-resolution ID photo' +
+          (coiDocumentPayload ? ' and/or COI file' : '') +
+          ' and try again.'
+        );
+      }
+
       const bookingResponse = await fetch('/api/booking-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submissionData),
+        body: requestBody,
       });
 
-      const bookingResult = await bookingResponse.json();
+      const bookingResult = await parseJsonSafely(bookingResponse);
 
-      if (bookingResponse.ok && bookingResult.success) {
+      if (bookingResponse.ok && bookingResult?.success) {
         console.log('✅ Booking created successfully:', bookingResult);
         // Sponsored bookings are comped and already confirmed server-side —
         // skip checkout entirely and go straight to the confirmation page.
@@ -1268,8 +1351,16 @@ export default function BookingPage() {
           redirect = `/booking/payment?booking_id=${bookingResult.id}`;
         }
         window.location.href = redirect;
+      } else if (bookingResponse.status === 413) {
+        throw new Error(
+          'Your uploaded documents are too large to submit (about 4 MB max). ' +
+          'Please upload a smaller or lower-resolution ID photo or COI file and try again.'
+        );
       } else {
-        throw new Error(bookingResult.error || 'Failed to create booking');
+        throw new Error(
+          bookingResult?.error ||
+          `Failed to create booking (server responded with status ${bookingResponse.status}). Please try again or call (720) 357-9499.`
+        );
       }
     } catch (error) {
       console.error('❌ Booking submission error:', error);
