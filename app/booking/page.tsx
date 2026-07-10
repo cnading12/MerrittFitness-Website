@@ -1419,7 +1419,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Full-Floor Mat:</strong> Our roll-out mat that fills the main hall is $100 per booking — our team sets it up and breaks it down within your reserved time. Included free for partners, who handle their own setup and breakdown.</span>
+                  <span><strong>Roll-Out Mat:</strong> Our roll-out mat can fill the entire main hall. Whether you use just a section or the whole floor, the cost is the same $100 per booking. Our team handles the setup for you, but it must happen during your booked event time — expect about 30 minutes. Included free for partners, who handle their own setup and breakdown.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -1891,13 +1891,14 @@ export default function BookingPage() {
                       );
                     })()}
 
-                    {/* Full-floor mat rental. $100/booking — covers our staff setting
-                        up and breaking down the mat — unless the renter is a partner
-                        (MerrittMagic), in which case it's free but self-serviced. Either
-                        way the setup/breakdown happens within the booked window. */}
+                    {/* Roll-out mat rental. Flat $100/booking whether the renter uses
+                        one section or the full floor — covers our staff setting up the
+                        mat (~30 min, inside the booked window) — unless the renter is a
+                        partner (MerrittMagic), in which case it's free but self-serviced.
+                        Either way setup/breakdown happens within the booked window. */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Full-Floor Mat
+                        Roll-Out Mat
                       </label>
                       <label className="flex items-center">
                         <input
@@ -1907,7 +1908,7 @@ export default function BookingPage() {
                           className="mr-3 text-[#735e59]"
                         />
                         <span>
-                          Rent the full-floor roll-out mat{' '}
+                          Rent the roll-out mat{' '}
                           {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
                             ? '(included with partnership)'
                             : '(+$100)'}
@@ -1915,8 +1916,8 @@ export default function BookingPage() {
                       </label>
                       <p className="text-xs text-gray-500 mt-2">
                         {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
-                          ? 'Included at no charge for partners. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.'
-                          : 'A traditional roll-out mat that fills the main hall — great for martial arts, yoga, and sound baths. The $100 fee includes our team setting it up and breaking it down, all within your reserved time.'}
+                          ? 'Our roll-out mat can fill the entire main hall — use just a section or the whole floor. Included at no charge for partners. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.'
+                          : 'Our roll-out mat can fill the entire main hall — great for martial arts, yoga, and sound baths. Use just a section or the whole floor; the cost is the same $100. Our team handles setup for you, but it takes place during your booked event time — expect about 30 minutes.'}
                       </p>
                     </div>
 
@@ -2241,11 +2242,11 @@ export default function BookingPage() {
                 />
               </div>
 
-              {/* Full-floor mat — free for recurring partners. They handle their
+              {/* Roll-out mat — free for recurring partners. They handle their
                   own setup/breakdown, always within their reserved time. */}
               <div>
                 <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
-                  Full-Floor Mat
+                  Roll-Out Mat
                 </label>
                 <label className="flex items-center">
                   <input
@@ -2254,10 +2255,10 @@ export default function BookingPage() {
                     onChange={(e) => updateRecurringDetails('needsMat', e.target.checked)}
                     className="mr-3 text-[#735e59]"
                   />
-                  <span>Use the full-floor roll-out mat (included for partners)</span>
+                  <span>Use the roll-out mat (included for partners)</span>
                 </label>
                 <p className="text-xs text-[#6b5f5b] mt-2">
-                  The traditional roll-out mat that fills the main hall is included at no charge with your recurring partnership. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.
+                  Our roll-out mat can fill the entire main hall — use just a section or the whole floor. It&apos;s included at no charge with your recurring partnership. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.
                 </p>
               </div>
 
@@ -3253,14 +3254,14 @@ export default function BookingPage() {
 
                 {pricing.matRentalFee > 0 && (
                   <div className="flex justify-between text-indigo-600">
-                    <span>Full-Floor Mat{pricing.matRentalCount > 1 ? ` (×${pricing.matRentalCount})` : ''}</span>
+                    <span>Roll-Out Mat{pricing.matRentalCount > 1 ? ` (×${pricing.matRentalCount})` : ''}</span>
                     <span>+${pricing.matRentalFee.toFixed(2)}</span>
                   </div>
                 )}
 
                 {pricing.matWaived && (
                   <div className="flex justify-between text-green-600">
-                    <span>Full-Floor Mat (partner)</span>
+                    <span>Roll-Out Mat (partner)</span>
                     <span>Included</span>
                   </div>
                 )}
