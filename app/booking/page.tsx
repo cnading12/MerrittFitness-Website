@@ -139,63 +139,32 @@ export default function BookingPage() {
     'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true }
   };
 
-  // Business-focused event types
+  // Event types aligned with our four business focus areas
   const eventTypes = [
     {
-      id: 'yoga-class',
-      name: 'Yoga Classes',
-      description: 'Vinyasa, Hatha, Restorative, Hot Yoga',
-      icon: '🧘‍♀️',
-      popular: true
+      id: 'wellness',
+      name: 'Wellness',
+      description: 'Yoga, meditation, sound baths'
     },
     {
-      id: 'meditation',
-      name: 'Meditation & Mindfulness',
-      description: 'Guided meditation, breathwork, sound healing',
-      icon: '🕯️'
+      id: 'fitness-class',
+      name: 'Fitness Class',
+      description: 'Dance, martial arts, group fitness'
     },
     {
-      id: 'fitness',
-      name: 'Fitness Classes',
-      description: 'Pilates, barre, strength training, cardio',
-      icon: '💪'
-    },
-    {
-      id: 'martial-arts',
-      name: 'Martial Arts',
-      description: 'Judo, BJJ, wrestling, self-defense',
-      icon: '🥋',
-      popular: true
-    },
-    {
-      id: 'dance',
-      name: 'Dance Classes',
-      description: 'Contemporary, ballroom, salsa, hip-hop',
-      icon: '💃'
-    },
-    {
-      id: 'workshop',
-      name: 'Workshops & Seminars',
-      description: 'Educational events, team building',
-      icon: '📚'
-    },
-    {
-      id: 'therapy',
-      name: 'Therapy & Healing',
-      description: 'Art therapy, sound baths, energy work',
-      icon: '🌟'
+      id: 'social-event',
+      name: 'Social Event',
+      description: 'Fundraisers, markets, concerts'
     },
     {
       id: 'private-event',
-      name: 'Private Events',
-      description: 'Birthday parties, celebrations, retreats',
-      icon: '🎉'
+      name: 'Private Event',
+      description: 'Weddings, celebrations of life, parties'
     },
     {
       id: 'other',
-      name: 'Other Wellness Practice',
-      description: 'Tell us about your unique offering',
-      icon: '✨'
+      name: 'Other',
+      description: ''
     }
   ];
 
@@ -1670,18 +1639,18 @@ export default function BookingPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-[#4a3f3c] mb-2">
-                        Practice Type *
+                        Event Type *
                       </label>
                       <select
                         value={booking.eventType}
                         onChange={(e) => updateBooking(booking.id, 'eventType', e.target.value)}
                         className={getInputClassName(`booking_${index}_eventType`)}
                       >
-                        <option value="">Select your practice...</option>
+                        <option value="">Select event type...</option>
                         {eventTypes.map(type => (
                           <option key={type.id} value={type.id}>
-                            {type.icon} {type.name}
-                            {type.popular ? ' (Popular!)' : ''}
+                            {type.name}
+                            {type.description ? ` (${type.description})` : ''}
                           </option>
                         ))}
                       </select>
@@ -2022,9 +1991,12 @@ export default function BookingPage() {
                     onChange={(e) => updateRecurringDetails('eventType', e.target.value)}
                     className={getInputClassName('recurring_eventType')}
                   >
-                    <option value="">Select a type...</option>
+                    <option value="">Select event type...</option>
                     {eventTypes.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                        {t.description ? ` (${t.description})` : ''}
+                      </option>
                     ))}
                   </select>
                   {validationErrors.recurring_eventType && (
