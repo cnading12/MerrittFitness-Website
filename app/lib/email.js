@@ -1220,6 +1220,12 @@ const EMAIL_SEND_SPACING_MS = 600;
 //      (the free plan caps at 2 req/sec) clears instead of dropping the email.
 //   3. Throw on any unrecoverable error so the caller logs + records it
 //      instead of reporting a false success.
+//   4. Pass an Idempotency-Key on every send so a retry of a request whose
+//      email WAS actually accepted (delivered-but-response-lost) can never
+//      deliver a duplicate — Resend replays the original response instead.
+//      This is what stopped the "client received the onboarding email 4
+//      times" incident: without a key, every retry (and every Stripe webhook
+//      redelivery) is a brand-new email to Resend.
 const RESEND_MAX_ATTEMPTS = 4;
 
 function isRateLimitError(error) {
@@ -1235,17 +1241,35 @@ function isRateLimitError(error) {
     || message.includes('too many requests');
 }
 
-async function sendEmailWithRetry(payload, { label = 'email' } = {}) {
+// The Resend SDK never throws for network problems — fetch failures and
+// unparseable 5xx responses come back as `{ error: { name:
+// 'application_error', ... } }`. These are exactly the cases where the email
+// may have been accepted even though we never saw the response, so they are
+// only safe to retry when the send carries an idempotency key.
+function isTransientTransportError(error) {
+  if (!error) return false;
+  if (String(error.name || '').toLowerCase() !== 'application_error') return false;
+  const message = String(error.message || '').toLowerCase();
+  return message.includes('unable to fetch data')
+    || message.includes('internal server error');
+}
+
+async function sendEmailWithRetry(payload, { label = 'email', idempotencyKey = null } = {}) {
   let lastError = null;
+  const sendOptions = idempotencyKey ? { idempotencyKey } : {};
 
   for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt++) {
     let result;
     try {
-      result = await getResend().emails.send(payload);
+      result = await getResend().emails.send(payload, sendOptions);
     } catch (transportError) {
-      // Network/transport failure (SDK throws here, unlike API errors).
+      // Defensive: the current SDK reports transport failures via
+      // `result.error`, but keep this path in case a future version throws.
+      // Without an idempotency key a blind retry could double-send (the email
+      // may have been accepted before the response was lost), so only retry
+      // when the key makes the retry safe.
       lastError = transportError;
-      if (attempt < RESEND_MAX_ATTEMPTS) {
+      if (idempotencyKey && attempt < RESEND_MAX_ATTEMPTS) {
         const backoff = 1000 * Math.pow(2, attempt - 1);
         console.warn(`⚠️ [RESEND] ${label} transport error (attempt ${attempt}/${RESEND_MAX_ATTEMPTS}) — retrying in ${backoff}ms: ${transportError.message}`);
         await delay(backoff);
@@ -1269,11 +1293,42 @@ async function sendEmailWithRetry(payload, { label = 'email' } = {}) {
       continue;
     }
 
+    // Fetch/5xx failures: the email may or may not have been accepted. With an
+    // idempotency key the retry is safe (Resend dedupes); without one, give up
+    // rather than risk a duplicate.
+    if (idempotencyKey && isTransientTransportError(error) && attempt < RESEND_MAX_ATTEMPTS) {
+      const backoff = 1000 * Math.pow(2, attempt - 1);
+      console.warn(`⚠️ [RESEND] ${label} transport error (attempt ${attempt}/${RESEND_MAX_ATTEMPTS}) — retrying in ${backoff}ms: ${error.message}`);
+      await delay(backoff);
+      continue;
+    }
+
     // Non-retryable API error (bad request, invalid recipient, etc.).
     break;
   }
 
   throw new Error(`Resend send failed for ${label}: ${lastError?.message || 'Unknown error'}`);
+}
+
+// Stable Idempotency-Key for a booking email. Keys are stored by Resend for
+// 24h: any repeat of the same key within that window (wrapper retry, Stripe
+// webhook redelivery, the group loop re-attempting a once-per-group email on
+// a later booking) replays the original response instead of sending again.
+//
+// Scope choices matter:
+//   - per-booking emails (confirmation, manager notification) key on the
+//     booking id — each event date legitimately gets its own email.
+//   - once-per-GROUP emails (onboarding, public marketing) key on the
+//     master_booking_id so a re-attempt from a DIFFERENT booking in the same
+//     group still dedupes. This is what previously produced N onboarding
+//     emails for an N-date booking: each retried webhook invocation reset the
+//     in-memory "already sent" flag and re-sent it with the next booking.
+function emailIdempotencyKey(kind, booking) {
+  return `${kind}/${booking.id}`;
+}
+
+function groupEmailIdempotencyKey(kind, booking) {
+  return `${kind}/${booking.master_booking_id || booking.id}`;
 }
 
 // Read the two ops addresses from env at call time (not at module load) so
@@ -1369,7 +1424,10 @@ export async function sendBookingConfirmation(booking, { group } = {}) {
       to: [booking.email],
       replyTo: EMAIL_CONFIG.replyTo,
       ...template
-    }, { label: `booking confirmation ${booking.id}` });
+    }, {
+      label: `booking confirmation ${booking.id}`,
+      idempotencyKey: emailIdempotencyKey('booking-confirmation', booking),
+    });
 
     console.log('✅ Booking confirmation sent successfully:', result.data?.id);
     return result;
@@ -1406,7 +1464,10 @@ export async function sendManagerNotification(booking, { group } = {}) {
       console.warn('⚠️ Alcohol present but no COI found on booking', booking.id, '- manager email will flag it as missing.');
     }
 
-    const result = await sendEmailWithRetry(payload, { label: `manager notification ${booking.id}` });
+    const result = await sendEmailWithRetry(payload, {
+      label: `manager notification ${booking.id}`,
+      idempotencyKey: emailIdempotencyKey('manager-notification', booking),
+    });
 
     console.log('✅ Manager notification sent successfully:', result.data?.id);
     return result;
@@ -1422,12 +1483,18 @@ export async function sendClientOnboarding(booking) {
 
     const template = EMAIL_TEMPLATES.clientOnboarding(booking);
 
+    // Keyed on the GROUP, not the booking: the renter gets onboarding once no
+    // matter which booking in a multi-date group carries the send — including
+    // across retried webhook invocations.
     const result = await sendEmailWithRetry({
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.clientServicesEmail,
       ...template
-    }, { label: `client onboarding ${booking.id}` });
+    }, {
+      label: `client onboarding ${booking.id}`,
+      idempotencyKey: groupEmailIdempotencyKey('client-onboarding', booking),
+    });
 
     console.log('✅ Client onboarding email sent successfully:', result.data?.id);
     return result;
@@ -1460,7 +1527,12 @@ export async function sendPublicEventMarketing(booking) {
       ...template
     };
 
-    const result = await sendEmailWithRetry(payload, { label: `public-event marketing ${booking.id}` });
+    // Group-scoped key: the marketing email is once-per-group, same as
+    // onboarding.
+    const result = await sendEmailWithRetry(payload, {
+      label: `public-event marketing ${booking.id}`,
+      idempotencyKey: groupEmailIdempotencyKey('public-event-marketing', booking),
+    });
 
     console.log('✅ Public-event marketing email sent successfully:', result.data?.id);
     return result;
@@ -1484,7 +1556,12 @@ export async function sendRecurringSetupClient(booking) {
       ...template
     };
 
-    const result = await sendEmailWithRetry(payload, { label: `recurring setup client ${booking.id}` });
+    const result = await sendEmailWithRetry(payload, {
+      label: `recurring setup client ${booking.id}`,
+      // Guards the race between the client-driven finalize route and the
+      // setup_intent.succeeded webhook safety net both sending this email.
+      idempotencyKey: emailIdempotencyKey('recurring-setup-client', booking),
+    });
     console.log('✅ Recurring setup client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1509,7 +1586,10 @@ export async function sendRecurringSetupManager(booking) {
     if (attachments.length > 0) {
       payload.attachments = attachments;
     }
-    const result = await sendEmailWithRetry(payload, { label: `recurring setup manager ${booking.id}` });
+    const result = await sendEmailWithRetry(payload, {
+      label: `recurring setup manager ${booking.id}`,
+      idempotencyKey: emailIdempotencyKey('recurring-setup-manager', booking),
+    });
     console.log('✅ Recurring setup manager email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1594,7 +1674,12 @@ export async function sendMonthlyBillingClientEmail(args) {
     };
     if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
-    const result = await sendEmailWithRetry(payload, { label: `monthly billing client ${booking.id}` });
+    const result = await sendEmailWithRetry(payload, {
+      label: `monthly billing client ${booking.id}`,
+      // Month-scoped: the same booking legitimately gets one of these per
+      // billing cycle, but never two for the same cycle.
+      idempotencyKey: `monthly-billing-client/${booking.id}/${args?.year || ''}-${args?.month || ''}`,
+    });
     console.log('✅ Monthly billing client email sent:', result.data?.id);
     return result;
   } catch (error) {
@@ -1624,7 +1709,10 @@ export async function sendMonthlyBillingRollupEmail(args) {
       from: EMAIL_CONFIG.from,
       to: ops.addrs,
       ...template
-    }, { label: `monthly billing rollup ${args?.year || ''}-${args?.month || ''}` });
+    }, {
+      label: `monthly billing rollup ${args?.year || ''}-${args?.month || ''}`,
+      idempotencyKey: `monthly-billing-rollup/${args?.year || ''}-${args?.month || ''}`,
+    });
     console.log('✅ Monthly billing rollup sent:', result.data?.id);
     return result;
   } catch (error) {

@@ -42,6 +42,17 @@ prevent them:
    One-time bookings: once per group (`sendOnboarding` flag in
    `sendBookingEmails`). Recurring: sent inside `sendRecurringSetupEmails`.
 
+7. **Every send MUST carry a Resend Idempotency-Key** (the `idempotencyKey`
+   option on `sendEmailWithRetry`). The "once per group" flags in the webhook
+   loop are in-memory only — when the function dies mid-group and Stripe
+   redelivers the webhook, the retry resets them and re-sends the onboarding
+   email with the next booking in the group (a client once received it 4
+   times this way). Keys make every duplicate path safe: per-booking emails
+   key on `booking.id`; once-per-group emails (onboarding, public marketing)
+   key on `master_booking_id` so ANY booking in the group re-attempting the
+   send dedupes against the first. Resend stores keys for 24h and replays the
+   original response. `tests/email-idempotency.test.mjs` locks this in.
+
 ## Email architecture map
 
 - `app/lib/email.js` — templates + individual send functions + retry wrapper.
