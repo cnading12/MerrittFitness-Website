@@ -1,11 +1,12 @@
 import { createSecurePaymentIntent } from '../../../lib/stripe-config.js';
 import { getBooking } from '../../../lib/database.js';
 import { createClient } from '@supabase/supabase-js';
+import { lazyClient } from '../../../lib/lazy-client.js';
 
-const supabase = createClient(
+const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
-);
+));
 
 export async function POST(request) {
   const corsHeaders = {

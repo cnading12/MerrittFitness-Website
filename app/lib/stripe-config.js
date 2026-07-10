@@ -1,10 +1,11 @@
 import Stripe from 'stripe';
+import { lazyClient } from './lazy-client.js';
 
 // Initialize Stripe with your secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
-});
+}));
 
 // Payment configuration
 export const PAYMENT_CONFIG = {

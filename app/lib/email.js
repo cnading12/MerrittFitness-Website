@@ -5,7 +5,14 @@ import { Resend } from 'resend';
 import { isSponsoredBooking } from './calendar-flags.js';
 import { saturdayRateForWeekdayRate } from './booking-pricing.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Instantiated on first send, not at module load: the Resend constructor
+// throws without an API key, which breaks `next build` (page-data collection
+// imports this module) in environments where RESEND_API_KEY isn't set.
+let resendClient = null;
+function getResend() {
+  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
+}
 
 const EMAIL_CONFIG = {
   from: 'Merritt Wellness <clientservices@merrittwellness.net>',
@@ -1227,7 +1234,7 @@ async function sendEmailWithRetry(payload, { label = 'email' } = {}) {
   for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt++) {
     let result;
     try {
-      result = await resend.emails.send(payload);
+      result = await getResend().emails.send(payload);
     } catch (transportError) {
       // Network/transport failure (SDK throws here, unlike API errors).
       lastError = transportError;
