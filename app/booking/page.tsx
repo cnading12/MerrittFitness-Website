@@ -105,6 +105,9 @@ export default function BookingPage() {
     type: string;
     size: number;
   } | null>(null);
+  // Applies to the photo AFTER client-side compression, not the raw file the
+  // renter picks — modern phone/camera photos routinely exceed 8 MB but shrink
+  // to a few hundred KB once downscaled, so the raw size is never the blocker.
   const ID_PHOTO_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 
   // Certificate of Insurance (COI) for general liability incl. liquor — required
@@ -353,10 +356,20 @@ export default function BookingPage() {
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas unavailable');
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', IMAGE_JPEG_QUALITY);
-      const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
-      const size = Math.floor((base64Length * 3) / 4);
-      return { dataUrl, type: 'image/jpeg', size };
+      const encode = (quality: number) => {
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
+        const size = Math.floor((base64Length * 3) / 4);
+        return { dataUrl, type: 'image/jpeg', size };
+      };
+      let result = encode(IMAGE_JPEG_QUALITY);
+      // A 1600px JPEG at 0.8 quality almost never exceeds ~1.5 MB, but leave
+      // headroom under the 4 MB request ceiling for the rest of the payload
+      // (a COI upload may ride along in the same request).
+      if (result.size > 2 * 1024 * 1024) {
+        result = encode(0.6);
+      }
+      return result;
     } finally {
       URL.revokeObjectURL(objectUrl);
     }
@@ -465,7 +478,7 @@ export default function BookingPage() {
     } else if (!idPhoto.type.startsWith('image/')) {
       errors.idPhoto = 'ID photo must be an image file (JPG, PNG, HEIC, etc.)';
     } else if (idPhoto.size > ID_PHOTO_MAX_BYTES) {
-      errors.idPhoto = 'ID photo must be smaller than 8 MB';
+      errors.idPhoto = "Your ID photo couldn't be shrunk automatically. Please save it as a JPG or PNG and upload that instead.";
     }
 
     // Alcohol at the event is a required yes/no question. When the renter
@@ -1118,16 +1131,22 @@ export default function BookingPage() {
       return;
     }
 
-    if (file.size > ID_PHOTO_MAX_BYTES) {
-      setValidationErrors(prev => ({ ...prev, idPhoto: 'ID photo must be smaller than 8 MB' }));
-      setIdPhoto(null);
-      event.target.value = '';
-      return;
-    }
-
     try {
       // Downscale/re-encode so the photo fits within the request body limit.
+      // No size check on the raw file — big phone/camera photos compress down
+      // to a few hundred KB, so size only matters after preparation.
       const prepared = await prepareUploadedFile(file);
+      if (prepared.size > ID_PHOTO_MAX_BYTES) {
+        // Only reachable when the browser couldn't decode the image (e.g. HEIC
+        // outside Safari) and the untouched original is too large to send.
+        setValidationErrors(prev => ({
+          ...prev,
+          idPhoto: "We couldn't shrink that photo automatically. Please save it as a JPG or PNG and upload that instead."
+        }));
+        setIdPhoto(null);
+        event.target.value = '';
+        return;
+      }
       setIdPhoto(prepared);
       setValidationErrors(prev => {
         if (!prev.idPhoto) return prev;
@@ -1156,7 +1175,9 @@ export default function BookingPage() {
       return;
     }
 
-    if (file.size > COI_MAX_BYTES) {
+    // PDFs pass through unchanged, so their raw size is what gets sent. Images
+    // are compressed first, so their size is checked after preparation instead.
+    if (file.type === 'application/pdf' && file.size > COI_MAX_BYTES) {
       setValidationErrors(prev => ({ ...prev, coiDocument: 'COI must be smaller than 10 MB' }));
       setCoiDocument(null);
       event.target.value = '';
@@ -1166,6 +1187,15 @@ export default function BookingPage() {
     try {
       // Images are downscaled/re-encoded; PDFs pass through unchanged.
       const prepared = await prepareUploadedFile(file);
+      if (prepared.size > COI_MAX_BYTES) {
+        setValidationErrors(prev => ({
+          ...prev,
+          coiDocument: "We couldn't shrink that image automatically. Please save it as a JPG, PNG, or PDF and upload that instead."
+        }));
+        setCoiDocument(null);
+        event.target.value = '';
+        return;
+      }
       setCoiDocument(prepared);
       setValidationErrors(prev => {
         if (!prev.coiDocument) return prev;
