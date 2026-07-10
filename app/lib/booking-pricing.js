@@ -6,6 +6,8 @@
 // before this extraction — every rate, fee, threshold, and rounding rule is
 // preserved. The route now imports these helpers instead of redefining them.
 
+import { computeOccurrences } from './recurring-occurrences.js';
+
 // Pricing constants. Mirror the "Important Rental Information" copy on the
 // booking page. Changing any of these without updating the UI copy will create
 // a discrepancy between what the renter sees and what they're charged, so
@@ -47,6 +49,59 @@ export function hourlyRateFor(attendees, isSat = false) {
     : HOURLY_RATE + tier * RATE_TIER_INCREMENT;
 }
 
+// Recurring volume discount. A recurring schedule whose slots guarantee at
+// least 8 hours in EVERY calendar month (weekly slots land ≥4×, biweekly ≥2×,
+// monthly 1×) automatically bills 20% off the attendee-tiered hourly rate —
+// both the weekday and Saturday band rates. This mirrors the MerrittMagic
+// partnership discount (also 20% for 8+ hrs/month) but applies itself: no
+// promo code needed on the recurring application. The discount is decided
+// once at intake from the schedule and baked into the stored rates, so every
+// month bills at the discounted rate even in 5-week months.
+export const RECURRING_VOLUME_DISCOUNT = 0.20;
+export const RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS = 8;
+
+// Guaranteed minimum hours in any calendar month for a set of recurring
+// slots: weekly slots occur at least 4 times a month, biweekly at least
+// twice, monthly exactly once. Mirrors calculateMonthlyHourRange().min on the
+// booking page.
+export function recurringMonthlyMinHours(slots) {
+  if (!Array.isArray(slots)) return 0;
+  return slots.reduce((sum, slot) => {
+    const hours = parseFloat(slot?.durationHours) || 0;
+    const minOccurrences = slot?.frequency === 'weekly' ? 4
+      : slot?.frequency === 'biweekly' ? 2
+      : 1;
+    return sum + hours * minOccurrences;
+  }, 0);
+}
+
+// True iff a recurring schedule qualifies for the automatic 20% volume
+// discount: the slots guarantee 8+ hours every month.
+export function recurringVolumeDiscountApplies(slots) {
+  return recurringMonthlyMinHours(slots) >= RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS;
+}
+
+// Weekday + Saturday hourly rates for a recurring series: the attendee-tiered
+// band rate (same tiers as single events), with the 20% volume discount
+// applied when the schedule guarantees 8+ hrs/month. Returns both the billed
+// and undiscounted rates so UIs and emails can show the markdown.
+export function recurringRatesFor(attendees, slots) {
+  const undiscountedHourlyRate = hourlyRateFor(attendees, false);
+  const undiscountedSaturdayHourlyRate = hourlyRateFor(attendees, true);
+  const monthlyMinHours = recurringMonthlyMinHours(slots);
+  const volumeDiscountApplied =
+    monthlyMinHours >= RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS;
+  const factor = volumeDiscountApplied ? 1 - RECURRING_VOLUME_DISCOUNT : 1;
+  return {
+    hourlyRate: Math.round(undiscountedHourlyRate * factor * 100) / 100,
+    saturdayHourlyRate: Math.round(undiscountedSaturdayHourlyRate * factor * 100) / 100,
+    undiscountedHourlyRate,
+    undiscountedSaturdayHourlyRate,
+    volumeDiscountApplied,
+    monthlyMinHours,
+  };
+}
+
 // Recover the Saturday rate from a stored weekday band rate. Used by the
 // monthly invoicer for older recurring records persisted before the Saturday
 // rate was stored alongside the weekday rate.
@@ -71,6 +126,99 @@ export function recurringOccurrencesAmount(occurrences, weekdayRate, saturdayRat
     return sum + hours * rate;
   }, 0);
   return Math.round(total * 100) / 100;
+}
+
+// Server-side recurring intake pricing. The booking page shows an estimate,
+// but this is what actually gets persisted and billed — the API recomputes
+// everything from the schedule itself rather than trusting client-sent
+// numbers (matching how single events re-validate via
+// calculateAccuratePricing). Rates are attendee-tiered and carry the 20%
+// volume discount when the schedule qualifies (see recurringRatesFor).
+//
+// `schedule` = { slots, expectedAttendees, startDate, endDate?, exceptions?,
+// paymentPreference }. Returns the pricing object persisted into
+// recurring_details.pricing and echoed to the client.
+export function computeRecurringIntakePricing(schedule) {
+  const {
+    slots = [],
+    expectedAttendees,
+    startDate,
+    endDate = null,
+    exceptions = [],
+    paymentPreference = 'ach',
+  } = schedule || {};
+
+  const rates = recurringRatesFor(expectedAttendees, slots);
+  const rateForSlot = (slot) =>
+    Number(slot?.dayOfWeek) === 6 ? rates.saturdayHourlyRate : rates.hourlyRate;
+
+  // Weekly-average hours: biweekly slots contribute half, monthly ≈ 1/4.33.
+  const weeklyHours = slots.reduce((sum, slot) => {
+    const hours = parseFloat(slot?.durationHours) || 0;
+    const multiplier = slot?.frequency === 'weekly' ? 1
+      : slot?.frequency === 'biweekly' ? 0.5
+      : 1 / 4.33;
+    return sum + hours * multiplier;
+  }, 0);
+
+  // Monthly hour/charge bands: weekly slots land 4–5× per month, biweekly
+  // 2–3×, monthly exactly once. Saturday slots (dayOfWeek 6) use the Saturday
+  // band rate.
+  let monthlyMinHours = 0;
+  let monthlyMaxHours = 0;
+  let monthlyMinCharge = 0;
+  let monthlyMaxCharge = 0;
+  slots.forEach((slot) => {
+    const hours = parseFloat(slot?.durationHours) || 0;
+    const rate = rateForSlot(slot);
+    const [minOcc, maxOcc] = slot?.frequency === 'weekly' ? [4, 5]
+      : slot?.frequency === 'biweekly' ? [2, 3]
+      : [1, 1];
+    monthlyMinHours += hours * minOcc;
+    monthlyMaxHours += hours * maxOcc;
+    monthlyMinCharge += hours * minOcc * rate;
+    monthlyMaxCharge += hours * maxOcc * rate;
+  });
+
+  // First (possibly partial) month: expand the actual occurrences from the
+  // start date through month end with the same engine the monthly invoicer
+  // uses, honoring any skip/reschedule exceptions the renter already chose.
+  let firstMonthHours = 0;
+  let firstMonthCharge = 0;
+  const startMatch = typeof startDate === 'string' && startDate.match(/^(\d{4})-(\d{2})-\d{2}/);
+  if (startMatch) {
+    const occurrences = computeOccurrences({ slots }, Number(startMatch[1]), Number(startMatch[2]), {
+      startDate,
+      endDate,
+      exceptions,
+    });
+    firstMonthHours = occurrences.reduce((sum, occ) => sum + (Number(occ.hours) || 0), 0);
+    firstMonthCharge = recurringOccurrencesAmount(occurrences, rates.hourlyRate, rates.saturdayHourlyRate);
+  }
+
+  const firstMonthFee = paymentPreference === 'card'
+    ? Math.round(firstMonthCharge * (STRIPE_FEE_PERCENTAGE / 100))
+    : 0;
+
+  return {
+    weeklyHours,
+    monthlyMinHours,
+    monthlyMaxHours,
+    monthlyMinCharge: Math.round(monthlyMinCharge * 100) / 100,
+    monthlyMaxCharge: Math.round(monthlyMaxCharge * 100) / 100,
+    firstMonthHours,
+    firstMonthCharge,
+    firstMonthFee,
+    firstMonthTotal: Math.round((firstMonthCharge + firstMonthFee) * 100) / 100,
+    hourlyRate: rates.hourlyRate,
+    saturdayHourlyRate: rates.saturdayHourlyRate,
+    undiscountedHourlyRate: rates.undiscountedHourlyRate,
+    undiscountedSaturdayHourlyRate: rates.undiscountedSaturdayHourlyRate,
+    volumeDiscountApplied: rates.volumeDiscountApplied,
+    volumeDiscountPercent: rates.volumeDiscountApplied ? RECURRING_VOLUME_DISCOUNT * 100 : 0,
+    hasSaturdaySlot: slots.some((slot) => Number(slot?.dayOfWeek) === 6),
+    paymentPreference,
+  };
 }
 
 export const ON_SITE_ASSISTANCE_FEE = 35;          // First-hour onboarding/setup help (flat, once per submission)

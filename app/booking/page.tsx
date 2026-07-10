@@ -511,8 +511,10 @@ export default function BookingPage() {
           errors[`recurring_slot_${idx}_startTime`] = 'Start time is required';
         }
         const duration = parseFloat(slot.durationHours);
-        if (!slot.durationHours || isNaN(duration) || duration < 0.5) {
-          errors[`recurring_slot_${idx}_durationHours`] = 'Duration must be at least 30 minutes';
+        // The venue-wide 2-hour minimum per booking applies to each recurring
+        // occurrence too (mirrors RecurringSlotSchema on the server).
+        if (!slot.durationHours || isNaN(duration) || duration < 2) {
+          errors[`recurring_slot_${idx}_durationHours`] = 'Each event has a 2-hour minimum';
         } else if (!endsBy10PM(slot.startTime, slot.durationHours)) {
           errors[`recurring_slot_${idx}_durationHours`] = 'All events must end by 10 PM';
         }
@@ -850,6 +852,13 @@ export default function BookingPage() {
     }, 0);
   };
 
+  // Recurring volume discount (mirror app/lib/booking-pricing.js — the server
+  // recomputes and is the source of truth): a schedule whose slots guarantee
+  // at least 8 hours in EVERY month (weekly ≥4×, biweekly ≥2×, monthly 1×)
+  // automatically bills 20% off the attendee-tiered hourly rate.
+  const RECURRING_VOLUME_DISCOUNT = 0.20;
+  const RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS = 8;
+
   const calculateRecurringPricing = () => {
     const weeklyHours = calculateWeeklyHours();
     const monthlyRange = calculateMonthlyHourRange();
@@ -858,8 +867,13 @@ export default function BookingPage() {
     // Recurring billing is keyed to the typical guest band: a larger class is
     // billed at the higher tier. Slots that land on a Saturday (dayOfWeek 6)
     // carry the Saturday premium; every other day uses the weekday rate.
-    const recurringHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, false);
-    const saturdayHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, true);
+    // Schedules guaranteeing 8+ hrs/month get 20% off both band rates.
+    const undiscountedHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, false);
+    const undiscountedSaturdayHourlyRate = hourlyRateFor(recurringDetails.expectedAttendees, true);
+    const volumeDiscountApplied = monthlyRange.min >= RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS;
+    const discountFactor = volumeDiscountApplied ? 1 - RECURRING_VOLUME_DISCOUNT : 1;
+    const recurringHourlyRate = Math.round(undiscountedHourlyRate * discountFactor * 100) / 100;
+    const saturdayHourlyRate = Math.round(undiscountedSaturdayHourlyRate * discountFactor * 100) / 100;
     const hasSaturdaySlot = recurringSlots.some(slot => Number(slot.dayOfWeek) === 6);
     const rateForSlot = (slot) =>
       Number(slot.dayOfWeek) === 6 ? saturdayHourlyRate : recurringHourlyRate;
@@ -910,6 +924,9 @@ export default function BookingPage() {
       firstMonthTotal: firstMonthCharge + firstMonthFee,
       hourlyRate: recurringHourlyRate,
       saturdayHourlyRate,
+      undiscountedHourlyRate,
+      undiscountedSaturdayHourlyRate,
+      volumeDiscountApplied,
       hasSaturdaySlot,
       paymentPreference: recurringDetails.paymentPreference
     };
@@ -1404,6 +1421,10 @@ export default function BookingPage() {
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Saturday Rentals:</strong> $200/hour for 0–30 guests, $260/hour for 30–60, and $320/hour for 60+ (2-hour minimum).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Recurring Volume Discount:</strong> Recurring schedules that guarantee 8+ hours per month automatically receive 20% off the hourly rate (weekday and Saturday) — no promo code needed.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -2193,7 +2214,7 @@ export default function BookingPage() {
                         <input
                           type="number"
                           step="0.5"
-                          min="0.5"
+                          min="2"
                           max="12"
                           value={slot.durationHours}
                           onChange={(e) => updateRecurringSlot(slot.id, 'durationHours', e.target.value)}
@@ -3144,8 +3165,40 @@ export default function BookingPage() {
                     <span className="font-medium text-[#4a3f3c]">Weekly Hours</span>
                     <span className="text-xl font-bold text-[#735e59]">{recurringPricing.weeklyHours.toFixed(1)}</span>
                   </div>
-                  <p className="text-xs text-[#6b5f5b]">Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at ${recurringPricing.hourlyRate}/hr{recurringPricing.hasSaturdaySlot ? ` • $${recurringPricing.saturdayHourlyRate}/hr Saturdays` : ''}</p>
+                  <p className="text-xs text-[#6b5f5b]">
+                    Across {recurringSlots.length} recurring slot{recurringSlots.length === 1 ? '' : 's'} at{' '}
+                    {recurringPricing.volumeDiscountApplied && (
+                      <span className="line-through text-[#a08b84]">${recurringPricing.undiscountedHourlyRate}</span>
+                    )}
+                    {recurringPricing.volumeDiscountApplied ? ' ' : ''}${recurringPricing.hourlyRate}/hr
+                    {recurringPricing.hasSaturdaySlot ? (
+                      <>
+                        {' • '}
+                        {recurringPricing.volumeDiscountApplied && (
+                          <span className="line-through text-[#a08b84]">${recurringPricing.undiscountedSaturdayHourlyRate}</span>
+                        )}
+                        {recurringPricing.volumeDiscountApplied ? ' ' : ''}${recurringPricing.saturdayHourlyRate}/hr Saturdays
+                      </>
+                    ) : ''}
+                  </p>
                 </div>
+
+                {recurringPricing.volumeDiscountApplied ? (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <p className="text-sm font-medium text-emerald-900">🎉 20% Volume Discount Applied</p>
+                    <p className="text-xs text-emerald-800 mt-1">
+                      Your schedule guarantees {recurringPricing.monthlyMinHours}+ hours every month — recurring renters
+                      booking 8+ hours/month automatically get 20% off the hourly rate.
+                    </p>
+                  </div>
+                ) : recurringPricing.monthlyMinHours > 0 && (
+                  <div className="p-3 bg-[#faf8f5] border border-[#735e59]/10 rounded-xl">
+                    <p className="text-xs text-[#6b5f5b]">
+                      💡 Book 8+ hours per month and your hourly rate automatically drops 20%. Your current
+                      schedule guarantees {recurringPricing.monthlyMinHours} hour{recurringPricing.monthlyMinHours === 1 ? '' : 's'}/month.
+                    </p>
+                  </div>
+                )}
 
                 <div className="p-3 bg-white rounded-xl border border-[#735e59]/10">
                   <p className="text-sm font-medium text-[#4a3f3c] mb-2">Typical Monthly Charge</p>

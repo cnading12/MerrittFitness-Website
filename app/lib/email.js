@@ -536,6 +536,9 @@ const EMAIL_TEMPLATES = {
     const saturdayHourlyRate = details?.saturdayHourlyRate
       ?? details?.pricing?.saturdayHourlyRate
       ?? saturdayRateForWeekdayRate(hourlyRate);
+    // The stored rates already include the automatic 20% volume discount for
+    // schedules guaranteeing 8+ hrs/month — surface it, never re-apply it.
+    const volumeDiscountApplied = details?.pricing?.volumeDiscountApplied === true;
     const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
     const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
     const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
@@ -584,7 +587,7 @@ const EMAIL_TEMPLATES = {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
-                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}</td>
+                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: #059669; font-weight: 600;">(includes 20% volume discount — 8+ hrs/month)</span>' : ''}</td>
                 </tr>
               </table>
             </div>
@@ -635,6 +638,15 @@ const EMAIL_TEMPLATES = {
   recurringSetupManager: (booking) => {
     const details = parseRecurringDetails(booking.recurring_details);
     const slots = details?.slots || [];
+    const hourlyRate = details?.hourlyRate || details?.pricing?.hourlyRate || 95;
+    const hasSaturdaySlot = slots.some((s) => Number(s?.dayOfWeek) === 6);
+    const saturdayHourlyRate = details?.saturdayHourlyRate
+      ?? details?.pricing?.saturdayHourlyRate
+      ?? saturdayRateForWeekdayRate(hourlyRate);
+    // Stored rates already include the automatic 20% volume discount for
+    // schedules guaranteeing 8+ hrs/month — flag it so staff know why the
+    // rate is below the standard band.
+    const volumeDiscountApplied = details?.pricing?.volumeDiscountApplied === true;
     const monthlyMin = details?.monthlyMinCharge ?? details?.pricing?.monthlyMinCharge ?? null;
     const monthlyMax = details?.monthlyMaxCharge ?? details?.pricing?.monthlyMaxCharge ?? null;
     const firstMonthCharge = Number(details?.firstMonthCharge ?? booking.subtotal ?? 0);
@@ -661,6 +673,7 @@ const EMAIL_TEMPLATES = {
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td><td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td><td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td><td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td><td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: #059669; font-weight: 600;">(20% volume discount — 8+ hrs/month)</span>' : ''}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td><td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit' : 'Card (3% fee)'}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Expected attendees:</td><td style="padding: 8px 0; color: #111827;">${booking.expected_attendees || 'n/a'}</td></tr>
             </table>
