@@ -1193,6 +1193,13 @@ const EMAIL_TEMPLATES = {
 // Delay helper to avoid Resend free-plan rate limits (2 requests/second)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Spacing between consecutive sends. Resend's 2 req/sec cap needs ≥500ms, but
+// oversized sleeps burn the serverless function's maxDuration budget and are
+// how trailing emails historically got killed by the platform timeout before
+// they were ever sent. 600ms clears the rate limit with margin while keeping
+// the whole pipeline fast; sendEmailWithRetry backstops any transient 429.
+const EMAIL_SEND_SPACING_MS = 600;
+
 // The Resend SDK does NOT throw when the API rejects a send — it resolves to
 // `{ data: null, error: {...} }`. Only transport-level failures throw. That
 // means a rate-limit rejection (HTTP 429, `name: 'rate_limit_exceeded'`) comes
@@ -1432,12 +1439,11 @@ export async function sendPublicEventMarketing(booking) {
 
     const template = EMAIL_TEMPLATES.publicEventMarketing(booking);
 
-    // Copy ops so staff know to expect the renter's marketing materials.
-    const ops = getOpsEmails();
-
     // Public events are handled by the manager, so renter replies (and their
     // marketing materials) should land in the manager's inbox rather than
     // client services. Fall back to client services if no manager is configured.
+    // No staff BCC — staff only receive the booking notification email.
+    const ops = getOpsEmails();
     const replyTo = ops.manager || EMAIL_CONFIG.clientServicesEmail;
 
     const payload = {
@@ -1446,7 +1452,6 @@ export async function sendPublicEventMarketing(booking) {
       replyTo,
       ...template
     };
-    if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
     const result = await sendEmailWithRetry(payload, { label: `public-event marketing ${booking.id}` });
 
@@ -1463,22 +1468,14 @@ export async function sendRecurringSetupClient(booking) {
     console.log('📧 Sending recurring setup confirmation to:', booking.email);
     const template = EMAIL_TEMPLATES.recurringSetupClient(booking);
 
-    // Silently copy ops on every client-facing recurring billing email so
-    // staff see what the client sees without reaching back to the renter.
-    const ops = getOpsEmails();
-    if (ops.addrs.length === 0) {
-      console.warn('⚠️ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — sending recurring setup client email without BCC');
-    } else if (ops.addrs.length === 1) {
-      console.warn(`⚠️ Only one ops email configured — BCCing ${ops.addrs[0]} only on recurring setup client email`);
-    }
-
+    // No staff BCC — staff get their own recurring-setup notification and
+    // should receive nothing else.
     const payload = {
       from: EMAIL_CONFIG.from,
       to: [booking.email],
       replyTo: EMAIL_CONFIG.clientServicesEmail,
       ...template
     };
-    if (ops.addrs.length > 0) payload.bcc = ops.addrs;
 
     const result = await sendEmailWithRetry(payload, { label: `recurring setup client ${booking.id}` });
     console.log('✅ Recurring setup client email sent:', result.data?.id);
@@ -1514,29 +1511,48 @@ export async function sendRecurringSetupManager(booking) {
   }
 }
 
+// Client-facing emails first, staff notification LAST — if the function is
+// ever cut short (platform timeout, crash) the paying client loses nothing.
+// Recurring renters need the same onboarding email as one-time renters: the
+// facility walkthrough, lock-up procedure, and Wi-Fi apply to them just as
+// much, and their series is set up exactly once so it can't double-send.
 export async function sendRecurringSetupEmails(booking) {
-  const results = { clientEmail: null, managerEmail: null, publicMarketingEmail: null, errors: [] };
+  const results = {
+    clientEmail: null,
+    onboardingEmail: null,
+    publicMarketingEmail: null,
+    managerEmail: null,
+    errors: [],
+  };
   try {
     results.clientEmail = await sendRecurringSetupClient(booking);
   } catch (error) {
     results.errors.push(`Client email failed: ${error.message}`);
   }
-  await delay(1000);
+  await delay(EMAIL_SEND_SPACING_MS);
+
   try {
-    results.managerEmail = await sendRecurringSetupManager(booking);
+    results.onboardingEmail = await sendClientOnboarding(booking);
   } catch (error) {
-    results.errors.push(`Manager email failed: ${error.message}`);
+    results.errors.push(`Client onboarding email failed: ${error.message}`);
   }
+  await delay(EMAIL_SEND_SPACING_MS);
 
   // Public series get the collaborative-marketing email, sent once here as part
   // of the one-time setup so the renter receives it exactly once.
   if (isPublicBooking(booking)) {
-    await delay(1000);
     try {
       results.publicMarketingEmail = await sendPublicEventMarketing(booking);
     } catch (error) {
       results.errors.push(`Public-event marketing email failed: ${error.message}`);
     }
+    await delay(EMAIL_SEND_SPACING_MS);
+  }
+
+  try {
+    results.managerEmail = await sendRecurringSetupManager(booking);
+  } catch (error) {
+    results.errors.push(`Manager email failed: ${error.message}`);
   }
 
   if (!results.clientEmail && !results.managerEmail) {
@@ -1624,28 +1640,30 @@ export async function sendConfirmationEmails(booking) {
   try {
     console.log('📧 Sending confirmation emails for booking:', booking.id);
 
+    // Client-facing emails first, staff notification last — if the function is
+    // ever cut short, the paying client loses nothing.
     try {
       emailResults.customerConfirmation = await sendBookingConfirmation(booking);
     } catch (error) {
       emailResults.errors.push(`Customer email failed: ${error.message}`);
     }
 
-    // Delay to avoid Resend rate limit (2 requests/second on free plan)
-    await delay(1000);
-
-    try {
-      emailResults.managerNotification = await sendManagerNotification(booking);
-    } catch (error) {
-      emailResults.errors.push(`Manager email failed: ${error.message}`);
-    }
-
-    // Delay to avoid Resend rate limit (2 requests/second on free plan)
-    await delay(1000);
+    // Space sends to stay under the Resend rate limit (2 requests/second)
+    await delay(EMAIL_SEND_SPACING_MS);
 
     try {
       emailResults.clientOnboarding = await sendClientOnboarding(booking);
     } catch (error) {
       emailResults.errors.push(`Client onboarding email failed: ${error.message}`);
+    }
+
+    // Space sends to stay under the Resend rate limit (2 requests/second)
+    await delay(EMAIL_SEND_SPACING_MS);
+
+    try {
+      emailResults.managerNotification = await sendManagerNotification(booking);
+    } catch (error) {
+      emailResults.errors.push(`Manager email failed: ${error.message}`);
     }
 
     if (emailResults.customerConfirmation || emailResults.managerNotification || emailResults.clientOnboarding) {

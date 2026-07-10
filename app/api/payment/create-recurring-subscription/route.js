@@ -8,6 +8,12 @@
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 
+// CRITICAL: This route sends the recurring setup + onboarding emails inline.
+// Without this, Vercel's default (~10s) function timeout kills the handler
+// mid-pipeline and the later emails silently never send. Every route that
+// sends email MUST export a maxDuration.
+export const maxDuration = 60;
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',

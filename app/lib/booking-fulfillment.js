@@ -29,9 +29,14 @@ export function isPublicBooking(booking) {
   return booking?.is_public === true || booking?.is_public === 'public';
 }
 
-// Resend's free plan caps at ~2 requests/sec. Space individual sends out so a
-// group of bookings doesn't burst past the limit.
-const EMAIL_RATE_LIMIT_DELAY_MS = 1000;
+// Resend's free plan caps at ~2 requests/sec, so sends must be ≥500ms apart.
+// But every extra millisecond of sleep also eats into the serverless function's
+// maxDuration budget — a too-generous delay is exactly how the later emails in
+// the pipeline (onboarding, marketing) got killed by the platform timeout and
+// never reached clients. 600ms clears the rate limit with margin while keeping
+// large multi-event groups inside the route's maxDuration. sendEmailWithRetry
+// backstops any transient 429 anyway.
+const EMAIL_RATE_LIMIT_DELAY_MS = 600;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const supabase = createClient(
@@ -74,6 +79,11 @@ export async function ensureCalendarEvent(booking) {
 // sharing this booking's master_booking_id) so multi-event emails can spell out
 // "event X of N" and that the amount is the combined, charged-once total.
 // Returns an array of error strings (empty when everything sent).
+//
+// ORDER MATTERS: every client-facing email (confirmation, onboarding, public
+// marketing) goes out BEFORE the staff notification. If the function is ever
+// cut short (platform timeout, crash), the client — the person who just paid —
+// loses nothing; staff visibility is the acceptable casualty. Do not reorder.
 export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMarketing = false, group } = {}) {
   const errors = [];
 
@@ -86,14 +96,16 @@ export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMar
   }
   await delay(EMAIL_RATE_LIMIT_DELAY_MS);
 
-  try {
-    await sendManagerNotification(booking, { group });
-    console.log(`✅ [FULFILL] Manager notification sent for ${booking.id} (${booking.event_date})`);
-  } catch (err) {
-    console.error(`❌ [FULFILL] Manager notification failed for ${booking.id}:`, err.message);
-    errors.push(`manager:${booking.id}:${err.message}`);
+  if (sendOnboarding) {
+    try {
+      await sendClientOnboarding(booking);
+      console.log(`✅ [FULFILL] Client onboarding sent (once for group)`);
+    } catch (err) {
+      console.error(`❌ [FULFILL] Client onboarding failed:`, err.message);
+      errors.push(`onboarding:${booking.id}:${err.message}`);
+    }
+    await delay(EMAIL_RATE_LIMIT_DELAY_MS);
   }
-  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
 
   // Public events get the collaborative-marketing email (flyer + website +
   // social materials request). Sent once per group, like onboarding.
@@ -108,16 +120,15 @@ export async function sendBookingEmails(booking, { sendOnboarding, sendPublicMar
     await delay(EMAIL_RATE_LIMIT_DELAY_MS);
   }
 
-  if (sendOnboarding) {
-    try {
-      await sendClientOnboarding(booking);
-      console.log(`✅ [FULFILL] Client onboarding sent (once for group)`);
-    } catch (err) {
-      console.error(`❌ [FULFILL] Client onboarding failed:`, err.message);
-      errors.push(`onboarding:${booking.id}:${err.message}`);
-    }
-    await delay(EMAIL_RATE_LIMIT_DELAY_MS);
+  // Staff notification goes LAST — see the ordering note above.
+  try {
+    await sendManagerNotification(booking, { group });
+    console.log(`✅ [FULFILL] Manager notification sent for ${booking.id} (${booking.event_date})`);
+  } catch (err) {
+    console.error(`❌ [FULFILL] Manager notification failed for ${booking.id}:`, err.message);
+    errors.push(`manager:${booking.id}:${err.message}`);
   }
+  await delay(EMAIL_RATE_LIMIT_DELAY_MS);
 
   return errors;
 }

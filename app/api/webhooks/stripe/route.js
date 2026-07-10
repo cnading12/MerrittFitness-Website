@@ -22,6 +22,11 @@ const supabase = createClient(
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const preferredRegion = 'iad1';
+// CRITICAL: Without this, Vercel's default (~10s) function timeout kills the
+// handler mid-pipeline — the customer confirmation goes out but the onboarding
+// and marketing emails (sent later, spaced for Resend's rate limit) silently
+// never do. Every route that sends email MUST export a maxDuration.
+export const maxDuration = 60;
 
 export async function POST(request) {
   // SUPER VISIBLE LOGGING
