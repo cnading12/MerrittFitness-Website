@@ -22,6 +22,7 @@ import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from './lazy-client.js';
 
 import { computeOccurrences, summarizeOccurrences } from './recurring-occurrences.js';
+import { syncRecurringCalendarEvents } from './recurring-calendar.js';
 import {
   isSaturday,
   saturdayRateForWeekdayRate,
@@ -300,12 +301,26 @@ export async function processRecurringBooking({ booking, year, month, dryRun }) 
     console.error(`⚠️ Client email failed for booking ${bookingId}:`, err.message);
   }
 
+  // Roll the Google Calendar horizon forward: each cycle this books the month
+  // that just entered the 3-month window and re-attempts anything a previous
+  // sync failed to create. Deterministic event ids make the overlap with
+  // prior syncs a no-op (counted under alreadyExists). Best-effort — the
+  // invoice item above is the critical output and is already committed.
+  let calendarSync = null;
+  try {
+    calendarSync = await syncRecurringCalendarEvents(booking);
+  } catch (err) {
+    console.error(`⚠️ Calendar sync failed for booking ${bookingId}:`, err.message);
+  }
+
   return {
     status: 'succeeded',
     ...plan,
     stripeInvoiceItemId: invoiceItem.id,
     subscriptionCancelled,
     emailSent: Boolean(emailResult && !emailResult.error),
+    calendarEventsCreated: calendarSync ? calendarSync.created : null,
+    calendarEventsFailed: calendarSync ? calendarSync.failed : null,
   };
 }
 

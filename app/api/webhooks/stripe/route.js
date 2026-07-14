@@ -7,6 +7,7 @@ import { lazyClient } from '../../../lib/lazy-client.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { ensureCalendarEvent, sendBookingEmails, isPublicBooking } from '../../../lib/booking-fulfillment.js';
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
+import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js';
 
 // Initialize Stripe
 const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -500,18 +501,27 @@ async function handleSetupIntentSucceeded(setupIntent) {
     setupIntentId: setupIntent.id,
   });
 
-  if (alreadyDone) {
-    console.log('✅ [WEBHOOK] Recurring setup already complete — no action taken.');
-    return;
+  if (!alreadyDone) {
+    console.log('✅ [WEBHOOK] Recurring subscription created via webhook safety net');
+    try {
+      await sendRecurringSetupEmails(booking);
+      console.log('📧 [WEBHOOK] Recurring setup emails sent');
+    } catch (err) {
+      console.error('⚠️ [WEBHOOK] Recurring setup emails failed:', err.message);
+    }
+  } else {
+    console.log('✅ [WEBHOOK] Recurring setup already complete — emails skipped.');
   }
 
-  console.log('✅ [WEBHOOK] Recurring subscription created via webhook safety net');
-
+  // Book the recurring slots onto the Google Calendar ~3 months out. Runs on
+  // BOTH branches: even when the client-side finalize won the race, it may
+  // have died before its own calendar sync. Deterministic event ids make this
+  // a no-op for anything already on the calendar.
   try {
-    await sendRecurringSetupEmails(booking);
-    console.log('📧 [WEBHOOK] Recurring setup emails sent');
+    const calendarSync = await syncRecurringCalendarEvents(booking);
+    console.log('📅 [WEBHOOK] Recurring calendar sync:', calendarSync);
   } catch (err) {
-    console.error('⚠️ [WEBHOOK] Recurring setup emails failed:', err.message);
+    console.error('⚠️ [WEBHOOK] Recurring calendar sync failed (non-critical):', err.message);
   }
 }
 

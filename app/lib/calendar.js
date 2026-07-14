@@ -279,7 +279,20 @@ function nextIsoDate(iso) {
 }
 
 // COMPLETELY FIXED: Calendar event creation with proper timezone handling
-export async function createCalendarEvent(booking, includeAttendees = false) {
+//
+// options:
+//   eventId        — client-supplied Google event id (base32hex: [a-v0-9],
+//                    5-1024 chars). Passing a deterministic id makes creation
+//                    idempotent: re-inserting the same id fails with 409,
+//                    which callers treat as "already on the calendar". Used
+//                    by the recurring sync so webhook retries / monthly
+//                    re-syncs never duplicate an occurrence.
+//   recurringLabel — human label of the recurring slot (e.g. "Every
+//                    Wednesday 6:00 PM"). Marks the event as one occurrence
+//                    of a recurring booking and swaps the amount line for
+//                    "billed monthly" (per-occurrence dollar amounts don't
+//                    exist — the monthly invoicer computes them).
+export async function createCalendarEvent(booking, includeAttendees = false, options = {}) {
   try {
     console.log('📅 Creating calendar event for booking:', booking.id);
     console.log('📅 Event details:', {
@@ -382,20 +395,27 @@ export async function createCalendarEvent(booking, includeAttendees = false) {
       : booking.payment_method === 'ach' ? 'ACH'
       : booking.payment_method === 'pay-later' ? 'Pay later'
       : booking.payment_method || 'n/a';
-    const amountLine = sponsored
-      ? '$0.00 — Sponsored (no payment collected)'
-      : booking.total_amount != null
-        ? `$${Number(booking.total_amount).toFixed(2)} (${paymentLabel})`
-        : 'n/a';
+    const recurringLabel = options.recurringLabel || null;
+    const amountLine = recurringLabel
+      ? `Recurring rental — billed monthly (${paymentLabel})`
+      : sponsored
+        ? '$0.00 — Sponsored (no payment collected)'
+        : booking.total_amount != null
+          ? `$${Number(booking.total_amount).toFixed(2)} (${paymentLabel})`
+          : 'n/a';
+    const recurringLine = recurringLabel
+      ? `Recurring schedule: ${recurringLabel}\n`
+      : '';
 
     const event = {
-      summary: `🔒 ${titlePrefix}BOOKED: ${booking.event_name}`,
+      ...(options.eventId ? { id: options.eventId } : {}),
+      summary: `🔒 ${titlePrefix}BOOKED${recurringLabel ? ' (recurring)' : ''}: ${booking.event_name}`,
       description: `
 BOOKING CONFIRMED - This Time Slot is RESERVED
 
 ${flagBlock}Event: ${booking.event_name}
 Type: ${booking.event_type || 'Not specified'}
-Visibility: ${visibilityLine}
+${recurringLine}Visibility: ${visibilityLine}
 Organizer (event host): ${booking.contact_name}
 ${booking.business_name ? `Business: ${booking.business_name}\n` : ''}Email: ${booking.email}
 Phone: ${booking.phone || 'Not provided'}

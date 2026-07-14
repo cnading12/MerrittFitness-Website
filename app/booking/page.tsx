@@ -3476,7 +3476,7 @@ export default function BookingPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Schedule Conflicts Found</h2>
                 <p className="text-sm text-[#6b5f5b] mt-1">
-                  We found {recurringConflicts.length} {recurringConflicts.length === 1 ? 'date' : 'dates'} in the next 3 months where your time would overlap an existing booking. Choose how to handle each — you can skip the date, move it, or keep it as-is and we&apos;ll sort it out together. <span className="font-medium text-[#4a3f3c]">Billing happens monthly on the 1st, so skipped dates are simply not billed.</span>
+                  We found {recurringConflicts.length} {recurringConflicts.length === 1 ? 'date' : 'dates'} in the next 3 months where your time would overlap an existing booking. For each date below you can <span className="font-medium text-[#4a3f3c]">cancel that week</span> (skip it — skipped dates are never billed) or <span className="font-medium text-[#4a3f3c]">move it to a different date</span>. If you&apos;d like help finding replacement dates, reach out to our manager at manager@merrittwellness.net or (720) 357-9499 and we&apos;ll work them out together. <span className="font-medium text-[#4a3f3c]">Billing happens monthly on the 1st, so skipped dates are simply not billed.</span>
                 </p>
               </div>
               <button
