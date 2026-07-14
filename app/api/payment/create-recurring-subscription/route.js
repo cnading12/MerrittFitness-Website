@@ -7,6 +7,7 @@
 
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
+import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js';
 
 // CRITICAL: This route sends the recurring setup + onboarding emails inline.
 // Without this, Vercel's default (~10s) function timeout kills the handler
@@ -43,6 +44,18 @@ export async function POST(request) {
         // Emails are best-effort — the subscription is real and will bill.
         console.error('⚠️ Recurring setup emails failed:', emailError);
       }
+    }
+
+    // Book the recurring slots onto the Google Calendar ~3 months out.
+    // Runs even when `alreadyDone` (a prior attempt may have died before
+    // reaching this step) — deterministic event ids make re-runs no-ops.
+    // AFTER emails on purpose: if the function is cut short, the client's
+    // emails must lose nothing, and the monthly cron re-syncs the calendar.
+    try {
+      const calendarSync = await syncRecurringCalendarEvents(booking);
+      console.log('📅 Recurring calendar sync:', calendarSync);
+    } catch (calendarError) {
+      console.error('⚠️ Recurring calendar sync failed (non-critical):', calendarError);
     }
 
     return Response.json(
