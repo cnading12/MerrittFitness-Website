@@ -388,7 +388,7 @@ export default function Home() {
                   { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
                   { emoji: "🎵", title: "Live Music & Sound Wellness", desc: "Sound baths, live acoustic performances, DJ sets, and ecstatic dance gatherings transform our historic venue into Denver's premier destination for sonic healing and conscious celebration." },
                   { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
-                  { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and professional sprung floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
+                  { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and wooden floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
                     <div key={index} className="flex items-start space-x-6 group">
                       <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/15 to-[#735e59]/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                         <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
