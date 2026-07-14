@@ -209,12 +209,14 @@ const RecurringSlotSchema = z.object({
 
 // Per-date overrides the renter chose during the conflict-resolution step.
 // `skip` drops a single occurrence from invoicing; `reschedule` swaps it to a
-// different date / time. Both are surfaced by /api/recurring-conflicts and
+// different date / time; `resolve_with_staff` drops the occurrence like `skip`
+// but flags it in the setup emails so staff follow up with the renter to find
+// a replacement date. All are surfaced by /api/recurring-conflicts and
 // persisted on the booking row inside recurring_details.exceptions.
 const RecurringExceptionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   slotIdx: z.number().int().min(0).optional().nullable(),
-  action: z.enum(['skip', 'reschedule']),
+  action: z.enum(['skip', 'reschedule', 'resolve_with_staff']),
   newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   newStartTime: z.string().regex(/^\d{1,2}:\d{2} (AM|PM)$/).optional().nullable(),
   reason: z.string().max(200).optional().default(''),

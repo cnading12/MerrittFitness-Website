@@ -3,7 +3,7 @@
 
 import { Resend } from 'resend';
 import { isSponsoredBooking } from './calendar-flags.js';
-import { saturdayRateForWeekdayRate } from './booking-pricing.js';
+import { saturdayRateForWeekdayRate, isSaturday } from './booking-pricing.js';
 import { recordEmailEvent } from './email-log.js';
 
 // Instantiated on first send, not at module load: the Resend constructor
@@ -67,6 +67,87 @@ function describeSlot(slot) {
   const day = DAY_LABELS[Number(slot.dayOfWeek)] || 'Day';
   const freq = slot.frequency === 'weekly' ? 'Every' : slot.frequency === 'biweekly' ? 'Every other' : 'Once a month on';
   return `${freq} ${day} at ${slot.startTime} for ${slot.durationHours} hrs`;
+}
+
+// Schedule exceptions the renter recorded during the conflict-resolution step
+// (recurring_details.exceptions). Both recurring setup emails surface them:
+// the client email confirms what they chose, and the manager email flags any
+// 'resolve_with_staff' date for follow-up — those renters are waiting to hear
+// from us, and the conflicting date was dropped from billing until a
+// replacement is worked out.
+function partitionExceptions(details) {
+  const exceptions = Array.isArray(details?.exceptions) ? details.exceptions : [];
+  return {
+    skipped: exceptions.filter((ex) => ex?.action === 'skip' && ex.date),
+    rescheduled: exceptions.filter((ex) => ex?.action === 'reschedule' && ex.date && ex.newDate),
+    resolveWithStaff: exceptions.filter((ex) => ex?.action === 'resolve_with_staff' && ex.date),
+  };
+}
+
+// Client-facing "Schedule Adjustments" block. Empty string when the renter
+// recorded no exceptions.
+function renderClientScheduleAdjustments(details, { saturdayHourlyRate, hourlyRate } = {}) {
+  const { skipped, rescheduled, resolveWithStaff } = partitionExceptions(details);
+  if (!skipped.length && !rescheduled.length && !resolveWithStaff.length) return '';
+
+  const items = [
+    ...rescheduled.map((ex) => {
+      const satNote = isSaturday(ex.newDate) && saturdayHourlyRate
+        ? ` <span style="color: #b45309;">(Saturday — billed at the $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturday rate${hourlyRate ? ` instead of $${Number(hourlyRate).toFixed(0)}/hr` : ''})</span>`
+        : '';
+      return `<li><strong>${formatBillingDate(ex.date)}</strong> moved to <strong>${formatBillingDate(ex.newDate)}</strong>${ex.newStartTime ? ` at ${ex.newStartTime}` : ''}.${satNote}</li>`;
+    }),
+    ...skipped.map((ex) =>
+      `<li><strong>${formatBillingDate(ex.date)}</strong> skipped — this date is not reserved for you and will not be billed.</li>`),
+    ...resolveWithStaff.map((ex) =>
+      `<li><strong>${formatBillingDate(ex.date)}</strong> — we'll reach out to find a replacement date together. The original date stays with the existing booking (it is not reserved for you) and will not be billed.</li>`),
+  ];
+
+  return `
+            <div style="background: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #9a3412; margin: 0 0 10px 0; font-size: 16px;">Schedule Adjustments</h3>
+              <p style="margin: 0 0 10px 0; color: #431407; line-height: 1.6;">
+                A few dates in your schedule overlapped existing bookings. Here's how each one was resolved:
+              </p>
+              <ul style="margin: 0; padding-left: 20px; color: #431407; line-height: 1.8;">
+                ${items.join('')}
+              </ul>
+            </div>`;
+}
+
+// Staff-facing exceptions block. Leads with the resolve_with_staff dates,
+// which need someone to contact the renter — that's the whole point of the
+// option, so make it impossible to miss.
+function renderManagerScheduleAdjustments(details, booking) {
+  const { skipped, rescheduled, resolveWithStaff } = partitionExceptions(details);
+  if (!skipped.length && !rescheduled.length && !resolveWithStaff.length) return '';
+
+  const followUp = resolveWithStaff.length ? `
+          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #b91c1c; margin: 0 0 8px 0;">⚠️ Action needed — contact the renter</h3>
+            <p style="margin: 0 0 8px 0; color: #7f1d1d;">
+              The renter chose "resolve it with our team" for ${resolveWithStaff.length === 1 ? 'this date' : 'these dates'}. Each one was dropped from their schedule (not calendared, not billed) — reach out to ${booking.contact_name || 'the renter'} to work out a replacement:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; line-height: 1.8;">
+              ${resolveWithStaff.map((ex) => `<li><strong>${formatBillingDate(ex.date)}</strong></li>`).join('')}
+            </ul>
+          </div>` : '';
+
+  const otherItems = [
+    ...rescheduled.map((ex) =>
+      `<li><strong>${formatBillingDate(ex.date)}</strong> → renter moved it to <strong>${formatBillingDate(ex.newDate)}</strong>${ex.newStartTime ? ` at ${ex.newStartTime}` : ''}${isSaturday(ex.newDate) ? ' <span style="color: #b45309; font-weight: 600;">(Saturday — bills at the Saturday rate)</span>' : ''}</li>`),
+    ...skipped.map((ex) =>
+      `<li><strong>${formatBillingDate(ex.date)}</strong> → renter skipped this week (not billed)</li>`),
+  ];
+  const others = otherItems.length ? `
+          <div style="background: #fff7ed; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #9a3412; margin: 0 0 8px 0;">Conflict resolutions the renter made</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #431407; line-height: 1.8;">
+              ${otherItems.join('')}
+            </ul>
+          </div>` : '';
+
+  return `${followUp}${others}`;
 }
 
 // Format a dollar value for email display.
@@ -602,6 +683,8 @@ const EMAIL_TEMPLATES = {
             </div>
             ` : ''}
 
+            ${renderClientScheduleAdjustments(details, { saturdayHourlyRate, hourlyRate })}
+
             ${details?.needsMat ? `
             <div style="background: #eef2ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #3730a3; margin: 0 0 10px 0; font-size: 16px;">Full-Floor Mat</h3>
@@ -688,6 +771,8 @@ const EMAIL_TEMPLATES = {
             </ul>
           </div>
           ` : ''}
+
+          ${renderManagerScheduleAdjustments(details, booking)}
 
           ${details?.needsMat ? `
           <div style="background: #eef2ff; padding: 16px; border-radius: 8px; margin: 20px 0;">

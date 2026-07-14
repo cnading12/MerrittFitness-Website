@@ -32,7 +32,9 @@ const SlotSchema = z.object({
 const ExceptionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   slotIdx: z.number().int().min(0).optional().nullable(),
-  action: z.enum(['skip', 'reschedule']),
+  // 'resolve_with_staff' = the renter asked staff to find a replacement date
+  // together; the engine drops the occurrence exactly like 'skip'.
+  action: z.enum(['skip', 'reschedule', 'resolve_with_staff']),
   newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   newStartTime: z.string().regex(/^\d{1,2}:\d{2} (AM|PM)$/).optional().nullable(),
 });
