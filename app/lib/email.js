@@ -145,7 +145,7 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
         ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: '#7c3aed' })}
         ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: '#0d9488' })}
         ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: '#0f766e' })}
-        ${row(booking.promo_code ? `Discount (${booking.promo_code})` : 'Discount', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
+        ${row(booking.promo_code ? `Discount (${booking.promo_code})` : 'Extended booking discount (8+ hours)', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
         ${row('Subtotal', money(subtotal), { bold: true, border: true })}
         ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: '#ea580c' })}
         ${row(isGroup ? `Total (all ${groupContext.total} events)` : 'Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}

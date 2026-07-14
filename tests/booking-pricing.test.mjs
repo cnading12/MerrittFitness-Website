@@ -32,6 +32,8 @@ import {
   HOURLY_RATE,
   SATURDAY_RATE,
   ON_SITE_ASSISTANCE_FEE,
+  EXTENDED_BOOKING_DISCOUNT,
+  EXTENDED_BOOKING_DISCOUNT_MIN_HOURS,
   EVENT_SUPERVISION_RATE,
   TABLES_CHAIRS_FEE_SMALL,
   TABLES_CHAIRS_FEE_LARGE,
@@ -97,7 +99,6 @@ test('isPartnerPromoCode: MerrittMagic is the partnership (recurring-partner) co
 });
 
 test('isPartnerPromoCode: other codes and junk are not partner codes', () => {
-  assert.equal(isPartnerPromoCode('EXTENDED15'), false);
   assert.equal(isPartnerPromoCode('MerrittSponsor100'), false);
   assert.equal(isPartnerPromoCode(''), false);
   assert.equal(isPartnerPromoCode(null), false);
@@ -596,29 +597,68 @@ test('pricing: MerrittMagic discounts the pre-discount subtotal by 20% (partner 
   assert.equal(result.promoCode, 'MerrittMagic');
 });
 
-test('pricing: EXTENDED15 is rejected when total hours < 8', () => {
+// ---------- Automatic extended-booking discount (8+ hours, 10%, no code) ----------
+
+test('pricing: extended discount is 10% at an 8-hour minimum (constants locked)', () => {
+  // The booking-page copy advertises "8+ hours → 10% off automatically" — a
+  // constant change without a copy change is a user-visible discrepancy.
+  assert.equal(EXTENDED_BOOKING_DISCOUNT, 0.10);
+  assert.equal(EXTENDED_BOOKING_DISCOUNT_MIN_HOURS, 8);
+});
+
+test('pricing: no extended discount under 8 total hours', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 4, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'EXTENDED15'
+    ''
   );
   assert.equal(result.promoDiscount, 0);
+  assert.equal(result.extendedDiscountApplied, false);
   assert.equal(result.promoCode, '');
 });
 
-test('pricing: EXTENDED15 applies once total hours reaches 8 (not a partner code)', () => {
+test('pricing: 8+ total hours earn the 10% extended discount automatically — no code', () => {
   // First event, so the $35 onboarding fee applies: 8 * $95 + $35 = $795
-  // pre-discount, 15% = $119 (round(119.25)).
+  // pre-discount, 10% = $80 (round(79.5)).
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 5 }],
     { isFirstEvent: true, paymentMethod: 'ach' },
-    'EXTENDED15'
+    ''
   );
   assert.equal(result.isRecurringPartner, false);
   assert.equal(result.preDiscountSubtotal, 760 + 35);
-  assert.equal(result.promoDiscount, 119);
-  assert.equal(result.subtotal, 676);
-  assert.equal(result.promoCode, 'EXTENDED15');
+  assert.equal(result.promoDiscount, 80);
+  assert.equal(result.subtotal, 715);
+  assert.equal(result.extendedDiscountApplied, true);
+  assert.equal(result.promoCode, ''); // automatic — no code involved
+  assert.match(result.promoDescription, /Extended Booking Discount/);
+});
+
+test('pricing: extended discount does not stack with a promo code — the larger wins', () => {
+  // MerrittMagic (20%) on an 8-hour booking: the partner code beats the
+  // automatic 10%, and the two never combine to 30%.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 5 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.preDiscountSubtotal, 760); // exempt partner → no onboarding fee
+  assert.equal(result.promoDiscount, 152);       // 20% of 760, not 30%
+  assert.equal(result.promoCode, 'MerrittMagic');
+  assert.equal(result.extendedDiscountApplied, false);
+});
+
+test('pricing: the old EXTENDED15 code is retired (treated as invalid)', () => {
+  // 8 hours would earn the automatic discount anyway; the retired code itself
+  // must no longer validate or change the outcome.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 5 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'EXTENDED15'
+  );
+  assert.equal(result.promoCode, '');
+  assert.equal(result.extendedDiscountApplied, true);
+  assert.equal(result.promoDiscount, 76); // 10% of 760 — not 15%
 });
 
 test('pricing: invalid promo codes are silently ignored, not errored', () => {
@@ -637,7 +677,9 @@ test('pricing: invalid promo codes are silently ignored, not errored', () => {
 
 test('pricing: multi-booking sums hours and applies the onboarding fee once per submission', () => {
   // Three bookings on weekdays, first-event renter. The $35 onboarding fee is
-  // charged once for the whole submission (not per booking).
+  // charged once for the whole submission (not per booking). The 9 combined
+  // hours also cross the 8-hour threshold, so the automatic 10% extended
+  // discount applies to the whole submission.
   const result = calculateAccuratePricing(
     [
       { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 },
@@ -651,7 +693,11 @@ test('pricing: multi-booking sums hours and applies the onboarding fee once per 
   assert.equal(result.totalHours, 9);
   assert.equal(result.baseAmount, 9 * HOURLY_RATE);
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
-  assert.equal(result.subtotal, 9 * HOURLY_RATE + ON_SITE_ASSISTANCE_FEE);
+  const preDiscount = 9 * HOURLY_RATE + ON_SITE_ASSISTANCE_FEE; // $890
+  assert.equal(result.preDiscountSubtotal, preDiscount);
+  assert.equal(result.extendedDiscountApplied, true);
+  assert.equal(result.promoDiscount, Math.round(preDiscount * EXTENDED_BOOKING_DISCOUNT)); // $89
+  assert.equal(result.subtotal, preDiscount - 89);
 });
 
 test('pricing: mixed weekday + Saturday correctly applies surcharge only once', () => {

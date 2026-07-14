@@ -135,9 +135,17 @@ export default function BookingPage() {
     // coverage on repeat events — but everyone, partners included, pays on their
     // first event. Mirrors VALID_PROMO_CODES in app/lib/booking-pricing.js.
     'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-    'EXTENDED15': { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
     'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true }
   };
+
+  // Automatic extended-booking discount (mirrors app/lib/booking-pricing.js —
+  // the server is the source of truth and re-applies it at intake): single-event
+  // submissions totalling 8+ hours get 10% off automatically, no promo code
+  // needed. It never stacks with a promo code — the larger discount wins.
+  const EXTENDED_BOOKING_DISCOUNT = 0.10;
+  const EXTENDED_BOOKING_DISCOUNT_MIN_HOURS = 8;
+  const EXTENDED_BOOKING_DISCOUNT_DESCRIPTION =
+    `Extended Booking Discount (${EXTENDED_BOOKING_DISCOUNT * 100}% off, ${EXTENDED_BOOKING_DISCOUNT_MIN_HOURS}+ hours)`;
 
   // Event types aligned with our four business focus areas
   const eventTypes = [
@@ -765,13 +773,30 @@ export default function BookingPage() {
     let promoDiscount = 0;
     let promoDescription = '';
     let sponsored = false;
+    let promoCodeUsed = promoCodeApplied ? promoCode.trim() : '';
     if (promoCodeApplied && promoCode.trim() && VALID_PROMO_CODES[promoCode.trim()]) {
       const promoData = VALID_PROMO_CODES[promoCode.trim()];
-      // Enforce minimum hours requirement (e.g., EXTENDED15 requires 8+ hours)
+      // Enforce minimum hours requirement when a code carries one
       if (!promoData.minHours || totalHours >= promoData.minHours) {
         promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
         promoDescription = promoData.description;
         sponsored = promoData.sponsored === true;
+      }
+    }
+
+    // Automatic extended-booking discount: 8+ total hours → 10% off, no code
+    // needed. Never stacks with a promo code — the larger discount wins (all
+    // current codes are ≥ 10%, so a valid code keeps precedence). Mirrors
+    // calculateAccuratePricing in app/lib/booking-pricing.js.
+    let extendedDiscountApplied = false;
+    if (totalHours >= EXTENDED_BOOKING_DISCOUNT_MIN_HOURS) {
+      const extendedDiscount = Math.round(preDiscountSubtotal * EXTENDED_BOOKING_DISCOUNT);
+      if (extendedDiscount > promoDiscount) {
+        promoDiscount = extendedDiscount;
+        promoDescription = EXTENDED_BOOKING_DISCOUNT_DESCRIPTION;
+        promoCodeUsed = '';
+        sponsored = false;
+        extendedDiscountApplied = true;
       }
     }
 
@@ -803,8 +828,9 @@ export default function BookingPage() {
       preDiscountSubtotal,
       promoDiscount,
       promoDescription,
+      extendedDiscountApplied,
       sponsored,
-      promoCode: promoCodeApplied ? promoCode.trim() : '',
+      promoCode: promoCodeUsed,
       subtotal,
       stripeFee,
       total,
@@ -1421,6 +1447,10 @@ export default function BookingPage() {
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Saturday Rentals:</strong> $200/hour for 0–30 guests, $260/hour for 30–60, and $320/hour for 60+ (2-hour minimum).</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Extended Booking Discount:</strong> Book 8+ total hours in a single reservation and automatically save 10% — no promo code needed. Perfect for full-day events and multi-event bookings.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -3380,7 +3410,23 @@ export default function BookingPage() {
                   {pricing.promoDiscount > 0 && (
                     <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded-lg p-3">
                       <p className="text-green-800">
-                        <strong>🎉 Promo Applied:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} with code &quot;{pricing.promoCode}&quot;
+                        {pricing.extendedDiscountApplied ? (
+                          <>
+                            <strong>🎉 Extended Booking Discount:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} — bookings of {EXTENDED_BOOKING_DISCOUNT_MIN_HOURS}+ total hours automatically get {EXTENDED_BOOKING_DISCOUNT * 100}% off. No code needed.
+                          </>
+                        ) : (
+                          <>
+                            <strong>🎉 Promo Applied:</strong> You&apos;re saving ${pricing.promoDiscount.toFixed(2)} with code &quot;{pricing.promoCode}&quot;
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  {!pricing.extendedDiscountApplied && pricing.promoDiscount === 0 && pricing.totalHours > 0 && pricing.totalHours < EXTENDED_BOOKING_DISCOUNT_MIN_HOURS && (
+                    <div className="mt-3 text-xs bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                      <p className="text-emerald-800">
+                        <strong>💡 Save {EXTENDED_BOOKING_DISCOUNT * 100}%:</strong> Book {EXTENDED_BOOKING_DISCOUNT_MIN_HOURS}+ total hours and the Extended Booking Discount applies automatically — you&apos;re {EXTENDED_BOOKING_DISCOUNT_MIN_HOURS - pricing.totalHours} hour{EXTENDED_BOOKING_DISCOUNT_MIN_HOURS - pricing.totalHours !== 1 ? 's' : ''} away.
                       </p>
                     </div>
                   )}

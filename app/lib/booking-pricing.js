@@ -243,6 +243,19 @@ export const TABLES_CHAIRS_GROUP_THRESHOLD = 40;   // Attendee count that bumps 
 // it) so bookings can be stacked back-to-back.
 export const MAT_RENTAL_FEE = 100;                 // $/booking, waived for partners
 
+// Automatic extended-booking discount. Single-event submissions totalling 8+
+// hours get 10% off the pre-discount subtotal — applied automatically, no
+// promo code needed (this replaced the old EXTENDED15 promo code, which was
+// 15% and code-gated). It does NOT stack with promo codes: whichever single
+// discount is larger wins, and every current code (20% partner, 100%
+// sponsored) beats 10%, so a valid code always takes precedence. Advertised
+// in the "Important Rental Information" copy on the booking page — keep the
+// UI copy in sync when changing these.
+export const EXTENDED_BOOKING_DISCOUNT = 0.10;
+export const EXTENDED_BOOKING_DISCOUNT_MIN_HOURS = 8;
+export const EXTENDED_BOOKING_DISCOUNT_DESCRIPTION =
+  `Extended Booking Discount (${EXTENDED_BOOKING_DISCOUNT * 100}% off, ${EXTENDED_BOOKING_DISCOUNT_MIN_HOURS}+ hours)`;
+
 // Promo codes. These must stay in sync with the client-side dictionary in
 // app/booking/page.tsx — the server is the source of truth, but the UI shows
 // the discount before submit, so any drift is user-visible.
@@ -251,7 +264,6 @@ export const VALID_PROMO_CODES = {
   // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
   // coverage — except on their very first event, which everyone pays for.
   MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-  EXTENDED15: { discount: 0.15, description: 'Extended Booking Discount (15% off)', minHours: 8 },
   // Sponsored events: 100% off, zero fees, no payment collected. The renter is
   // never sent to checkout — the booking is confirmed immediately. The
   // `sponsored` flag is what the booking flow keys off of to skip payment and
@@ -352,6 +364,8 @@ export function endsBy10PM(startTime, hoursRequested) {
 //     included, pays on their first event. A renter on a repeat event may still
 //     opt in to the $35 onboarding help.
 //   * Promo discount applies to the pre-discount subtotal; minHours is enforced.
+//   * 8+ total hours automatically earn the 10% extended-booking discount (no
+//     code). Discounts never stack — the largest single discount wins.
 //   * Card adds a 3% surcharge; ACH does not.
 //
 // `clientPromoCode` is whatever the renter typed; we re-validate here rather
@@ -461,6 +475,21 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     }
   }
 
+  // Automatic extended-booking discount: 8+ total hours → 10% off, no code
+  // needed. Discounts never stack — the larger one wins, so a valid promo
+  // code (all currently ≥ 10%) keeps precedence over the automatic discount.
+  let extendedDiscountApplied = false;
+  if (totalHours >= EXTENDED_BOOKING_DISCOUNT_MIN_HOURS) {
+    const extendedDiscount = Math.round(preDiscountSubtotal * EXTENDED_BOOKING_DISCOUNT);
+    if (extendedDiscount > promoDiscount) {
+      promoDiscount = extendedDiscount;
+      promoDescription = EXTENDED_BOOKING_DISCOUNT_DESCRIPTION;
+      validatedPromoCode = '';
+      sponsored = false;
+      extendedDiscountApplied = true;
+    }
+  }
+
   const subtotal = preDiscountSubtotal - promoDiscount;
   const stripeFee = contactInfo.paymentMethod === 'card'
     ? Math.round(subtotal * (STRIPE_FEE_PERCENTAGE / 100))
@@ -487,6 +516,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     promoCode: validatedPromoCode,
     promoDiscount,
     promoDescription,
+    extendedDiscountApplied,
     sponsored,
     subtotal,
     stripeFee,
