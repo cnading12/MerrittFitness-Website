@@ -53,6 +53,29 @@ prevent them:
    send dedupes against the first. Resend stores keys for 24h and replays the
    original response. `tests/email-idempotency.test.mjs` locks this in.
 
+8. **Delivered ≠ sent.** The pipeline once sent flawlessly and clients still
+   didn't see the trailing emails: identical repeated content is a spam /
+   Gmail-thread-collapse magnet. Two invariants keep the content deliverable:
+   every send carries a plain-text part (auto-derived in `sendEmailWithRetry`
+   via `htmlToPlainText` — don't strip it), and the client emails whose
+   templates used to be identical for every booking (onboarding, marketing)
+   embed the event name + date in subject and body so no two bookings produce
+   byte-identical messages. `tests/client-email-delivery.test.mjs` locks both
+   in.
+
+9. **Every send outcome is recorded in the `email_events` table**
+   (`app/lib/email-log.js`; migration
+   `scripts/migrations/2026_add_email_events_table.sql`). Best-effort — a log
+   failure never blocks a send — but do not remove the logging: it is the only
+   durable evidence when a client reports a missing email. To diagnose one:
+   `GET /api/admin/email-status?bookingId=<id>` (header `x-admin-secret:
+   $ADMIN_API_SECRET`) lists every logged send for the booking AND asks Resend
+   for each message's live delivery state. Read it as: no row → the pipeline
+   died before that send; `failed` row → Resend rejected it (error included);
+   `sent` + `delivered` → it reached the client's mailbox, so check spam /
+   filters — not a code bug. `tests/email-observability.test.mjs` locks the
+   logging in.
+
 ## Email architecture map
 
 - `app/lib/email.js` — templates + individual send functions + retry wrapper.

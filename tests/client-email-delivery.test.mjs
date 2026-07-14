@@ -220,7 +220,56 @@ test('sendBookingEmails: staff never appear on client-facing sends', async () =>
   }
 });
 
-// ---------- 4. Email-sending routes must survive their whole pipeline ----------
+// ---------- 4. Deliverability: text parts + unique subjects ----------
+// The pipeline can send flawlessly and the client can STILL "not receive" an
+// email if it lands in spam or a collapsed Gmail thread. Two hard rules:
+//   a. Every email ships a plain-text part alongside the HTML (html-only
+//      messages score much worse with spam filters).
+//   b. The once-per-booking client emails must not be byte-identical across
+//      bookings: identical subject + identical body on repeat sends is a
+//      classic spam/promotions signal, and Gmail collapses same-subject
+//      threads — which is how "Resend sent it" became "client never saw it".
+
+test('every email in the booking pipeline carries a plain-text part', async () => {
+  sentEmails.length = 0;
+  await sendBookingEmails(sampleBooking, { sendOnboarding: true, sendPublicMarketing: true });
+
+  assert.equal(sentEmails.length, 4);
+  for (const payload of sentEmails) {
+    assert.ok(typeof payload.text === 'string' && payload.text.trim().length > 50,
+      `"${payload.subject}" must include a real plain-text part`);
+    assert.ok(!/<[a-z][^>]*>/i.test(payload.text),
+      `plain-text part of "${payload.subject}" must not contain HTML tags`);
+  }
+});
+
+test('onboarding and marketing subjects are unique per event', async () => {
+  sentEmails.length = 0;
+  await sendBookingEmails(sampleBooking, { sendOnboarding: true, sendPublicMarketing: true });
+  const otherBooking = {
+    ...sampleBooking,
+    id: 'booking_delivery_2',
+    event_name: 'Sound Bath',
+    event_date: '2026-06-20',
+  };
+  await sendBookingEmails(otherBooking, { sendOnboarding: true, sendPublicMarketing: true });
+
+  const onboardingSubjects = sentEmails
+    .filter((e) => /Welcome to Merritt Wellness/i.test(e.subject))
+    .map((e) => e.subject);
+  const marketingSubjects = sentEmails
+    .filter((e) => /promote/i.test(e.subject))
+    .map((e) => e.subject);
+
+  assert.equal(onboardingSubjects.length, 2);
+  assert.notEqual(onboardingSubjects[0], onboardingSubjects[1],
+    'onboarding subject must differ across different events');
+  assert.equal(marketingSubjects.length, 2);
+  assert.notEqual(marketingSubjects[0], marketingSubjects[1],
+    'marketing subject must differ across different events');
+});
+
+// ---------- 5. Email-sending routes must survive their whole pipeline ----------
 // Vercel's default function timeout is far shorter than the email pipeline
 // (calendar insert + N spaced sends). Any route that sends email without an
 // explicit maxDuration WILL drop trailing emails under load.

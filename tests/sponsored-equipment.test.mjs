@@ -70,23 +70,30 @@ function makeQuery(table) {
       return Promise.resolve({ data: updated, error: null });
     }
     if (ctx.op === 'insert') {
-      // Emulate PostgREST: reject the whole insert if any payload key targets
-      // a column the schema doesn't have (reported one column at a time).
-      for (const row of ctx.payload) {
-        const missing = Object.keys(row).find((k) => dbState.missingColumns.has(k));
-        if (missing) {
-          return Promise.resolve({
-            data: null,
-            error: {
-              code: 'PGRST204',
-              message: `Could not find the '${missing}' column of 'bookings' in the schema cache`,
-            },
-          });
+      // The missing-column emulation and the `inserts` attempt log exist to
+      // assert what the route sends to the BOOKINGS table. Other tables (the
+      // email_events delivery log) just accept rows so they don't pollute
+      // those assertions.
+      if (table === 'bookings') {
+        // Emulate PostgREST: reject the whole insert if any payload key targets
+        // a column the schema doesn't have (reported one column at a time).
+        for (const row of ctx.payload) {
+          const missing = Object.keys(row).find((k) => dbState.missingColumns.has(k));
+          if (missing) {
+            return Promise.resolve({
+              data: null,
+              error: {
+                code: 'PGRST204',
+                message: `Could not find the '${missing}' column of 'bookings' in the schema cache`,
+              },
+            });
+          }
         }
       }
       const inserted = [];
+      dbState[table] = dbState[table] || [];
       for (const row of ctx.payload) {
-        dbState.inserts.push({ ...row });
+        if (table === 'bookings') dbState.inserts.push({ ...row });
         dbState[table].push(row);
         inserted.push({ ...row });
       }

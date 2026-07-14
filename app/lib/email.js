@@ -4,6 +4,7 @@
 import { Resend } from 'resend';
 import { isSponsoredBooking } from './calendar-flags.js';
 import { saturdayRateForWeekdayRate } from './booking-pricing.js';
+import { recordEmailEvent } from './email-log.js';
 
 // Instantiated on first send, not at module load: the Resend constructor
 // throws without an API key, which breaks `next build` (page-data collection
@@ -727,8 +728,13 @@ const EMAIL_TEMPLATES = {
     };
   },
 
+  // Subject and intro carry the specific event: with a fixed subject and
+  // byte-identical body, every renter's onboarding email was an exact copy of
+  // every other one — Gmail threads repeats under one collapsed conversation
+  // and treats identical repeated content as a strong spam/promotions signal,
+  // which is how "sent by Resend" still ended up as "client never saw it".
   clientOnboarding: (booking) => ({
-    subject: `Welcome to Merritt Wellness — Important Info for Your Upcoming Event`,
+    subject: `Welcome to Merritt Wellness — Important Info for ${booking.event_name || 'Your Upcoming Event'}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -745,7 +751,7 @@ const EMAIL_TEMPLATES = {
               Hi ${booking.contact_name},
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
-              Thank you so much for booking your event at Merritt Wellness. We truly appreciate your business and are excited to host you in our space.
+              Thank you so much for booking <strong>${booking.event_name || 'your event'}</strong>${booking.event_date ? ` on ${formatEventDateShort(booking.event_date)}` : ''} at Merritt Wellness. We truly appreciate your business and are excited to host you in our space.
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
               Now that your booking is confirmed and payment and agreements are complete, we want to share a few important details to ensure everything runs smoothly leading up to—and during—your event.
@@ -900,7 +906,9 @@ const EMAIL_TEMPLATES = {
   // Events" feature, social media) and requests the materials we need from them
   // to execute each channel. Includes the logo in the header.
   publicEventMarketing: (booking) => ({
-    subject: `Let's promote ${booking.event_name} together — materials we need from you`,
+    // The date keeps repeat bookings of the same event name out of a single
+    // collapsed Gmail thread (see the clientOnboarding subject note).
+    subject: `Let's promote ${booking.event_name}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''} together — materials we need from you`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -1267,11 +1275,59 @@ function isTransientTransportError(error) {
     || message.includes('internal server error');
 }
 
-async function sendEmailWithRetry(payload, { label = 'email', idempotencyKey = null } = {}) {
+// Derive a plain-text body from an HTML email body. Every client-facing email
+// ships BOTH parts: HTML-only messages score significantly worse with Gmail /
+// Outlook spam filtering, and the trailing pipeline emails (onboarding,
+// marketing — content-heavy, link-heavy) are exactly the ones that were
+// reaching Resend but not the client's inbox. Best-effort conversion — layout
+// tables flatten to lines, links keep their visible text.
+export function htmlToPlainText(html) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '\n- ')
+    .replace(/<\/(p|div|tr|h[1-6]|ul|ol|table|li)>/gi, '\n')
+    .replace(/<td[^>]*>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&middot;/gi, '·')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#?\w{2,8};/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+async function sendEmailWithRetry(payload, { label = 'email', idempotencyKey = null, kind = null, booking = null } = {}) {
   let lastError = null;
   const sendOptions = idempotencyKey ? { idempotencyKey } : {};
 
+  // Always include a plain-text alternative alongside the HTML part — a major
+  // spam-score factor for the content-heavy client emails (see htmlToPlainText).
+  if (payload.html && !payload.text) {
+    payload = { ...payload, text: htmlToPlainText(payload.html) };
+  }
+
+  // Common fields for the durable email_events log (see app/lib/email-log.js).
+  // `kind`/`booking` are optional — sends without them still log under `label`.
+  const logBase = {
+    bookingId: booking?.id ?? null,
+    masterBookingId: booking?.master_booking_id ?? null,
+    kind: kind || label,
+    recipient: Array.isArray(payload.to) ? payload.to.join(', ') : (payload.to ?? null),
+    idempotencyKey,
+  };
+
+  let attemptsUsed = 0;
   for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt++) {
+    attemptsUsed = attempt;
     let result;
     try {
       result = await getResend().emails.send(payload, sendOptions);
@@ -1293,6 +1349,12 @@ async function sendEmailWithRetry(payload, { label = 'email', idempotencyKey = n
 
     const error = result?.error;
     if (!error) {
+      await recordEmailEvent({
+        ...logBase,
+        status: 'sent',
+        resendId: result.data?.id ?? null,
+        attempts: attempt,
+      });
       return result;
     }
 
@@ -1320,6 +1382,12 @@ async function sendEmailWithRetry(payload, { label = 'email', idempotencyKey = n
     break;
   }
 
+  await recordEmailEvent({
+    ...logBase,
+    status: 'failed',
+    attempts: attemptsUsed,
+    errorMessage: lastError?.message || 'Unknown error',
+  });
   throw new Error(`Resend send failed for ${label}: ${lastError?.message || 'Unknown error'}`);
 }
 
@@ -1440,6 +1508,8 @@ export async function sendBookingConfirmation(booking, { group } = {}) {
     }, {
       label: `booking confirmation ${booking.id}`,
       idempotencyKey: emailIdempotencyKey('booking-confirmation', booking),
+      kind: 'booking-confirmation',
+      booking,
     });
 
     console.log('✅ Booking confirmation sent successfully:', result.data?.id);
@@ -1480,6 +1550,8 @@ export async function sendManagerNotification(booking, { group } = {}) {
     const result = await sendEmailWithRetry(payload, {
       label: `manager notification ${booking.id}`,
       idempotencyKey: emailIdempotencyKey('manager-notification', booking),
+      kind: 'manager-notification',
+      booking,
     });
 
     console.log('✅ Manager notification sent successfully:', result.data?.id);
@@ -1507,6 +1579,8 @@ export async function sendClientOnboarding(booking) {
     }, {
       label: `client onboarding ${booking.id}`,
       idempotencyKey: groupEmailIdempotencyKey('client-onboarding', booking),
+      kind: 'client-onboarding',
+      booking,
     });
 
     console.log('✅ Client onboarding email sent successfully:', result.data?.id);
@@ -1545,6 +1619,8 @@ export async function sendPublicEventMarketing(booking) {
     const result = await sendEmailWithRetry(payload, {
       label: `public-event marketing ${booking.id}`,
       idempotencyKey: groupEmailIdempotencyKey('public-event-marketing', booking),
+      kind: 'public-event-marketing',
+      booking,
     });
 
     console.log('✅ Public-event marketing email sent successfully:', result.data?.id);
@@ -1574,6 +1650,8 @@ export async function sendRecurringSetupClient(booking) {
       // Guards the race between the client-driven finalize route and the
       // setup_intent.succeeded webhook safety net both sending this email.
       idempotencyKey: emailIdempotencyKey('recurring-setup-client', booking),
+      kind: 'recurring-setup-client',
+      booking,
     });
     console.log('✅ Recurring setup client email sent:', result.data?.id);
     return result;
@@ -1602,6 +1680,8 @@ export async function sendRecurringSetupManager(booking) {
     const result = await sendEmailWithRetry(payload, {
       label: `recurring setup manager ${booking.id}`,
       idempotencyKey: emailIdempotencyKey('recurring-setup-manager', booking),
+      kind: 'recurring-setup-manager',
+      booking,
     });
     console.log('✅ Recurring setup manager email sent:', result.data?.id);
     return result;
@@ -1692,6 +1772,8 @@ export async function sendMonthlyBillingClientEmail(args) {
       // Month-scoped: the same booking legitimately gets one of these per
       // billing cycle, but never two for the same cycle.
       idempotencyKey: `monthly-billing-client/${booking.id}/${args?.year || ''}-${args?.month || ''}`,
+      kind: 'monthly-billing-client',
+      booking,
     });
     console.log('✅ Monthly billing client email sent:', result.data?.id);
     return result;
@@ -1725,6 +1807,7 @@ export async function sendMonthlyBillingRollupEmail(args) {
     }, {
       label: `monthly billing rollup ${args?.year || ''}-${args?.month || ''}`,
       idempotencyKey: `monthly-billing-rollup/${args?.year || ''}-${args?.month || ''}`,
+      kind: 'monthly-billing-rollup',
     });
     console.log('✅ Monthly billing rollup sent:', result.data?.id);
     return result;
