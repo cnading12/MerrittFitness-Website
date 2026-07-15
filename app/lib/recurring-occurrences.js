@@ -97,8 +97,13 @@ function firstMatchingDayOnOrAfter(fromDateStr, targetDow) {
 // Exceptions (per-date overrides selected by the renter, typically to dodge a
 // calendar conflict) take this shape:
 //   { date: 'YYYY-MM-DD', slotIdx?: number, action: 'skip' }
+//   { date: 'YYYY-MM-DD', slotIdx?: number, action: 'resolve_with_staff' }
 //   { date: 'YYYY-MM-DD', slotIdx?: number, action: 'reschedule',
 //     newDate: 'YYYY-MM-DD', newStartTime?: 'H:MM AM/PM' }
+// `resolve_with_staff` means the renter asked staff to work out a replacement
+// date together. For billing and calendar purposes it behaves exactly like
+// `skip` — the conflicting occurrence is dropped and never invoiced — but the
+// distinct action lets the setup emails flag the date for staff follow-up.
 // `slotIdx` matches the original slot index; if omitted, the exception applies
 // to every slot landing on that date. Reschedules whose `newDate` falls in a
 // different month are dropped from THAT month's output and re-introduced when
@@ -216,8 +221,9 @@ export function computeOccurrences(pattern, year, month, options = {}) {
       filtered.push(occ);
       continue;
     }
-    if (matched.action === 'skip') {
-      // drop
+    if (matched.action === 'skip' || matched.action === 'resolve_with_staff') {
+      // drop — resolve_with_staff dates are never billed or calendared until
+      // staff record an actual replacement (as a reschedule or a new slot).
       continue;
     }
     if (matched.action === 'reschedule') {
@@ -266,7 +272,9 @@ function normalizeException(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const date = normalizeDateString(raw.date);
   if (!date) return null;
-  const action = raw.action === 'skip' || raw.action === 'reschedule' ? raw.action : null;
+  const action = raw.action === 'skip' || raw.action === 'reschedule' || raw.action === 'resolve_with_staff'
+    ? raw.action
+    : null;
   if (!action) return null;
   const slotIdx = (raw.slotIdx === null || raw.slotIdx === undefined)
     ? null

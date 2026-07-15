@@ -64,7 +64,11 @@ export default function BookingPage() {
   type RecurringException = {
     date: string;
     slotIdx: number | null;
-    action: 'skip' | 'reschedule';
+    // 'skip' = drop the week (never billed). 'reschedule' = renter picked a
+    // replacement date/time themselves. 'resolve_with_staff' = drop the week
+    // for now (never billed) and flag it for staff to work out a replacement
+    // with the renter — the conflicting date itself is never theirs.
+    action: 'skip' | 'reschedule' | 'resolve_with_staff';
     newDate?: string;
     newStartTime?: string;
     reason?: string;
@@ -1003,11 +1007,24 @@ export default function BookingPage() {
     });
   };
 
-  const clearException = (date: string, slotIdx: number | null) => {
-    setRecurringExceptions((prev) =>
-      prev.filter((e) => !(e.date === date && (e.slotIdx ?? null) === (slotIdx ?? null)))
-    );
-  };
+  // Exceptions ready to leave the browser. A reschedule whose replacement
+  // date hasn't been chosen yet is incomplete — omit it so the pre-submit
+  // scan re-flags the original date (and the server, whose schema rejects an
+  // empty newDate, never sees it).
+  const submittableExceptions = () =>
+    recurringExceptions.filter((e) => e.action !== 'reschedule' || !!e.newDate);
+
+  // A conflict row counts as resolved once the renter picked one of the three
+  // options (a reschedule also needs its replacement date chosen). The modal's
+  // submit button stays disabled until every row is resolved — keeping a
+  // conflicting date "as is" is not an option, because that date belongs to
+  // another booking and the renter will never receive it.
+  const unresolvedConflictCount = (recurringConflicts || []).filter((c) => {
+    const ex = getException(c.rescheduledFrom || c.date, c.slotIdx);
+    if (!ex) return true;
+    if (ex.action === 'reschedule') return !ex.newDate;
+    return false;
+  }).length;
 
   // Run the calendar conflict check for the proposed recurring schedule.
   // Returns true if the call succeeded, false otherwise. Sets the conflict
@@ -1028,7 +1045,7 @@ export default function BookingPage() {
             durationHours: parseFloat(s.durationHours) || 0,
             frequency: s.frequency,
           })),
-          exceptions: recurringExceptions,
+          exceptions: submittableExceptions(),
           horizonMonths: 3,
         }),
       });
@@ -1244,9 +1261,11 @@ export default function BookingPage() {
       : `${baseClassName} border-[#735e59]/20 focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]`;
   };
 
-  // `skipConflictCheck` lets the conflict modal's "Submit anyway" button
-  // bypass the pre-flight calendar scan after the renter has acknowledged
-  // their conflicts.
+  // `skipConflictCheck` is a safety valve that bypasses the pre-flight
+  // calendar scan. The conflict modal deliberately does NOT use it: its
+  // submit button re-runs the scan so a self-picked replacement date that
+  // itself collides with an existing booking is caught and surfaced before
+  // the application goes through.
   const handleSubmit = async (skipConflictCheck = false) => {
     setSubmitMessage('');
     setValidationErrors({});
@@ -1263,9 +1282,11 @@ export default function BookingPage() {
     }
 
     // Recurring applications get a calendar scan first. If conflicts are
-    // found we open the modal and stop here; the renter resolves each row
-    // (Skip / Move to / Keep), then clicks "Submit Anyway" to proceed with
-    // exceptions baked into the payload.
+    // found we open the modal and stop here; the renter resolves every row
+    // (Skip / Pick a new date / Resolve with staff) and re-submits. The
+    // re-submit runs this scan again with the exceptions applied, so a
+    // replacement date that collides re-opens the modal instead of slipping
+    // through — the renter never ends up holding a conflicting date.
     if (applicationType === 'recurring' && !skipConflictCheck) {
       const cleared = await runRecurringConflictCheck();
       if (!cleared) {
@@ -1318,7 +1339,7 @@ export default function BookingPage() {
               durationHours: parseFloat(s.durationHours) || 0,
               frequency: s.frequency
             })),
-            exceptions: recurringExceptions
+            exceptions: submittableExceptions()
           },
           pricing: recurringPricing,
           idPhoto: idPhotoPayload,
@@ -3510,10 +3531,13 @@ export default function BookingPage() {
 
       {/* ===== Recurring schedule conflict modal =====
           Surfaced after the renter clicks Submit on a recurring application
-          if the calendar scan finds overlaps in the next 3 months. Each row
-          can be Skipped (drop the occurrence) or Moved (reschedule to a new
-          date/time). "Submit Anyway" forwards the exceptions list with the
-          booking and the monthly invoicer honors them. */}
+          if the calendar scan finds overlaps in the next 3 months. The
+          conflicting date is never theirs — every row must be resolved one of
+          three ways before submitting: pick a replacement date themselves
+          (Saturdays allowed but bill at the Saturday rate), skip the week
+          (never billed), or hand it to staff to resolve together (dropped
+          from billing, flagged for follow-up). Submitting re-runs the
+          calendar scan so self-picked replacement dates are validated too. */}
       {conflictModalOpen && recurringConflicts && recurringConflicts.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
           <div className="bg-white rounded-3xl shadow-xl border border-[#735e59]/10 w-full max-w-3xl my-8">
@@ -3522,7 +3546,7 @@ export default function BookingPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-[#4a3f3c] font-serif">Schedule Conflicts Found</h2>
                 <p className="text-sm text-[#6b5f5b] mt-1">
-                  We found {recurringConflicts.length} {recurringConflicts.length === 1 ? 'date' : 'dates'} in the next 3 months where your time would overlap an existing booking. For each date below you can <span className="font-medium text-[#4a3f3c]">cancel that week</span> (skip it — skipped dates are never billed) or <span className="font-medium text-[#4a3f3c]">move it to a different date</span>. If you&apos;d like help finding replacement dates, reach out to our manager at manager@merrittwellness.net or (720) 357-9499 and we&apos;ll work them out together. <span className="font-medium text-[#4a3f3c]">Billing happens monthly on the 1st, so skipped dates are simply not billed.</span>
+                  We found {recurringConflicts.length} {recurringConflicts.length === 1 ? 'date' : 'dates'} in the next 3 months where your time would overlap an existing booking. <span className="font-medium text-[#4a3f3c]">Those dates are already reserved and can&apos;t be part of your schedule</span>, but you choose how to handle each one: <span className="font-medium text-[#4a3f3c]">pick a different date</span> that works for you that week (Saturdays are available too, but bill at the Saturday rate), <span className="font-medium text-[#4a3f3c]">skip that week</span> (skipped dates are never billed — billing happens monthly on the 1st), or <span className="font-medium text-[#4a3f3c]">have us resolve it together</span> — we&apos;ll reach out to find a replacement date with you.
                 </p>
               </div>
               <button
@@ -3537,14 +3561,21 @@ export default function BookingPage() {
 
             <div className="p-6 space-y-4 max-h-[55vh] overflow-y-auto">
               {recurringConflicts.map((c, idx) => {
-                const exception = getException(c.date, c.slotIdx);
-                const action = exception?.action ?? 'keep';
-                const niceDate = (() => {
-                  const [y, m, d] = c.date.split('-').map(Number);
+                // Exceptions are keyed on the ORIGINAL occurrence date. When a
+                // renter's self-picked replacement date itself conflicts, the
+                // re-scan reports it with `rescheduledFrom` set — editing that
+                // row must update the original exception, not create a second
+                // one keyed on the replacement date.
+                const exDate = c.rescheduledFrom || c.date;
+                const exception = getException(exDate, c.slotIdx);
+                const action = exception?.action ?? null;
+                const fmtDate = (iso: string) => {
+                  const [y, m, d] = iso.split('-').map(Number);
                   return new Date(y, m - 1, d).toLocaleDateString('en-US', {
                     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
                   });
-                })();
+                };
+                const niceDate = fmtDate(c.date);
                 const fmtMins = (mins: number) => {
                   const h24 = Math.floor(mins / 60);
                   const m = mins % 60;
@@ -3552,6 +3583,34 @@ export default function BookingPage() {
                   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
                   return `${h12}:${String(m).padStart(2, '0')} ${period}`;
                 };
+                const now = new Date();
+                const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                const newDateIsSaturday = action === 'reschedule' && isSaturday(exception?.newDate);
+                const optionButton = (
+                  label: string,
+                  targetAction: RecurringException['action'],
+                  extra: Partial<RecurringException> = {},
+                ) => (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setException({
+                        date: exDate,
+                        slotIdx: c.slotIdx,
+                        action: targetAction,
+                        reason: 'calendar conflict',
+                        ...extra,
+                      })
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                      action === targetAction
+                        ? 'bg-[#735e59] text-white border-[#735e59]'
+                        : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-[#735e59]/5'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
                 return (
                   <div key={`${c.date}-${c.slotIdx ?? 'all'}-${idx}`} className="border border-[#735e59]/10 rounded-2xl p-4 bg-[#faf8f5]">
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-2">
@@ -3561,108 +3620,103 @@ export default function BookingPage() {
                       </div>
                     </div>
                     <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
-                      Conflicts with <span className="font-medium">{c.conflictWith.summary}</span>
+                      {c.rescheduledFrom ? (
+                        <>The replacement date you picked for {fmtDate(c.rescheduledFrom)} also overlaps{' '}</>
+                      ) : (
+                        <>Conflicts with{' '}</>
+                      )}
+                      <span className="font-medium">{c.conflictWith.summary}</span>
                       {' '}({fmtMins(c.conflictWith.startMinutes)}–{fmtMins(c.conflictWith.endMinutes)})
+                      {c.rescheduledFrom ? ' — please choose a different date or option below.' : ''}
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => clearException(c.date, c.slotIdx)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          action === 'keep'
-                            ? 'bg-[#735e59] text-white border-[#735e59]'
-                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-[#735e59]/5'
-                        }`}
-                      >
-                        Keep as scheduled
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setException({
-                            date: c.date,
-                            slotIdx: c.slotIdx,
-                            action: 'skip',
-                            reason: 'calendar conflict',
-                          })
-                        }
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          action === 'skip'
-                            ? 'bg-red-600 text-white border-red-600'
-                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-red-50'
-                        }`}
-                      >
-                        Skip this date
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setException({
-                            date: c.date,
-                            slotIdx: c.slotIdx,
-                            action: 'reschedule',
-                            newDate: exception?.newDate || c.date,
-                            newStartTime: exception?.newStartTime || c.startTime || undefined,
-                            reason: 'calendar conflict',
-                          })
-                        }
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          action === 'reschedule'
-                            ? 'bg-[#735e59] text-white border-[#735e59]'
-                            : 'bg-white text-[#4a3f3c] border-[#735e59]/20 hover:bg-[#735e59]/5'
-                        }`}
-                      >
-                        Move to a different date
-                      </button>
+                      {optionButton('Pick a different date', 'reschedule', {
+                        newDate: exception?.newDate || '',
+                        newStartTime: exception?.newStartTime || c.startTime || undefined,
+                      })}
+                      {optionButton('Skip this week (not billed)', 'skip')}
+                      {optionButton('Resolve it with our team', 'resolve_with_staff')}
                     </div>
 
-                    {action === 'reschedule' && (
-                      <div className="mt-3 grid sm:grid-cols-2 gap-3">
-                        <label className="block">
-                          <span className="block text-xs text-[#6b5f5b] mb-1">New date</span>
-                          <input
-                            type="date"
-                            value={exception?.newDate || ''}
-                            onChange={(e) =>
-                              setException({
-                                date: c.date,
-                                slotIdx: c.slotIdx,
-                                action: 'reschedule',
-                                newDate: e.target.value,
-                                newStartTime: exception?.newStartTime || c.startTime || undefined,
-                                reason: 'calendar conflict',
-                              })
-                            }
-                            className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="block text-xs text-[#6b5f5b] mb-1">New start time</span>
-                          <select
-                            value={exception?.newStartTime || c.startTime || ''}
-                            onChange={(e) =>
-                              setException({
-                                date: c.date,
-                                slotIdx: c.slotIdx,
-                                action: 'reschedule',
-                                newDate: exception?.newDate || c.date,
-                                newStartTime: e.target.value,
-                                reason: 'calendar conflict',
-                              })
-                            }
-                            className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
-                          >
-                            {[
-                              '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
-                              '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
-                              '6:00 PM','7:00 PM','8:00 PM',
-                            ].map((t) => (
-                              <option key={t} value={t}>{t}</option>
-                            ))}
-                          </select>
-                        </label>
+                    {action === null && (
+                      <p className="mt-2 text-xs font-medium text-amber-700">
+                        Please choose an option — this date is already reserved, so it can&apos;t stay on your schedule as-is.
+                      </p>
+                    )}
+
+                    {action === 'resolve_with_staff' && (
+                      <div className="mt-3 text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                        Got it — our manager will reach out at the contact info on this application to find a replacement date together.
+                        In the meantime this week is left off your schedule: {niceDate} stays with the existing booking, and you won&apos;t be scheduled or billed for it.
                       </div>
+                    )}
+
+                    {action === 'reschedule' && (
+                      <>
+                        <p className="mt-3 text-xs text-[#6b5f5b]">
+                          Pick another day that works for you that week — or any other open date.
+                        </p>
+                        <div className="mt-2 grid sm:grid-cols-2 gap-3">
+                          <label className="block">
+                            <span className="block text-xs text-[#6b5f5b] mb-1">New date</span>
+                            <input
+                              type="date"
+                              min={todayIso}
+                              value={exception?.newDate || ''}
+                              onChange={(e) =>
+                                setException({
+                                  date: exDate,
+                                  slotIdx: c.slotIdx,
+                                  action: 'reschedule',
+                                  newDate: e.target.value,
+                                  newStartTime: exception?.newStartTime || c.startTime || undefined,
+                                  reason: 'calendar conflict',
+                                })
+                              }
+                              className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="block text-xs text-[#6b5f5b] mb-1">New start time</span>
+                            <select
+                              value={exception?.newStartTime || c.startTime || ''}
+                              onChange={(e) =>
+                                setException({
+                                  date: exDate,
+                                  slotIdx: c.slotIdx,
+                                  action: 'reschedule',
+                                  newDate: exception?.newDate || '',
+                                  newStartTime: e.target.value,
+                                  reason: 'calendar conflict',
+                                })
+                              }
+                              className="w-full p-2 border border-[#735e59]/20 rounded-lg text-sm focus:ring-2 focus:ring-[#735e59] focus:border-[#735e59]"
+                            >
+                              {[
+                                '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
+                                '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
+                                '6:00 PM','7:00 PM','8:00 PM',
+                              ].map((t) => (
+                                <option key={t} value={t}>{t}</option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        {!exception?.newDate && (
+                          <p className="mt-2 text-xs font-medium text-amber-700">
+                            Choose your replacement date to finish resolving this conflict.
+                          </p>
+                        )}
+                        {newDateIsSaturday && (
+                          <div className="mt-2 text-sm text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2">
+                            <span className="font-semibold">Heads up — that&apos;s a Saturday.</span>{' '}
+                            Saturdays bill at our Saturday rate of ${recurringPricing.saturdayHourlyRate}/hr instead of your usual ${recurringPricing.hourlyRate}/hr,
+                            so this date will be charged ${(recurringPricing.saturdayHourlyRate * c.durationHours).toFixed(2)} ({c.durationHours}h × ${recurringPricing.saturdayHourlyRate}/hr) on that month&apos;s invoice.
+                            Pick a weekday to keep your regular rate.
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 );
@@ -3671,7 +3725,9 @@ export default function BookingPage() {
 
             <div className="p-6 border-t border-[#735e59]/10 flex flex-wrap gap-3 justify-end items-center bg-[#faf8f5] rounded-b-3xl">
               <p className="text-xs text-[#6b5f5b] mr-auto">
-                We&apos;ll save your choices on this application. Skipped dates aren&apos;t billed; rescheduled dates take their place.
+                {unresolvedConflictCount > 0
+                  ? `${unresolvedConflictCount} ${unresolvedConflictCount === 1 ? 'date still needs' : 'dates still need'} a choice above before you can submit.`
+                  : 'We’ll save your choices on this application and double-check your new dates are open when you submit. Skipped and staff-resolved dates aren’t billed; rescheduled dates take their place.'}
               </p>
               <button
                 type="button"
@@ -3682,14 +3738,18 @@ export default function BookingPage() {
               </button>
               <button
                 type="button"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCheckingConflicts || unresolvedConflictCount > 0}
                 onClick={() => {
+                  // Deliberately NOT handleSubmit(true): re-running the scan
+                  // validates any self-picked replacement dates against the
+                  // calendar. If one still collides, the modal re-opens with
+                  // that row instead of submitting a conflicting schedule.
                   setConflictModalOpen(false);
-                  handleSubmit(true);
+                  handleSubmit();
                 }}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-[#735e59] text-white hover:bg-[#4a3f3c] disabled:opacity-60"
               >
-                {isSubmitting ? 'Submitting…' : 'Submit Application'}
+                {isSubmitting || isCheckingConflicts ? 'Submitting…' : 'Confirm Choices & Submit'}
               </button>
             </div>
           </div>
