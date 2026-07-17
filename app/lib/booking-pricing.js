@@ -264,11 +264,19 @@ export const VALID_PROMO_CODES = {
   // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
   // coverage — except on their very first event, which everyone pays for.
   MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-  // Sponsored events: 100% off, zero fees, no payment collected. The renter is
-  // never sent to checkout — the booking is confirmed immediately. The
-  // `sponsored` flag is what the booking flow keys off of to skip payment and
-  // what the calendar / emails use to label the reservation "Sponsored".
-  MerrittSponsor100: { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
+  // Fully sponsored events: 100% off, zero fees, no payment collected. The
+  // renter is never sent to checkout — the booking is confirmed immediately.
+  // The `sponsored` flag is what the booking flow keys off of to skip payment
+  // and what the calendar / emails use to label the reservation "Sponsored".
+  // (This fully-comped behavior used to live on MerrittSponsor100.)
+  COLESTEST: { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
+  // Venue-sponsored events where STAFFING is still billed: venue time, Saturday
+  // premium, equipment, and mat are all comped, but mandatory staff coverage is
+  // charged in full — the flat $35 first-hour onboarding for <40-attendee
+  // events (required on every sponsored event, even for returning renters), or
+  // $30/hr supervision for the ENTIRE event at 40+ attendees (e.g. 70 people
+  // for 4 hours = $120). Payment IS collected, so no `sponsored` flag here.
+  MerrittSponsor100: { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true },
 };
 
 // Codes that comp the entire booking (no payment, no card). Kept as a derived
@@ -297,6 +305,19 @@ export const PARTNER_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
 export function isPartnerPromoCode(code) {
   if (!code || typeof code !== 'string') return false;
   return PARTNER_PROMO_CODES.includes(code.trim());
+}
+
+// Codes that comp everything EXCEPT mandatory staff coverage (the sponsorship
+// code). Derived from the promo dictionary like the lists above.
+export const STAFFING_BILLED_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
+  .filter(([, data]) => data.staffingBilled === true)
+  .map(([code]) => code);
+
+// True iff `code` is a sponsorship code that still bills staffing (the $35
+// first-hour onboarding for small events / full-event supervision for 40+).
+export function isStaffingBilledPromoCode(code) {
+  if (!code || typeof code !== 'string') return false;
+  return STAFFING_BILLED_PROMO_CODES.includes(code.trim());
 }
 
 // True iff `dateString` (YYYY-MM-DD) lands on a Saturday in local time. Parses
@@ -401,6 +422,12 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   const exemptFromStaffCoverage =
     isRecurringPartner && contactInfo.isFirstEvent !== true;
 
+  // The staffing-billed sponsorship (MerrittSponsor100) comps everything except
+  // staff coverage — so staffing is always charged: small events carry the $35
+  // first-hour onboarding even for returning renters who didn't opt in, and 40+
+  // attendee events pay full-event supervision as usual.
+  const staffingBilledSponsor = isStaffingBilledPromoCode(clientPromoCode);
+
   bookings.forEach((booking) => {
     let hours = parseFloat(booking.hoursRequested) || 0;
     const isSat = isSaturday(booking.selectedDate);
@@ -448,10 +475,14 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
   // On-site (first-hour) onboarding assistance is mutually exclusive with the
   // supervisor and is a one-time first-event fee. Charge it once when no
-  // supervision applied AND either it's the renter's first event (required) or a
-  // returning renter opted in. Renters who have been to the space before are not
-  // charged unless they opt in.
-  if (eventSupervisionFee === 0 && (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance)) {
+  // supervision applied AND either it's the renter's first event (required), a
+  // returning renter opted in, or the booking is on the staffing-billed
+  // sponsorship code (staffing is mandatory on every sponsored event). Renters
+  // who have been to the space before are not charged unless they opt in.
+  if (
+    eventSupervisionFee === 0 &&
+    (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance || staffingBilledSponsor)
+  ) {
     onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
   }
 
@@ -468,7 +499,12 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     if (promoData.minHours && totalHours < promoData.minHours) {
       // Silently ignored: the client surfaces an error already.
     } else {
-      promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+      // Staffing-billed sponsorships discount everything EXCEPT staff
+      // coverage: the onboarding / supervision fees stay payable in full.
+      const discountBase = promoData.staffingBilled === true
+        ? preDiscountSubtotal - onsiteAssistanceFee - eventSupervisionFee
+        : preDiscountSubtotal;
+      promoDiscount = Math.round(discountBase * promoData.discount);
       promoDescription = promoData.description;
       validatedPromoCode = clientPromoCode;
       sponsored = promoData.sponsored === true;
@@ -518,6 +554,9 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     promoDescription,
     extendedDiscountApplied,
     sponsored,
+    // True when the applied code is the staffing-billed sponsorship — the
+    // subtotal is exactly the staff-coverage fee(s) and payment IS collected.
+    staffingBilledSponsor: staffingBilledSponsor && validatedPromoCode !== '',
     subtotal,
     stripeFee,
     total,
