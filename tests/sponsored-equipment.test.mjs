@@ -7,6 +7,9 @@
 // selected tables + chairs + mat, and the calendar event / confirmation email
 // showed "None requested" / "No" for all of them.
 //
+// The fully-comped code is COLESTEST (it took over the no-payment behavior
+// that used to live on MerrittSponsor100, which now bills staffing).
+//
 // We mock every external dependency (Supabase, Google Calendar, Resend,
 // Stripe) so both routes can be invoked end-to-end without network calls.
 //
@@ -283,7 +286,7 @@ async function fireWebhook(bookingId) {
 
 test('sponsored booking: equipment flags are persisted to the DB row', async () => {
   resetState();
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
   assert.equal(body.sponsored, true, 'booking should be recognized as sponsored');
@@ -298,7 +301,7 @@ test('sponsored booking: equipment flags are persisted to the DB row', async () 
 
 test('sponsored booking: calendar event lists tables, chairs, and mat', async () => {
   resetState();
-  await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
+  await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
 
   assert.equal(calendarInserts.length, 1, 'sponsored path must create the calendar event immediately');
   const description = calendarInserts[0].description;
@@ -309,7 +312,7 @@ test('sponsored booking: calendar event lists tables, chairs, and mat', async ()
 
 test('sponsored booking: confirmation + manager emails reflect the equipment selections', async () => {
   resetState();
-  await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
+  await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
 
   const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
   assert.ok(confirmation, `customer confirmation email should be sent; got subjects: ${sentEmails.map((e) => e.subject).join(' | ')}`);
@@ -328,7 +331,7 @@ test('partially-migrated DB: a missing UNRELATED column must not drop the equipm
   // ONLY the missing column — not the whole "newest columns" layer.
   dbState.missingColumns = new Set(['serving_alcohol']);
 
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
 
@@ -358,7 +361,7 @@ test('equipment columns missing entirely: sponsored calendar + emails still refl
     'needs_tables', 'needs_chairs', 'tables_chairs_fees', 'needs_mat', 'mat_rental_fee',
   ]);
 
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MerrittSponsor100' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
 

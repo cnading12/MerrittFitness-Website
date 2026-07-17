@@ -25,6 +25,8 @@ import {
   calculateAccuratePricing,
   findRecurringSlotConflicts,
   isPartnerPromoCode,
+  isSponsoredPromoCode,
+  isStaffingBilledPromoCode,
   rateTierFor,
   hourlyRateFor,
   saturdayRateForWeekdayRate,
@@ -595,6 +597,109 @@ test('pricing: MerrittMagic discounts the pre-discount subtotal by 20% (partner 
   assert.equal(result.promoDiscount, 38); // 20% of 190
   assert.equal(result.subtotal, 152);
   assert.equal(result.promoCode, 'MerrittMagic');
+});
+
+// ---------- COLESTEST (fully comped) + MerrittSponsor100 (staffing billed) ----------
+
+test('pricing: COLESTEST comps the entire booking — $0 total, sponsored', () => {
+  // COLESTEST took over the fully-comped behavior that used to live on
+  // MerrittSponsor100: 100% off everything, no payment collected.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-01-03', hoursRequested: 3, expectedAttendees: 60,
+       needsTables: true, needsChairs: true, needsMat: true }], // Saturday, all fees
+    { isFirstEvent: true, paymentMethod: 'card' },
+    'COLESTEST'
+  );
+  assert.equal(result.sponsored, true);
+  assert.equal(result.staffingBilledSponsor, false);
+  assert.equal(result.promoDiscount, result.preDiscountSubtotal); // 100% off
+  assert.equal(result.subtotal, 0);
+  assert.equal(result.stripeFee, 0);
+  assert.equal(result.total, 0);
+  assert.equal(result.promoCode, 'COLESTEST');
+  assert.equal(isSponsoredPromoCode('COLESTEST'), true);
+});
+
+test('pricing: MerrittSponsor100 is no longer fully comped — it bills staffing', () => {
+  assert.equal(isSponsoredPromoCode('MerrittSponsor100'), false);
+  assert.equal(isStaffingBilledPromoCode('MerrittSponsor100'), true);
+  assert.equal(isStaffingBilledPromoCode('COLESTEST'), false);
+});
+
+test('pricing: MerrittSponsor100 small event charges ONLY the $35 onboarding', () => {
+  // The worked example from the rules: a 15-person event pays exactly the $35
+  // onboarding — even for a returning renter who did not opt in, because
+  // staffing is the one thing the sponsorship does not cover.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 15 }],
+    { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittSponsor100'
+  );
+  assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.eventSupervisionFee, 0);
+  assert.equal(result.promoDiscount, result.preDiscountSubtotal - ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.subtotal, 35);
+  assert.equal(result.total, 35);
+  assert.equal(result.sponsored, false); // payment IS collected
+  assert.equal(result.staffingBilledSponsor, true);
+  assert.equal(result.promoCode, 'MerrittSponsor100');
+});
+
+test('pricing: MerrittSponsor100 large event charges ONLY full-event supervision', () => {
+  // The worked example from the rules: 70 people for 4 hours = 4 × $30 = $120.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 4, expectedAttendees: 70 }],
+    { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
+    'MerrittSponsor100'
+  );
+  assert.equal(result.eventSupervisionHours, 4);
+  assert.equal(result.eventSupervisionFee, 4 * EVENT_SUPERVISION_RATE); // $120
+  assert.equal(result.onsiteAssistanceFee, 0); // mutually exclusive with supervision
+  assert.equal(result.subtotal, 120);
+  assert.equal(result.total, 120);
+  assert.equal(result.sponsored, false);
+});
+
+test('pricing: MerrittSponsor100 comps equipment, mat, and Saturday premium — staffing still due', () => {
+  // Saturday, 20 attendees, tables + chairs + mat: everything except the $35
+  // onboarding is sponsored.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-01-03', hoursRequested: 2, expectedAttendees: 20,
+       needsTables: true, needsChairs: true, needsMat: true }],
+    { isFirstEvent: true, paymentMethod: 'ach' },
+    'MerrittSponsor100'
+  );
+  // Fees are computed normally, then the discount covers everything but staffing.
+  assert.equal(result.tablesChairsFees, 2 * TABLES_CHAIRS_FEE_SMALL);
+  assert.equal(result.matRentalFee, MAT_RENTAL_FEE);
+  assert.ok(result.saturdayCharges > 0);
+  assert.equal(result.subtotal, ON_SITE_ASSISTANCE_FEE);
+  assert.equal(result.total, ON_SITE_ASSISTANCE_FEE);
+});
+
+test('pricing: MerrittSponsor100 card payment adds the 3% fee on the staffing charge', () => {
+  // 4 hr, 70 attendees, card: $120 supervision + round(120 * 3%) = $124.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 4, expectedAttendees: 70 }],
+    { isFirstEvent: false, paymentMethod: 'card' },
+    'MerrittSponsor100'
+  );
+  assert.equal(result.subtotal, 120);
+  assert.equal(result.stripeFee, 4); // round(120 * 0.03)
+  assert.equal(result.total, 124);
+});
+
+test('pricing: MerrittSponsor100 beats the automatic extended discount on long bookings', () => {
+  // 8+ hours would earn the automatic 10%, but the sponsorship discount
+  // (100% of everything but staffing) is larger and wins — never stacking.
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 15 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittSponsor100'
+  );
+  assert.equal(result.extendedDiscountApplied, false);
+  assert.equal(result.promoCode, 'MerrittSponsor100');
+  assert.equal(result.subtotal, ON_SITE_ASSISTANCE_FEE);
 });
 
 // ---------- Automatic extended-booking discount (8+ hours, 10%, no code) ----------

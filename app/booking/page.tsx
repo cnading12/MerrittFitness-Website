@@ -139,7 +139,13 @@ export default function BookingPage() {
     // coverage on repeat events — but everyone, partners included, pays on their
     // first event. Mirrors VALID_PROMO_CODES in app/lib/booking-pricing.js.
     'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-    'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true }
+    // Fully comped — $0 total, no card, confirmed immediately (this behavior
+    // used to live on MerrittSponsor100).
+    'COLESTEST': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
+    // Venue comped but STAFFING still billed: the only charge is the $35
+    // first-hour onboarding (<40 attendees, required even for returning
+    // renters) or $30/hr full-event supervision (40+ attendees).
+    'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true }
   };
 
   // Automatic extended-booking discount (mirrors app/lib/booking-pricing.js —
@@ -698,6 +704,13 @@ export default function BookingPage() {
     const isRecurringPartner = (appliedPromo as { partner?: boolean } | undefined)?.partner === true;
     const exemptFromStaffCoverage = isRecurringPartner && formData.isFirstEvent !== true;
 
+    // The staffing-billed sponsorship (MerrittSponsor100) comps everything
+    // except staff coverage, so staffing is always charged: small events carry
+    // the $35 onboarding even for returning renters, and 40+ attendee events
+    // pay full-event supervision. Mirrors app/lib/booking-pricing.js.
+    const staffingBilledSponsor =
+      (appliedPromo as { staffingBilled?: boolean } | undefined)?.staffingBilled === true;
+
     // The MerrittMagic partnership code waives the tables/chairs equipment fees
     // for everyone who applies it — no first-event caveat, unlike staff coverage.
     const waivesEquipmentFees = isRecurringPartner;
@@ -767,7 +780,10 @@ export default function BookingPage() {
     // renter's first event; returning renters (who've been to the space before)
     // are not charged unless they opt in. Mutually exclusive with the
     // supervisor — a booking never pays for both.
-    if (!eventSupervisionApplies && (formData.isFirstEvent === true || formData.wantsOnsiteAssistance)) {
+    if (
+      !eventSupervisionApplies &&
+      (formData.isFirstEvent === true || formData.wantsOnsiteAssistance || staffingBilledSponsor)
+    ) {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
@@ -782,7 +798,12 @@ export default function BookingPage() {
       const promoData = VALID_PROMO_CODES[promoCode.trim()];
       // Enforce minimum hours requirement when a code carries one
       if (!promoData.minHours || totalHours >= promoData.minHours) {
-        promoDiscount = Math.round(preDiscountSubtotal * promoData.discount);
+        // Staffing-billed sponsorships discount everything EXCEPT staff
+        // coverage: onboarding / supervision fees stay payable in full.
+        const discountBase = (promoData as { staffingBilled?: boolean }).staffingBilled === true
+          ? preDiscountSubtotal - onsiteAssistanceFee - eventSupervisionFee
+          : preDiscountSubtotal;
+        promoDiscount = Math.round(discountBase * promoData.discount);
         promoDescription = promoData.description;
         sponsored = promoData.sponsored === true;
       }
@@ -834,6 +855,7 @@ export default function BookingPage() {
       promoDescription,
       extendedDiscountApplied,
       sponsored,
+      staffingBilledSponsor: staffingBilledSponsor && promoDiscount > 0 && !extendedDiscountApplied,
       promoCode: promoCodeUsed,
       subtotal,
       stripeFee,
@@ -3428,6 +3450,16 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <>
+                  {pricing.staffingBilledSponsor && (
+                    <div className="mt-3 text-xs bg-emerald-50 border-2 border-emerald-300 rounded-lg p-3">
+                      <p className="text-emerald-900">
+                        <strong>🎁 Sponsored Event — Staffing Not Included:</strong> The venue, equipment, and any Saturday premium are fully sponsored. The only charge is staff coverage: {pricing.eventSupervisionFee > 0
+                          ? <>full-event supervision (<strong>${pricing.eventSupervisionFee.toFixed(2)}</strong> — {pricing.eventSupervisionHours} hr × ${pricing.eventSupervisionRate}/hr for 40+ attendees)</>
+                          : <>the <strong>${pricing.onsiteAssistanceFee.toFixed(2)}</strong> first-hour onboarding</>}.
+                      </p>
+                    </div>
+                  )}
+
                   {pricing.promoDiscount > 0 && (
                     <div className="mt-3 text-xs bg-green-50 border border-green-200 rounded-lg p-3">
                       <p className="text-green-800">
