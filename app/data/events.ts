@@ -17,6 +17,7 @@ export interface Event {
   recurrence?: string; // e.g., "Every Thursday", "First Saturday of every month"
   endDate?: string; // Optional ISO date — for recurring events, the last day occurrences should appear
   sessionDates?: string[]; // Optional explicit list of session dates (ISO) for a fixed multi-session series with irregular spacing
+  hideOccurrenceDates?: boolean; // Hide the per-date chip list on the card (the recurrence banner still shows the schedule)
 }
 
 // Add your events here - events with dates in the past will be automatically filtered out
@@ -74,7 +75,25 @@ export const events: Event[] = [
     ticketLabel: "Book a Free Consultation",
     instagramHandle: "full.mind.body.spirit",
     practitionerName: "Cayla Chambers MA, LPC, R-DMT",
-    recurrence: "Every Monday, Wednesday & Friday"
+    recurrence: "Every Monday, Wednesday & Friday",
+    hideOccurrenceDates: true
+  },
+
+  // ============ GROUND & FLOW: CHAKRA-INSPIRED VINYASA SERIES (AUG–SEP 2026) ============
+  {
+    id: "ground-and-flow-chakra-vinyasa-2026",
+    title: "Ground & Flow: A Chakra-Inspired Vinyasa Series",
+    date: "2026-08-21",
+    sessionDates: ["2026-08-21", "2026-08-28", "2026-09-18"],
+    time: "9:30 AM",
+    endTime: "10:30 AM",
+    description: "A 7-week Chakra inspired Vinyasa series exploring movement, breath, and embodied awareness. Each week focuses on one chakra through mindful movement, breathwork, and meditation, supporting balance and self-discovery. Upcoming Friday sessions: August 21 — Grounded, August 28 — Creative, and September 18 — Confident, with additional dates to be announced. Open to all levels! Bring a mat, water bottle, and journal — props will be provided. Facilitated by Cayla Chambers MA, LPC, R-DMT, RYT 200.",
+    imageUrl: "/images/event-banners/Ground-Flow-August.jpg",
+    imageFit: "contain",
+    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/movement-medicine",
+    ticketLabel: "Register",
+    instagramHandle: "full.mind.body.spirit",
+    practitionerName: "Cayla Chambers MA, LPC, R-DMT, RYT 200"
   },
 
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============

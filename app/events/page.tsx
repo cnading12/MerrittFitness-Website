@@ -290,7 +290,7 @@ function EventCard({ event }: { event: DisplayEvent }) {
         </div>
 
         {/* Upcoming dates list for recurring events and fixed multi-session series */}
-        {event.occurrenceDates && event.occurrenceDates.length > 0 && (
+        {!event.hideOccurrenceDates && event.occurrenceDates && event.occurrenceDates.length > 0 && (
           <div className="flex items-start gap-2 text-[#735e59] text-sm mb-4">
             <CalendarDays className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div className="flex flex-wrap gap-1.5">
