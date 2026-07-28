@@ -188,6 +188,41 @@ test('no mat flag when mat not requested', () => {
   assert.deepEqual(flags, []);
 });
 
+test('divider removal flags DIVIDERS REMOVED with the fee', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_divider_removal: true,
+    divider_removal_fee: 1000,
+  });
+  assert.equal(flags.length, 1);
+  assert.match(flags[0].tag, /DIVIDERS REMOVED/);
+  assert.match(flags[0].detail, /\$1000\.00/);
+  assert.match(flags[0].detail, /removes the glass & wood dividers/);
+  assert.match(flags[0].detail, /reinstalls them afterward/);
+});
+
+test('divider flag coexists with the mat flag', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_mat: true,
+    mat_rental_fee: 100,
+    needs_divider_removal: true,
+    divider_removal_fee: 1000,
+  });
+  assert.equal(flags.length, 2);
+  assert.match(flags[0].tag, /MAT/);
+  assert.match(flags[1].tag, /DIVIDERS REMOVED/);
+});
+
+test('no divider flag when removal not requested', () => {
+  const flags = buildStaffAttentionFlags({
+    ...baseBooking,
+    needs_divider_removal: false,
+    divider_removal_fee: 0,
+  });
+  assert.deepEqual(flags, []);
+});
+
 test('first event under threshold without paid assist produces no flag', () => {
   // The pricing engine charges on-site assistance for first events even when
   // attendees < 40, but if the persisted fields say no fee was charged we

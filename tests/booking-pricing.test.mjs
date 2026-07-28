@@ -40,6 +40,7 @@ import {
   TABLES_CHAIRS_FEE_SMALL,
   TABLES_CHAIRS_FEE_LARGE,
   MAT_RENTAL_FEE,
+  DIVIDER_REMOVAL_FEE,
 } from '../app/lib/booking-pricing.js';
 
 // ---------- isSaturday ----------
@@ -583,6 +584,83 @@ test('mat: not requested means no fee and matWaived stays false', () => {
   assert.equal(result.matRentalFee, 0);
   assert.equal(result.matRentalCount, 0);
   assert.equal(result.matWaived, false); // waived flag only when a mat was actually requested
+});
+
+// ---------- Cafe/lounge divider removal ----------
+
+test('dividers: removal adds the flat $1000 fee to the booking', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.dividerRemovalFee, DIVIDER_REMOVAL_FEE); // $1000
+  assert.equal(result.dividerRemovalCount, 1);
+  // 2 hrs * $95 = $190 base + $1000 divider removal = $1190.
+  assert.equal(result.preDiscountSubtotal, 190 + DIVIDER_REMOVAL_FEE);
+  assert.equal(result.subtotal, 1190);
+});
+
+test('dividers: fee is NOT waived for partners (unlike mat and equipment)', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5,
+       needsDividerRemoval: true, needsMat: true, needsTables: true }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    'MerrittMagic'
+  );
+  assert.equal(result.matRentalFee, 0);        // partner: mat waived
+  assert.equal(result.tablesChairsFees, 0);    // partner: equipment waived
+  assert.equal(result.dividerRemovalFee, DIVIDER_REMOVAL_FEE); // dividers NOT waived
+  // $190 base + $1000 dividers = $1190; 20% partnership discount applies to it.
+  assert.equal(result.preDiscountSubtotal, 190 + DIVIDER_REMOVAL_FEE);
+  assert.equal(result.promoDiscount, Math.round((190 + DIVIDER_REMOVAL_FEE) * 0.20));
+});
+
+test('dividers: fee accumulates per booking in a multi-booking submission', () => {
+  const result = calculateAccuratePricing(
+    [
+      { selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true },
+      { selectedDate: '2026-11-05', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true },
+      { selectedDate: '2026-11-06', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: false },
+    ],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.dividerRemovalCount, 2);
+  assert.equal(result.dividerRemovalFee, 2 * DIVIDER_REMOVAL_FEE); // $2000
+});
+
+test('dividers: not requested means no fee', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 }],
+    { isFirstEvent: false, paymentMethod: 'ach' },
+    ''
+  );
+  assert.equal(result.dividerRemovalFee, 0);
+  assert.equal(result.dividerRemovalCount, 0);
+});
+
+test('dividers: COLESTEST sponsorship comps the divider fee with everything else', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true }],
+    { isFirstEvent: false, paymentMethod: 'card' },
+    'COLESTEST'
+  );
+  assert.equal(result.dividerRemovalFee, DIVIDER_REMOVAL_FEE); // computed normally
+  assert.equal(result.promoDiscount, result.preDiscountSubtotal); // then 100% comped
+  assert.equal(result.total, 0);
+});
+
+test('dividers: card surcharge applies on top of the divider fee', () => {
+  const result = calculateAccuratePricing(
+    [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true }],
+    { isFirstEvent: false, paymentMethod: 'card' },
+    ''
+  );
+  // $1190 subtotal → 3% card fee = $36 (rounded), total $1226.
+  assert.equal(result.subtotal, 1190);
+  assert.equal(result.stripeFee, Math.round(1190 * 0.03));
+  assert.equal(result.total, 1190 + Math.round(1190 * 0.03));
 });
 
 // ---------- Promo codes ----------

@@ -40,6 +40,7 @@ export default function BookingPage() {
     needsTables: false,
     needsChairs: false,
     needsMat: false, // Optional: rent the full-floor roll-out mat ($100, waived for partners)
+    needsDividerRemoval: false, // Optional: remove the cafe/lounge glass & wood dividers ($1000, never waived)
     expectedAttendees: '' // Required: used to determine if on-site event supervision is needed (40+ attendees on first booking)
   }]);
 
@@ -672,6 +673,7 @@ export default function BookingPage() {
   };
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
   const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
+  const DIVIDER_REMOVAL_FEE = 1000; // Cafe/lounge divider removal: flat $1000/booking, never waived. Mirrors app/lib/booking-pricing.js.
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
   const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
   const TABLES_CHAIRS_FEE_SMALL = 25; // Tables/chairs equipment fee per item type, <40 attendees
@@ -693,6 +695,8 @@ export default function BookingPage() {
     let tablesChairsFees = 0;
     let matRentalFee = 0;
     let matRentalCount = 0;
+    let dividerRemovalFee = 0;
+    let dividerRemovalCount = 0;
 
     // A recurring partner (renter on the 20% partnership code) is exempt from
     // mandatory on-site staff coverage — but NOT on their first event, which
@@ -750,6 +754,13 @@ export default function BookingPage() {
           }
         }
 
+        // Cafe/lounge divider removal — flat $1000 per booking, never waived.
+        // Mirrors the server in app/lib/booking-pricing.js.
+        if (booking.needsDividerRemoval) {
+          dividerRemovalCount++;
+          dividerRemovalFee += DIVIDER_REMOVAL_FEE;
+        }
+
         // On-site event supervision: required when any booking has 40+ expected
         // attendees and the renter isn't an exempt recurring partner. The
         // supervisor stays for the ENTIRE event — bill the full requested hours.
@@ -787,7 +798,7 @@ export default function BookingPage() {
       onsiteAssistanceFee = ON_SITE_ASSISTANCE_FEE;
     }
 
-    const preDiscountSubtotal = baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
+    const preDiscountSubtotal = baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee + dividerRemovalFee;
 
     // Apply promo code discount
     let promoDiscount = 0;
@@ -844,6 +855,8 @@ export default function BookingPage() {
       matRentalFee,
       matRentalCount,
       matWaived: matWaived && matRentalCount > 0,
+      dividerRemovalFee,
+      dividerRemovalCount,
       eventSupervisionRate: EVENT_SUPERVISION_RATE,
       eventSupervisionThreshold: EVENT_SUPERVISION_GROUP_THRESHOLD,
       tablesChairsFees,
@@ -1109,6 +1122,7 @@ export default function BookingPage() {
       needsTables: false,
       needsChairs: false,
       needsMat: false,
+      needsDividerRemoval: false,
       expectedAttendees: ''
     }]);
   };
@@ -1514,6 +1528,10 @@ export default function BookingPage() {
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Roll-Out Mat:</strong> Our roll-out mat can fill the entire main hall. Whether you use just a section or the whole floor, the cost is the same $100 per booking. Our team handles the setup for you, but it must happen during your booked event time — expect about 30 minutes. Included free for partners, who handle their own setup and breakdown.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span><strong>Cafe/Lounge Divider Removal:</strong> Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 per booking, our team removes them before your event and reinstalls them afterward, opening both areas into one continuous space.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -2012,6 +2030,28 @@ export default function BookingPage() {
                         {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
                           ? 'Our roll-out mat can fill the entire main hall — use just a section or the whole floor. Included at no charge for partners. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.'
                           : 'Our roll-out mat can fill the entire main hall — great for martial arts, yoga, and sound baths. Use just a section or the whole floor; the cost is the same $100. Our team handles setup for you, but it takes place during your booked event time — expect about 30 minutes.'}
+                      </p>
+                    </div>
+
+                    {/* Cafe/lounge divider removal. Flat $1000/booking, never
+                        waived — staff removes the large glass & wood dividers
+                        before the event and reinstalls them after, opening the
+                        cafe/lounge and main hall into one space. */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Cafe/Lounge Divider Removal
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={booking.needsDividerRemoval}
+                          onChange={(e) => updateBooking(booking.id, 'needsDividerRemoval', e.target.checked)}
+                          className="mr-3 text-[#735e59]"
+                        />
+                        <span>Remove the cafe/lounge dividers (+$1,000)</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 our team removes them before your event and reinstalls them afterward, opening both areas into one continuous space — ideal for larger receptions and gatherings.
                       </p>
                     </div>
 
@@ -3389,6 +3429,13 @@ export default function BookingPage() {
                   <div className="flex justify-between text-green-600">
                     <span>Roll-Out Mat (partner)</span>
                     <span>Included</span>
+                  </div>
+                )}
+
+                {pricing.dividerRemovalFee > 0 && (
+                  <div className="flex justify-between text-indigo-600">
+                    <span>Cafe/Lounge Divider Removal{pricing.dividerRemovalCount > 1 ? ` (×${pricing.dividerRemovalCount})` : ''}</span>
+                    <span>+${pricing.dividerRemovalFee.toFixed(2)}</span>
                   </div>
                 )}
 

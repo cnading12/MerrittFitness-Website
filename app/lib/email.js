@@ -173,9 +173,9 @@ function publicLabel(booking) {
 // Shared by the client confirmation (their receipt) and manager notification
 // (so staff see exactly what was charged for). The `bookings` table stores the
 // computed fees but NOT the base venue charge, so we derive it:
-//   preDiscountSubtotal = base + saturday + onsite + supervision + equipment + mat
+//   preDiscountSubtotal = base + saturday + onsite + supervision + equipment + mat + dividers
 //   subtotal            = preDiscountSubtotal - promoDiscount
-// → base = (subtotal + promoDiscount) - (saturday + onsite + supervision + equipment + mat)
+// → base = (subtotal + promoDiscount) - (saturday + onsite + supervision + equipment + mat + dividers)
 // Sponsored bookings (100% comped) end at a $0.00 total.
 function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext = null } = {}) {
   const sponsored = isSponsoredBooking(booking);
@@ -191,11 +191,12 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
   const supervisionHours = num(booking.event_supervision_hours);
   const equipment = num(booking.tables_chairs_fees);
   const mat = num(booking.mat_rental_fee);
+  const dividers = num(booking.divider_removal_fee);
   const promo = num(booking.promo_discount);
   const subtotal = num(booking.subtotal);
   const stripeFee = num(booking.stripe_fee);
   const total = num(booking.total_amount);
-  const base = (subtotal + promo) - (saturday + onsite + supervision + equipment + mat);
+  const base = (subtotal + promo) - (saturday + onsite + supervision + equipment + mat + dividers);
 
   const row = (label, value, opts = {}) => {
     if (opts.skip) return '';
@@ -223,6 +224,7 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
         ${row('Venue rental (base)', money(base))}
         ${row('Saturday surcharge', `+${money(saturday)}`, { skip: saturday <= 0, color: '#b45309' })}
         ${row('Full-floor mat', `+${money(mat)}`, { skip: mat <= 0, color: '#4f46e5' })}
+        ${row('Cafe/lounge divider removal', `+${money(dividers)}`, { skip: dividers <= 0, color: '#4f46e5' })}
         ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: '#7c3aed' })}
         ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: '#0d9488' })}
         ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: '#0f766e' })}
@@ -373,6 +375,12 @@ const EMAIL_TEMPLATES = {
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Tables &amp; chairs:</td>
                 <td style="padding: 8px 0; color: #111827;">${equipmentSummary(booking)}</td>
               </tr>
+              ${booking.needs_divider_removal ? `
+              <tr>
+                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
+                <td style="padding: 8px 0; color: #111827;">Removed for your event — the cafe/lounge and main hall open into one space</td>
+              </tr>
+              ` : ''}
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Event visibility:</td>
                 <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
@@ -393,7 +401,7 @@ const EMAIL_TEMPLATES = {
           <!-- Cost Breakdown / Receipt -->
           ${renderCostBreakdown(booking, { heading: 'Your Receipt', groupContext })}
 
-          ${booking.needs_mat ? `
+          ${booking.needs_mat || booking.needs_divider_removal ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 18px;">🤝 Assistance Services</h3>
             ${booking.needs_mat ? (
@@ -401,6 +409,9 @@ const EMAIL_TEMPLATES = {
                 ? '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included — our team will set it up and break it down within your reserved time.</p>'
                 : '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included (partner) — setup and breakdown are your responsibility, within your reserved time.</p>'
             ) : ''}
+            ${booking.needs_divider_removal
+              ? '<p style="margin: 5px 0; color: #451a03;">✓ Cafe/lounge divider removal included — our team will remove the glass &amp; wood dividers before your event and reinstall them afterward, opening the cafe/lounge and main hall into one continuous space.</p>'
+              : ''}
           </div>
           ` : ''}
 
@@ -499,6 +510,10 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #111827;">${booking.needs_mat ? (Number(booking.mat_rental_fee) > 0 ? 'Yes — staff sets up &amp; breaks down (within booked window)' : 'Yes — partner handles own setup &amp; breakdown') : 'No'}</td>
             </tr>
             <tr>
+              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
+              <td style="padding: 8px 0; color: #111827;">${booking.needs_divider_removal ? '<strong style="color: #b45309;">REMOVE for this event</strong> — staff takes them out before &amp; reinstalls after' : 'In place (no removal requested)'}</td>
+            </tr>
+            <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Visibility:</td>
               <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
             </tr>
@@ -508,7 +523,7 @@ const EMAIL_TEMPLATES = {
             </tr>
           </table>
 
-          ${booking.needs_mat ? `
+          ${booking.needs_mat || booking.needs_divider_removal ? `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
               <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Assistance Requested:</p>
               ${booking.needs_mat ? (
@@ -516,6 +531,9 @@ const EMAIL_TEMPLATES = {
                   ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (+$100) — WE set up &amp; break down, within the booked window.</p>'
                   : '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (partner — no charge) — RENTER handles setup &amp; breakdown, within the booked window.</p>'
               ) : ''}
+              ${booking.needs_divider_removal
+                ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Cafe/lounge divider removal (+$1,000) — STAFF removes the glass &amp; wood dividers before the event and reinstalls them after. Plan the crew accordingly.</p>'
+                : ''}
             </div>
           ` : ''}
 
