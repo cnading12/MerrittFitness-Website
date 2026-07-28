@@ -383,7 +383,7 @@ export async function createCalendarEvent(booking, includeAttendees = false, opt
         : 'Yes — partner handles their own setup & breakdown'
       : 'No';
     const dividerLine = booking.needs_divider_removal
-      ? 'REMOVED for this event — staff takes the glass & wood dividers out before the event and reinstalls them after (cafe/lounge opens into the main hall)'
+      ? 'REMOVED for this event — staff takes the glass & wood dividers out and breaks down all cafe tables & chairs before the event, then restores everything after (cafe/lounge opens into the main hall)'
       : 'In place (cafe/lounge separated from the main hall)';
     const alcoholLine =
       booking.serving_alcohol === true

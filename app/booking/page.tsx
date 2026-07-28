@@ -1531,7 +1531,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Cafe/Lounge Divider Removal:</strong> Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 per booking, our team removes them before your event and reinstalls them afterward, opening both areas into one continuous space.</span>
+                  <span><strong>Cafe/Lounge Divider Removal:</strong> Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 per booking, our team removes them — including breakdown of all cafe tables and chairs — before your event, then restores everything afterward, opening both areas into one continuous space.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
@@ -2051,7 +2051,7 @@ export default function BookingPage() {
                         <span>Remove the cafe/lounge dividers (+$1,000)</span>
                       </label>
                       <p className="text-xs text-gray-500 mt-2">
-                        Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 our team removes them before your event and reinstalls them afterward, opening both areas into one continuous space — ideal for larger receptions and gatherings.
+                        Large glass &amp; wood dividers separate the cafe/lounge from the main hall. For an additional $1,000 our team removes them — including breakdown of all cafe tables and chairs — before your event, then restores everything afterward, opening both areas into one continuous space — ideal for larger receptions and gatherings.
                       </p>
                     </div>
 

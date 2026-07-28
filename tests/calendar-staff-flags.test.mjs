@@ -198,6 +198,7 @@ test('divider removal flags DIVIDERS REMOVED with the fee', () => {
   assert.match(flags[0].tag, /DIVIDERS REMOVED/);
   assert.match(flags[0].detail, /\$1000\.00/);
   assert.match(flags[0].detail, /removes the glass & wood dividers/);
+  assert.match(flags[0].detail, /breaks down all cafe tables & chairs/);
   assert.match(flags[0].detail, /reinstalls them afterward/);
 });
 

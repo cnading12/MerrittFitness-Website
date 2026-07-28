@@ -141,9 +141,9 @@ export function buildStaffAttentionFlags(booking) {
       detail:
         `Cafe/lounge divider removal paid` +
         (dividerFee > 0 ? ` ($${dividerFee.toFixed(2)})` : '') +
-        `. Staff removes the glass & wood dividers before the event and ` +
-        `reinstalls them afterward — the cafe/lounge and main hall open into ` +
-        `one space for this event.`,
+        `. Staff removes the glass & wood dividers AND breaks down all cafe ` +
+        `tables & chairs before the event, then reinstalls them afterward — ` +
+        `the cafe/lounge and main hall open into one space for this event.`,
     });
   }
 

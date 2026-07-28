@@ -378,7 +378,7 @@ const EMAIL_TEMPLATES = {
               ${booking.needs_divider_removal ? `
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
-                <td style="padding: 8px 0; color: #111827;">Removed for your event — the cafe/lounge and main hall open into one space</td>
+                <td style="padding: 8px 0; color: #111827;">Removed for your event (incl. breakdown of all cafe tables &amp; chairs) — the cafe/lounge and main hall open into one space</td>
               </tr>
               ` : ''}
               <tr>
@@ -410,7 +410,7 @@ const EMAIL_TEMPLATES = {
                 : '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included (partner) — setup and breakdown are your responsibility, within your reserved time.</p>'
             ) : ''}
             ${booking.needs_divider_removal
-              ? '<p style="margin: 5px 0; color: #451a03;">✓ Cafe/lounge divider removal included — our team will remove the glass &amp; wood dividers before your event and reinstall them afterward, opening the cafe/lounge and main hall into one continuous space.</p>'
+              ? '<p style="margin: 5px 0; color: #451a03;">✓ Cafe/lounge divider removal included — our team will remove the glass &amp; wood dividers and break down all cafe tables &amp; chairs before your event, then restore everything afterward, opening the cafe/lounge and main hall into one continuous space.</p>'
               : ''}
           </div>
           ` : ''}
@@ -511,7 +511,7 @@ const EMAIL_TEMPLATES = {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.needs_divider_removal ? '<strong style="color: #b45309;">REMOVE for this event</strong> — staff takes them out before &amp; reinstalls after' : 'In place (no removal requested)'}</td>
+              <td style="padding: 8px 0; color: #111827;">${booking.needs_divider_removal ? '<strong style="color: #b45309;">REMOVE for this event</strong> — staff takes them out (incl. breaking down all cafe tables &amp; chairs) before &amp; restores after' : 'In place (no removal requested)'}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Visibility:</td>
@@ -532,7 +532,7 @@ const EMAIL_TEMPLATES = {
                   : '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (partner — no charge) — RENTER handles setup &amp; breakdown, within the booked window.</p>'
               ) : ''}
               ${booking.needs_divider_removal
-                ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Cafe/lounge divider removal (+$1,000) — STAFF removes the glass &amp; wood dividers before the event and reinstalls them after. Plan the crew accordingly.</p>'
+                ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Cafe/lounge divider removal (+$1,000) — STAFF removes the glass &amp; wood dividers AND breaks down all cafe tables &amp; chairs before the event, then restores everything after. Plan the crew accordingly.</p>'
                 : ''}
             </div>
           ` : ''}

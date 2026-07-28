@@ -246,7 +246,8 @@ export const MAT_RENTAL_FEE = 100;                 // $/booking, waived for part
 // Cafe/lounge divider removal. Large glass-and-wood dividers separate the
 // cafe/lounge from the main hall; renters can have them removed to open the
 // two spaces into one for their event. A flat $1,000 per booking covers our
-// staff removing the dividers before the event and reinstalling them after.
+// staff removing the dividers — including breaking down all cafe tables and
+// chairs — before the event, and restoring everything after.
 // NOT waived for partners — unlike the mat, this is heavy specialty work with
 // a real cost every time. (Sponsored promo codes still comp it along with the
 // rest of the subtotal, same as every other line item.) Single-event bookings

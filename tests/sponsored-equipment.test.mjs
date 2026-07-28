@@ -391,15 +391,18 @@ test('sponsored booking: divider removal is persisted and surfaces on calendar +
   assert.match(summary, /DIVIDERS REMOVED/, `calendar title should call out divider removal, got:\n${summary}`);
   const description = calendarInserts[0]?.description || '';
   assert.match(description, /divider removal paid/i, 'calendar flags should spell out the divider work');
+  assert.match(description, /breaks down all cafe tables & chairs/, 'calendar flags should include the cafe furniture breakdown');
   assert.match(description, /Cafe\/lounge dividers: REMOVED/, 'calendar logistics should show the dividers as removed');
 
   const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
   assert.ok(confirmation, 'confirmation email should be sent');
   assert.match(confirmation.html, /divider removal/i, 'confirmation email should mention the divider removal');
+  assert.match(confirmation.html, /cafe tables &amp; chairs/i, 'confirmation email should mention the cafe furniture breakdown');
 
   const managerNote = sentEmails.find((e) => /New Booking/i.test(e.subject));
   assert.ok(managerNote, 'manager notification email should be sent');
   assert.match(managerNote.html, /REMOVE for this event/, 'manager email should flag the divider removal work');
+  assert.match(managerNote.html, /cafe tables &amp; chairs/i, 'manager email should mention the cafe furniture breakdown');
 });
 
 test('booking without divider removal shows the dividers as in place', async () => {

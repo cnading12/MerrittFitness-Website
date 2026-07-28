@@ -4,7 +4,8 @@
 --   Large glass-and-wood dividers separate the cafe/lounge from the main hall.
 --   Renters can have them removed for their event, opening both areas into one
 --   continuous space. A flat $1,000 per booking covers our staff removing the
---   dividers before the event and reinstalling them afterward. Unlike the mat
+--   dividers — including breaking down all cafe tables and chairs — before
+--   the event and restoring everything afterward. Unlike the mat
 --   and tables/chairs fees, this fee is NEVER waived — it is heavy specialty
 --   work with a real cost every time (sponsored promo codes still comp it
 --   along with the rest of the subtotal, like every other line item).
@@ -34,4 +35,4 @@ COMMENT ON COLUMN bookings.needs_divider_removal IS
   'True when the renter requested removal of the cafe/lounge glass & wood dividers for this booking.';
 
 COMMENT ON COLUMN bookings.divider_removal_fee IS
-  'Cafe/lounge divider-removal fee: flat $1,000 per booking that requested it (staff removes and reinstalls the dividers). Never waived.';
+  'Cafe/lounge divider-removal fee: flat $1,000 per booking that requested it (staff removes and reinstalls the dividers, incl. breakdown of all cafe tables & chairs). Never waived.';
