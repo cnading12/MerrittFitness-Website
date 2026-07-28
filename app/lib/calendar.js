@@ -382,6 +382,9 @@ export async function createCalendarEvent(booking, includeAttendees = false, opt
         ? 'Yes — staff sets up & breaks down (within the booked window)'
         : 'Yes — partner handles their own setup & breakdown'
       : 'No';
+    const dividerLine = booking.needs_divider_removal
+      ? 'REMOVED for this event — staff takes the glass & wood dividers out and breaks down all cafe tables & chairs before the event, then restores everything after (cafe/lounge opens into the main hall)'
+      : 'In place (cafe/lounge separated from the main hall)';
     const alcoholLine =
       booking.serving_alcohol === true
         ? booking.coi_document_data
@@ -425,6 +428,7 @@ Guest count: ${booking.expected_attendees ?? 'n/a'}
 — Setup & logistics —
 Tables / Chairs: ${equipmentLine}
 Full-floor mat: ${matLine}
+Cafe/lounge dividers: ${dividerLine}
 Alcohol: ${alcoholLine}
 Amount: ${amountLine}
 ${booking.special_requests ? `\nSpecial Requests: ${booking.special_requests}\n` : ''}

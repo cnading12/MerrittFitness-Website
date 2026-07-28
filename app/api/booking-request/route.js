@@ -80,6 +80,11 @@ const IndividualBookingSchema = z.object({
   // calculateAccuratePricing — this flag is the only trusted input.
   needsMat: z.boolean().default(false),
 
+  // Whether the renter wants the cafe/lounge glass & wood dividers removed for
+  // this booking. Pricing (flat $1,000, never waived) is recomputed server-side
+  // in calculateAccuratePricing — this flag is the only trusted input.
+  needsDividerRemoval: z.boolean().default(false),
+
   // Expected attendee count — used server-side to determine whether on-site
   // event supervision ($30/hr for the entire event) should be applied.
   expectedAttendees: z.coerce.number()
@@ -139,6 +144,7 @@ const PricingSchema = z.object({
   eventSupervisionHours: z.number().optional().default(0),
   tablesChairsFees: z.number().optional().default(0),
   matRentalFee: z.number().optional().default(0),
+  dividerRemovalFee: z.number().optional().default(0),
   isFirstEvent: z.boolean().nullable().optional(),
   wantsOnsiteAssistance: z.boolean().optional().default(false),
   promoCode: z.string().optional().default(''),
@@ -395,7 +401,10 @@ async function createBooking(bookingData) {
       needs_chairs: bookingData.needsChairs || false,
       tables_chairs_fees: parseFloat(bookingData.tablesChairsFees || 0),
       needs_mat: bookingData.needsMat || false,
-      mat_rental_fee: parseFloat(bookingData.matRentalFee || 0)
+      mat_rental_fee: parseFloat(bookingData.matRentalFee || 0),
+      // Cafe/lounge divider removal: flat $1,000 per booking, never waived.
+      needs_divider_removal: bookingData.needsDividerRemoval || false,
+      divider_removal_fee: parseFloat(bookingData.dividerRemovalFee || 0)
     };
 
     // Insert with per-column fallback: a pre-migration DB only loses the
@@ -660,6 +669,7 @@ async function bookingHandler(request) {
           needsTables: booking.needsTables,
           needsChairs: booking.needsChairs,
           needsMat: booking.needsMat,
+          needsDividerRemoval: booking.needsDividerRemoval,
           expectedAttendees: booking.expectedAttendees,
           contactName: validatedData.contactInfo.contactName,
           email: validatedData.contactInfo.email,
@@ -679,6 +689,7 @@ async function bookingHandler(request) {
           eventSupervisionHours: accuratePricing.eventSupervisionHours,
           tablesChairsFees: accuratePricing.tablesChairsFees,
           matRentalFee: accuratePricing.matRentalFee,
+          dividerRemovalFee: accuratePricing.dividerRemovalFee,
           promoCode: accuratePricing.promoCode,
           promoDiscount: accuratePricing.promoDiscount,
           idPhotoDataUrl: validatedData.idPhoto.dataUrl,

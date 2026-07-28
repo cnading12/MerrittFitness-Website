@@ -11,6 +11,8 @@
 //   4. Paid setup / breakdown → "SETUP" / "BREAKDOWN" / combined badge
 //   5. Full-floor mat → "MAT — STAFF SETUP" (paid) or "MAT (renter setup)"
 //      (comped for a partner)
+//   6. Cafe/lounge divider removal → "DIVIDERS REMOVED" badge — staff removes
+//      the glass & wood dividers before the event and reinstalls them after
 //
 // Whether coverage is required is decided by the pricing engine, so these flags
 // key off the persisted fees (event_supervision_fee / onsite_assistance_fee)
@@ -58,6 +60,8 @@ export function buildStaffAttentionFlags(booking) {
   const needsTeardown = booking.needs_teardown_help === true;
   const needsMat = booking.needs_mat === true;
   const matFee = parseFloat(booking.mat_rental_fee) || 0;
+  const needsDividerRemoval = booking.needs_divider_removal === true;
+  const dividerFee = parseFloat(booking.divider_removal_fee) || 0;
 
   // The pricing engine only charges a supervision fee when an on-site
   // supervisor is required, so the fee is the authoritative trigger.
@@ -126,6 +130,21 @@ export function buildStaffAttentionFlags(booking) {
           'own setup and breakdown, within the booked window.',
       });
     }
+  }
+
+  // Cafe/lounge divider removal. Staff must remove the large glass & wood
+  // dividers BEFORE the event and reinstall them AFTER — this is scheduled
+  // work outside the renter's own setup, so it needs to be planned ahead.
+  if (needsDividerRemoval) {
+    flags.push({
+      tag: '🚪 DIVIDERS REMOVED',
+      detail:
+        `Cafe/lounge divider removal paid` +
+        (dividerFee > 0 ? ` ($${dividerFee.toFixed(2)})` : '') +
+        `. Staff removes the glass & wood dividers AND breaks down all cafe ` +
+        `tables & chairs before the event, then reinstalls them afterward — ` +
+        `the cafe/lounge and main hall open into one space for this event.`,
+    });
   }
 
   // Sponsored bookings are comped — surface this front and center so staff

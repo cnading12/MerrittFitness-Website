@@ -199,7 +199,7 @@ function futureDate() {
   return d.toISOString().slice(0, 10);
 }
 
-function buildSubmission({ promoCode, needsTables = true, needsChairs = true, needsMat = true }) {
+function buildSubmission({ promoCode, needsTables = true, needsChairs = true, needsMat = true, needsDividerRemoval = false }) {
   return {
     applicationType: 'single',
     bookings: [
@@ -215,6 +215,7 @@ function buildSubmission({ promoCode, needsTables = true, needsChairs = true, ne
         needsTables,
         needsChairs,
         needsMat,
+        needsDividerRemoval,
         expectedAttendees: 20,
       },
     ],
@@ -372,6 +373,70 @@ test('equipment columns missing entirely: sponsored calendar + emails still refl
   const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
   assert.ok(confirmation, 'confirmation email should be sent');
   assert.match(confirmation.html, /Tables \+ Chairs/, 'confirmation email should list the requested equipment even pre-migration');
+});
+
+test('sponsored booking: divider removal is persisted and surfaces on calendar + emails', async () => {
+  resetState();
+  const { response, body } = await submitBooking(
+    buildSubmission({ promoCode: 'COLESTEST', needsDividerRemoval: true })
+  );
+  assert.equal(response.status, 200, JSON.stringify(body));
+  assert.equal(body.success, true);
+
+  const row = dbState.inserts[0];
+  assert.equal(row.needs_divider_removal, true, 'needs_divider_removal must be persisted as true');
+  assert.equal(Number(row.divider_removal_fee), 1000, 'divider_removal_fee must store the flat $1000');
+
+  const summary = calendarInserts[0]?.summary || '';
+  assert.match(summary, /DIVIDERS REMOVED/, `calendar title should call out divider removal, got:\n${summary}`);
+  const description = calendarInserts[0]?.description || '';
+  assert.match(description, /divider removal paid/i, 'calendar flags should spell out the divider work');
+  assert.match(description, /breaks down all cafe tables & chairs/, 'calendar flags should include the cafe furniture breakdown');
+  assert.match(description, /Cafe\/lounge dividers: REMOVED/, 'calendar logistics should show the dividers as removed');
+
+  const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
+  assert.ok(confirmation, 'confirmation email should be sent');
+  assert.match(confirmation.html, /divider removal/i, 'confirmation email should mention the divider removal');
+  assert.match(confirmation.html, /cafe tables &amp; chairs/i, 'confirmation email should mention the cafe furniture breakdown');
+
+  const managerNote = sentEmails.find((e) => /New Booking/i.test(e.subject));
+  assert.ok(managerNote, 'manager notification email should be sent');
+  assert.match(managerNote.html, /REMOVE for this event/, 'manager email should flag the divider removal work');
+  assert.match(managerNote.html, /cafe tables &amp; chairs/i, 'manager email should mention the cafe furniture breakdown');
+});
+
+test('booking without divider removal shows the dividers as in place', async () => {
+  resetState();
+  await submitBooking(buildSubmission({ promoCode: 'COLESTEST', needsDividerRemoval: false }));
+
+  const description = calendarInserts[0]?.description || '';
+  assert.match(description, /Cafe\/lounge dividers: In place/, 'calendar should show the dividers staying in place');
+  assert.doesNotMatch(description, /DIVIDERS REMOVED/, 'no divider flag when removal was not requested');
+});
+
+test('paid booking: divider removal survives insert and webhook-driven calendar + email', async () => {
+  resetState();
+  const { response, body } = await submitBooking(
+    buildSubmission({ promoCode: '', needsDividerRemoval: true })
+  );
+  assert.equal(response.status, 200, JSON.stringify(body));
+  assert.equal(body.sponsored, false);
+
+  const row = dbState.inserts[0];
+  assert.equal(row.needs_divider_removal, true, 'paid path: needs_divider_removal must be persisted');
+  assert.equal(Number(row.divider_removal_fee), 1000, 'paid path: divider_removal_fee must store the flat $1000');
+  // The $1000 fee must be reflected in the amount the renter is charged.
+  assert.ok(Number(row.total_amount) >= 1000, `total_amount should include the $1000 divider fee, got ${row.total_amount}`);
+
+  const webhookResponse = await fireWebhook(body.id);
+  assert.equal(webhookResponse.status, 200);
+
+  const description = calendarInserts[0]?.description || '';
+  assert.match(description, /Cafe\/lounge dividers: REMOVED/, 'paid calendar should show the dividers as removed');
+
+  const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
+  assert.ok(confirmation, 'paid path: confirmation email should be sent');
+  assert.match(confirmation.html, /Cafe\/lounge divider removal/i, 'paid receipt should itemize the divider removal fee');
 });
 
 test('paid booking: equipment flags survive insert and webhook-driven calendar + email', async () => {

@@ -243,6 +243,17 @@ export const TABLES_CHAIRS_GROUP_THRESHOLD = 40;   // Attendee count that bumps 
 // it) so bookings can be stacked back-to-back.
 export const MAT_RENTAL_FEE = 100;                 // $/booking, waived for partners
 
+// Cafe/lounge divider removal. Large glass-and-wood dividers separate the
+// cafe/lounge from the main hall; renters can have them removed to open the
+// two spaces into one for their event. A flat $1,000 per booking covers our
+// staff removing the dividers — including breaking down all cafe tables and
+// chairs — before the event, and restoring everything after.
+// NOT waived for partners — unlike the mat, this is heavy specialty work with
+// a real cost every time. (Sponsored promo codes still comp it along with the
+// rest of the subtotal, same as every other line item.) Single-event bookings
+// only — the recurring path has no per-add-on billing.
+export const DIVIDER_REMOVAL_FEE = 1000;           // $/booking, flat
+
 // Automatic extended-booking discount. Single-event submissions totalling 8+
 // hours get 10% off the pre-discount subtotal — applied automatically, no
 // promo code needed (this replaced the old EXTENDED15 promo code, which was
@@ -369,6 +380,8 @@ export function endsBy10PM(startTime, hoursRequested) {
 //     size: <40 attendees = $25, 40+ = $50. Tables and chairs stack (a 60-person
 //     event using both pays $50 + $50 = $100). Renters on the MerrittMagic
 //     partnership code are waived these fees entirely.
+//   * Cafe/lounge divider removal adds a flat $1,000 per booking that requests
+//     it (staff removes and reinstalls the glass/wood dividers). Never waived.
 //   * On-site staff coverage rules:
 //       - >=40 attendees: an on-site supervisor at $30/hr for the ENTIRE event
 //         (no hour cap). REQUIRED for every renter who isn't an exempt recurring
@@ -404,6 +417,8 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let tablesChairsFees = 0;
   let matRentalFee = 0;
   let matRentalCount = 0;
+  let dividerRemovalFee = 0;
+  let dividerRemovalCount = 0;
 
   // Recurring partners (booking with the partnership promo code) get the mat at
   // no charge; everyone else pays the flat fee per booking that uses it.
@@ -452,6 +467,13 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
       if (!matWaived) matRentalFee += MAT_RENTAL_FEE;
     }
 
+    // Cafe/lounge divider removal — flat fee per booking, never waived (see
+    // DIVIDER_REMOVAL_FEE above).
+    if (booking.needsDividerRemoval) {
+      dividerRemovalCount++;
+      dividerRemovalFee += DIVIDER_REMOVAL_FEE;
+    }
+
     if (!exemptFromStaffCoverage && attendees >= EVENT_SUPERVISION_GROUP_THRESHOLD) {
       // Supervisor stays for the entire event — bill the full requested hours.
       eventSupervisionFee += hours * EVENT_SUPERVISION_RATE;
@@ -487,7 +509,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   }
 
   const preDiscountSubtotal =
-    baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee;
+    baseAmount + saturdayCharges + onsiteAssistanceFee + eventSupervisionFee + tablesChairsFees + matRentalFee + dividerRemovalFee;
 
   let promoDiscount = 0;
   let promoDescription = '';
@@ -545,6 +567,8 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
     matRentalFee,
     matRentalCount,
     matWaived: matWaived && matRentalCount > 0,
+    dividerRemovalFee,
+    dividerRemovalCount,
     isFirstEvent: contactInfo.isFirstEvent,
     isRecurringPartner,
     wantsOnsiteAssistance: contactInfo.wantsOnsiteAssistance,
