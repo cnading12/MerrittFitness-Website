@@ -227,66 +227,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        {/* FAQ Schema for featured snippets */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              "mainEntity": [
-                {
-                  "@type": "Question",
-                  "name": "Where can I find sound bath sessions in Denver?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "What yoga classes are available near Sloans Lake Denver?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Merritt Wellness in Sloans Lake offers a variety of yoga classes including Vinyasa, Hatha, Restorative, and Hot Yoga. Our historic 2,400 sq ft space features 24-foot ceilings and abundant natural light, perfect for all levels of practice. Located at 2246 Irving St, Denver CO 80211."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "How much does it cost to rent a wellness space in Denver?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Is there a meditation center in the Sloans Lake area of Denver?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes! Merritt Wellness is a meditation and wellness center located in the heart of Sloans Lake, Denver. Our beautifully restored 1905 historic building provides a peaceful sanctuary for meditation, mindfulness, breathwork, and holistic healing practices. Visit us at 2246 Irving St, Denver CO 80211."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "What makes Merritt Wellness unique for wellness events?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Do you offer private yoga sessions in Denver?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
-                  }
-                }
-              ]
-            })
-          }}
-        />
       </head>
       <body className="ios-fix text-[#4a3f3c] bg-[#faf8f5] flex flex-col min-h-screen">
         <Navbar />

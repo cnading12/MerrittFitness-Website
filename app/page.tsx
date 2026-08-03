@@ -137,12 +137,81 @@ export default function Home() {
     ]
   };
 
+  // Site-wide FAQ schema lives on the homepage only, so the event-type pages'
+  // own FAQPage blocks (weddings, concerts, etc.) never collide with it.
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Can I host a wedding or private event at Merritt Wellness?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The restored 1905 church hosts weddings, concerts, art shows, celebrations of life, parties, and corporate offsites for up to 125 guests, with published hourly pricing, 22 on-site parking spots, and a built-in sound system. See merrittwellness.net/weddings and merrittwellness.net/private-events, or call (720) 357-9499."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where can I find sound bath sessions in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What yoga classes are available near Sloans Lake Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness in Sloans Lake offers a variety of yoga classes including Vinyasa, Hatha, Restorative, and Hot Yoga. Our historic 2,400 sq ft space features 24-foot ceilings and abundant natural light, perfect for all levels of practice. Located at 2246 Irving St, Denver CO 80211."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does it cost to rent a wellness space in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a meditation center in the Sloans Lake area of Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! Merritt Wellness is a meditation and wellness center located in the heart of Sloans Lake, Denver. Our beautifully restored 1905 historic building provides a peaceful sanctuary for meditation, mindfulness, breathwork, and holistic healing practices. Visit us at 2246 Irving St, Denver CO 80211."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What makes Merritt Wellness unique for wellness events?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you offer private yoga sessions in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
+        }
+      }
+    ]
+  };
+
   return (
     <>
       {/* ENHANCED: Structured Data for Local SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       <main className="bg-[#faf8f5] font-sans">
@@ -151,7 +220,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
           <Image
             src="/images/hero/outside5.webp"
-            alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
+            alt="The restored 1905 church that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood"
             fill
             priority
             placeholder="blur"
@@ -166,37 +235,38 @@ export default function Home() {
 
           <div className="relative z-20 text-center text-[#f2eee9] px-6 max-w-5xl mx-auto">
             <div className="mb-8 animate-fade-in-up">
-              <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none font-serif">
-                <span className="block font-thin drop-shadow-lg">Merritt</span>
-                <span className="block font-bold drop-shadow-lg">Wellness</span>
+              <h1 className="text-5xl md:text-7xl font-light tracking-tight mb-6 leading-none font-serif">
+                <span className="block font-thin drop-shadow-lg">A Restored 1905 Church</span>
+                <span className="block font-bold drop-shadow-lg">in Sloans Lake</span>
               </h1>
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
-              {/* ENHANCED: Better local keywords in hero description */}
               <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Denver's premier historic wellness sanctuary in Sloans Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
+                Merritt Wellness is Denver's historic sanctuary for gathering: private events
+                under 24-foot cathedral ceilings, and a weekly rhythm of classes, practices,
+                and community
               </p>
             </div>
 
-            {/* Enhanced CTA Section */}
+            {/* Two clear paths */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
               <Link
-                href="#booking"
+                href="/private-events"
                 className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
               >
                 <span className="relative z-10 flex items-center">
-                  <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+                  Host a Private Event
+                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                  Reserve Your Experience
                 </span>
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
               <Link
-                href="/about"
+                href="/class-partnerships"
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
               >
                 <span className="flex items-center">
-                  Discover the Space
+                  Classes & Partnerships
                   <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -209,6 +279,84 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <div className="w-6 h-10 border-2 border-[#f2eee9]/70 rounded-full flex justify-center backdrop-blur-sm">
               <div className="w-1 h-3 bg-[#f2eee9]/70 rounded-full mt-2 animate-pulse"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* FEATURED: Weddings — direct path, no dropdown required */}
+        <section className="py-24 bg-gradient-to-b from-[#faf8f5] to-[#f2eee9]/40">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid lg:grid-cols-2 rounded-3xl overflow-hidden shadow-xl border border-[#735e59]/10 bg-white">
+              <div className="relative min-h-[320px] lg:min-h-0">
+                <Image
+                  src="/images/pages/weddings/celebration-kiss.webp"
+                  alt="A wedding party cheers as the couple kisses before the grand stained-glass window of the church hall"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  placeholder={getBlurDataURL("/images/pages/weddings/celebration-kiss.webp") ? "blur" : "empty"}
+                  blurDataURL={getBlurDataURL("/images/pages/weddings/celebration-kiss.webp")}
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-10 md:p-14 flex flex-col justify-center">
+                <span className="inline-flex self-start items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                  Weddings at Merritt
+                </span>
+                <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-4">
+                  Say it under
+                  <span className="block font-bold text-[#735e59]">the rose window</span>
+                </h2>
+                <p className="text-[#6b5f5b] leading-relaxed mb-8">
+                  Cathedral ceilings, original stained glass, and room for 125 guests, ten
+                  minutes from downtown Denver. Real hourly pricing is published on the page,
+                  so you can plan before you ever reach out.
+                </p>
+                <Link
+                  href="/weddings"
+                  className="inline-flex self-start items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-8 py-4 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
+                >
+                  Explore the Wedding Venue
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+
+            {/* The two doors, spelled out */}
+            <div className="grid md:grid-cols-2 gap-6 mt-6">
+              <Link
+                href="/private-events"
+                className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
+              >
+                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Private Events</h3>
+                <p className="text-[#6b5f5b] leading-relaxed mb-5">
+                  Concerts, art shows, celebrations of life, parties, quinceañeras, and
+                  corporate offsites, with published pricing and 22 on-site parking spots.
+                </p>
+                <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
+                  See every event type
+                  <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </Link>
+              <Link
+                href="/class-partnerships"
+                className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
+              >
+                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Classes & Partnerships</h3>
+                <p className="text-[#6b5f5b] leading-relaxed mb-5">
+                  Recurring blocks for yoga, breathwork, dance, and martial arts, congregation
+                  partnerships on Sundays, and studio space for practitioners.
+                </p>
+                <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
+                  Find your weekly block
+                  <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </Link>
             </div>
           </div>
         </section>
