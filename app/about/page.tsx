@@ -185,10 +185,10 @@ export default function AboutPage() {
                   </li>
                 </ul>
                 <Link
-                  href="/events"
+                  href="/calendar"
                   className="inline-flex items-center mt-6 px-6 py-3 bg-[#735e59] text-white rounded-full font-semibold hover:bg-[#5d4a46] transition-colors duration-300"
                 >
-                  View Upcoming Events
+                  See What's On
                   <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

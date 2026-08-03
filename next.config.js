@@ -28,6 +28,19 @@ const nextConfig = {
     '*': ['./public/images/**/*'],
   },
 
+  // Permanent redirects from the pre-restructure routes. The public calendar
+  // moved from /events to /calendar ("What's On") to free the word "events"
+  // for the private-events rental pages; the standalone contact page was
+  // retired (contact lives in the footer + per-page inquiry forms); /book is
+  // the short alias for the booking application.
+  async redirects() {
+    return [
+      { source: '/events', destination: '/calendar', permanent: true },
+      { source: '/contact', destination: '/booking', permanent: true },
+      { source: '/book', destination: '/booking', permanent: true },
+    ]
+  },
+
   // Security headers
   async headers() {
     return [

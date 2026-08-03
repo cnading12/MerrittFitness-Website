@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.webp',
+        url: 'https://merrittwellness.net/images/hero/outside5.webp',
         width: 1200,
         height: 630,
         alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'About Merritt Wellness | Historic Wellness Space Since 1905',
     description: 'Discover our 119-year history of community gathering in Denver\'s Sloans Lake neighborhood.',
-    images: ['https://merrittwellness.net/images/hero/outside3.webp'],
+    images: ['https://merrittwellness.net/images/hero/outside5.webp'],
   },
   alternates: {
     canonical: 'https://merrittwellness.net/about',

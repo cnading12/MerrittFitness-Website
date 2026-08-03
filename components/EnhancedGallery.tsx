@@ -405,7 +405,7 @@ const EnhancedGallery = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-[#4a3f3c] relative overflow-hidden">
+    <section id="gallery" className="py-20 bg-[#4a3f3c] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#4a3f3c] via-[#5a4a46] to-[#4a3f3c]"></div>
 
       {/* Stained glass texture overlay - using Next/Image */}

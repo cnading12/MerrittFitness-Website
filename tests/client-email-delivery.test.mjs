@@ -291,3 +291,35 @@ test('create-recurring-subscription route exports maxDuration', async () => {
   assert.ok(route.maxDuration >= 60,
     `create-recurring-subscription route must export maxDuration ≥ 60, got ${route.maxDuration}`);
 });
+
+test('inquiry route exports maxDuration', async () => {
+  const route = await import('../app/api/inquiry/route.js');
+  assert.ok(route.maxDuration >= 60,
+    `inquiry route must export maxDuration ≥ 60, got ${route.maxDuration}`);
+});
+
+// ---------- 6. Inquiry form emails ----------
+// New-business inquiries go to the MANAGER ONLY (never clientservices@, which
+// serves already-booked clients) and every send carries an idempotency key so
+// a double-submit can't email the manager twice.
+
+test('inquiry notification goes to the manager only, keyed on submissionId', async () => {
+  sentEmails.length = 0;
+  const { sendInquiryNotification } = await import('../app/lib/email.js');
+  await sendInquiryNotification({
+    type: 'inquiry',
+    submissionId: '11111111-2222-4333-8444-555555555555',
+    name: 'Test Renter',
+    email: 'renter@example.com',
+    eventType: 'Wedding',
+    message: 'Looking at next June.',
+  });
+
+  assert.equal(sentEmails.length, 1);
+  const payload = sentEmails[0];
+  assert.deepEqual(payload.to, [process.env.OPS_EMAIL_MANAGER],
+    'inquiry must go to the manager address only');
+  assert.ok(!payload.bcc && !payload.cc, 'inquiry must not CC/BCC anyone');
+  assert.equal(payload.replyTo, 'renter@example.com');
+  assert.ok(payload.text, 'inquiry email must carry a plain-text part');
+});

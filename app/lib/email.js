@@ -1980,3 +1980,81 @@ export async function sendConfirmationEmails(booking) {
     throw new Error(`Email process failed: ${emailResults.errors.join(', ')}`);
   }
 }
+// ---------------------------------------------------------------------------
+// Website inquiry / studio waitlist notifications (app/api/inquiry/route.js).
+//
+// New-business inquiries route to the MANAGER ONLY — clientservices@ is for
+// clients with an existing booking and must never receive new inquiries.
+// ---------------------------------------------------------------------------
+
+function getManagerRecipient() {
+  return (process.env.OPS_EMAIL_MANAGER || '').trim() || 'manager@merrittwellness.net';
+}
+
+// Minimal HTML escape for user-typed inquiry fields interpolated into the
+// staff email body.
+function escapeInquiryHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Send a website inquiry (or studio waitlist signup) to the manager.
+// `inquiry` = { type: 'inquiry'|'waitlist', submissionId, eventType, name,
+// email, phone?, eventDate?, startWindow?, message?, sourcePage? }.
+// The submissionId (generated client-side per submission) keys idempotency so
+// a double-submitted form or retried request can't email the manager twice.
+export async function sendInquiryNotification(inquiry) {
+  const isWaitlist = inquiry.type === 'waitlist';
+  const label = isWaitlist ? 'studio waitlist signup' : 'website inquiry';
+  const e = escapeInquiryHtml;
+
+  const rows = [
+    ['Name', inquiry.name],
+    ['Email', inquiry.email],
+    ['Phone', inquiry.phone],
+    isWaitlist ? ['Desired start window', inquiry.startWindow] : ['Event date', inquiry.eventDate],
+    ['Interested in', inquiry.eventType],
+    ['Submitted from', inquiry.sourcePage],
+  ]
+    .filter(([, value]) => value)
+    .map(([key, value]) =>
+      `<tr><td style="padding: 6px 12px 6px 0; color: #6b5f5b; white-space: nowrap;"><strong>${key}</strong></td><td style="padding: 6px 0; color: #4a3f3c;">${e(value)}</td></tr>`)
+    .join('');
+
+  const subjectName = inquiry.name ? ` from ${inquiry.name}` : '';
+  const subject = isWaitlist
+    ? `Studio waitlist signup${subjectName}`
+    : `New event inquiry${subjectName}${inquiry.eventType ? ` — ${inquiry.eventType}` : ''}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #4a3f3c;">
+      ${LOGO_HEADER}
+      <h2 style="color: #735e59;">${isWaitlist ? 'Studio Waitlist Signup' : 'New Event Inquiry'}</h2>
+      <table style="border-collapse: collapse;">${rows}</table>
+      ${inquiry.message ? `
+      <div style="background: #f2eee9; padding: 16px; border-radius: 8px; margin-top: 16px;">
+        <p style="margin: 0; white-space: pre-wrap;">${e(inquiry.message)}</p>
+      </div>` : ''}
+      <p style="color: #a08b84; font-size: 12px; margin-top: 24px;">
+        Sent by the ${SITE_URL} ${isWaitlist ? 'studio waitlist' : 'inquiry'} form. Reply goes straight to the sender.
+      </p>
+    </div>`;
+
+  const result = await sendEmailWithRetry({
+    from: EMAIL_CONFIG.from,
+    to: [getManagerRecipient()],
+    replyTo: inquiry.email,
+    subject,
+    html,
+  }, {
+    label: `${label} ${inquiry.submissionId}`,
+    idempotencyKey: `inquiry-${inquiry.submissionId}`,
+    kind: isWaitlist ? 'studio-waitlist' : 'website-inquiry',
+  });
+
+  console.log(`✅ ${label} forwarded to manager:`, result.data?.id);
+  return result;
+}

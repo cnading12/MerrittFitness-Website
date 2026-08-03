@@ -467,7 +467,7 @@ function EmptyState({ dateRange }: { dateRange: DateRange }) {
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link
-          href="/contact"
+          href="/booking"
           className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-8 py-4 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
         >
           Get Notified
@@ -509,11 +509,11 @@ export default function EventsPage() {
           <div className="max-w-7xl mx-auto px-6 text-center animate-fade-in-up">
             <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
               <Calendar className="w-4 h-4 mr-2" />
-              What's Happening
+              The Public Calendar
             </span>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-[#f2eee9] leading-tight font-serif mb-4">
-              Upcoming
-              <span className="block font-bold">Events</span>
+              What&apos;s
+              <span className="block font-bold">On</span>
             </h1>
             <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/60 to-transparent mx-auto mb-6" />
             <p className="text-lg md:text-xl text-[#f2eee9]/80 max-w-2xl mx-auto leading-relaxed">
@@ -601,7 +601,7 @@ export default function EventsPage() {
                   and community gatherings. Let's create something beautiful together.
                 </p>
                 <Link
-                  href="/contact"
+                  href="/booking"
                   className="inline-flex items-center gap-2 bg-[#f2eee9] text-[#735e59] font-semibold px-8 py-4 rounded-xl hover:bg-white transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
                 >
                   Get in Touch

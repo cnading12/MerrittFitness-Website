@@ -39,7 +39,7 @@ export default function Home() {
     "priceRange": "$95/hour",
     "paymentAccepted": ["Credit Card", "Cash", "Check", "Venmo", "Zelle"],
     "image": [
-      "https://merrittwellness.net/images/hero/outside3.webp",
+      "https://merrittwellness.net/images/hero/outside5.webp",
       "https://merrittwellness.net/images/hero/1.webp",
       "https://merrittwellness.net/images/events/2.webp"
     ],
@@ -151,7 +151,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
           <Image
             src="/images/hero/outside5.webp"
-            alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
+            alt="The restored 1905 church housing Merritt Wellness, beside the Merritt Workspace building in Denver's Sloans Lake neighborhood"
             fill
             priority
             placeholder="blur"
@@ -171,32 +171,32 @@ export default function Home() {
                 <span className="block font-bold drop-shadow-lg">Wellness</span>
               </h1>
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
-              {/* ENHANCED: Better local keywords in hero description */}
+              {/* Building-first framing: the venue leads, the offerings follow */}
               <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Denver's premier historic wellness sanctuary in Sloans Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
+                A restored 1905 church in Denver's Sloans Lake, with 24-foot cathedral ceilings and original stained glass. Host a wedding or private event, or make it the weekly home for your class or practice.
               </p>
             </div>
 
-            {/* Enhanced CTA Section */}
+            {/* Two clear paths: private events, and recurring classes & partnerships */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
               <Link
-                href="#booking"
+                href="/private-events"
                 className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
               >
                 <span className="relative z-10 flex items-center">
                   <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                   </svg>
-                  Reserve Your Experience
+                  Host a Private Event
                 </span>
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
               <Link
-                href="/about"
+                href="/class-partnerships"
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
               >
                 <span className="flex items-center">
-                  Discover the Space
+                  Classes &amp; Partnerships
                   <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -209,6 +209,87 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <div className="w-6 h-10 border-2 border-[#f2eee9]/70 rounded-full flex justify-center backdrop-blur-sm">
               <div className="w-1 h-3 bg-[#f2eee9]/70 rounded-full mt-2 animate-pulse"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* TWO PATHS — private events (weddings first) and recurring partnerships.
+            The weddings card is a direct link; dropdown-only access is invisible
+            on mobile and weddings is the highest-intent inbound search. */}
+        <section className="py-20 bg-[#faf8f5]">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-14">
+              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] font-serif">
+                One historic building,
+                <span className="block font-bold text-[#735e59]">two ways to make it yours</span>
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Weddings & private events path */}
+              <Link
+                href="/weddings"
+                className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 min-h-[320px] flex items-end"
+              >
+                <Image
+                  src="/images/hero/church-2.webp"
+                  alt="The sunlit main hall of the 1905 church, ready for a wedding ceremony"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL("/images/hero/church-2.webp")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4a3f3c]/90 via-[#4a3f3c]/30 to-transparent"></div>
+                <div className="relative z-10 p-8 text-[#f2eee9]">
+                  <span className="inline-block px-3 py-1 bg-[#f2eee9]/15 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wide mb-3">
+                    Weddings &amp; Private Events
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-serif font-bold mb-2">
+                    Get married in a 1905 church
+                  </h3>
+                  <p className="text-[#f2eee9]/85 leading-relaxed mb-4">
+                    Ceremonies and receptions for up to 125 guests, plus concerts, art shows,
+                    memorials, and milestones.
+                  </p>
+                  <span className="font-semibold underline underline-offset-4">
+                    Explore weddings →
+                  </span>
+                </div>
+              </Link>
+
+              {/* Classes & partnerships path */}
+              <Link
+                href="/class-partnerships"
+                className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 min-h-[320px] flex items-end"
+              >
+                <Image
+                  src="/images/events/dance/Ricky.JPG"
+                  alt="A dance class practicing in the main hall at Merritt Wellness"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL("/images/events/dance/Ricky.JPG")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4a3f3c]/90 via-[#4a3f3c]/30 to-transparent"></div>
+                <div className="relative z-10 p-8 text-[#f2eee9]">
+                  <span className="inline-block px-3 py-1 bg-[#f2eee9]/15 backdrop-blur-sm rounded-full text-xs font-semibold uppercase tracking-wide mb-3">
+                    Classes &amp; Partnerships
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-serif font-bold mb-2">
+                    A weekly home for your practice
+                  </h3>
+                  <p className="text-[#f2eee9]/85 leading-relaxed mb-4">
+                    Recurring blocks for yoga, dance, and martial arts, congregation partnerships,
+                    and studio space for practitioners.
+                  </p>
+                  <span className="font-semibold underline underline-offset-4">
+                    See open blocks →
+                  </span>
+                </div>
+              </Link>
             </div>
           </div>
         </section>

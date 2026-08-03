@@ -187,7 +187,7 @@ function SuccessPageContent() {
           </button>
 
           <a
-            href="/contact"
+            href="mailto:clientservices@merrittwellness.net"
             className="flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all"
           >
             Questions? Contact Us

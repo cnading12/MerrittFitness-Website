@@ -4,19 +4,48 @@ import { useState, useEffect, useRef } from 'react';
 import { getBlurDataURL } from '@/lib/blur-data';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, X, Calendar } from 'lucide-react';
+import { X, Calendar, ChevronDown } from 'lucide-react';
 
-const NAV_ITEMS = [
+type NavLink = { label: string; href: string };
+type NavItem = NavLink | { label: string; items: NavLink[] };
+
+// Weddings stays first in the Private Events dropdown — it is the
+// highest-intent inbound search traffic. Do not alphabetize.
+const NAV_ITEMS: NavItem[] = [
+  { label: 'Home', href: '/' },
+  {
+    label: 'Private Events',
+    items: [
+      { label: 'Weddings', href: '/weddings' },
+      { label: 'Concerts & Performances', href: '/concerts' },
+      { label: 'Art Shows & Exhibitions', href: '/art-shows' },
+      { label: 'All Private Events', href: '/private-events' },
+    ],
+  },
+  {
+    label: 'Classes & Studio',
+    items: [
+      { label: 'Recurring Class Partnerships', href: '/class-partnerships' },
+      { label: 'Congregation Partnerships', href: '/congregations' },
+      { label: 'Studio & Workspace', href: '/studio' },
+    ],
+  },
+  { label: "What's On", href: '/calendar' },
   { label: 'About', href: '/about' },
-  { label: 'Events', href: '/events' },
-  { label: 'Contact', href: '/contact' },
 ];
+
+function isDropdown(item: NavItem): item is { label: string; items: NavLink[] } {
+  return 'items' in item;
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
   const lastScroll = useRef(0);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -28,14 +57,32 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  // Close desktop dropdowns on outside click / Escape
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDropdown(null);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, []);
+
   // Scroll hide/show and background change for navbar
   useEffect(() => {
     const handleScroll = () => {
       const current = window.scrollY;
-      
+
       // Change background after scrolling past 50px
       setScrolled(current > 50);
-      
+
       if (current <= 0) {
         setShowNav(true);
         lastScroll.current = 0;
@@ -46,6 +93,7 @@ export default function Navbar() {
       } else if (current > lastScroll.current) {
         setShowNav(false);
         setMenuOpen(false); // Close mobile menu when scrolling down
+        setOpenDropdown(null);
       }
       lastScroll.current = current;
     };
@@ -62,12 +110,12 @@ export default function Navbar() {
     >
       {/* Desktop Navbar */}
       <div className={`w-full transition-all duration-300 ${
-        scrolled 
-          ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20' 
+        scrolled
+          ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20'
           : 'bg-[#f2eee9]/80 backdrop-blur-sm'
       }`}>
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4 overflow-hidden">
-          {/* Logo - Made Bigger */}
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4" ref={navRef}>
+          {/* Logo */}
           <Link href="/" className="flex items-center min-w-0 z-50 group" tabIndex={0}>
             <Image
               src="/images/hero/logo.png"
@@ -82,31 +130,77 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="relative font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2 group"
-              >
-                {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#735e59] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            ))}
-            
-            {/* Book Now CTA */}
+          <div className="hidden lg:flex items-center gap-6">
+            {NAV_ITEMS.map((item) =>
+              isDropdown(item) ? (
+                <div
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenDropdown(item.label)}
+                  onMouseLeave={() => setOpenDropdown((cur) => (cur === item.label ? null : cur))}
+                >
+                  <button
+                    className="flex items-center gap-1 font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2"
+                    aria-expanded={openDropdown === item.label}
+                    aria-haspopup="true"
+                    onClick={() =>
+                      setOpenDropdown((cur) => (cur === item.label ? null : item.label))
+                    }
+                  >
+                    {item.label}
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform duration-200 ${
+                        openDropdown === item.label ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  <div
+                    className={`absolute left-0 top-full pt-2 transition-all duration-200 ${
+                      openDropdown === item.label
+                        ? 'opacity-100 visible translate-y-0'
+                        : 'opacity-0 invisible -translate-y-1'
+                    }`}
+                  >
+                    <div className="bg-[#f2eee9] rounded-2xl shadow-xl border border-[#735e59]/15 py-2 min-w-[240px]">
+                      {item.items.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="block px-5 py-2.5 text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium transition-colors duration-150"
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="relative font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2 group"
+                >
+                  {item.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#735e59] transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              )
+            )}
+
+            {/* Book CTA */}
             <Link
               href="/booking"
               className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-medium px-5 py-2.5 rounded-full hover:bg-[#5a4a46] transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
             >
               <Calendar size={16} />
-              Book Now
+              Book
             </Link>
           </div>
 
           {/* Mobile Hamburger */}
           <button
-            className="md:hidden shrink-0 text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
+            className="lg:hidden shrink-0 text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
@@ -125,23 +219,25 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer. Sized with w-screen/h-screen rather than inset-0: the
+          transformed header is this element's containing block, so inset-0
+          would collapse it to the header's own height. */}
       <div className={`
-        md:hidden fixed inset-0 z-40 transition-all duration-300 ease-in-out
+        lg:hidden fixed left-0 top-0 w-screen h-screen z-40 transition-all duration-300 ease-in-out
         ${menuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
       `}>
         {/* Backdrop */}
-        <div 
+        <div
           className={`absolute inset-0 bg-[#735e59]/20 backdrop-blur-sm transition-opacity duration-300 ${
             menuOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setMenuOpen(false)}
         ></div>
-        
+
         {/* Drawer */}
         <div className={`
           absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-[#f2eee9] shadow-2xl
-          transition-transform duration-300 ease-out
+          transition-transform duration-300 ease-out overflow-y-auto
           ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}>
           {/* Header */}
@@ -174,18 +270,54 @@ export default function Navbar() {
           {/* Navigation */}
           <nav className="p-6 bg-[#f2eee9]">
             <div className="space-y-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="block text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {NAV_ITEMS.map((item) =>
+                isDropdown(item) ? (
+                  <div key={item.label}>
+                    <button
+                      className="w-full flex items-center justify-between text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
+                      aria-expanded={mobileOpenSection === item.label}
+                      onClick={() =>
+                        setMobileOpenSection((cur) => (cur === item.label ? null : item.label))
+                      }
+                    >
+                      {item.label}
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform duration-200 ${
+                          mobileOpenSection === item.label ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        mobileOpenSection === item.label ? 'max-h-64' : 'max-h-0'
+                      }`}
+                    >
+                      {item.items.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="block text-[#735e59]/90 hover:text-[#5a4a46] hover:bg-[#735e59]/10 py-2.5 pl-8 pr-4 rounded-xl transition-all duration-200"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="block text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
             </div>
-            
+
             {/* Mobile Book CTA */}
             <div className="mt-8 pt-6 border-t border-[#735e59]/20 bg-[#f2eee9]">
               <Link
@@ -194,10 +326,10 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
               >
                 <Calendar size={20} />
-                Book Your Class
+                Book the Space
               </Link>
               <p className="text-center text-sm text-[#735e59]/70 mt-3">
-                Ready to begin your journey?
+                Events, classes, and gatherings in a restored 1905 church
               </p>
             </div>
           </nav>
