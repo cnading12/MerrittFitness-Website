@@ -1,7 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import Image from 'next/image';
-import { getBlurDataURL } from '@/lib/blur-data';
 import PageHero from '@/components/venue/PageHero';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
@@ -10,11 +7,10 @@ import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
 import CtaSection from '@/components/venue/CtaSection';
+import RateTable from '@/components/venue/RateTable';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, weddingsImages } from '@/app/data/venue-images';
-import { contact } from '@/app/data/site';
 import {
-  rateBands,
   extendedDiscount,
   minimumHours,
   cardFeePercent,
@@ -244,26 +240,7 @@ export default function WeddingsPage() {
             Hourly rates by day and guest count, with a {minimumHours}-hour minimum. No
             packages to decode, no quote-request wall.
           </p>
-          <div className="overflow-x-auto rounded-3xl border border-[#735e59]/10 bg-white shadow-sm">
-            <table className="w-full text-left min-w-[420px]">
-              <thead>
-                <tr className="border-b border-[#735e59]/10">
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wide text-[#a08b84]">Guests</th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wide text-[#a08b84]">Sunday to Friday</th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wide text-[#a08b84]">Saturday</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rateBands.map((band) => (
-                  <tr key={band.guests} className="border-b border-[#735e59]/5 last:border-0">
-                    <td className="px-6 py-4 font-semibold text-[#4a3f3c]">{band.guests}</td>
-                    <td className="px-6 py-4 text-[#6b5f5b]">{money(band.weekday)}/hour</td>
-                    <td className="px-6 py-4 text-[#6b5f5b]">{money(band.saturday)}/hour</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <RateTable />
           <div className="mt-8 grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm">
               <h3 className="font-bold text-[#735e59] font-serif text-lg mb-3">

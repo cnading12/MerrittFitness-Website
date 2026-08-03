@@ -12,6 +12,14 @@ import {
   RECURRING_VOLUME_DISCOUNT,
   RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS,
   STRIPE_FEE_PERCENTAGE,
+  ON_SITE_ASSISTANCE_FEE,
+  EVENT_SUPERVISION_RATE,
+  EVENT_SUPERVISION_GROUP_THRESHOLD,
+  TABLES_CHAIRS_FEE_SMALL,
+  TABLES_CHAIRS_FEE_LARGE,
+  TABLES_CHAIRS_GROUP_THRESHOLD,
+  MAT_RENTAL_FEE,
+  DIVIDER_REMOVAL_FEE,
   // @ts-expect-error - plain JS module without type declarations
 } from './booking-pricing.js';
 
@@ -58,6 +66,27 @@ export const minimumHours = 2;
 export function money(n: number): string {
   return `$${n.toLocaleString('en-US')}`;
 }
+
+// Optional add-ons, itemized during booking. Descriptions mirror the fee
+// rules in booking-pricing.js.
+export const addOns = [
+  {
+    name: 'In-house tables and chairs',
+    detail: `$${TABLES_CHAIRS_FEE_SMALL} per item type for events under ${TABLES_CHAIRS_GROUP_THRESHOLD} guests, $${TABLES_CHAIRS_FEE_LARGE} per item type for ${TABLES_CHAIRS_GROUP_THRESHOLD}+ guests`,
+  },
+  {
+    name: 'Event staffing',
+    detail: `$${EVENT_SUPERVISION_RATE}/hour for events with ${EVENT_SUPERVISION_GROUP_THRESHOLD}+ guests; smaller first-time events include a flat $${ON_SITE_ASSISTANCE_FEE} first-hour onboarding`,
+  },
+  {
+    name: 'Full-coverage floor mat',
+    detail: `$${MAT_RENTAL_FEE} per booking, set up and broken down by our staff within your rental window`,
+  },
+  {
+    name: 'Room divider removal',
+    detail: `$${DIVIDER_REMOVAL_FEE.toLocaleString('en-US')} flat, for events that want the full open floor`,
+  },
+] as const;
 
 /** Example: a full Saturday wedding day, used on /weddings pricing copy. */
 export function saturdayExample(hours: number, guests: number) {
