@@ -291,3 +291,9 @@ test('create-recurring-subscription route exports maxDuration', async () => {
   assert.ok(route.maxDuration >= 60,
     `create-recurring-subscription route must export maxDuration ≥ 60, got ${route.maxDuration}`);
 });
+
+test('inquiry route exports maxDuration', async () => {
+  const route = await import('../app/api/inquiry/route.js');
+  assert.ok(route.maxDuration >= 60,
+    `inquiry route must export maxDuration ≥ 60, got ${route.maxDuration}`);
+});
