@@ -9,7 +9,7 @@ import InquirySection from '@/components/venue/InquirySection';
 import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS } from '@/app/data/venue';
 
-const SHARE_IMAGE = `${VENUE.url}/images/events/art/Karen-1.webp`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/art/Karen-1.webp`;
 
 export const metadata: Metadata = {
   title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
@@ -56,7 +56,7 @@ const venueSchema = {
     addressCountry: 'US',
   },
   geo: { '@type': 'GeoCoordinates', latitude: VENUE.geo.latitude, longitude: VENUE.geo.longitude },
-  image: [SHARE_IMAGE, `${VENUE.url}/images/events/art/Karen-3.webp`],
+  image: [SHARE_IMAGE, `${VENUE.url}/images/events/venue/art/Karen-3.webp`],
 };
 
 const FAQS: Faq[] = [
@@ -93,27 +93,27 @@ const FAQS: Faq[] = [
 
 const GALLERY = [
   {
-    src: '/images/events/art/Karen-1.webp',
+    src: '/images/events/venue/art/Karen-1.webp',
     alt: 'Abstract paintings hung on the wood-framed gallery wall above the pew benches in the main hall',
   },
   {
-    src: '/images/events/art/Karen-2.webp',
+    src: '/images/events/venue/art/Karen-2.webp',
     alt: 'A row of canvases displayed on the gallery panels with track lighting overhead',
   },
   {
-    src: '/images/events/art/Karen-3.webp',
+    src: '/images/events/venue/art/Karen-3.webp',
     alt: 'Circular and rectangular works arranged across the main hall display wall',
   },
   {
-    src: '/images/events/art/Karen-4.webp',
+    src: '/images/events/venue/art/Karen-4.webp',
     alt: 'Detail of artwork labels and canvases on the wood-and-glass gallery wall',
   },
   {
-    src: '/images/events/art/hero.webp',
+    src: '/images/events/venue/art/hero.webp',
     alt: 'Wide view of an art show hung in the main hall of the 1905 church',
   },
   {
-    src: '/images/events/art/hero-2.webp',
+    src: '/images/events/venue/art/hero-2.webp',
     alt: 'Guests viewing artwork during an exhibition in the main hall',
   },
 ];
@@ -127,7 +127,7 @@ export default function ArtShowsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/events/art/Karen-1.webp"
+          image="/images/events/venue/art/Karen-1.webp"
           imageAlt="Artwork hung on the wood-framed gallery walls of the main hall at Merritt Wellness"
           eyebrow="Art Shows & Exhibitions"
           title={

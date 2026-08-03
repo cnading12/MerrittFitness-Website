@@ -15,7 +15,7 @@ import {
   WORKSPACE_MEMBER_BENEFIT,
 } from '@/app/data/partnerships';
 
-const SHARE_IMAGE = `${VENUE.url}/images/events/dance/Ricky.JPG`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/dance/3.JPG`;
 
 export const metadata: Metadata = {
   title: 'Recurring Class Space for Rent in Denver | Merritt Wellness',
@@ -77,19 +77,19 @@ const FAQS: Faq[] = [
 
 const GALLERY = [
   {
-    src: '/images/events/dance/Ricky.JPG',
+    src: '/images/events/venue/dance/3.JPG',
     alt: 'A line dancing class mid-step on the hardwood floor of the main hall',
   },
   {
-    src: '/images/events/judo/1.JPG',
+    src: '/images/events/venue/martial-arts/1.JPG',
     alt: 'A kids judo class seated on the full-coverage roll-out mat beneath the stained glass windows',
   },
   {
-    src: '/images/events/2.webp',
+    src: '/images/events/venue/wellness/2.webp',
     alt: 'A restorative yoga class resting on mats in the upstairs hall',
   },
   {
-    src: '/images/events/yoga/yoga-class.webp',
+    src: '/images/events/venue/wellness/3-yoga-class.webp',
     alt: 'A yoga class flowing through poses in the main hall',
   },
   {
@@ -97,8 +97,8 @@ const GALLERY = [
     alt: 'An instructor teaching a dance phrase to students in the main hall',
   },
   {
-    src: '/images/events/yoga/breathwork-in-action.webp',
-    alt: 'A breathwork session in progress on the main hall floor',
+    src: '/images/events/venue/wellness/7-mats.jpg',
+    alt: 'The full-coverage roll-out mat covering the entire main hall floor beneath the stained glass',
   },
 ];
 
@@ -106,7 +106,7 @@ export default function ClassPartnershipsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
       <PageHero
-        image="/images/events/dance/Ricky.JPG"
+        image="/images/events/venue/dance/3.JPG"
         imageAlt="Dancers practicing in the high-ceilinged main hall of the 1905 church"
         eyebrow="Recurring Class Partnerships"
         title={

@@ -9,7 +9,7 @@ import InquirySection from '@/components/venue/InquirySection';
 import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS } from '@/app/data/venue';
 
-const SHARE_IMAGE = `${VENUE.url}/images/hero/church-3.webp`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/concerts/1-Western-Wish.JPEG`;
 
 export const metadata: Metadata = {
   title: 'Concert & Performance Venue in Denver | Merritt Wellness',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       'Play a room built for sound: a 1905 sanctuary with cathedral acoustics, surround sound, and an audience of up to 125.',
     url: `${VENUE.url}/concerts`,
     siteName: 'Merritt Wellness',
-    images: [{ url: SHARE_IMAGE, width: 1080, height: 1440, alt: 'The main hall of the 1905 church at Merritt Wellness with its rose window and projection screen' }],
+    images: [{ url: SHARE_IMAGE, width: 4000, height: 3000, alt: 'Songwriters performing beneath the rose window at Merritt Wellness in Denver' }],
     locale: 'en_US',
     type: 'website',
   },
@@ -56,7 +56,7 @@ const venueSchema = {
     addressCountry: 'US',
   },
   geo: { '@type': 'GeoCoordinates', latitude: VENUE.geo.latitude, longitude: VENUE.geo.longitude },
-  image: [SHARE_IMAGE, `${VENUE.url}/images/hero/Sound-event.JPG`],
+  image: [SHARE_IMAGE, `${VENUE.url}/images/events/venue/concerts/2-PS.jpeg`],
 };
 
 const FAQS: Faq[] = [
@@ -109,8 +109,8 @@ const GALLERY = [
     alt: 'Candlelight against the dark wood floor during an evening performance',
   },
   {
-    src: '/images/hero/church-2.webp',
-    alt: 'Daylight view of the performance hall showing the wood dividers and stained glass',
+    src: '/images/events/venue/concerts/2-PS.jpeg',
+    alt: 'A packed dance floor moving together during an evening show in the main hall',
   },
 ];
 
@@ -123,8 +123,8 @@ export default function ConcertsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/hero/church-3.webp"
-          imageAlt="Symmetrical view of the 1905 sanctuary with rose window, projection screen, and hardwood floor"
+          image="/images/events/venue/concerts/1-Western-Wish.JPEG"
+          imageAlt="Four songwriters performing in the round beneath the rose window as the audience listens"
           eyebrow="Concerts & Performances"
           title={
             <>
@@ -157,13 +157,7 @@ export default function ConcertsPage() {
             <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif text-center mb-10">
               The hall in performance
             </h2>
-            <GalleryGrid
-              images={GALLERY}
-              placeholders={[
-                'Live band mid-set',
-                'Audience during a show',
-              ]}
-            />
+            <GalleryGrid images={GALLERY} />
           </div>
         </section>
 

@@ -115,6 +115,10 @@ const GALLERY = [
     src: '/images/hero/Cafe-East.webp',
     alt: 'The cafe lounge with tables and pews, used for fellowship after services',
   },
+  {
+    src: '/images/events/venue/church/community.JPG',
+    alt: 'A weeknight community meeting seated in rows in the upstairs hall',
+  },
 ];
 
 export default function CongregationsPage() {

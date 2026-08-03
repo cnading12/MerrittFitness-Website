@@ -41,7 +41,7 @@ export default function Home() {
     "image": [
       "https://merrittwellness.net/images/hero/outside5.webp",
       "https://merrittwellness.net/images/hero/1.webp",
-      "https://merrittwellness.net/images/events/2.webp"
+      "https://merrittwellness.net/images/events/venue/wellness/2.webp"
     ],
     "sameAs": [
       "https://www.instagram.com/merrittwellnessdenver",
@@ -264,14 +264,14 @@ export default function Home() {
                 className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 min-h-[320px] flex items-end"
               >
                 <Image
-                  src="/images/events/dance/Ricky.JPG"
+                  src="/images/events/venue/dance/3.JPG"
                   alt="A dance class practicing in the main hall at Merritt Wellness"
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                   placeholder="blur"
-                  blurDataURL={getBlurDataURL("/images/events/dance/Ricky.JPG")}
+                  blurDataURL={getBlurDataURL("/images/events/venue/dance/3.JPG")}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#4a3f3c]/90 via-[#4a3f3c]/30 to-transparent"></div>
                 <div className="relative z-10 p-8 text-[#f2eee9]">

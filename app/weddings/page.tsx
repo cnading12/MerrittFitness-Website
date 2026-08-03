@@ -12,7 +12,7 @@ import InquirySection from '@/components/venue/InquirySection';
 import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS, AMENITIES } from '@/app/data/venue';
 
-const SHARE_IMAGE = `${VENUE.url}/images/hero/1.webp`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/wedding/10-Celebration - Edited.jpg`;
 
 export const metadata: Metadata = {
   title: 'Denver Wedding Venue in a Restored 1905 Church | Merritt Wellness',
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: SHARE_IMAGE,
-        width: 1920,
-        height: 1256,
-        alt: 'The restored 1905 brick church that hosts weddings at Merritt Wellness in Denver',
+        width: 1080,
+        height: 649,
+        alt: 'A wedding party celebrating beneath the stained glass windows at Merritt Wellness in Denver',
       },
     ],
     locale: 'en_US',
@@ -75,8 +75,8 @@ const venueSchema = {
   },
   image: [
     SHARE_IMAGE,
-    `${VENUE.url}/images/hero/church-2.webp`,
-    `${VENUE.url}/images/hero/Glass-Group.webp`,
+    `${VENUE.url}/images/events/venue/wedding/2-Pose.JPG`,
+    `${VENUE.url}/images/events/venue/wedding/7-Wedding.jpg`,
   ],
   amenityFeature: [
     { '@type': 'LocationFeatureSpecification', name: '24-foot cathedral ceilings', value: true },
@@ -142,28 +142,28 @@ const WEDDING_FAQS: Faq[] = [
 
 const GALLERY = [
   {
-    src: '/images/hero/church-2.webp',
-    alt: 'Main hall at Merritt Wellness with hardwood floors, cathedral ceilings, and stained glass windows along the right wall',
+    src: '/images/events/venue/wedding/1-Aisle-Walk - Edited.jpg',
+    alt: 'Newlyweds walking back up the aisle as guests stand and applaud beneath the stained glass',
+  },
+  {
+    src: '/images/events/venue/wedding/10-Celebration - Edited.jpg',
+    alt: 'The couple kissing while the whole wedding party cheers around them in the upstairs hall',
+  },
+  {
+    src: '/images/events/venue/wedding/5-Setup.JPG',
+    alt: 'Reception setup with skirted head tables, a wedding cake, and drapery under the wood-framed gallery wall',
+  },
+  {
+    src: '/images/events/venue/wedding/7-Wedding.jpg',
+    alt: 'Ceremony seating in white chair covers under the exposed beams of the upstairs hall',
+  },
+  {
+    src: '/images/events/venue/wedding/8-Get-Ready.PNG',
+    alt: 'A bride laughing with family while getting ready in the downstairs stone-walled suite',
   },
   {
     src: '/images/hero/Glass-Group.webp',
     alt: 'Four original arched stained glass windows in blue and rose tones along the main hall wall',
-  },
-  {
-    src: '/images/hero/1.webp',
-    alt: 'Exterior of the 1905 brick church on its lawn in the Sloans Lake neighborhood of Denver',
-  },
-  {
-    src: '/images/hero/Cafe-East.webp',
-    alt: 'Cafe lounge with small tables, pew benches, and a stained glass window over exposed brick',
-  },
-  {
-    src: '/images/hero/Glass-1.webp',
-    alt: 'Detail of a single arched stained glass window with wood trim in the main hall',
-  },
-  {
-    src: '/images/hero/candles.webp',
-    alt: 'Candles glowing during an evening event in the sanctuary',
   },
 ];
 
@@ -176,8 +176,9 @@ export default function WeddingsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/hero/church-2.webp"
-          imageAlt="Sunlit main hall of the restored 1905 church at Merritt Wellness, with hardwood floors and stained glass"
+          image="/images/events/venue/wedding/2-Pose.JPG"
+          imageAlt="A couple sharing a look beside their cake beneath a flower-and-drapery arch in the main hall"
+          objectPosition="center 40%"
           eyebrow="Weddings at Merritt Wellness"
           title={
             <>
@@ -213,8 +214,6 @@ export default function WeddingsPage() {
             <GalleryGrid
               images={GALLERY}
               placeholders={[
-                'Reception setup with round tables',
-                'Table setting and detail shots',
                 'Dusk exterior',
                 'Couple portrait outside the building',
               ]}

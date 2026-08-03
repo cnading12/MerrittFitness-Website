@@ -110,7 +110,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 31,
-      src: "/images/events/yoga/breathwork-class.webp",
+      src: "/images/events/venue/wellness/4-breathwork-class.webp",
       title: "Breathwork Session",
       desc: "Guided breathwork in our sacred space",
       category: "yoga",
@@ -118,7 +118,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 32,
-      src: "/images/events/yoga/breathwork-in-action.webp",
+      src: "/images/events/venue/wellness/1-breathwork-in-action.webp",
       title: "Breathwork in Action",
       desc: "Deep healing through conscious breathing",
       category: "yoga",
@@ -126,7 +126,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 33,
-      src: "/images/events/yoga/shavasana.webp",
+      src: "/images/events/venue/wellness/shavasana.webp",
       title: "Shavasana",
       desc: "Rest and restoration after practice",
       category: "yoga",
@@ -134,7 +134,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 34,
-      src: "/images/events/yoga/yoga-class.webp",
+      src: "/images/events/venue/wellness/3-yoga-class.webp",
       title: "Yoga Class",
       desc: "Community yoga in our historic sanctuary",
       category: "yoga",
@@ -178,7 +178,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 9,
-      src: "/images/events/judo/1.JPG",
+      src: "/images/events/venue/martial-arts/1.JPG",
       title: "Judo Training",
       desc: "Martial arts discipline in our sacred space",
       category: "events",
@@ -186,7 +186,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 12,
-      src: "/images/events/judo/4.JPG",
+      src: "/images/events/venue/martial-arts/4.JPG",
       title: "Judo Community",
       desc: "Learning respect and discipline together",
       category: "events",
@@ -194,7 +194,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 29,
-      src: "/images/events/dance/Event-1.JPG",
+      src: "/images/events/venue/dance/6.JPG",
       title: "Artist Amongst Us",
       desc: "An evening of dance and creative expression",
       category: "events",
@@ -202,28 +202,28 @@ const EnhancedGallery = () => {
     },
     {
       id: 30,
-      src: "/images/events/dance/Event-2.JPG",
+      src: "/images/events/venue/dance/2.JPG",
       title: "Artist Amongst Us Dance",
       desc: "Community celebration through movement and art",
       category: "events"
     },
     {
       id: 27,
-      src: "/images/events/art/hero.webp",
+      src: "/images/events/venue/art/hero.webp",
       title: "Art Show",
       desc: "Creative expression in our sacred space",
       category: "art"
     },
     {
       id: 28,
-      src: "/images/events/art/hero-2.webp",
+      src: "/images/events/venue/art/hero-2.webp",
       title: "Art Exhibition",
       desc: "Local artists showcase their work",
       category: "art"
     },
     {
       id: 36,
-      src: "/images/events/art/Karen-1.webp",
+      src: "/images/events/venue/art/Karen-1.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -236,7 +236,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 37,
-      src: "/images/events/art/Karen-2.webp",
+      src: "/images/events/venue/art/Karen-2.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -249,7 +249,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 38,
-      src: "/images/events/art/Karen-3.webp",
+      src: "/images/events/venue/art/Karen-3.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -262,7 +262,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 39,
-      src: "/images/events/art/Karen-4.webp",
+      src: "/images/events/venue/art/Karen-4.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
