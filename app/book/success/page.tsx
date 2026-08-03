@@ -179,7 +179,7 @@ function SuccessPageContent() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => window.location.href = '/booking'}
+            onClick={() => window.location.href = '/book'}
             className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-8 py-4 rounded-xl hover:bg-emerald-700 transition-all hover:scale-105 shadow-lg"
           >
             <Calendar size={20} />
@@ -187,7 +187,7 @@ function SuccessPageContent() {
           </button>
 
           <a
-            href="/contact"
+            href="mailto:clientservices@merrittwellness.net"
             className="flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all"
           >
             Questions? Contact Us

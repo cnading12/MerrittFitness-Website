@@ -2,13 +2,13 @@ import { Metadata } from 'next';
 import { events, Event } from '@/app/data/events';
 
 export const metadata: Metadata = {
-  title: 'Upcoming Events | Merritt Wellness - Yoga, Sound Baths & Workshops in Denver',
+  title: "What's On | Merritt Wellness - Classes, Sound Baths & Community Events in Denver",
   description: 'Discover upcoming wellness events at Merritt Wellness in Denver\'s Sloans Lake. Join us for sound baths, yoga workshops, breathwork sessions, meditation circles, and more in our historic 1905 sanctuary.',
   keywords: 'wellness events Denver, sound bath events, yoga workshop Denver, meditation event Denver, breathwork Denver, wellness workshop Sloans Lake, spiritual events Denver, healing events Denver',
   openGraph: {
-    title: 'Upcoming Events | Merritt Wellness',
+    title: "What's On | Merritt Wellness",
     description: 'Join us for transformative wellness events at our historic 1905 venue in Denver. Sound baths, yoga workshops, breathwork, and more.',
-    url: 'https://merrittwellness.net/events',
+    url: 'https://merrittwellness.net/calendar',
     siteName: 'Merritt Wellness',
     images: [
       {
@@ -23,12 +23,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Upcoming Events | Merritt Wellness Denver',
+    title: "What's On | Merritt Wellness Denver",
     description: 'Transformative wellness events at our historic 1905 venue. Sound baths, yoga workshops, breathwork, and more.',
     images: ['https://merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net/events',
+    canonical: 'https://merrittwellness.net/calendar',
   },
 };
 

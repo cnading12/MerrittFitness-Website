@@ -143,7 +143,7 @@ export default function RecurringPaymentSetup({ bookingId }) {
         <AlertCircle className="text-red-600 mx-auto mb-4" size={32} />
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Could not load booking</h2>
         <p className="text-red-600 mb-4">{loadError || 'Booking not found.'}</p>
-        <a href="/booking" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+        <a href="/book" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
           <ArrowLeft size={16} /> Return to booking
         </a>
       </div>

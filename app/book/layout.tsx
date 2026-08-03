@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Book Your Wellness Experience | Merritt Wellness Denver',
     description: 'Reserve yoga, sound baths, meditation & wellness events at our historic 1905 venue in Sloans Lake Denver. $95/hour with flexible booking.',
-    url: 'https://merrittwellness.net/booking',
+    url: 'https://merrittwellness.net/book',
     siteName: 'Merritt Wellness',
     images: [
       {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     images: ['https://merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net/booking',
+    canonical: 'https://merrittwellness.net/book',
   },
 }
 

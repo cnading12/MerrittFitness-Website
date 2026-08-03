@@ -476,7 +476,7 @@ export default function Home() {
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <Link
-                href="/booking"
+                href="/book"
                 className="group relative bg-[#f2eee9] text-[#735e59] font-bold px-16 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center text-lg">
@@ -489,7 +489,7 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/contact"
+                href="/book"
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9] text-lg"
               >
                 <span className="flex items-center">
@@ -586,7 +586,7 @@ export default function Home() {
                 </div>
 
                 <Link
-                  href="/contact"
+                  href="/book"
                   className="inline-flex items-center bg-[#735e59] text-[#f2eee9] font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-[#5a4a46] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
                 >
                   <svg className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

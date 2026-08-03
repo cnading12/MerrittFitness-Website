@@ -220,7 +220,7 @@ function PaymentCompleteContent() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => router.push('/booking')}
+              onClick={() => router.push('/book')}
               className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-8 py-4 rounded-xl hover:bg-emerald-700 transition-all hover:scale-105 shadow-lg"
             >
               <Calendar size={20} />
@@ -228,7 +228,7 @@ function PaymentCompleteContent() {
             </button>
 
             <button
-              onClick={() => router.push('/contact')}
+              onClick={() => window.location.href = 'mailto:clientservices@merrittwellness.net'}
               className="flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all"
             >
               Questions? Contact Us
@@ -266,13 +266,13 @@ function PaymentCompleteContent() {
 
           <div className="flex gap-4 justify-center">
             <button
-              onClick={() => router.push('/booking')}
+              onClick={() => router.push('/book')}
               className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
               Try Again
             </button>
             <button
-              onClick={() => router.push('/contact')}
+              onClick={() => window.location.href = 'mailto:clientservices@merrittwellness.net'}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Contact Support

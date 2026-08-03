@@ -20,8 +20,8 @@ Allow: /
 
 # Disallow API routes and internal pages
 Disallow: /api/
-Disallow: /booking/payment
-Disallow: /booking/success
+Disallow: /book/payment
+Disallow: /book/success
 
 # Allow important assets
 Allow: /images/

@@ -185,7 +185,7 @@ export default function AboutPage() {
                   </li>
                 </ul>
                 <Link
-                  href="/events"
+                  href="/calendar"
                   className="inline-flex items-center mt-6 px-6 py-3 bg-[#735e59] text-white rounded-full font-semibold hover:bg-[#5d4a46] transition-colors duration-300"
                 >
                   View Upcoming Events
@@ -222,7 +222,7 @@ export default function AboutPage() {
                   </li>
                 </ul>
                 <Link
-                  href="/booking"
+                  href="/book"
                   className="inline-flex items-center mt-6 px-6 py-3 bg-[#735e59] text-white rounded-full font-semibold hover:bg-[#5d4a46] transition-colors duration-300"
                 >
                   Book Your Class
