@@ -53,9 +53,14 @@ export interface NavItem {
   children?: NavChild[];
 }
 
-// Top-level navigation. Events order is intentional, Weddings first; do not
-// alphabetize. No Home item: the logo is the home link. "Events" covers both
-// private and public hosted events; the /private-events URL is kept for its
+// Top-level navigation. No Home item: the logo is the home link.
+//
+// The split is by RELATIONSHIP, not event type: "Events" lists every kind of
+// one-off booking (private or public, Weddings first — do not alphabetize),
+// and "Partnerships" holds the recurring arrangements (weekly class blocks,
+// congregations, studio/workspace). A concert can be booked weekly and a
+// class can be booked once; the pages cover both, so neither dropdown claims
+// a frequency the other excludes. The /private-events URL is kept for its
 // search value.
 export const navItems: NavItem[] = [
   {
@@ -68,10 +73,10 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    label: 'Wellness & Classes',
+    label: 'Partnerships',
     children: [
-      { label: 'Recurring Class Partnerships', href: '/class-partnerships' },
-      { label: 'Congregation Partnerships', href: '/congregations' },
+      { label: 'Recurring Bookings & Rates', href: '/class-partnerships' },
+      { label: 'Congregations', href: '/congregations' },
       { label: 'Studio & Workspace', href: '/studio' },
     ],
   },
