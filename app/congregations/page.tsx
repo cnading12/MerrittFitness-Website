@@ -5,7 +5,6 @@ import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, congregationsImages } from '@/app/data/venue-images';
 import { sundaySchedule, specs, contact } from '@/app/data/site';
-import { rateBands, partnerDiscount, money } from '@/app/lib/venue-rates';
 import { Check } from 'lucide-react';
 
 const PATH = '/congregations';
@@ -43,7 +42,6 @@ const included = [
   `${specs.parkingSpots} on-site parking spots`,
   'Cafe lounge and breakout rooms for fellowship, childcare, and classes',
   'Flat monthly rate, not hourly billing',
-  'Non-profits automatically receive the partner discount, with no minimum hours',
 ];
 
 export default function CongregationsPage() {
@@ -163,11 +161,8 @@ export default function CongregationsPage() {
             </h3>
             <p className="text-[#6b5f5b] leading-relaxed text-sm">
               Congregation partnerships are a flat monthly rate built around your schedule,
-              not an hourly meter. Non-profit communities automatically qualify for the
-              partner discount of {partnerDiscount.percent}%, with no minimum hours; as a
-              reference point, that discount takes the standard {money(rateBands[0].weekday)}
-              /hour rate to {money(rateBands[0].weekdayRecurring)}/hour before it is rolled
-              into your monthly figure. We will put a real number on your specific schedule
+              not an hourly meter. Every community's rhythm is different, so we do not
+              publish a number here; we will put a real figure on your specific schedule
               during the walkthrough.
             </p>
           </div>

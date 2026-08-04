@@ -2,10 +2,59 @@
 'use client';
 
 import EnhancedGallery from "@/components/EnhancedGallery";
+import PageHero from "@/components/venue/PageHero";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getBlurDataURL } from "@/lib/blur-data";
+import {
+  venueImages,
+  weddingsImages,
+  concertsImages,
+  artShowsImages,
+  classesImages,
+  congregationsImages,
+} from "@/app/data/venue-images";
+
+// The six doors into the venue — same list, same order as the Events menu.
+const homeEventTypes = [
+  {
+    label: "Weddings",
+    href: "/weddings",
+    image: weddingsImages.celebrationKiss,
+    description: "Ceremonies and receptions under the rose window, for up to 125 guests.",
+  },
+  {
+    label: "Concerts & Performances",
+    href: "/concerts",
+    image: concertsImages.songwritersRound,
+    description: "A hall shaped for sound, with the surround system already in the room.",
+  },
+  {
+    label: "Art Shows & Exhibitions",
+    href: "/art-shows",
+    image: artShowsImages.exhibitionStainedGlass,
+    description: "Natural light and century-old walls that let the work carry the room.",
+  },
+  {
+    label: "Wellness & Movement Classes",
+    href: "/class-partnerships",
+    image: classesImages.danceClassStringLights,
+    description: "Yoga, breathwork, sound baths, dance, and martial arts, all week long.",
+  },
+  {
+    label: "Faith & Community Gatherings",
+    href: "/congregations",
+    image: congregationsImages.communityCircle,
+    description: "A sanctuary since 1905, open to communities of every tradition.",
+  },
+  {
+    label: "All Private Events",
+    href: "/private-events",
+    image: venueImages.sunlitHall,
+    description: "Celebrations of life, parties, quinceañeras, showers, and offsites, with published pricing.",
+  },
+];
 
 export default function Home() {
   const [calendarLoaded, setCalendarLoaded] = useState(false);
@@ -215,150 +264,67 @@ export default function Home() {
       />
 
       <main className="bg-[#faf8f5] font-sans">
-        {/* HERO - Enhanced alt text only + MOBILE RIGHT FOCUS */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
-          <Image
-            src="/images/hero/outside5.webp"
-            alt="The restored 1905 church that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood"
-            fill
-            priority
-            placeholder="blur"
-            blurDataURL={getBlurDataURL("/images/hero/outside5.webp")}
-            className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom" />
+        {/* HERO — same treatment as the venue pages: full-bleed photo under
+            the transparent navbar */}
+        <PageHero
+          size="tall"
+          image={{
+            src: "/images/hero/outside5.webp",
+            alt: "The restored 1905 church that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood",
+          }}
+          eyebrow="Sloans Lake, Denver"
+          title={
+            <>
+              A Restored 1905 Church
+              <span className="block font-bold">Built for Gathering</span>
+            </>
+          }
+          subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot cathedral ceilings."
+          ctas={[
+            { label: "Host an Event", href: "/private-events" },
+            { label: "Wellness & Classes", href: "/class-partnerships", variant: "ghost" },
+          ]}
+        />
 
-          {/* Enhanced floating elements */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/40 rounded-full animate-float blur-sm"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-[#f2eee9]/30 rounded-full animate-float-delay blur-sm"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#f2eee9]/35 rounded-full animate-float-slow blur-sm"></div>
-          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-[#f2eee9]/25 rounded-full animate-float blur-sm"></div>
-
-          <div className="relative z-20 text-center text-[#f2eee9] px-6 max-w-5xl mx-auto">
-            <div className="mb-8 animate-fade-in-up">
-              <h1 className="text-5xl md:text-7xl font-light tracking-tight mb-6 leading-none font-serif">
-                <span className="block font-thin drop-shadow-lg">A Restored 1905 Church</span>
-                <span className="block font-bold drop-shadow-lg">in Sloans Lake</span>
-              </h1>
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
-              <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Merritt Wellness is Denver's historic sanctuary for gathering: yoga,
-                breathwork, sound baths, and dance all week long, and weddings, concerts,
-                and celebrations under 24-foot cathedral ceilings
-              </p>
-            </div>
-
-            {/* Two clear paths */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
-              <Link
-                href="/private-events"
-                className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
-              >
-                <span className="relative z-10 flex items-center">
-                  Host an Event
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </Link>
-              <Link
-                href="/class-partnerships"
-                className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
-              >
-                <span className="flex items-center">
-                  Wellness & Classes
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Enhanced scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-[#f2eee9]/70 rounded-full flex justify-center backdrop-blur-sm">
-              <div className="w-1 h-3 bg-[#f2eee9]/70 rounded-full mt-2 animate-pulse"></div>
-            </div>
-          </div>
-        </section>
-
-        {/* FEATURED: Weddings — direct path, no dropdown required */}
-        <section className="py-24 bg-gradient-to-b from-[#faf8f5] to-[#f2eee9]/40">
+        {/* WHAT HAPPENS HERE — the six doors in, mirroring the Events menu */}
+        <section className="pt-14 pb-24">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 rounded-3xl overflow-hidden shadow-xl border border-[#735e59]/10 bg-white">
-              <div className="relative min-h-[320px] lg:min-h-0">
-                <Image
-                  src="/images/pages/weddings/celebration-kiss.webp"
-                  alt="A wedding party cheers as the couple kisses before the grand stained-glass window of the church hall"
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  placeholder={getBlurDataURL("/images/pages/weddings/celebration-kiss.webp") ? "blur" : "empty"}
-                  blurDataURL={getBlurDataURL("/images/pages/weddings/celebration-kiss.webp")}
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-10 md:p-14 flex flex-col justify-center">
-                <span className="inline-flex self-start items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                  Weddings at Merritt
-                </span>
-                <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-4">
-                  Say it under
-                  <span className="block font-bold text-[#735e59]">the rose window</span>
-                </h2>
-                <p className="text-[#6b5f5b] leading-relaxed mb-8">
-                  Cathedral ceilings, original stained glass, and room for 125 guests, ten
-                  minutes from downtown Denver. Real hourly pricing is published on the page,
-                  so you can plan before you ever reach out.
-                </p>
-                <Link
-                  href="/weddings"
-                  className="inline-flex self-start items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-8 py-4 rounded-xl hover:bg-[#5a4a46] transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
-                >
-                  Explore the Wedding Venue
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-              </div>
+            <div className="text-center mb-14">
+              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                What happens here
+              </span>
+              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] font-serif">
+                One historic room,
+                <span className="block font-bold text-[#735e59]">six ways in</span>
+              </h2>
+              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mt-6"></div>
             </div>
-
-            {/* The two doors, spelled out */}
-            <div className="grid md:grid-cols-2 gap-6 mt-6">
-              <Link
-                href="/private-events"
-                className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
-              >
-                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Host an Event</h3>
-                <p className="text-[#6b5f5b] leading-relaxed mb-5">
-                  Concerts, art shows, celebrations of life, parties, quinceañeras, and
-                  corporate offsites. Private or open to the public, with published pricing,
-                  and we co-promote public events with you.
-                </p>
-                <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
-                  See every event type
-                  <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </Link>
-              <Link
-                href="/class-partnerships"
-                className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
-              >
-                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Wellness & Classes</h3>
-                <p className="text-[#6b5f5b] leading-relaxed mb-5">
-                  The heart of Merritt: yoga, breathwork, sound baths, dance, and martial
-                  arts every week, plus congregation partnerships and studio space for
-                  practitioners.
-                </p>
-                <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
-                  Find your weekly block
-                  <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </Link>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {homeEventTypes.map((type) => (
+                <Link
+                  key={type.href}
+                  href={type.href}
+                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
+                >
+                  <div className="relative aspect-[4/3]">
+                    <Image
+                      src={type.image.src}
+                      alt={type.image.alt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      placeholder={getBlurDataURL(type.image.src) ? "blur" : "empty"}
+                      blurDataURL={getBlurDataURL(type.image.src)}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-7">
+                    <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-2 group-hover:text-[#735e59] transition-colors duration-200">
+                      {type.label}
+                    </h3>
+                    <p className="text-[#6b5f5b] text-sm leading-relaxed">{type.description}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
@@ -469,90 +435,6 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-        <section className="py-24 bg-[#faf8f5] relative overflow-hidden">
-          {/* Top-left watercolor decoration */}
-          <div className="absolute -top-20 -left-20 w-[500px] h-[500px] pointer-events-none z-0">
-            <Image
-              src="/images/overlays/WaterColor.png"
-              alt=""
-              width={500}
-              height={500}
-              className="w-full h-full object-contain opacity-80"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
-            />
-          </div>
-
-          {/* Bottom-left watercolor decoration */}
-          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] pointer-events-none z-0">
-            <Image
-              src="/images/overlays/WaterColor.png"
-              alt=""
-              width={500}
-              height={500}
-              className="w-full h-full object-contain opacity-70 rotate-180"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
-            />
-          </div>
-
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-20">
-              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Denver's Premier Wellness Venue
-              </span>
-              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
-                Perfect for Every
-                <span className="block font-bold text-[#735e59]">Denver Wellness Practice</span>
-              </h2>
-              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto"></div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
-              <div className="relative group">
-                <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-                  <Image
-                    src="/images/events/katrina/3.webp"
-                    alt="Dynamic yoga and movement arts classes in Denver's most spacious historic wellness venue"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    loading="lazy"
-                    placeholder="blur"
-                    blurDataURL={getBlurDataURL("/images/events/katrina/3.webp")}
-                  />
-                </div>
-                <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
-                  <div className="text-3xl font-bold text-[#4a3f3c] font-serif">2,400</div>
-                  <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Square Feet</div>
-                </div>
-              </div>
-
-              <div className="space-y-12">
-                {[
-                  { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
-                  { emoji: "🎵", title: "Live Music & Sound Wellness", desc: "Sound baths, live acoustic performances, DJ sets, and ecstatic dance gatherings transform our historic venue into Denver's premier destination for sonic healing and conscious celebration." },
-                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
-                  { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and wooden floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
-                    <div key={index} className="flex items-start space-x-6 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/15 to-[#735e59]/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 font-serif">{item.title}</h3>
-                        <p className="text-[#6b5f5b] leading-relaxed text-lg">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section

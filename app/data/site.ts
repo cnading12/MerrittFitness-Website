@@ -158,7 +158,15 @@ export const mixerPolicy =
 // ---------------------------------------------------------------------------
 
 // Open recurring class blocks shown on /class-partnerships.
+//
+// publishSpecificBlocks: while most of the week is open (2 of ~10 blocks
+// booked as of Aug 2026), the page shows general-availability copy instead
+// of naming slots — listing three "open blocks" would undersell how much is
+// available and fake a scarcity that is not real yet. Once roughly 5+ blocks
+// are booked, set this to true and list the ACTUAL remaining open blocks;
+// the page will switch back to the specific-slots presentation.
 export const openClassBlocks = {
+  publishSpecificBlocks: false,
   season: 'fall',
   blocks: [
     { day: 'Monday', time: '6 to 8 PM' },

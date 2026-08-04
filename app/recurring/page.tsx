@@ -125,7 +125,7 @@ export default function RecurringPage() {
           </p>
           <RateTable
             showRecurring
-            footnote={`Recurring partner rates shown for Sunday to Friday; Saturday partner blocks get the same ${recurringDiscount.percent}% off the Saturday rate. ${minimumHours}-hour minimum per session. Non-profits qualify for the partner discount automatically, with no minimum hours.`}
+            footnote={`Recurring partner rates shown for Sunday to Friday; Saturday partner blocks get the same ${recurringDiscount.percent}% off the Saturday rate. ${minimumHours}-hour minimum per session.`}
           />
         </div>
       </section>

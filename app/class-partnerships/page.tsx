@@ -119,24 +119,38 @@ export default function ClassPartnershipsPage() {
             Open right now
           </span>
           <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
-            Open recurring blocks for {openClassBlocks.season}
+            Find your weekly block
           </h2>
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-10">
-            The week here has a rhythm: two class blocks most weekdays, larger private events
-            on Fridays and Saturdays, congregations on Sunday until 4:30 PM, and a Sunday
-            evening block after that. These blocks are open today; when they are claimed,
-            they come off this list.
+            The week here has a rhythm: two class blocks most weekdays, larger events on
+            Fridays and Saturdays, congregations on Sunday until 4:30 PM, and a Sunday
+            evening block after that.
           </p>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {openClassBlocks.blocks.map((block) => (
-              <div key={`${block.day}-${block.time}`} className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
-                <p className="text-2xl font-bold text-[#735e59] font-serif">{block.day}s</p>
-                <p className="text-[#6b5f5b] mt-1">{block.time}</p>
+          {openClassBlocks.publishSpecificBlocks ? (
+            <>
+              <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-6">
+                These blocks are open for {openClassBlocks.season} today; when they are
+                claimed, they come off this list.
+              </p>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {openClassBlocks.blocks.map((block) => (
+                  <div key={`${block.day}-${block.time}`} className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
+                    <p className="text-2xl font-bold text-[#735e59] font-serif">{block.day}s</p>
+                    <p className="text-[#6b5f5b] mt-1">{block.time}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm max-w-3xl">
+              <p className="text-lg text-[#4a3f3c] leading-relaxed">
+                Most weekly blocks are open right now, prime weekday evenings and Sunday
+                evenings included. Name the day and time that fits your class and the odds
+                are good it is yours.
+              </p>
+            </div>
+          )}
           <p className="mt-6 text-sm text-[#a08b84]">
-            Weekday daytime hours are often available too; ask about the slot you actually want.
             Classes open to the public get co-promoted at no charge: a What&apos;s On calendar
             listing, a bulletin-board flyer, and posts on our social channels.
           </p>
