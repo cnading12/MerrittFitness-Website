@@ -134,7 +134,7 @@ export const events: Event[] = [
   {
     id: "mile-high-qualchata",
     title: "Mile High Qualchata",
-    date: "2026-08-05",
+    date: "2026-08-12",
     time: "6:30 PM",
     endTime: "8:30 PM",
     description: "Join Mile High Qualchata for weekly salsa and bachata classes every Wednesday from 6:30-8:30PM: one hour of salsa and one hour of bachata. Our goal is to teach you the basics of social dancing so that you can feel confident joining Denver's growing social dance scene across many amazing venues in the city. By the end, you'll have a working knowledge of social dancing within these dance styles, and will be able to go to any dance function and move confidently with a partner! $5 per class. Please note: classes are taking a break for the month of July and will resume in August.",
