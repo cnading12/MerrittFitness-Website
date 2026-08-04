@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
-import { getBlurDataURL } from '@/lib/blur-data';
 import PageHero from '@/components/venue/PageHero';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
-import { venueImages, weddingsImages } from '@/app/data/venue-images';
+import { venueImages } from '@/app/data/venue-images';
 import { workspace, workspaceMemberHours, contact } from '@/app/data/site';
 import { ArrowRight, Building2, Clock } from 'lucide-react';
 
@@ -75,9 +73,11 @@ export default function StudioPage() {
       />
 
       {/* 1. Basement flex studio — waitlist */}
-      <section className="py-24">
+      <section className="pt-14 pb-24">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Photo intentionally omitted: the flex studio, desk, and office
+              sections get their photo set together once all three shots exist. */}
+          <div className="max-w-3xl">
             <div>
               <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
                 At Merritt Wellness
@@ -100,17 +100,6 @@ export default function StudioPage() {
                   with the person at the top.
                 </p>
               </div>
-            </div>
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-lg">
-              <Image
-                src={weddingsImages.gettingReady.src}
-                alt="The stone-walled downstairs studio space in use"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                placeholder={getBlurDataURL(weddingsImages.gettingReady.src) ? 'blur' : 'empty'}
-                blurDataURL={getBlurDataURL(weddingsImages.gettingReady.src)}
-                className="object-cover"
-              />
             </div>
           </div>
 

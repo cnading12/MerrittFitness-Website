@@ -112,7 +112,7 @@ export default function ArtShowsPage() {
       />
 
       {/* Positioning */}
-      <section className="py-24">
+      <section className="pt-14 pb-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-8">
             A backdrop that earns its place in the photos

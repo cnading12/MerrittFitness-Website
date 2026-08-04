@@ -163,7 +163,7 @@ export default function WeddingsPage() {
       />
 
       {/* 2. Positioning */}
-      <section className="py-24">
+      <section className="pt-14 pb-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
             Why couples choose Merritt

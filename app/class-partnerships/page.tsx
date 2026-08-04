@@ -112,7 +112,7 @@ export default function ClassPartnershipsPage() {
       />
 
       {/* Open blocks — data-driven from app/data/site.ts */}
-      <section className="py-24">
+      <section className="pt-14 pb-24">
         <div className="max-w-5xl mx-auto px-6">
           <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
             <CalendarClock className="w-4 h-4 mr-2" />
