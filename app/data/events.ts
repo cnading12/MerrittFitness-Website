@@ -298,6 +298,20 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ AUGUST 2026 ============
+  {
+    id: "holosomatic-breathwork-aug-2026",
+    title: "Holosomatic Breathwork",
+    date: "2026-08-11",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Anxiety. Overthinking. Self-doubt. These are patterns. It's not who you are. Holosomatic Breathwork uses breath, movement, and sound to quiet your mind and reconnect you with your body's intelligence. Back to clarity. Back to trust. Back to yourself. This is body-led healing. And it changes everything. Doors open at 5:45 PM. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+
   // ============ JULY 2026 ============
   {
     id: "sacred-pause-breathwork-jul-2026",
