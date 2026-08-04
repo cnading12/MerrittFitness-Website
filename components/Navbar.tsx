@@ -1,13 +1,29 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { getBlurDataURL } from '@/lib/blur-data';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Calendar, ChevronDown } from 'lucide-react';
 import { navItems } from '@/app/data/site';
 
+// Routes whose pages open with a full-bleed photo hero. On these, the navbar
+// starts fully transparent (light text over the darkened image) and gains its
+// cream background on scroll; everywhere else it keeps the solid cream bar.
+const HERO_ROUTES = new Set([
+  '/',
+  '/weddings',
+  '/private-events',
+  '/concerts',
+  '/art-shows',
+  '/class-partnerships',
+  '/congregations',
+  '/studio',
+]);
+
 export default function Navbar() {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [scrolled, setScrolled] = useState(false);
@@ -70,6 +86,14 @@ export default function Navbar() {
     };
   }, []);
 
+  // Over a hero image the bar is transparent with light text; once scrolled
+  // (or with the mobile drawer open) it becomes the solid cream bar.
+  const overHero = HERO_ROUTES.has(pathname) && !scrolled && !menuOpen;
+  const linkColor = overHero
+    ? 'text-[#f2eee9] hover:text-white'
+    : 'text-[#735e59] hover:text-[#5a4a46]';
+  const underlineColor = overHero ? 'bg-[#f2eee9]' : 'bg-[#735e59]';
+
   return (
     <header
       className={`fixed z-50 w-full top-0 left-0 transition-all duration-300 ease-in-out
@@ -79,9 +103,11 @@ export default function Navbar() {
     >
       {/* Desktop Navbar */}
       <div className={`w-full transition-all duration-300 ${
-        scrolled
-          ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20'
-          : 'bg-[#f2eee9]/80 backdrop-blur-sm'
+        overHero
+          ? 'bg-transparent'
+          : scrolled
+            ? 'bg-[#f2eee9]/95 backdrop-blur-md shadow-lg border-b border-[#735e59]/20'
+            : 'bg-[#f2eee9]/95 backdrop-blur-sm'
       }`}>
         <nav ref={navRef} className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
           {/* Logo */}
@@ -91,7 +117,7 @@ export default function Navbar() {
               alt="Merritt Wellness Logo"
               width={160}
               height={70}
-              className="transition-transform duration-200 group-hover:scale-105 max-w-[120px] sm:max-w-[160px] h-auto"
+              className={`transition-all duration-300 group-hover:scale-105 max-w-[120px] sm:max-w-[160px] h-auto ${overHero ? 'brightness-0 invert' : ''}`}
               priority
               placeholder="blur"
               blurDataURL={getBlurDataURL("/images/hero/logo.png")}
@@ -109,7 +135,7 @@ export default function Navbar() {
                   onMouseLeave={() => setOpenDropdown((v) => (v === item.label ? null : v))}
                 >
                   <button
-                    className="relative flex items-center gap-1 font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2 group"
+                    className={`relative flex items-center gap-1 font-medium transition-colors duration-200 py-2 group ${linkColor}`}
                     aria-expanded={openDropdown === item.label}
                     aria-haspopup="true"
                     onClick={() => setOpenDropdown((v) => (v === item.label ? null : item.label))}
@@ -119,7 +145,7 @@ export default function Navbar() {
                       size={16}
                       className={`transition-transform duration-200 ${openDropdown === item.label ? 'rotate-180' : ''}`}
                     />
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#735e59] transition-all duration-300 group-hover:w-full"></span>
+                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${underlineColor}`}></span>
                   </button>
                   <div
                     className={`absolute left-0 top-full pt-2 transition-all duration-200 ${
@@ -146,10 +172,10 @@ export default function Navbar() {
                 <Link
                   key={item.label}
                   href={item.href!}
-                  className="relative font-medium text-[#735e59] hover:text-[#5a4a46] transition-colors duration-200 py-2 group"
+                  className={`relative font-medium transition-colors duration-200 py-2 group ${linkColor}`}
                 >
                   {item.label}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#735e59] transition-all duration-300 group-hover:w-full"></span>
+                  <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${underlineColor}`}></span>
                 </Link>
               )
             ))}
@@ -157,7 +183,11 @@ export default function Navbar() {
             {/* Book CTA */}
             <Link
               href="/book"
-              className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-medium px-5 py-2.5 rounded-full hover:bg-[#5a4a46] transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+              className={`inline-flex items-center gap-2 font-medium px-5 py-2.5 rounded-full transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                overHero
+                  ? 'bg-[#f2eee9] text-[#735e59] hover:bg-white'
+                  : 'bg-[#735e59] text-[#f2eee9] hover:bg-[#5a4a46]'
+              }`}
             >
               <Calendar size={16} />
               Book
@@ -166,18 +196,20 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="lg:hidden shrink-0 text-[#735e59] hover:text-[#5a4a46] z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[#735e59]/10 transition-colors duration-200 [-webkit-tap-highlight-color:transparent]"
+            className={`lg:hidden shrink-0 z-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors duration-200 [-webkit-tap-highlight-color:transparent] ${
+              overHero ? 'text-[#f2eee9] hover:bg-[#f2eee9]/15' : 'text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10'
+            }`}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
           >
             <div className="relative w-7 h-6">
-              <span className={`absolute top-[4px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+              <span className={`absolute top-[4px] left-0 w-7 h-[3px] rounded-full transition-all duration-300 ${overHero ? "bg-[#f2eee9]" : "bg-[#735e59]"} ${
                 menuOpen ? 'rotate-45 top-[11px]' : ''
               }`}></span>
-              <span className={`absolute top-[11px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-opacity duration-300 ${
+              <span className={`absolute top-[11px] left-0 w-7 h-[3px] rounded-full transition-opacity duration-300 ${overHero ? "bg-[#f2eee9]" : "bg-[#735e59]"} ${
                 menuOpen ? 'opacity-0' : 'opacity-100'
               }`}></span>
-              <span className={`absolute top-[18px] left-0 w-7 h-[3px] rounded-full bg-[#735e59] transition-all duration-300 ${
+              <span className={`absolute top-[18px] left-0 w-7 h-[3px] rounded-full transition-all duration-300 ${overHero ? "bg-[#f2eee9]" : "bg-[#735e59]"} ${
                 menuOpen ? '-rotate-45 top-[11px]' : ''
               }`}></span>
             </div>
