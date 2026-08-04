@@ -20,7 +20,11 @@ interface PageHeroProps {
 
 export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], size = 'default' }: PageHeroProps) {
   return (
-    <section className={`relative flex items-center justify-center overflow-hidden ${
+    // pt-28 keeps the vertically-centered content clear of the fixed navbar
+    // (~110px tall) instead of letting the headline slide underneath it on
+    // shorter viewports; the darker top gradient gives the translucent cream
+    // bar a consistent edge to sit on.
+    <section className={`relative flex items-center justify-center overflow-hidden pt-28 ${
       size === 'tall' ? 'min-h-[92svh]' : 'min-h-[70svh]'
     }`}>
       <Image
@@ -33,8 +37,8 @@ export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], s
         blurDataURL={getBlurDataURL(image.src)}
         className="object-cover brightness-[0.6]"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-32 text-center animate-fade-in-up">
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40" />
+      <div className="relative z-10 max-w-4xl mx-auto px-6 pt-12 pb-24 text-center animate-fade-in-up">
         {eyebrow && (
           <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/15 backdrop-blur-sm text-[#f2eee9] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
             {eyebrow}

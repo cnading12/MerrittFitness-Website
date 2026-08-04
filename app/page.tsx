@@ -241,9 +241,9 @@ export default function Home() {
               </h1>
               <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
               <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Merritt Wellness is Denver's historic sanctuary for gathering: private events
-                under 24-foot cathedral ceilings, and a weekly rhythm of classes, practices,
-                and community
+                Merritt Wellness is Denver's historic sanctuary for gathering: yoga,
+                breathwork, sound baths, and dance all week long, and weddings, concerts,
+                and celebrations under 24-foot cathedral ceilings
               </p>
             </div>
 
@@ -254,7 +254,7 @@ export default function Home() {
                 className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
               >
                 <span className="relative z-10 flex items-center">
-                  Host a Private Event
+                  Host an Event
                   <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -266,7 +266,7 @@ export default function Home() {
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
               >
                 <span className="flex items-center">
-                  Classes & Partnerships
+                  Wellness & Classes
                   <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -329,10 +329,11 @@ export default function Home() {
                 href="/private-events"
                 className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
               >
-                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Private Events</h3>
+                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Host an Event</h3>
                 <p className="text-[#6b5f5b] leading-relaxed mb-5">
                   Concerts, art shows, celebrations of life, parties, quinceañeras, and
-                  corporate offsites, with published pricing and 22 on-site parking spots.
+                  corporate offsites. Private or open to the public, with published pricing,
+                  and we co-promote public events with you.
                 </p>
                 <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
                   See every event type
@@ -345,10 +346,11 @@ export default function Home() {
                 href="/class-partnerships"
                 className="group bg-white rounded-3xl p-10 shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
               >
-                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Classes & Partnerships</h3>
+                <h3 className="text-2xl font-bold text-[#4a3f3c] font-serif mb-3">Wellness & Classes</h3>
                 <p className="text-[#6b5f5b] leading-relaxed mb-5">
-                  Recurring blocks for yoga, breathwork, dance, and martial arts, congregation
-                  partnerships on Sundays, and studio space for practitioners.
+                  The heart of Merritt: yoga, breathwork, sound baths, dance, and martial
+                  arts every week, plus congregation partnerships and studio space for
+                  practitioners.
                 </p>
                 <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold">
                   Find your weekly block

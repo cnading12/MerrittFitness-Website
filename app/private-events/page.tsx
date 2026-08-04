@@ -8,7 +8,7 @@ import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import RateTable from '@/components/venue/RateTable';
 import InquiryForm from '@/components/venue/InquiryForm';
-import CtaSection from '@/components/venue/CtaSection';
+import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, weddingsImages, artShowsImages, concertsImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
@@ -75,7 +75,7 @@ export default function PrivateEventsPage() {
       {/* Hero */}
       <PageHero
         image={venueImages.sunlitHall}
-        eyebrow="Private Events"
+        eyebrow="Events at Merritt"
         title={
           <>
             One Historic Room,
@@ -103,7 +103,8 @@ export default function PrivateEventsPage() {
             means weddings and concerts, and just as often celebrations of life, memorial
             services, quinceañeras, birthday parties, baby and bridal showers, graduation
             parties, and corporate offsites. If it involves people gathering with intention,
-            the room already knows how to hold it.
+            the room already knows how to hold it. Host it privately or open the doors to
+            the public; that choice is yours, made booking by booking.
           </p>
 
           {/* Types with dedicated pages */}
@@ -151,6 +152,13 @@ export default function PrivateEventsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Co-promotion for public events */}
+      <section className="pb-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <CoPromotionBlock />
         </div>
       </section>
 
@@ -209,16 +217,11 @@ export default function PrivateEventsPage() {
             kind="event"
             page={PATH}
             heading="Tell Us About Your Event"
-            subheading="Every event listed above starts with the same short note. Tell us what you are planning and we will reply with availability, usually within one business day."
+            subheading="Every event listed above starts with the same short note. Tell us what you are planning, or ask to come see the room; we will reply with availability, usually within one business day."
           />
         </div>
       </section>
 
-      {/* CTA */}
-      <CtaSection
-        heading="See If the Room Fits"
-        body="The fastest way to know is to stand in it. Reach out to schedule a tour, or check live availability and book directly."
-      />
     </main>
   );
 }

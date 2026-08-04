@@ -6,7 +6,7 @@ import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
-import CtaSection from '@/components/venue/CtaSection';
+import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, artShowsImages } from '@/app/data/venue-images';
 import { extendedDiscount } from '@/app/lib/venue-rates';
@@ -159,6 +159,13 @@ export default function ArtShowsPage() {
         </div>
       </section>
 
+      {/* Co-promotion for public openings */}
+      <section className="pb-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <CoPromotionBlock />
+        </div>
+      </section>
+
       {/* Policies */}
       <section className="py-24 bg-white/60">
         <div className="max-w-7xl mx-auto px-6">
@@ -180,17 +187,13 @@ export default function ArtShowsPage() {
             kind="event"
             page={PATH}
             heading="Tell Us About Your Show"
-            subheading="Medium, number of pieces, dates you are considering. We will reply with availability, usually within one business day."
+            subheading="Medium, number of pieces, dates you are considering; or ask to walk the walls with a tape measure first. We reply with availability, usually within one business day."
             defaultEventType="Art show / exhibition"
             submitLabel="Send Exhibition Inquiry"
           />
         </div>
       </section>
 
-      <CtaSection
-        heading="Walk the Walls First"
-        body="Bring a tape measure and your maquette. Reach out to schedule a tour and plan the hang in the actual light."
-      />
     </main>
   );
 }

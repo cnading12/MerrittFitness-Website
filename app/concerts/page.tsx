@@ -6,7 +6,7 @@ import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
-import CtaSection from '@/components/venue/CtaSection';
+import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, concertsImages } from '@/app/data/venue-images';
 import { mixerPolicy } from '@/app/data/site';
@@ -159,6 +159,13 @@ export default function ConcertsPage() {
         </div>
       </section>
 
+      {/* Co-promotion for public shows */}
+      <section className="pb-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <CoPromotionBlock />
+        </div>
+      </section>
+
       {/* Policies, including the mixer rule */}
       <section className="py-24 bg-white/60">
         <div className="max-w-7xl mx-auto px-6">
@@ -183,17 +190,13 @@ export default function ConcertsPage() {
             kind="event"
             page={PATH}
             heading="Tell Us About Your Show"
-            subheading="Genre, date, expected crowd, and whether you are bringing a sound tech. We will reply with availability, usually within one business day."
+            subheading="Genre, date, expected crowd, and whether you are bringing a sound tech; or just ask for a tour, because acoustics do not photograph. We reply with availability, usually within one business day."
             defaultEventType="Concert / performance"
             submitLabel="Send Show Inquiry"
           />
         </div>
       </section>
 
-      <CtaSection
-        heading="Hear the Room for Yourself"
-        body="Acoustics do not photograph. Reach out to schedule a tour and clap once in the middle of the hall; you will understand."
-      />
     </main>
   );
 }

@@ -6,7 +6,6 @@ import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
-import CtaSection from '@/components/venue/CtaSection';
 import RateTable from '@/components/venue/RateTable';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, weddingsImages } from '@/app/data/venue-images';
@@ -293,18 +292,13 @@ export default function WeddingsPage() {
             kind="event"
             page={PATH}
             heading="Tell Us About Your Wedding"
-            subheading="Share what you are planning and we will reply with availability and next steps, usually within one business day."
+            subheading="Share what you are planning, or just ask for a tour; photos carry the ceilings and stained glass only so far. We reply with availability and next steps, usually within one business day."
             defaultEventType="Wedding"
             submitLabel="Send Wedding Inquiry"
           />
         </div>
       </section>
 
-      {/* 10. CTA */}
-      <CtaSection
-        heading="Come Stand in the Room"
-        body="Photos carry the ceilings and the stained glass only so far. Reach out to schedule a tour and see how the hall feels with the light coming through."
-      />
     </main>
   );
 }

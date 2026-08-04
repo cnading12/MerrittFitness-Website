@@ -6,7 +6,6 @@ import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
-import CtaSection from '@/components/venue/CtaSection';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, classesImages } from '@/app/data/venue-images';
 import { openClassBlocks, workspace, specs } from '@/app/data/site';
@@ -138,6 +137,8 @@ export default function ClassPartnershipsPage() {
           </div>
           <p className="mt-6 text-sm text-[#a08b84]">
             Weekday daytime hours are often available too; ask about the slot you actually want.
+            Classes open to the public get co-promoted at no charge: a What&apos;s On calendar
+            listing, a bulletin-board flyer, and posts on our social channels.
           </p>
         </div>
       </section>
@@ -229,7 +230,7 @@ export default function ClassPartnershipsPage() {
             kind="class-partnership"
             page={PATH}
             heading="Claim a Block"
-            subheading="Tell us your discipline, class size, and the block you want, listed above or otherwise. We will reply with availability, usually within one business day."
+            subheading="Tell us your discipline, class size, and the block you want, listed above or otherwise; or ask to walk through and teach a trial class. We reply with availability, usually within one business day."
             showEventFields={false}
             showStartWindow
             submitLabel="Start the Conversation"
@@ -237,10 +238,6 @@ export default function ClassPartnershipsPage() {
         </div>
       </section>
 
-      <CtaSection
-        heading="Teach a Trial Class Here"
-        body="The fastest way to know if the room fits your practice is to move in it. Reach out to schedule a walkthrough."
-      />
     </main>
   );
 }

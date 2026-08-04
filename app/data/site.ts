@@ -53,21 +53,22 @@ export interface NavItem {
   children?: NavChild[];
 }
 
-// Top-level navigation. Private Events order is intentional, Weddings first;
-// do not alphabetize.
+// Top-level navigation. Events order is intentional, Weddings first; do not
+// alphabetize. No Home item: the logo is the home link. "Events" covers both
+// private and public hosted events; the /private-events URL is kept for its
+// search value.
 export const navItems: NavItem[] = [
-  { label: 'Home', href: '/' },
   {
-    label: 'Private Events',
+    label: 'Events',
     children: [
       { label: 'Weddings', href: '/weddings' },
       { label: 'Concerts & Performances', href: '/concerts' },
       { label: 'Art Shows & Exhibitions', href: '/art-shows' },
-      { label: 'All Private Events', href: '/private-events' },
+      { label: 'All Events', href: '/private-events' },
     ],
   },
   {
-    label: 'Classes & Studio',
+    label: 'Wellness & Classes',
     children: [
       { label: 'Recurring Class Partnerships', href: '/class-partnerships' },
       { label: 'Congregation Partnerships', href: '/congregations' },
@@ -77,6 +78,18 @@ export const navItems: NavItem[] = [
   { label: "What's On", href: '/calendar' },
   { label: 'About', href: '/about' },
 ];
+
+// Co-promotion for public events: stated wherever hosts might assume they are
+// on their own for marketing. Keep the three channels accurate.
+export const coPromotion = {
+  heading: 'Going public? We promote it with you.',
+  body: 'Any event you open to the public gets our co-promotion at no charge: a flyer on the community bulletin board, a listing on the What’s On calendar here on the site, and posts to our social channels. Our audience already comes here to find things to do; a public event starts with a crowd.',
+  channels: [
+    'Community bulletin board flyer',
+    "What's On calendar listing",
+    'Instagram and Facebook posts',
+  ],
+} as const;
 
 // Pending routes, awaiting photography. When photos exist, lift the matching
 // content block out of `eventTypes` below into a dedicated page and add the
