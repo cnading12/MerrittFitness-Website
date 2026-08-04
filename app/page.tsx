@@ -41,7 +41,7 @@ export default function Home() {
     "image": [
       "https://merrittwellness.net/images/hero/outside3.webp",
       "https://merrittwellness.net/images/hero/1.webp",
-      "https://merrittwellness.net/images/events/2.webp"
+      "https://merrittwellness.net/images/events/venue/wellness/2.webp"
     ],
     "sameAs": [
       "https://www.instagram.com/merrittwellnessdenver",
