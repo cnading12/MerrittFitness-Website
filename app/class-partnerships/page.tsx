@@ -93,8 +93,8 @@ const GALLERY = [
     alt: 'A yoga class flowing through poses in the main hall',
   },
   {
-    src: '/images/events/dance/teaching.webp',
-    alt: 'An instructor teaching a dance phrase to students in the main hall',
+    src: '/images/events/venue/dance/4.jpg',
+    alt: 'A movement workshop seated in a circle by the rollaway mirrors in the main hall',
   },
   {
     src: '/images/events/venue/wellness/7-mats.jpg',
