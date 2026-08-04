@@ -137,15 +137,20 @@ export const blurDataMap: Record<string, string> = {
   "/images/pages/venue/exterior-summer.webp": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADQAQCdASoKAAgABUB8JYgCdADb61K4AAD+gpnT3xBeut/96gs1b++4LgvtV7Z24aooDjGRHx6FEZYhjAA=",
   "/images/pages/venue/full-coverage-mat.webp": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoKAAcABUB8JQBOgBuzaJMAAPA91UYSJgnBPEpnoD+PeOQBZRgAAA==",
   "/images/pages/venue/hall-projection-screen.webp": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAoABUB8JYgCdADbAMgAAO890cTcwhXlKcMBFX3sebLxvleAAA==",
+  "/images/pages/venue/main-hall-rose-window-wide.webp": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoKAAYABUB8JZACdADdLkxT6AD1bat7TMIcAyDHzWAmiUHjLyzqLgAA",
   "/images/pages/venue/main-hall-rose-window.webp": "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAACwAQCdASoIAAoABUB8JZgCdADbAQAAAO89lzkPhbiom/Bl13Ohxl9KDMAAAA==",
+  "/images/pages/venue/og-venue.jpg": "data:image/webp;base64,UklGRjYAAABXRUJQVlA4ICoAAACwAQCdASoKAAUABUB8JZgCdAD0enHAAPuHeLzb9LJodJUUS+nVQTm7gAA=",
   "/images/pages/venue/seated-semicircle.webp": "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAACwAQCdASoKAAkABUB8JbACdAD597vQAMsziFSQjdAtYX81dJsw0KEsicZob4ksMKiIht76kYRyNFV3YAA=",
+  "/images/pages/venue/sunlit-hall-partition-wide.webp": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADwAQCdASoKAAYABUB8JYgCdAD5jiwdLoAA8hPahyEkyNn/Vvz+JPjIuvgGAAAA",
   "/images/pages/venue/sunlit-hall-partition.webp": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAAAQAgCdASoIAAoABUB8JaACdAEUU7T8jCQAAPpyvrUfejabmyR6ThtsLWFB9Cr/bPzyUAAA",
+  "/images/pages/venue/sunlit-hall-wide.webp": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoKAAYABUB8JZACdAD5Zxh6AADyE9qnHduseyIlUbMpAT4zCs5cqyAA",
   "/images/pages/venue/sunlit-hall.webp": "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAAAQAgCdASoIAAoABUB8JagCdAEUU7T8jCQAAPpyvrUfejabmyR6ThtsLWFB9G3A1dea62ycgAA=",
   "/images/pages/weddings/aisle-recessional.webp": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoKAAcABUB8JaQAAtzx2UQ5UAD6no3UAiqPQ6V+FSbnpUgjz0DAAAAA",
   "/images/pages/weddings/cake-table-couple.webp": "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAADQAQCdASoHAAoABUB8JZACdAEO9QBoAAD+g+qlLu6+wQhCkgnujCmcVxNb4c6C1q2Tv1gAAAA=",
   "/images/pages/weddings/celebration-kiss.webp": "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAADQAQCdASoKAAYABUB8JQBOgCKdQrwBsAD0U/n0i/bF6WjEYFENEHkDpbjba27UeFQAAA==",
   "/images/pages/weddings/getting-ready.webp": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADQAQCdASoJAAoABUB8JaQAAt0K/5Z8AAD+zGPSZIyHvANcqtsOw1l8MhzadRHJUyKAAAAA",
-  "/images/pages/weddings/head-table-cake.webp": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAACwAQCdASoGAAoABUB8JbACdADyVagAAPEDKcflGulac978/wZJMm/ZZRS9TFgAAAA="
+  "/images/pages/weddings/head-table-cake.webp": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAACwAQCdASoGAAoABUB8JbACdADyVagAAPEDKcflGulac978/wZJMm/ZZRS9TFgAAAA=",
+  "/images/pages/weddings/og-weddings.jpg": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAACwAQCdASoKAAUABUB8JQBOgCKKHyLIAPshF+FJ29S+SoB37TjikMCosqAXT6fAAAA="
 };
 
 export function getBlurDataURL(src: string): string | undefined {

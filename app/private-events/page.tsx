@@ -10,7 +10,7 @@ import RateTable from '@/components/venue/RateTable';
 import InquiryForm from '@/components/venue/InquiryForm';
 import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
-import { venueImages, weddingsImages, artShowsImages, concertsImages } from '@/app/data/venue-images';
+import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
 import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
 import { ArrowRight } from 'lucide-react';
@@ -49,6 +49,7 @@ const typeImages: Record<string, { src: string; alt: string }> = {
   weddings: weddingsImages.celebrationKiss,
   concerts: concertsImages.songwritersRound,
   'art-shows': artShowsImages.exhibitionStainedGlass,
+  'wellness-classes': classesImages.danceClassStringLights,
 };
 
 export default function PrivateEventsPage() {
@@ -74,7 +75,7 @@ export default function PrivateEventsPage() {
 
       {/* Hero */}
       <PageHero
-        image={venueImages.sunlitHall}
+        image={venueImages.sunlitHallWide}
         eyebrow="Events at Merritt"
         title={
           <>

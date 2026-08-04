@@ -146,8 +146,7 @@ export default function WeddingsPage() {
 
       {/* 1. Hero */}
       <PageHero
-        size="tall"
-        image={venueImages.mainHallRoseWindow}
+        image={venueImages.mainHallRoseWindowWide}
         eyebrow="Weddings at Merritt"
         title={
           <>

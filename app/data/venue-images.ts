@@ -24,6 +24,11 @@ export const venueImages = {
   sunlitHallPartition: { src: '/images/pages/venue/sunlit-hall-partition.webp', alt: "Sunlight streaks the long wood floor of the empty hall, facing the wood-framed partition wall and arched windows", width: 1800, height: 2400 },
   fullCoverageMat: { src: '/images/pages/venue/full-coverage-mat.webp', alt: "The hall's single full-coverage roll-out floor mat spans the room wall to wall beneath arched stained-glass windows", width: 2400, height: 1791 },
   hallProjectionScreen: { src: '/images/pages/venue/hall-projection-screen.webp', alt: "The empty hall with polished wood floors, arched stained-glass windows, and a projection screen beneath the rose window", width: 1200, height: 1600 },
+  // Landscape hero crops of the portrait originals, so wide hero sections
+  // show the architecture instead of a zoomed mid-band.
+  mainHallRoseWindowWide: { src: '/images/pages/venue/main-hall-rose-window-wide.webp', alt: "The main hall of the restored 1905 church, with a rose window and four arched stained-glass windows above a polished wood floor", width: 2400, height: 1360 },
+  sunlitHallWide: { src: '/images/pages/venue/sunlit-hall-wide.webp', alt: "Sunlight warms the wood floor of the vaulted main hall, looking toward the shoji-screen partition and antique pews", width: 2400, height: 1480 },
+  sunlitHallPartitionWide: { src: '/images/pages/venue/sunlit-hall-partition-wide.webp', alt: "Sunlight streaks the long wood floor of the empty hall, facing the wood-framed partition wall and arched windows", width: 2400, height: 1480 },
 } as const;
 
 export const weddingsImages = {

@@ -235,6 +235,13 @@ export const eventTypes: EventTypeBlock[] = [
       'Openings and exhibitions with hardwood floors, tall walls, and natural light that lets the work carry the room.',
   },
   {
+    key: 'wellness-classes',
+    title: 'Wellness & Movement Classes',
+    href: '/class-partnerships',
+    description:
+      'Yoga, breathwork, sound baths, dance, and martial arts, as a one-off workshop or a weekly block.',
+  },
+  {
     key: 'celebrations-of-life',
     title: 'Celebrations of Life & Memorials',
     href: null, // pending photography
@@ -247,12 +254,5 @@ export const eventTypes: EventTypeBlock[] = [
     href: null, // pending photography
     description:
       'Birthdays, quinceañeras, showers, graduations, anniversaries. The main hall gives a milestone the setting it deserves, and the breakout rooms keep food, gifts, and staging out of the way.',
-  },
-  {
-    key: 'corporate',
-    title: 'Corporate Offsites & Retreats',
-    href: null, // pending photography
-    description:
-      'Offsites, team retreats, and workshops ten minutes from downtown Denver, with a projector, surround sound, breakout rooms, and 22 on-site parking spots.',
   },
 ];

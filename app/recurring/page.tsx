@@ -75,7 +75,7 @@ export default function RecurringPage() {
       />
 
       <PageHero
-        image={venueImages.sunlitHallPartition}
+        image={venueImages.sunlitHallPartitionWide}
         eyebrow="Partnerships"
         title={
           <>
