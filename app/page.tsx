@@ -33,13 +33,13 @@ const homeEventTypes = [
   {
     label: "Art Shows & Exhibitions",
     href: "/art-shows",
-    image: artShowsImages.exhibitionStainedGlass,
+    image: artShowsImages.visitorsBrowsing,
     description: "Natural light and century-old walls that let the work carry the room.",
   },
   {
     label: "Wellness & Movement Classes",
     href: "/class-partnerships",
-    image: classesImages.danceClassStringLights,
+    image: classesImages.breathworkClass,
     description: "Yoga, breathwork, sound baths, dance, and martial arts, all week long.",
   },
   {
