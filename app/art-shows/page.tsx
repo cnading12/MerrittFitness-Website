@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
-import SpecsBlock from '@/components/venue/SpecsBlock';
 import PricingBlock from '@/components/venue/PricingBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import FAQSection, { Faq } from '@/components/venue/FAQSection';
 import GalleryGrid from '@/components/venue/GalleryGrid';
 import InquirySection from '@/components/venue/InquirySection';
-import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS } from '@/app/data/venue';
 
 const SHARE_IMAGE = `${VENUE.url}/images/events/venue/art/Karen-1.webp`;
@@ -165,8 +163,6 @@ export default function ArtShowsPage() {
           </div>
         </section>
 
-        <SpecsBlock heading="The space" />
-
         <PricingBlock
           heading="Exhibition pricing"
           intro="Hourly rates by expected guest count and day of week. Multi-hour installs qualify for the automatic extended-booking discount."
@@ -176,12 +172,11 @@ export default function ArtShowsPage() {
 
         <FAQSection heading="Questions artists ask" faqs={FAQS} />
 
-        <TourCTA
-          heading="Walk the walls first"
-          copy="Bring a tape measure and your maquette. Reach out and we will schedule a walkthrough so you can plan the hang."
+        <InquirySection
+          eventType="Art show / exhibition"
+          intro="Tell us about the show and the dates you have in mind. Or bring a tape measure and walk the walls first; we will schedule a walkthrough so you can plan the hang."
+          tourInvite
         />
-
-        <InquirySection eventType="Art show / exhibition" />
       </main>
     </>
   );

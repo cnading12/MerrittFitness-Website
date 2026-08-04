@@ -6,7 +6,6 @@ import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import FAQSection, { Faq } from '@/components/venue/FAQSection';
 import GalleryGrid from '@/components/venue/GalleryGrid';
 import InquirySection from '@/components/venue/InquirySection';
-import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS } from '@/app/data/venue';
 
 const SHARE_IMAGE = `${VENUE.url}/images/events/venue/concerts/1-Western-Wish.JPEG`;
@@ -149,7 +148,15 @@ export default function ConcertsPage() {
           </div>
         </section>
 
-        <SpecsBlock heading="The room" />
+        <SpecsBlock
+          heading="The room"
+          items={[
+            { value: '125', label: 'Audience capacity' },
+            { value: '24 ft', label: 'Ceilings' },
+            { value: '1,100', label: 'Sq ft main hall' },
+            { value: '22', label: 'On-site parking spots' },
+          ]}
+        />
 
         {/* Gallery */}
         <section className="py-16 bg-white">
@@ -170,12 +177,11 @@ export default function ConcertsPage() {
 
         <FAQSection heading="Questions performers ask" faqs={FAQS} />
 
-        <TourCTA
-          heading="Come clap in the room"
-          copy="Every musician does it: stand in the middle, clap once, listen. Reach out and we will set up a time for you to hear the hall for yourself."
+        <InquirySection
+          eventType="Concert / performance"
+          intro="Tell us about the show: the act, the audience size, the date you are eyeing. Or come clap in the room first and hear the hall for yourself."
+          tourInvite
         />
-
-        <InquirySection eventType="Concert / performance" />
       </main>
     </>
   );

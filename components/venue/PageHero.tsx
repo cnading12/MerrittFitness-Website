@@ -29,7 +29,9 @@ export default function PageHero({
   objectPosition?: string;
 }) {
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+    // mt clears the fixed navbar so hero photos start below it instead of
+    // being cut off behind the bar (nav is ~96px tall, ~112px on desktop).
+    <section className="relative mt-24 md:mt-28 min-h-[70vh] flex items-center justify-center overflow-hidden">
       <Image
         src={image}
         alt={imageAlt}
@@ -43,7 +45,7 @@ export default function PageHero({
       />
       <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/60 via-[#735e59]/25 to-[#735e59]/65"></div>
 
-      <div className="relative z-10 text-center text-[#f2eee9] px-6 py-32 max-w-4xl mx-auto">
+      <div className="relative z-10 text-center text-[#f2eee9] px-6 py-20 max-w-4xl mx-auto">
         {eyebrow && (
           <span className="inline-flex items-center px-4 py-2 bg-[#f2eee9]/10 backdrop-blur-sm text-[#f2eee9]/90 text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
             {eyebrow}

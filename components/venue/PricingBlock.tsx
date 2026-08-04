@@ -10,12 +10,16 @@ export default function PricingBlock({
   showRecurring = false,
   showEquipment = true,
   showStaffing = true,
+  showMat = false,
 }: {
   heading?: string;
   intro?: string;
   showRecurring?: boolean;
   showEquipment?: boolean;
   showStaffing?: boolean;
+  // The full-hall roll-out mat only matters to movement and wellness renters;
+  // leave it off event pages like weddings where it is just noise.
+  showMat?: boolean;
 }) {
   const pricing = buildPricing();
 
@@ -94,9 +98,13 @@ export default function PricingBlock({
               <strong className="text-[#4a3f3c]">Add-ons:</strong> tables and chairs can be added at{' '}
               {pricing.equipment.tablesChairsSmall} per item type (
               {pricing.equipment.tablesChairsLarge} for {pricing.equipment.tablesChairsThreshold}+
-              guests), the full-hall roll-out floor mat is {pricing.equipment.mat} per booking, and
-              opening the cafe lounge into the main hall by removing the glass-and-wood dividers is{' '}
-              {pricing.equipment.dividerRemoval} per booking.
+              guests){showMat ? (
+                <>
+                  , the full-hall roll-out floor mat is {pricing.equipment.mat} per booking,
+                </>
+              ) : null}{' '}
+              and opening the cafe lounge into the main hall by removing the glass-and-wood
+              dividers is {pricing.equipment.dividerRemoval} per booking.
             </li>
           )}
         </ul>

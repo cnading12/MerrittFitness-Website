@@ -6,7 +6,7 @@ import InquirySection from '@/components/venue/InquirySection';
 import { VENUE, SPECS, buildPricing } from '@/app/data/venue';
 import { SUNDAY_SCHEDULE } from '@/app/data/partnerships';
 
-const SHARE_IMAGE = `${VENUE.url}/images/hero/church-1.webp`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/church/church-1.jpg`;
 
 export const metadata: Metadata = {
   title: 'A Home for Your Congregation in Denver | Merritt Wellness',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
       'A 1905 church, restored and still gathering people every week. Two congregations meet here now; there is room for more.',
     url: `${VENUE.url}/congregations`,
     siteName: 'Merritt Wellness',
-    images: [{ url: SHARE_IMAGE, width: 1080, height: 1440, alt: 'The sanctuary of the 1905 church with its rose window and stained glass' }],
+    images: [{ url: SHARE_IMAGE, width: 3024, height: 4032, alt: 'The sanctuary of the 1905 church with its rose window and stained glass' }],
     locale: 'en_US',
     type: 'website',
   },
@@ -96,8 +96,8 @@ const FAQS: Faq[] = [
 
 const GALLERY = [
   {
-    src: '/images/hero/church-1.webp',
-    alt: 'The sanctuary with its rose window and four stained glass windows, floor open for seating',
+    src: '/images/events/venue/church/church-2.jpg',
+    alt: 'The warm main hall of the sanctuary with hardwood floors and stained glass along the wall',
   },
   {
     src: '/images/hero/Glass-Group.webp',
@@ -108,8 +108,8 @@ const GALLERY = [
     alt: 'A community gathered in rows during a service in the main hall',
   },
   {
-    src: '/images/hero/1.webp',
-    alt: 'The brick exterior and bell tower of the 1905 church from the sidewalk',
+    src: '/images/events/venue/church/outside-2.jpg',
+    alt: 'The brick church on its corner lot under summer trees, seen from the sidewalk',
   },
   {
     src: '/images/hero/Cafe-East.webp',
@@ -132,7 +132,7 @@ export default function CongregationsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/hero/church-1.webp"
+          image="/images/events/venue/church/church-1.jpg"
           imageAlt="The sanctuary of the restored 1905 church, rose window above and morning light on the hardwood floor"
           eyebrow="Congregation Partnerships"
           title={
@@ -262,6 +262,7 @@ export default function CongregationsPage() {
           eventType="Congregation partnership"
           heading="Talk through the fit"
           intro="Tell us about your community, your schedule, and what you need from a building. We will set up a walkthrough and take it from there."
+          tourInvite
         />
       </main>
     </>

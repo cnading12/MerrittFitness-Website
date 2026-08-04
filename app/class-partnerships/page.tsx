@@ -192,6 +192,7 @@ export default function ClassPartnershipsPage() {
         heading="Partner pricing"
         intro="Hourly rates by class size, with the recurring partner rate applied automatically when your schedule guarantees 8 or more hours a month."
         showRecurring
+        showMat
       />
 
       {/* Workspace cross-link */}

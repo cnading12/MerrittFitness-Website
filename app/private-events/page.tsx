@@ -6,11 +6,10 @@ import PricingBlock from '@/components/venue/PricingBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import FAQSection, { Faq } from '@/components/venue/FAQSection';
 import InquirySection from '@/components/venue/InquirySection';
-import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS, AMENITIES } from '@/app/data/venue';
 import { EVENT_TYPES } from '@/app/data/private-events';
 
-const SHARE_IMAGE = `${VENUE.url}/images/hero/church-3.webp`;
+const SHARE_IMAGE = `${VENUE.url}/images/events/venue/church/church-2.jpg`;
 
 export const metadata: Metadata = {
   title: 'Private Event Venue in Denver | Restored 1905 Church | Merritt Wellness',
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
       'A restored 1905 church in Sloans Lake for gatherings of every kind, up to 125 guests. Real pricing, published.',
     url: `${VENUE.url}/private-events`,
     siteName: 'Merritt Wellness',
-    images: [{ url: SHARE_IMAGE, width: 1080, height: 1440, alt: 'Main hall of the restored 1905 church at Merritt Wellness in Denver' }],
+    images: [{ url: SHARE_IMAGE, width: 3024, height: 4032, alt: 'Main hall of the restored 1905 church at Merritt Wellness in Denver' }],
     locale: 'en_US',
     type: 'website',
   },
@@ -100,8 +99,8 @@ export default function PrivateEventsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/hero/church-3.webp"
-          imageAlt="Main hall of the 1905 church with cathedral ceilings, rose window, and hardwood floors, set for an event"
+          image="/images/events/venue/church/church-2.jpg"
+          imageAlt="The warm main hall of the 1905 church, hardwood floors and stained glass, open and ready for an event"
           eyebrow="Private Events"
           title={
             <>
@@ -186,15 +185,14 @@ export default function PrivateEventsPage() {
           heading="Pricing, in full"
           intro="Every rate we charge is on this table or the list under it. Rates are hourly, set by guest count and day of the week."
           showRecurring={false}
+          showMat
         />
 
         <PoliciesBlock heading="Policies" include={['Alcohol', 'End time', 'Setup and breakdown', 'Accessibility', 'Live sound']} />
 
         <FAQSection heading="Common questions" faqs={FAQS} />
 
-        <TourCTA />
-
-        <InquirySection eventType="Private event" />
+        <InquirySection eventType="Private event" tourInvite />
       </main>
     </>
   );

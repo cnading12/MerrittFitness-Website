@@ -9,7 +9,6 @@ import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import FAQSection, { Faq } from '@/components/venue/FAQSection';
 import GalleryGrid from '@/components/venue/GalleryGrid';
 import InquirySection from '@/components/venue/InquirySection';
-import TourCTA from '@/components/venue/TourCTA';
 import { VENUE, SPECS, AMENITIES } from '@/app/data/venue';
 
 const SHARE_IMAGE = `${VENUE.url}/images/events/venue/wedding/10-Celebration - Edited.jpg`;
@@ -142,6 +141,10 @@ const WEDDING_FAQS: Faq[] = [
 
 const GALLERY = [
   {
+    src: '/images/events/venue/wedding/2-Pose.JPG',
+    alt: 'A couple sharing a look beside their cake beneath a flower-and-drapery arch in the main hall',
+  },
+  {
     src: '/images/events/venue/wedding/1-Aisle-Walk - Edited.jpg',
     alt: 'Newlyweds walking back up the aisle as guests stand and applaud beneath the stained glass',
   },
@@ -161,10 +164,6 @@ const GALLERY = [
     src: '/images/events/venue/wedding/8-Get-Ready.PNG',
     alt: 'A bride laughing with family while getting ready in the downstairs stone-walled suite',
   },
-  {
-    src: '/images/hero/Glass-Group.webp',
-    alt: 'Four original arched stained glass windows in blue and rose tones along the main hall wall',
-  },
 ];
 
 export default function WeddingsPage() {
@@ -176,9 +175,8 @@ export default function WeddingsPage() {
       />
       <main className="bg-[#faf8f5] font-sans">
         <PageHero
-          image="/images/events/venue/wedding/2-Pose.JPG"
-          imageAlt="A couple sharing a look beside their cake beneath a flower-and-drapery arch in the main hall"
-          objectPosition="center 40%"
+          image="/images/events/venue/wedding/4-church.jpg"
+          imageAlt="The warm, empty main hall of the 1905 church with hardwood floors and stained glass, ready to be set for a wedding"
           eyebrow="Weddings at Merritt Wellness"
           title={
             <>
@@ -188,7 +186,7 @@ export default function WeddingsPage() {
           }
           subtitle="Cathedral ceilings, original stained glass, and hardwood floors in the heart of Sloans Lake. Up to 125 guests."
           primaryCta={{ href: '/booking', label: 'Check your date' }}
-          secondaryCta={{ href: '#tour', label: 'Schedule a tour' }}
+          secondaryCta={{ href: '#inquiry', label: 'Schedule a tour' }}
         />
 
         {/* Positioning */}
@@ -286,14 +284,11 @@ export default function WeddingsPage() {
 
         <FAQSection faqs={WEDDING_FAQS} />
 
-        <div id="tour">
-          <TourCTA
-            heading="Come stand in the room"
-            copy="The photos are honest, but the light through the stained glass at golden hour is something you have to see. Reach out and we will find a time to walk the building together."
-          />
-        </div>
-
-        <InquirySection eventType="Wedding" />
+        <InquirySection
+          eventType="Wedding"
+          intro="Share a few details and our manager will get back to you, usually within a business day. Or come stand in the room first; the light through the stained glass at golden hour is something you have to see."
+          tourInvite
+        />
       </main>
     </>
   );

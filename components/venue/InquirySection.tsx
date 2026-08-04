@@ -12,11 +12,15 @@ export default function InquirySection({
   eventType = '',
   heading,
   intro,
+  tourInvite = false,
 }: {
   variant?: 'inquiry' | 'waitlist';
   eventType?: string;
   heading?: string;
   intro?: string;
+  // Folds the schedule-a-tour invitation into this section so pages don't
+  // need a separate tour CTA block. No tour days are published.
+  tourInvite?: boolean;
 }) {
   const isWaitlist = variant === 'waitlist';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -65,7 +69,24 @@ export default function InquirySection({
         <h2 className="text-3xl md:text-4xl font-light text-[#f2eee9] font-serif text-center mb-3">
           {heading ?? defaultHeading}
         </h2>
-        <p className="text-[#f2eee9]/80 text-center mb-10 leading-relaxed">{intro ?? defaultIntro}</p>
+        <p className="text-[#f2eee9]/80 text-center mb-6 leading-relaxed">{intro ?? defaultIntro}</p>
+
+        {tourInvite && (
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
+            <a
+              href={`tel:${VENUE.phone}`}
+              className="bg-[#f2eee9] text-[#735e59] font-semibold px-6 py-3 rounded-full hover:bg-white transition-colors duration-200"
+            >
+              Call {VENUE.phoneDisplay} for a tour
+            </a>
+            <a
+              href={`mailto:${VENUE.email}?subject=Tour%20request`}
+              className="border-2 border-[#f2eee9]/60 text-[#f2eee9] font-semibold px-6 py-3 rounded-full hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-200"
+            >
+              Email to schedule a walkthrough
+            </a>
+          </div>
+        )}
 
         {status === 'sent' ? (
           <div className="bg-[#f2eee9] rounded-3xl p-8 text-center">
