@@ -66,7 +66,7 @@ export default function CongregationsPage() {
 
       <PageHero
         image={venueImages.sunlitHallPartition}
-        eyebrow="Congregation Partnerships"
+        eyebrow="Faith & Community Gatherings"
         title={
           <>
             A Sanctuary,

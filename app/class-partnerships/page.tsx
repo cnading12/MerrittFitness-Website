@@ -97,7 +97,7 @@ export default function ClassPartnershipsPage() {
 
       <PageHero
         image={classesImages.danceClassStringLights}
-        eyebrow="Recurring Class Partnerships"
+        eyebrow="Wellness & Movement Classes"
         title={
           <>
             Your Class,

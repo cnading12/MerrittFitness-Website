@@ -55,13 +55,11 @@ export interface NavItem {
 
 // Top-level navigation. No Home item: the logo is the home link.
 //
-// The split is by RELATIONSHIP, not event type: "Events" lists every kind of
-// one-off booking (private or public, Weddings first — do not alphabetize),
-// and "Partnerships" holds the recurring arrangements (weekly class blocks,
-// congregations, studio/workspace). A concert can be booked weekly and a
-// class can be booked once; the pages cover both, so neither dropdown claims
-// a frequency the other excludes. The /private-events URL is kept for its
-// search value.
+// "Events" lists every TYPE of thing hosted here, with no frequency implied
+// — a visitor picks what they are doing. "Partnerships" holds only the
+// arrangement side: recurring booking rates and the studio/workspace next
+// door. Weddings first in Events; do not alphabetize. The /private-events
+// and /class-partnerships URLs are kept for their search value.
 export const navItems: NavItem[] = [
   {
     label: 'Events',
@@ -69,14 +67,15 @@ export const navItems: NavItem[] = [
       { label: 'Weddings', href: '/weddings' },
       { label: 'Concerts & Performances', href: '/concerts' },
       { label: 'Art Shows & Exhibitions', href: '/art-shows' },
-      { label: 'All Events', href: '/private-events' },
+      { label: 'Wellness & Movement Classes', href: '/class-partnerships' },
+      { label: 'Faith & Community Gatherings', href: '/congregations' },
+      { label: 'All Private Events', href: '/private-events' },
     ],
   },
   {
     label: 'Partnerships',
     children: [
-      { label: 'Recurring Bookings & Rates', href: '/class-partnerships' },
-      { label: 'Congregations', href: '/congregations' },
+      { label: 'Recurring Bookings & Rates', href: '/recurring' },
       { label: 'Studio & Workspace', href: '/studio' },
     ],
   },

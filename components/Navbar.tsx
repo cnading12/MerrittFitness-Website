@@ -20,6 +20,7 @@ const HERO_ROUTES = new Set([
   '/class-partnerships',
   '/congregations',
   '/studio',
+  '/recurring',
 ]);
 
 export default function Navbar() {
