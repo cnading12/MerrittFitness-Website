@@ -5,7 +5,7 @@ import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages } from '@/app/data/venue-images';
 import { workspace, workspaceMemberHours, contact } from '@/app/data/site';
-import { ArrowRight, Building2, Clock } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const PATH = '/studio';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/exterior-front.webp';
@@ -77,15 +77,17 @@ export default function StudioPage() {
         <div className="max-w-6xl mx-auto px-6">
           {/* Photo intentionally omitted: the flex studio, desk, and office
               sections get their photo set together once all three shots exist. */}
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto">
             <div>
-              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                At Merritt Wellness
-              </span>
-              <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-                The Flex Studio
-                <span className="block font-bold">Downstairs</span>
-              </h2>
+              <div className="text-center">
+                <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                  At Merritt Wellness
+                </span>
+                <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
+                  The Flex Studio
+                  <span className="block font-bold">Downstairs</span>
+                </h2>
+              </div>
               <div className="space-y-4 text-[#6b5f5b] leading-relaxed">
                 <p>
                   Below the main hall sits a stone-walled flex studio: a private, quiet room
@@ -103,7 +105,7 @@ export default function StudioPage() {
             </div>
           </div>
 
-          <div id="waitlist" className="mt-16 max-w-3xl">
+          <div id="waitlist" className="mt-16 max-w-3xl mx-auto">
             <InquiryForm
               kind="waitlist"
               page={PATH}
@@ -121,12 +123,8 @@ export default function StudioPage() {
       {/* 2. Private offices & studios at Merritt Workspace */}
       <section className="py-24 bg-white/60">
         <div className="max-w-5xl mx-auto px-6">
-          <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-            <Building2 className="w-4 h-4 mr-2" />
-            Next door at {workspace.name}
-          </span>
           <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-            Private Offices & Studios
+            Private Offices & Studios Next Door
           </h2>
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-8">
             {workspace.name} is the coworking property directly next door, run by the same
@@ -150,10 +148,6 @@ export default function StudioPage() {
       <section id="member-benefit" className="py-24">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-              <Clock className="w-4 h-4 mr-2" />
-              The member benefit
-            </span>
             <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
               A desk next door.
               <span className="block font-bold">A cathedral included.</span>

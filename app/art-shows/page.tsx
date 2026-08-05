@@ -114,6 +114,9 @@ export default function ArtShowsPage() {
       {/* Positioning */}
       <section className="pt-14 pb-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
+          <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+            Why artists show at Merritt
+          </span>
           <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-8">
             A backdrop that earns its place in the photos
           </h2>

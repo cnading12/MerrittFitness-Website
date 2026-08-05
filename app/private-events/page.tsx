@@ -93,13 +93,15 @@ export default function PrivateEventsPage() {
       {/* Event types */}
       <section className="pt-14 pb-24">
         <div className="max-w-7xl mx-auto px-6">
-          <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-            What people host here
-          </span>
-          <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
-            Built for gathering, whatever the occasion
-          </h2>
-          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-14">
+          <div className="text-center">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              What people host here
+            </span>
+            <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
+              Built for gathering, whatever the occasion
+            </h2>
+          </div>
+          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center mb-14">
             The hall has spent 120 years holding the moments that matter to people. Today that
             means weddings and concerts, and just as often celebrations of life, memorial
             services, quinceañeras, birthday parties, baby and bridal showers, graduation

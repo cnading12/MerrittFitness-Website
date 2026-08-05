@@ -114,14 +114,16 @@ export default function ClassPartnershipsPage() {
       {/* Open blocks — data-driven from app/data/site.ts */}
       <section className="pt-14 pb-24">
         <div className="max-w-5xl mx-auto px-6">
-          <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-            <CalendarClock className="w-4 h-4 mr-2" />
-            Open right now
-          </span>
-          <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
-            Find your weekly block
-          </h2>
-          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-10">
+          <div className="text-center">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              <CalendarClock className="w-4 h-4 mr-2" />
+              Open right now
+            </span>
+            <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
+              Find your weekly block
+            </h2>
+          </div>
+          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center mb-10">
             The week here has a rhythm: two class blocks most weekdays, larger events on
             Fridays and Saturdays, congregations on Sunday until 4:30 PM, and a Sunday
             evening block after that.
@@ -142,7 +144,7 @@ export default function ClassPartnershipsPage() {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm max-w-3xl">
+            <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm max-w-3xl mx-auto">
               <p className="text-lg text-[#4a3f3c] leading-relaxed">
                 Most weekly blocks are open right now, prime weekday evenings and Sunday
                 evenings included. Name the day and time that fits your class and the odds
@@ -150,7 +152,7 @@ export default function ClassPartnershipsPage() {
               </p>
             </div>
           )}
-          <p className="mt-6 text-sm text-[#a08b84]">
+          <p className="mt-6 text-sm text-[#a08b84] text-center max-w-3xl mx-auto">
             Classes open to the public get co-promoted at no charge: a What&apos;s On calendar
             listing, a bulletin-board flyer, and posts on our social channels.
           </p>

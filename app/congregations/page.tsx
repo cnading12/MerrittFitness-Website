@@ -78,9 +78,14 @@ export default function CongregationsPage() {
       {/* The framing: history and openness held together */}
       <section className="pt-14 pb-24">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-8 text-center">
-            120 years of people gathering here
-          </h2>
+          <div className="text-center">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              A sanctuary since 1905
+            </span>
+            <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-8">
+              120 years of people gathering here
+            </h2>
+          </div>
           <div className="space-y-6 text-lg text-[#6b5f5b] leading-relaxed">
             <p>
               This building was raised as a Methodist church in 1905 and spent more than a
