@@ -28,7 +28,7 @@ export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], s
     // shorter viewports; the darker top gradient gives the translucent cream
     // bar a consistent edge to sit on.
     <section className={`relative flex items-center justify-center overflow-hidden pt-28 ${
-      size === 'tall' ? 'min-h-[100svh]' : 'min-h-[70svh]'
+      size === 'tall' ? 'min-h-[100svh]' : 'min-h-[64svh]'
     }`}>
       <Image
         src={image.src}
