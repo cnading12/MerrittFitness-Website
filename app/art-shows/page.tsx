@@ -96,7 +96,7 @@ export default function ArtShowsPage() {
       />
 
       <PageHero
-        image={artShowsImages.exhibitionStainedGlass}
+        image={artShowsImages.vaultedHallExhibition}
         eyebrow="Art Shows & Exhibitions"
         title={
           <>
@@ -136,7 +136,7 @@ export default function ArtShowsPage() {
           <Gallery
             heading="Exhibitions in the Hall"
             images={[
-              artShowsImages.vaultedHallExhibition,
+              artShowsImages.exhibitionStainedGlass,
               artShowsImages.artShowTables,
               artShowsImages.visitorsBrowsing,
               artShowsImages.partitionWallPaintings,

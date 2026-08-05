@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getBlurDataURL } from "@/lib/blur-data";
+import { Landmark, Sun, HeartHandshake, Music2 } from "lucide-react";
 import {
   venueImages,
   weddingsImages,
@@ -351,7 +352,7 @@ export default function Home() {
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
                     </p>
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
                       Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
@@ -362,7 +363,7 @@ export default function Home() {
                 {/* Enhanced Stats */}
                 <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[#735e59]/20">
                   <div className="text-center group">
-                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">119</div>
+                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">{new Date().getFullYear() - 1905}</div>
                     <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Years Serving Denver</div>
                   </div>
                   <div className="text-center group">
@@ -392,42 +393,42 @@ export default function Home() {
               {/* Right Features Grid - Enhanced with local keywords */}
               <div className="grid grid-cols-2 gap-6 auto-rows-fr">
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Landmark className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0 font-serif">Historic Denver Landmark</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Historic Denver Landmark</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
+                    Original 1905 architecture with preserved stained glass, soaring ceilings, and hand-worn hardwood in the heart of Sloans Lake
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">☀️</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Sun className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0 font-serif">Natural Light Studio</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Natural Light, All Day</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Floor-to-ceiling windows bathe Denver's most beautiful yoga space in natural light throughout the day
+                    Tall arched windows and stained glass fill the hall with light that flatters a morning class and an evening reception alike
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🤝</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <HeartHandshake className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Inclusive Wellness Haven</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Open to Everyone</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    A non-denominational sanctuary welcoming all Denver wellness practitioners, paths, and people
+                    A non-denominational sanctuary welcoming every practice, tradition, celebration, and community
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#a08b84]/30 to-[#a08b84]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🎵</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Music2 className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Perfect Sound Healing Acoustics</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Acoustics That Carry</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Original church acoustics create Denver's most immersive sound bath and meditation experience
+                    Built for voices in 1905; the same acoustics now serve sound baths, concerts, and first dances
                   </p>
                 </div>
               </div>
@@ -521,26 +522,26 @@ export default function Home() {
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
 
-              <Link
-                href="/book"
+              <a
+                href="tel:720-357-9499"
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9] text-lg"
               >
                 <span className="flex items-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Let's Create Magic Together
+                  Call (720) 357-9499
                 </span>
-              </Link>
+              </a>
             </div>
 
             {/* Enhanced Trust Indicators */}
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                { number: "500+", label: "Denver Events Hosted" },
-                { number: "5★", label: "Google Rating" },
-                { number: "24/7", label: "Booking Support" },
-                { number: "119", label: "Years in Denver" }
+                { number: `${new Date().getFullYear() - 1905}`, label: "Years in Denver" },
+                { number: "125", label: "Guest Capacity" },
+                { number: "22", label: "On-Site Parking Spots" },
+                { number: "2,400", label: "Square Feet" }
               ].map((item, index) => (
                 <div key={index} className="group">
                   <div className="text-3xl font-bold text-[#f2eee9] mb-2 group-hover:text-white transition-colors duration-300 font-serif">{item.number}</div>

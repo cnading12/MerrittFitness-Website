@@ -16,15 +16,15 @@ const PATH = '/class-partnerships';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/classes/dance-class-string-lights.webp';
 
 export const metadata: Metadata = {
-  title: 'Recurring Class Space in Denver | Class Partnerships | Merritt Wellness',
+  title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
   description:
-    'Recurring weekly class blocks in a restored 1905 Denver church: yoga, breathwork, dance, martial arts, and every movement discipline. Full-coverage floor mat, rollaway mirrors, 20% partner rates, open blocks published.',
+    'Host yoga, breathwork, sound baths, dance, and martial arts in a restored 1905 Denver church. Book a one-time workshop, a pop-up series, or a weekly block; full-coverage floor mat, rollaway mirrors, and partner rates for regulars.',
   keywords:
     'yoga studio rental Denver, dance studio rental Denver, martial arts space Denver, recurring class space Denver, movement studio rental Sloans Lake, fitness class venue Denver',
   openGraph: {
-    title: 'Recurring Class Space in Denver | Merritt Wellness',
+    title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
-      'Weekly class blocks in a 1905 church hall: full-coverage mat, rollaway mirrors, and partner rates 20% below standard.',
+      'One workshop or every week: a 1905 church hall with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1603, alt: classesImages.danceClassStringLights.alt }],
@@ -33,15 +33,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Recurring Class Space in Denver | Merritt Wellness',
+    title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
-      'Weekly class blocks in a 1905 church hall: full-coverage mat, rollaway mirrors, and partner rates 20% below standard.',
+      'One workshop or every week: a 1905 church hall with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [
+  {
+    question: 'Do I have to commit to a weekly slot?',
+    answer:
+      'No. One-time and occasional bookings are a big part of what happens here; book any open date at the standard hourly rate through the booking page. A standing weekly block is simply there when your practice wants one, and it unlocks the partner discount.',
+  },
   {
     question: 'What does the recurring discount actually come to?',
     answer: `Partners with at least ${recurringDiscount.minMonthlyHours} guaranteed hours a month get ${recurringDiscount.percent}% off every hour, weekdays and Saturdays alike. For a class under 30 students that means ${money(rateBands[0].weekdayRecurring)}/hour instead of ${money(rateBands[0].weekday)}/hour, locked in at your stored rate.`,
@@ -82,9 +87,9 @@ export default function ClassPartnershipsPage() {
           __html: JSON.stringify(
             venueJsonLd({
               path: PATH,
-              name: 'Merritt Wellness — Recurring Class Space',
+              name: 'Merritt Wellness — Wellness & Movement Class Space',
               description:
-                'Recurring class blocks for yoga, breathwork, dance, martial arts, and movement disciplines in a restored 1905 Denver church.',
+                'Space for yoga, breathwork, sound baths, dance, and martial arts in a restored 1905 Denver church, from one-time workshops to weekly classes.',
               images: [classesImages.danceClassStringLights.src, venueImages.fullCoverageMat.src],
             })
           ),
@@ -100,14 +105,14 @@ export default function ClassPartnershipsPage() {
         eyebrow="Wellness & Movement Classes"
         title={
           <>
-            Your Class,
-            <span className="block font-bold">Same Time Every Week</span>
+            A Sanctuary
+            <span className="block font-bold">Built for Practice</span>
           </>
         }
-        subtitle="A 1905 church hall with cathedral ceilings for yoga, breathwork, dance, martial arts, and every movement discipline in between."
+        subtitle="Yoga, breathwork, sound baths, dance, and martial arts under 24-foot ceilings. Book it for one workshop, a pop-up series, or the same hour every week."
         ctas={[
-          { label: 'Claim an Open Block', href: '#inquiry' },
-          { label: 'See Partner Rates', href: '#rates', variant: 'ghost' },
+          { label: 'Check Availability & Book', href: '/book' },
+          { label: 'See Rates', href: '#rates', variant: 'ghost' },
         ]}
       />
 
@@ -120,13 +125,14 @@ export default function ClassPartnershipsPage() {
               Open right now
             </span>
             <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
-              Find your weekly block
+              One workshop or every week
             </h2>
           </div>
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center mb-10">
-            The week here has a rhythm: two class blocks most weekdays, larger events on
-            Fridays and Saturdays, congregations on Sunday until 4:30 PM, and a Sunday
-            evening block after that.
+            Plenty of what happens here is one-time or now-and-then: a sound bath, a
+            teacher training, a seasonal workshop series. Book a single date whenever the
+            calendar is open, and if your practice settles into a rhythm, a standing weekly
+            block is yours to claim.
           </p>
           {openClassBlocks.publishSpecificBlocks ? (
             <>
@@ -147,8 +153,9 @@ export default function ClassPartnershipsPage() {
             <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm max-w-3xl mx-auto">
               <p className="text-lg text-[#4a3f3c] leading-relaxed">
                 Most weekly blocks are open right now, prime weekday evenings and Sunday
-                evenings included. Name the day and time that fits your class and the odds
-                are good it is yours.
+                evenings included, and one-time dates book straight through the booking
+                page. Name the day and time that fits your class and the odds are good it
+                is yours.
               </p>
             </div>
           )}
@@ -189,12 +196,13 @@ export default function ClassPartnershipsPage() {
       <section id="rates" className="py-24">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-4">
-            Partner rates: {recurringDiscount.percent}% off, automatically
+            Simple hourly rates, one-time or weekly
           </h2>
           <p className="text-[#6b5f5b] mb-10 max-w-2xl">
-            Commit to at least {recurringDiscount.minMonthlyHours} hours a month and every hour
-            bills at the partner rate; no code, no negotiation. A weekly two-hour class clears
-            the bar on its own.
+            One-off sessions book at the standard hourly rate. Regulars do better: reach{' '}
+            {recurringDiscount.minMonthlyHours} hours a month and every hour bills at the
+            partner rate, {recurringDiscount.percent}% off automatically; a weekly two-hour
+            class clears the bar on its own.
           </p>
           <RateTable
             showRecurring
