@@ -279,6 +279,7 @@ export default function Home() {
               <span className="block font-bold">Built for Gathering</span>
             </>
           }
+          imageClassName="object-[82%_center] md:object-center"
           subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot cathedral ceilings."
           ctas={[
             { label: "Host an Event", href: "/private-events" },

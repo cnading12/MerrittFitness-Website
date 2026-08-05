@@ -14,11 +14,14 @@ interface PageHeroProps {
   title: React.ReactNode;
   subtitle?: string;
   ctas?: HeroCta[];
-  /** Vertical size; weddings uses tall, most pages default */
+  /** Vertical size; the homepage uses tall, interior pages default */
   size?: 'default' | 'tall';
+  /** Extra classes for the hero Image, e.g. a responsive object-position
+      when the photo's subject sits off-center on narrow screens */
+  imageClassName?: string;
 }
 
-export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], size = 'default' }: PageHeroProps) {
+export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], size = 'default', imageClassName = '' }: PageHeroProps) {
   return (
     // pt-28 keeps the vertically-centered content clear of the fixed navbar
     // (~110px tall) instead of letting the headline slide underneath it on
@@ -35,7 +38,7 @@ export default function PageHero({ image, eyebrow, title, subtitle, ctas = [], s
         sizes="100vw"
         placeholder={getBlurDataURL(image.src) ? 'blur' : 'empty'}
         blurDataURL={getBlurDataURL(image.src)}
-        className="object-cover brightness-[0.6]"
+        className={`object-cover brightness-[0.6] ${imageClassName}`}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40" />
       <div className="relative z-10 max-w-4xl mx-auto px-6 pt-12 pb-16 text-center animate-fade-in-up">

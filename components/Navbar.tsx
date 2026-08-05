@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { getBlurDataURL } from '@/lib/blur-data';
 import Image from 'next/image';
@@ -29,9 +30,13 @@ export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  // The mobile menu renders through a portal; wait for mount so SSR markup
+  // stays consistent.
+  const [mounted, setMounted] = useState(false);
   const lastScroll = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -77,7 +82,10 @@ export default function Navbar() {
       }
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenDropdown(null);
+      if (e.key === 'Escape') {
+        setOpenDropdown(null);
+        setMenuOpen(false);
+      }
     };
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKey);
@@ -218,114 +226,119 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Mobile Drawer */}
-      <div className={`
-        lg:hidden fixed inset-0 z-40 transition-all duration-300 ease-in-out
-        ${menuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
-      `}>
-        {/* Backdrop */}
+      {/* Mobile menu — rendered via portal to <body>: the transformed fixed
+          header cannot be its containing block, so the overlay truly covers
+          the viewport. Full-screen takeover, every destination one tap away. */}
+      {mounted && createPortal(
         <div
-          className={`absolute inset-0 bg-[#735e59]/20 backdrop-blur-sm transition-opacity duration-300 ${
-            menuOpen ? 'opacity-100' : 'opacity-0'
+          className={`lg:hidden fixed inset-0 z-[70] transition-all duration-300 ease-out ${
+            menuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
           }`}
-          onClick={() => setMenuOpen(false)}
-        ></div>
-
-        {/* Drawer */}
-        <div className={`
-          absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-[#f2eee9] shadow-2xl
-          transition-transform duration-300 ease-out flex flex-col
-          ${menuOpen ? 'translate-x-0' : 'translate-x-full'}
-        `}>
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-6 border-b border-[#735e59]/20 bg-[#f2eee9]">
-            <Link
-              href="/"
-              className="flex items-center shrink-0"
-              onClick={() => setMenuOpen(false)}
-              tabIndex={0}
-            >
-              <Image
-                src="/images/hero/logo.png"
-                alt="Merritt Wellness Logo"
-                width={140}
-                height={60}
-                priority
-                placeholder="blur"
-                blurDataURL={getBlurDataURL("/images/hero/logo.png")}
-              />
-            </Link>
-            <button
-              aria-label="Close menu"
-              onClick={() => setMenuOpen(false)}
-              className="text-[#735e59]/70 hover:text-[#735e59] p-2 rounded-full hover:bg-[#735e59]/10 transition-colors duration-200"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="p-6 bg-[#f2eee9] overflow-y-auto flex-1">
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                item.children ? (
-                  <div key={item.label}>
-                    <button
-                      className="flex w-full items-center justify-between text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
-                      aria-expanded={mobileExpanded === item.label}
-                      onClick={() => setMobileExpanded((v) => (v === item.label ? null : item.label))}
-                    >
-                      {item.label}
-                      <ChevronDown
-                        size={18}
-                        className={`transition-transform duration-200 ${mobileExpanded === item.label ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    <div className={`overflow-hidden transition-all duration-300 ${
-                      mobileExpanded === item.label ? 'max-h-64' : 'max-h-0'
-                    }`}>
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className="block text-[#735e59]/90 hover:text-[#5a4a46] hover:bg-[#735e59]/10 py-2.5 pl-8 pr-4 rounded-xl transition-all duration-200"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    key={item.label}
-                    href={item.href!}
-                    className="block text-[#735e59] hover:text-[#5a4a46] hover:bg-[#735e59]/10 font-medium text-lg py-3 px-4 rounded-xl transition-all duration-200"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              ))}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site menu"
+        >
+          <div className="absolute inset-0 bg-[#f2eee9]" />
+          <div className={`relative flex h-[100dvh] flex-col transition-transform duration-300 ease-out ${
+            menuOpen ? 'translate-y-0' : '-translate-y-2'
+          }`}>
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),1rem)] pb-3">
+              <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center">
+                <Image
+                  src="/images/hero/logo.png"
+                  alt="Merritt Wellness Logo"
+                  width={130}
+                  height={56}
+                  className="h-auto w-[120px]"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL("/images/hero/logo.png")}
+                />
+              </Link>
+              <button
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-[#735e59] hover:bg-[#735e59]/10 transition-colors duration-200"
+              >
+                <X size={26} />
+              </button>
             </div>
 
-            {/* Mobile Book CTA */}
-            <div className="mt-8 pt-6 border-t border-[#735e59]/20 bg-[#f2eee9]">
+            {/* Destinations */}
+            <nav className="flex-1 overflow-y-auto px-7 pt-2 pb-4">
+              {navItems.filter((item) => item.children).map((group, gi) => (
+                <div key={group.label} className={gi > 0 ? 'mt-7' : ''}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a08b84] mb-2">
+                    {group.label}
+                  </p>
+                  <ul>
+                    {group.children!.map((child) => (
+                      <li key={child.href}>
+                        <Link
+                          href={child.href}
+                          onClick={() => setMenuOpen(false)}
+                          className={`flex items-center gap-3 py-[7px] font-serif text-[22px] leading-snug transition-colors duration-150 ${
+                            pathname === child.href
+                              ? 'font-bold text-[#735e59]'
+                              : 'text-[#4a3f3c] active:text-[#735e59]'
+                          }`}
+                        >
+                          {pathname === child.href && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#735e59] shrink-0" />
+                          )}
+                          {child.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              <div className="mt-7 pt-6 border-t border-[#735e59]/15">
+                <ul>
+                  {navItems.filter((item) => !item.children).map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href!}
+                        onClick={() => setMenuOpen(false)}
+                        className={`flex items-center gap-3 py-[7px] font-serif text-[22px] leading-snug transition-colors duration-150 ${
+                          pathname === item.href
+                            ? 'font-bold text-[#735e59]'
+                            : 'text-[#4a3f3c] active:text-[#735e59]'
+                        }`}
+                      >
+                        {pathname === item.href && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#735e59] shrink-0" />
+                        )}
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </nav>
+
+            {/* Pinned actions */}
+            <div className="px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-3 border-t border-[#735e59]/15 bg-[#f2eee9]">
               <Link
                 href="/book"
-                className="flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold py-4 px-6 rounded-2xl hover:bg-[#5a4a46] transition-all duration-200 hover:scale-105 shadow-lg"
                 onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold py-4 rounded-2xl active:bg-[#5a4a46] transition-colors duration-200 shadow-lg"
               >
                 <Calendar size={20} />
                 Book the Venue
               </Link>
-              <p className="text-center text-sm text-[#735e59]/70 mt-3">
-                Classes, events, and everything in between
-              </p>
+              <a
+                href="tel:720-357-9499"
+                className="block text-center text-sm text-[#735e59]/80 mt-3"
+              >
+                Questions? Call (720) 357-9499
+              </a>
             </div>
-          </nav>
-        </div>
-      </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }
