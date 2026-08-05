@@ -267,6 +267,7 @@ export default function Home() {
         {/* HERO — same treatment as the venue pages: full-bleed photo under
             the transparent navbar */}
         <PageHero
+          size="tall"
           image={{
             src: "/images/hero/outside5.webp",
             alt: "The restored 1905 church that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood",
