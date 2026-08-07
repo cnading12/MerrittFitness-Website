@@ -45,6 +45,7 @@ export const weddingsImages = {
 
 // Merritt Workspace next door: dedicated desks, private offices, and studios.
 export const coworkImages = {
+  flexStudio: { src: '/images/pages/studio/flex-studio.webp', alt: "The basement flex studio set up as a quiet session room, with a sofa, round rug, and soft lamplight", width: 1600, height: 1200 },
   dedicatedDesks: { src: '/images/pages/studio/dedicated-desks.webp', alt: "Members work at dedicated desks in the wood-beamed coworking hall at Merritt Workspace", width: 1600, height: 1067 },
   privateOffice: { src: '/images/pages/studio/private-office.webp', alt: "A member works at an ultrawide monitor in a sunlit private office at Merritt Workspace", width: 1600, height: 1067 },
   corporateNetworking: { src: '/images/pages/private-events/corporate-networking.webp', alt: "Professionals talk in a circle beneath the rose window and projection screen after a corporate gathering in the main hall", width: 1600, height: 1067 },

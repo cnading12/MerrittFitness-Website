@@ -100,9 +100,8 @@ place it on the page.
   /private-events temporarily borrow venue shots (seated semicircle,
   dance-floor crowd); replace when real events are shot. Corporate now uses
   the real networking photo from `co-work/Networking.jpg`.
-- **Studio & Workspace**: the flex studio photo is still missing (its section
-  stays text-only); dedicated desk and private office photos arrived Aug 2026
-  and are live on /studio.
+- **Studio & Workspace**: complete. Flex studio, dedicated desk, and private
+  office photos all arrived Aug 2026 and are live on /studio.
 - **Color-critical re-uploads**: original camera exports of
   `hero/Sound-event.JPG`, `hero/Sound-Event2.JPG`, `hero/outside3.webp`,
   `hero/outside5.webp` (homepage hero), and `hero/1.webp` would let the

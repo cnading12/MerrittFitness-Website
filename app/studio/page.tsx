@@ -77,36 +77,43 @@ export default function StudioPage() {
       {/* 1. Basement flex studio — waitlist */}
       <section className="pt-14 pb-24">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Photo intentionally omitted: the flex studio has not been shot
-              yet; add it here when the photo arrives. */}
-          <div className="max-w-3xl mx-auto">
-            <div>
-              <div className="text-center">
-                <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                  At Merritt Wellness
-                </span>
-                <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-                  The <span className="font-bold">Flex Studio</span>
-                </h2>
-              </div>
-              <div className="space-y-4 text-[#6b5f5b] leading-relaxed">
-                <p>
-                  In the basement of the building, beneath the main hall, sits a stone-walled
-                  flex studio: a very private, quiet room that practitioners love for
-                  bodywork, coaching, small-group sessions, and any practice that wants a
-                  door that closes. Renters get scheduled access on a recurring monthly
-                  arrangement, with the building's parking and lounge around them.
-                </p>
-                <p>
-                  Every room in the basement is spoken for right now, and the practitioners
-                  who hold them tend to stay. The{' '}
-                  <a href="#waitlist" className="underline decoration-[#735e59]/40 hover:text-[#735e59]">
-                    waitlist below
-                  </a>{' '}
-                  is how the next room changes hands: when one opens, we go down the list in
-                  order, and the conversation starts with the person at the top.
-                </p>
-              </div>
+          <div className="text-center">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+              At Merritt Wellness
+            </span>
+            <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-10">
+              The <span className="font-bold">Flex Studio</span>
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+            <div className="space-y-4 text-[#6b5f5b] leading-relaxed">
+              <p>
+                In the basement of the building, beneath the main hall, sits the flex
+                studio: a very private, quiet room that practitioners love for bodywork,
+                coaching, small-group sessions, and any practice that wants a door that
+                closes. Renters get scheduled access on a recurring monthly arrangement,
+                with the building's parking and lounge around them.
+              </p>
+              <p>
+                Every room in the basement is spoken for right now, and the practitioners
+                who hold them tend to stay. The{' '}
+                <a href="#waitlist" className="underline decoration-[#735e59]/40 hover:text-[#735e59]">
+                  waitlist below
+                </a>{' '}
+                is how the next room changes hands: when one opens, we go down the list in
+                order, and the conversation starts with the person at the top.
+              </p>
+            </div>
+            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-lg">
+              <Image
+                src={coworkImages.flexStudio.src}
+                alt={coworkImages.flexStudio.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                placeholder={getBlurDataURL(coworkImages.flexStudio.src) ? 'blur' : 'empty'}
+                blurDataURL={getBlurDataURL(coworkImages.flexStudio.src)}
+                className="object-cover"
+              />
             </div>
           </div>
         </div>

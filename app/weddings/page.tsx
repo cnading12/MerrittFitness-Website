@@ -105,7 +105,7 @@ const faqs: Faq[] = [
 ];
 
 const galleryImages = [
-  weddingsImages.ceremonyArch,
+  weddingsImages.celebrationKiss,
   venueImages.mainHallRoseWindow,
   weddingsImages.aisleRecessional,
   weddingsImages.cakeTableCouple,
@@ -144,11 +144,12 @@ export default function WeddingsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(PATH, faqs)) }}
       />
 
-      {/* 1. Hero — the full wedding party cheering the kiss. The people live
-          in the lower two-thirds of the frame, so bias the crop there. */}
+      {/* 1. Hero — the draped ceremony arch over the petal-lined aisle, the
+          sharpest wedding frame in the library (1440px vs the 1080px
+          celebration shot, which now leads the gallery instead). */}
       <PageHero
-        image={weddingsImages.celebrationKiss}
-        imageClassName="object-[center_75%]"
+        image={weddingsImages.ceremonyArch}
+        imageClassName="object-[center_62%]"
         eyebrow="Weddings at Merritt"
         title={
           <>
