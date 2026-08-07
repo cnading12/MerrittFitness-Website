@@ -309,7 +309,7 @@ export const events: Event[] = [
     description: "A 7-week chakra inspired vinyasa series exploring movement, breath, and embodied awareness. Each week focuses on one chakra through mindful movement, breathwork, and meditation, supporting balance and self-discovery. Held Friday mornings 9:30–10:30 AM: 8/21 — Grounded, 8/28 — Creative, 9/18 — Confident, with additional dates to be announced. Open to all levels! Bring a mat, water bottle, and journal — props will be provided. Facilitated by Cayla Chambers MA, LPC, R-DMT, RYT 200.",
     imageUrl: "/images/event-banners/Cayla-Headshot.jpg",
     imagePosition: "center 30%",
-    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/",
+    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/movement-medicine",
     ticketLabel: "Register",
     instagramHandle: "full.mind.body.spirit",
     practitionerName: "Cayla Chambers MA, LPC, R-DMT"
