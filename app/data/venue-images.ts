@@ -62,9 +62,13 @@ export const classesImages = {
   martialArtsPractice: { src: '/images/pages/classes/martial-arts-practice.webp', alt: "An instructor coaches two young students practicing grappling on the full-coverage floor mat", width: 1225, height: 1600 },
   circleRollawayMirror: { src: '/images/pages/classes/circle-rollaway-mirror.webp', alt: "Class members sit in a circle on the wood floor for a discussion, reflected in the studio's rollaway mirror", width: 1600, height: 1069 },
   restorativeClass: { src: '/images/pages/classes/restorative-class.webp', alt: "A large restorative class rests on the wood floor of the hall, lit by tall blue stained-glass windows", width: 1600, height: 1032 },
+  soundBathCandlelight: { src: '/images/pages/classes/sound-bath-candlelight.webp', alt: "Candlelit sound bath setup with a gong, singing bowls, and mats beneath an aurora projection on the vaulted ceiling", width: 810, height: 1080 },
+  soundBathRoseWindow: { src: '/images/pages/classes/sound-bath-rose-window.webp', alt: "Singing bowls and candles glow beneath the stained-glass rose window during an evening sound bath", width: 810, height: 1080 },
+  soundBathGathering: { src: '/images/pages/classes/sound-bath-gathering.webp', alt: "Participants gather among mats and candles under a projected purple sky during a sound bath event", width: 960, height: 1280 },
 } as const;
 
 export const congregationsImages = {
   communityCircle: { src: '/images/pages/congregations/community-circle.webp', alt: "A community congregation gathers in a circle of chairs for a discussion in the church hall", width: 1600, height: 1200 },
+  sundayService: { src: '/images/pages/congregations/sunday-service.webp', alt: "Pastor Tate preaches beside an interpreter during a bilingual Sunday service in the hall", width: 1130, height: 900 },
 } as const;
 

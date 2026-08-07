@@ -96,8 +96,11 @@ export default function ConcertsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(PATH, faqs)) }}
       />
 
+      {/* The performers sit in the lower band of this frame; keep the crop
+          there so the hero reads as musicians, not the projection screen. */}
       <PageHero
         image={concertsImages.songwritersRound}
+        imageClassName="object-bottom"
         eyebrow="Concerts & Performances"
         title={
           <>

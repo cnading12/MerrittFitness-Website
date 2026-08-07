@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText, X } from 'lucide-react';
 
 type ApplicationType = 'single' | 'recurring';
 type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
@@ -23,6 +23,8 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  // Rental information lives behind a popup so the form leads the page.
+  const [showRentalInfo, setShowRentalInfo] = useState(false);
 
   // Application type — the very first choice: single event vs. recurring series.
   const [applicationType, setApplicationType] = useState<ApplicationType>('single');
@@ -1488,15 +1490,43 @@ export default function BookingPage() {
             Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
             <span className="font-semibold text-[#735e59]"> From $95/hour • Flexible pricing for partners</span>
           </p>
+          {/* Rates, fees, and policies live in a popup so the form comes first */}
+          <button
+            type="button"
+            onClick={() => setShowRentalInfo(true)}
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#735e59] border border-[#735e59]/30 bg-white rounded-full px-5 py-2.5 hover:bg-[#735e59]/5 hover:border-[#735e59]/50 transition-colors"
+          >
+            <FileText size={16} />
+            View rental information: rates, fees &amp; policies
+          </button>
         </div>
 
-        {/* Important Rental Information */}
-        <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 mb-8">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="text-amber-600 mt-1 flex-shrink-0" size={24} />
-            <div>
-              <h3 className="text-lg font-semibold text-amber-900 mb-3 font-serif">Important Rental Information</h3>
-              <ul className="space-y-2 text-amber-800">
+        {/* Rental information popup */}
+        {showRentalInfo && (
+          <div
+            className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Rental information"
+            onClick={() => setShowRentalInfo(false)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 md:px-8 py-5 border-b border-[#735e59]/10 shrink-0">
+                <h3 className="text-lg md:text-xl font-bold text-[#4a3f3c] font-serif">Rental Information</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowRentalInfo(false)}
+                  aria-label="Close rental information"
+                  className="p-2 rounded-full text-[#6b5f5b] hover:bg-[#735e59]/10 hover:text-[#4a3f3c] transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="overflow-y-auto px-6 md:px-8 py-6">
+              <ul className="space-y-3 text-[#4a3f3c] text-sm md:text-base">
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Standard Rate (by guest count):</strong> $95/hour for 0–30 guests, $125/hour for 30–60, and $155/hour for 60+. A 2-hour minimum applies to all events.</span>
@@ -1546,9 +1576,19 @@ export default function BookingPage() {
                   <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
                 </li>
               </ul>
+              </div>
+              <div className="px-6 md:px-8 py-4 border-t border-[#735e59]/10 shrink-0 text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowRentalInfo(false)}
+                  className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-2.5 rounded-full hover:bg-[#5a4a46] transition-colors"
+                >
+                  Got it
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Error Summary Display */}
         {Object.keys(validationErrors).length > 0 && (

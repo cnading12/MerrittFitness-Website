@@ -84,38 +84,28 @@ export default function StudioPage() {
                   At Merritt Wellness
                 </span>
                 <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-                  The Flex Studio
-                  <span className="block font-bold">Downstairs</span>
+                  The <span className="font-bold">Flex Studio</span>
                 </h2>
               </div>
               <div className="space-y-4 text-[#6b5f5b] leading-relaxed">
                 <p>
-                  Below the main hall sits a stone-walled flex studio: a private, quiet room
-                  for bodywork, coaching, small-group sessions, and practices that want a door
-                  that closes. Renters get scheduled access on a recurring monthly
+                  In the basement of the building, beneath the main hall, sits a stone-walled
+                  flex studio: a very private, quiet room that practitioners love for
+                  bodywork, coaching, small-group sessions, and any practice that wants a
+                  door that closes. Renters get scheduled access on a recurring monthly
                   arrangement, with the building's parking and lounge around them.
                 </p>
                 <p>
-                  Every room downstairs is spoken for right now, and the practitioners who
-                  hold them tend to stay. The waitlist is how the next room changes hands:
-                  when one opens, we go down the list in order, and the conversation starts
-                  with the person at the top.
+                  Every room in the basement is spoken for right now, and the practitioners
+                  who hold them tend to stay. The{' '}
+                  <a href="#waitlist" className="underline decoration-[#735e59]/40 hover:text-[#735e59]">
+                    waitlist below
+                  </a>{' '}
+                  is how the next room changes hands: when one opens, we go down the list in
+                  order, and the conversation starts with the person at the top.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div id="waitlist" className="mt-16 max-w-3xl mx-auto">
-            <InquiryForm
-              kind="waitlist"
-              page={PATH}
-              heading="Be First in Line"
-              subheading="Name, email, and when you would want to start. We work the list in order when a room opens."
-              showEventFields={false}
-              showStartWindow
-              submitLabel="Join the Waitlist"
-              successMessage="You're on the list. When a studio opens, we reach out in the order inquiries came in."
-            />
           </div>
         </div>
       </section>
@@ -193,6 +183,22 @@ export default function StudioPage() {
             </a>
             .
           </p>
+        </div>
+      </section>
+
+      {/* Flex studio waitlist — kept at the bottom so the page reads before it asks */}
+      <section id="waitlist" className="py-24 bg-white/60">
+        <div className="max-w-3xl mx-auto px-6">
+          <InquiryForm
+            kind="waitlist"
+            page={PATH}
+            heading="Be First in Line"
+            subheading="The flex studio waitlist: name, email, and when you would want to start. We work the list in order when a room opens."
+            showEventFields={false}
+            showStartWindow
+            submitLabel="Join the Waitlist"
+            successMessage="You're on the list. When a studio opens, we reach out in the order inquiries came in."
+          />
         </div>
       </section>
     </main>

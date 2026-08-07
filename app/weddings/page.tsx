@@ -100,7 +100,7 @@ const faqs: Faq[] = [
 ];
 
 const galleryImages = [
-  weddingsImages.celebrationKiss,
+  venueImages.mainHallRoseWindow,
   weddingsImages.aisleRecessional,
   weddingsImages.cakeTableCouple,
   weddingsImages.headTableCake,
@@ -144,9 +144,11 @@ export default function WeddingsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(PATH, faqs)) }}
       />
 
-      {/* 1. Hero */}
+      {/* 1. Hero — the full wedding party cheering the kiss. The people live
+          in the lower two-thirds of the frame, so bias the crop there. */}
       <PageHero
-        image={venueImages.mainHallRoseWindowWide}
+        image={weddingsImages.celebrationKiss}
+        imageClassName="object-[center_75%]"
         eyebrow="Weddings at Merritt"
         title={
           <>

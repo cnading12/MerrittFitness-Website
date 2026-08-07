@@ -10,10 +10,10 @@ import RateTable from '@/components/venue/RateTable';
 import InquiryForm from '@/components/venue/InquiryForm';
 import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
-import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages } from '@/app/data/venue-images';
+import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
 import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, HeartHandshake, PartyPopper, Briefcase, Sparkles } from 'lucide-react';
 
 const PATH = '/private-events';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
@@ -50,12 +50,18 @@ const typeImages: Record<string, { src: string; alt: string }> = {
   concerts: concertsImages.songwritersRound,
   'art-shows': artShowsImages.exhibitionStainedGlass,
   'wellness-classes': classesImages.danceClassStringLights,
+  congregations: congregationsImages.communityCircle,
+};
+
+// Icon bands stand in for photography on the types that are not shot yet, so
+// every card in the grid carries the same header height.
+const typeIcons: Record<string, typeof HeartHandshake> = {
+  'celebrations-of-life': HeartHandshake,
+  parties: PartyPopper,
+  corporate: Briefcase,
 };
 
 export default function PrivateEventsPage() {
-  const linked = eventTypes.filter((t) => t.href);
-  const unlinked = eventTypes.filter((t) => !t.href);
-
   return (
     <main className="bg-[#faf8f5] font-sans">
       <script
@@ -110,17 +116,16 @@ export default function PrivateEventsPage() {
             the public; that choice is yours, made booking by booking.
           </p>
 
-          {/* Types with dedicated pages */}
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {linked.map((type) => {
+          {/* One grid for every event type. Types with a dedicated page link
+              out; types awaiting photography sit in the same grid with an
+              icon band instead of a photo and no link. */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {eventTypes.map((type) => {
               const img = typeImages[type.key];
-              return (
-                <Link
-                  key={type.key}
-                  href={type.href!}
-                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
-                >
-                  {img && (
+              const Icon = typeIcons[type.key];
+              const card = (
+                <>
+                  {img ? (
                     <div className="relative aspect-[4/3]">
                       <Image
                         src={img.src}
@@ -132,28 +137,59 @@ export default function PrivateEventsPage() {
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
+                  ) : (
+                    <div className="relative aspect-[4/3] bg-gradient-to-br from-[#735e59]/10 to-[#735e59]/20 flex items-center justify-center">
+                      {Icon && <Icon size={44} strokeWidth={1.5} className="text-[#735e59]/50" />}
+                    </div>
                   )}
                   <div className="p-8">
                     <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-2">{type.title}</h3>
-                    <p className="text-[#6b5f5b] text-sm leading-relaxed mb-4">{type.description}</p>
-                    <span className="inline-flex items-center gap-2 text-[#735e59] font-semibold text-sm">
-                      Explore {type.title.toLowerCase()}
-                      <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
-                    </span>
+                    <p className="text-[#6b5f5b] text-sm leading-relaxed">{type.description}</p>
+                    {type.href && (
+                      <span className="mt-4 inline-flex items-center gap-2 text-[#735e59] font-semibold text-sm">
+                        Explore {type.title.toLowerCase()}
+                        <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+                      </span>
+                    )}
                   </div>
+                </>
+              );
+              return type.href ? (
+                <Link
+                  key={type.key}
+                  href={type.href}
+                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
+                >
+                  {card}
                 </Link>
+              ) : (
+                <div key={type.key} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#735e59]/10">
+                  {card}
+                </div>
               );
             })}
-          </div>
 
-          {/* Types covered here until they get their own pages */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {unlinked.map((type) => (
-              <div key={type.key} className="bg-white rounded-3xl p-8 shadow-sm border border-[#735e59]/10">
-                <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-2">{type.title}</h3>
-                <p className="text-[#6b5f5b] text-sm leading-relaxed">{type.description}</p>
+            {/* The list is never complete — the ninth card keeps the grid full
+                and the door open. */}
+            <Link
+              href="#inquiry"
+              className="group bg-[#735e59] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
+            >
+              <div className="relative aspect-[4/3] flex items-center justify-center">
+                <Sparkles size={44} strokeWidth={1.5} className="text-[#f2eee9]/60" />
               </div>
-            ))}
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-[#f2eee9] font-serif mb-2">Something Else Entirely</h3>
+                <p className="text-[#f2eee9]/85 text-sm leading-relaxed">
+                  If it involves people gathering with intention, the room can hold it. Tell us
+                  what you have in mind.
+                </p>
+                <span className="mt-4 inline-flex items-center gap-2 text-[#f2eee9] font-semibold text-sm">
+                  Start the conversation
+                  <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+                </span>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

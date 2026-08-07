@@ -477,7 +477,7 @@ export default function Home() {
           style={{
             // The taupe layer on top softens the swirl lines; raise its alpha to fade them further
             backgroundImage:
-              'linear-gradient(rgba(115, 94, 89, 0.5), rgba(115, 94, 89, 0.5)), url("/images/overlays/Swirls.png")',
+              'linear-gradient(rgba(115, 94, 89, 0.65), rgba(115, 94, 89, 0.65)), url("/images/overlays/Swirls.png")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}

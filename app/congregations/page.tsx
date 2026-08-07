@@ -56,14 +56,18 @@ export default function CongregationsPage() {
               name: 'Merritt Wellness — Congregation Partnerships',
               description:
                 'A restored 1905 church in Denver hosting congregations and spiritual communities of every tradition, with Sunday and weekday availability.',
-              images: [venueImages.sunlitHallPartition.src, congregationsImages.communityCircle.src],
+              images: [congregationsImages.sundayService.src, venueImages.sunlitHallPartition.src, congregationsImages.communityCircle.src],
             })
           ),
         }}
       />
 
+      {/* A real Sunday service, not an empty room: Pastor Tate mid-sermon
+          with an interpreter beside him. The people sit in the lower half of
+          the frame, so bias the crop there. */}
       <PageHero
-        image={venueImages.sunlitHallPartitionWide}
+        image={congregationsImages.sundayService}
+        imageClassName="object-[center_62%]"
         eyebrow="Faith & Community Gatherings"
         title={
           <>

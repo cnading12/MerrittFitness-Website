@@ -8,7 +8,7 @@ import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, classesImages } from '@/app/data/venue-images';
-import { openClassBlocks, workspace, specs } from '@/app/data/site';
+import { workspace, specs, contact } from '@/app/data/site';
 import { rateBands, recurringDiscount, money } from '@/app/lib/venue-rates';
 import { CalendarClock, ArrowRight } from 'lucide-react';
 
@@ -116,7 +116,7 @@ export default function ClassPartnershipsPage() {
         ]}
       />
 
-      {/* Open blocks — data-driven from app/data/site.ts */}
+      {/* One-time and recurring booking paths */}
       <section className="pt-14 pb-24">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center">
@@ -128,38 +128,31 @@ export default function ClassPartnershipsPage() {
               One workshop or every week
             </h2>
           </div>
-          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center mb-10">
-            Plenty of what happens here is one-time or now-and-then: a sound bath, a
-            teacher training, a seasonal workshop series. Book a single date whenever the
-            calendar is open, and if your practice settles into a rhythm, a standing weekly
-            block is yours to claim.
-          </p>
-          {openClassBlocks.publishSpecificBlocks ? (
-            <>
-              <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-6">
-                These blocks are open for {openClassBlocks.season} today; when they are
-                claimed, they come off this list.
-              </p>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {openClassBlocks.blocks.map((block) => (
-                  <div key={`${block.day}-${block.time}`} className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
-                    <p className="text-2xl font-bold text-[#735e59] font-serif">{block.day}s</p>
-                    <p className="text-[#6b5f5b] mt-1">{block.time}</p>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm max-w-3xl mx-auto">
-              <p className="text-lg text-[#4a3f3c] leading-relaxed">
-                Most weekly blocks are open right now, prime weekday evenings and Sunday
-                evenings included, and one-time dates book straight through the booking
-                page. Name the day and time that fits your class and the odds are good it
-                is yours.
-              </p>
-            </div>
-          )}
-          <p className="mt-6 text-sm text-[#a08b84] text-center max-w-3xl mx-auto">
+          <div className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center space-y-5">
+            <p>
+              Plenty of what happens here is one-time or now-and-then: a sound bath, a
+              teacher training, a seasonal workshop series. Book a single date whenever the
+              calendar is open, and if your practice settles into a rhythm, a standing
+              weekly block is yours to claim. For recurring classes we aim for evening
+              blocks of 5 to 7 PM and 7 to 9 PM, and daytime hours are open for the
+              practices that want them.
+            </p>
+            <p>
+              To find a class time that fits, check the{' '}
+              <Link href="/calendar" className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold">
+                What&apos;s On calendar
+              </Link>{' '}
+              to see what is already scheduled, or email{' '}
+              <a
+                href={`mailto:${contact.inquiries.email}`}
+                className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold"
+              >
+                {contact.inquiries.email}
+              </a>{' '}
+              and we will walk the open blocks with you.
+            </p>
+          </div>
+          <p className="mt-8 text-sm text-[#a08b84] text-center max-w-3xl mx-auto">
             Classes open to the public get co-promoted at no charge: a What&apos;s On calendar
             listing, a bulletin-board flyer, and posts on our social channels.
           </p>
@@ -182,9 +175,12 @@ export default function ClassPartnershipsPage() {
           <Gallery
             images={[
               classesImages.danceClassSteps,
+              classesImages.soundBathCandlelight,
               classesImages.breathworkClass,
+              classesImages.soundBathGathering,
               classesImages.martialArtsPractice,
               classesImages.circleRollawayMirror,
+              classesImages.soundBathRoseWindow,
               classesImages.restorativeClass,
               venueImages.fullCoverageMat,
             ]}

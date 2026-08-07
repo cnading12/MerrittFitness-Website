@@ -162,6 +162,33 @@ export default function ArtShowsPage() {
         </div>
       </section>
 
+      {/* Resident artist credit */}
+      <section className="pb-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm text-center">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-5">
+              On our walls now
+            </span>
+            <h2 className="text-2xl md:text-3xl font-light text-[#4a3f3c] font-serif mb-4">
+              Resident artist: Karen Borthick
+            </h2>
+            <p className="text-[#6b5f5b] leading-relaxed max-w-2xl mx-auto">
+              The paintings hanging in the hall today, including several of the works in the
+              photos above, are by Denver artist Karen Borthick. Her show lives with us
+              between events, which is its own answer to how art looks in this room. See more
+              of her work at{' '}
+              <a
+                href="https://www.karenborthickart.com"
+                className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold"
+              >
+                karenborthickart.com
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Co-promotion for public openings */}
       <section className="pb-24">
         <div className="max-w-7xl mx-auto px-6">

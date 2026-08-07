@@ -58,16 +58,17 @@ export interface NavItem {
 // "Events" lists every TYPE of thing hosted here, with no frequency implied
 // — a visitor picks what they are doing. "Partnerships" holds only the
 // arrangement side: recurring booking rates and the studio/workspace next
-// door. Weddings first in Events; do not alphabetize. The /private-events
-// and /class-partnerships URLs are kept for their search value.
+// door. Weddings first, wellness second (the venue's core identity); do not
+// alphabetize. The /private-events and /class-partnerships URLs are kept for
+// their search value.
 export const navItems: NavItem[] = [
   {
     label: 'Events',
     children: [
       { label: 'Weddings', href: '/weddings' },
+      { label: 'Wellness & Movement Classes', href: '/class-partnerships' },
       { label: 'Concerts & Performances', href: '/concerts' },
       { label: 'Art Shows & Exhibitions', href: '/art-shows' },
-      { label: 'Wellness & Movement Classes', href: '/class-partnerships' },
       { label: 'Faith & Community Gatherings', href: '/congregations' },
       { label: 'All Private Events', href: '/private-events' },
     ],
@@ -242,6 +243,13 @@ export const eventTypes: EventTypeBlock[] = [
       'Yoga, breathwork, sound baths, dance, and martial arts, as a one-off workshop or a weekly block.',
   },
   {
+    key: 'congregations',
+    title: 'Faith & Community Gatherings',
+    href: '/congregations',
+    description:
+      'A sanctuary since 1905, open to congregations and spiritual communities of every tradition. Two churches meet here every Sunday.',
+  },
+  {
     key: 'celebrations-of-life',
     title: 'Celebrations of Life & Memorials',
     href: null, // pending photography
@@ -254,5 +262,12 @@ export const eventTypes: EventTypeBlock[] = [
     href: null, // pending photography
     description:
       'Birthdays, quinceañeras, showers, graduations, anniversaries. The main hall gives a milestone the setting it deserves, and the breakout rooms keep food, gifts, and staging out of the way.',
+  },
+  {
+    key: 'corporate',
+    title: 'Corporate Events & Offsites',
+    href: null, // pending photography
+    description:
+      'Offsites, retreats, and team days that feel nothing like a conference room. Projector, screen, surround sound, and a cafe lounge for the breaks people actually remember.',
   },
 ];
