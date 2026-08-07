@@ -474,12 +474,16 @@ export default function Home() {
         <section
           id="booking"
           className="py-24 bg-[#735e59] relative overflow-hidden texture-dark"
-          style={{
-            backgroundImage: 'url("/images/overlays/Swirls.png")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
         >          <div className="absolute inset-0">
+          {/* Swirls on their own layer so their strength is tunable */}
+          <div
+            className="absolute inset-0 opacity-25 pointer-events-none"
+            style={{
+              backgroundImage: 'url("/images/overlays/Swirls.png")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          ></div>
           <Image
             src="/images/hero/1.webp"
             alt="Merritt Wellness Denver yoga studio interior booking background"
