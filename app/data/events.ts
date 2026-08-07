@@ -300,6 +300,21 @@ export const events: Event[] = [
 
   // ============ AUGUST 2026 ============
   {
+    id: "ground-and-flow-chakra-vinyasa-2026",
+    title: "Ground & Flow",
+    date: "2026-08-21",
+    sessionDates: ["2026-08-21", "2026-08-28", "2026-09-18"],
+    time: "9:30 AM",
+    endTime: "10:30 AM",
+    description: "A 7-week chakra inspired vinyasa series exploring movement, breath, and embodied awareness. Each week focuses on one chakra through mindful movement, breathwork, and meditation, supporting balance and self-discovery. Held Friday mornings 9:30–10:30 AM: 8/21 — Grounded, 8/28 — Creative, 9/18 — Confident, with additional dates to be announced. Open to all levels! Bring a mat, water bottle, and journal — props will be provided. Facilitated by Cayla Chambers MA, LPC, R-DMT, RYT 200.",
+    imageUrl: "/images/event-banners/Cayla-Headshot.jpg",
+    imagePosition: "center 30%",
+    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/",
+    ticketLabel: "Register",
+    instagramHandle: "full.mind.body.spirit",
+    practitionerName: "Cayla Chambers MA, LPC, R-DMT"
+  },
+  {
     id: "holosomatic-breathwork-aug-2026",
     title: "Holosomatic Breathwork",
     date: "2026-08-11",
