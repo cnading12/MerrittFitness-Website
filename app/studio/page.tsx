@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import PageHero from '@/components/venue/PageHero';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
-import { venueImages } from '@/app/data/venue-images';
+import { venueImages, coworkImages } from '@/app/data/venue-images';
 import { workspace, workspaceMemberHours, contact } from '@/app/data/site';
+import { getBlurDataURL } from '@/lib/blur-data';
 import { ArrowRight } from 'lucide-react';
 
 const PATH = '/studio';
@@ -75,8 +77,8 @@ export default function StudioPage() {
       {/* 1. Basement flex studio — waitlist */}
       <section className="pt-14 pb-24">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Photo intentionally omitted: the flex studio, desk, and office
-              sections get their photo set together once all three shots exist. */}
+          {/* Photo intentionally omitted: the flex studio has not been shot
+              yet; add it here when the photo arrives. */}
           <div className="max-w-3xl mx-auto">
             <div>
               <div className="text-center">
@@ -112,25 +114,40 @@ export default function StudioPage() {
 
       {/* 2. Private offices & studios at Merritt Workspace */}
       <section className="py-24 bg-white/60">
-        <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-            Private Offices & Studios Next Door
-          </h2>
-          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-8">
-            {workspace.name} is the coworking property directly next door, run by the same
-            family. Practitioners and small businesses take private offices and private
-            studios there: your own key, your own room, a real business address, and the
-            event center a few steps away when a session needs more space than an office.
-            Inventory and current pricing live on their site, which stays up to date as rooms
-            turn over.
-          </p>
-          <Link
-            href={workspace.url}
-            className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-bold px-8 py-4 rounded-full shadow-lg hover:bg-[#5a4a46] hover:-translate-y-1 transition-all duration-300"
-          >
-            See Offices & Studios at {workspace.name}
-            <ArrowRight size={18} />
-          </Link>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
+                Private Offices & Studios Next Door
+              </h2>
+              <p className="text-[#6b5f5b] leading-relaxed mb-8">
+                {workspace.name} is the coworking property directly next door, run by the same
+                family. Practitioners and small businesses take private offices and private
+                studios there: your own key, your own room, a real business address, and the
+                event center a few steps away when a session needs more space than an office.
+                Inventory and current pricing live on their site, which stays up to date as
+                rooms turn over.
+              </p>
+              <Link
+                href={workspace.url}
+                className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-bold px-8 py-4 rounded-full shadow-lg hover:bg-[#5a4a46] hover:-translate-y-1 transition-all duration-300"
+              >
+                See Offices & Studios at {workspace.name}
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-lg">
+              <Image
+                src={coworkImages.privateOffice.src}
+                alt={coworkImages.privateOffice.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                placeholder={getBlurDataURL(coworkImages.privateOffice.src) ? 'blur' : 'empty'}
+                blurDataURL={getBlurDataURL(coworkImages.privateOffice.src)}
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -149,6 +166,19 @@ export default function StudioPage() {
               that already gives you your desk. No other coworking space in the area offers
               anything like it.
             </p>
+          </div>
+
+          {/* The dedicated-desk hall itself */}
+          <div className="relative aspect-[21/9] rounded-3xl overflow-hidden shadow-lg max-w-4xl mx-auto mb-14">
+            <Image
+              src={coworkImages.dedicatedDesks.src}
+              alt={coworkImages.dedicatedDesks.alt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 896px"
+              placeholder={getBlurDataURL(coworkImages.dedicatedDesks.src) ? 'blur' : 'empty'}
+              blurDataURL={getBlurDataURL(coworkImages.dedicatedDesks.src)}
+              className="object-cover"
+            />
           </div>
 
           {/* The two tiers, side by side and legible at a glance */}

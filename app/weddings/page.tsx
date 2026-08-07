@@ -105,12 +105,15 @@ const faqs: Faq[] = [
 ];
 
 const galleryImages = [
+  weddingsImages.ceremonyArch,
   venueImages.mainHallRoseWindow,
   weddingsImages.aisleRecessional,
   weddingsImages.cakeTableCouple,
+  weddingsImages.ceremonyArchSide,
   weddingsImages.headTableCake,
   weddingsImages.gettingReady,
   venueImages.sunlitHall,
+  venueImages.exteriorSanctuary,
 ];
 
 export default function WeddingsPage() {

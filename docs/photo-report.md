@@ -94,14 +94,15 @@ place it on the page.
   place settings, signage); dusk exterior with the windows lit; couple
   portrait outside the building. A full-resolution export of
   `10-Celebration - Edited.jpg` from the photographer would sharpen the
-  weddings hero, which currently runs from a 1080px file.
-- **Celebrations of life / parties / corporate**: no photography exists.
-  Their cards on /private-events temporarily borrow venue shots (seated
-  semicircle, dance-floor crowd, projection screen); replace when real
-  events are shot.
-- **Studio & Workspace**: flex studio, dedicated desk, and private office
-  photos (owner is gathering these; the page's three sections are text-only
-  until all three exist).
+  weddings hero, which currently runs from a 1080px file. (The two
+  ceremony-arch photos added Aug 2026 are in the gallery.)
+- **Celebrations of life / parties**: no photography exists. Their cards on
+  /private-events temporarily borrow venue shots (seated semicircle,
+  dance-floor crowd); replace when real events are shot. Corporate now uses
+  the real networking photo from `co-work/Networking.jpg`.
+- **Studio & Workspace**: the flex studio photo is still missing (its section
+  stays text-only); dedicated desk and private office photos arrived Aug 2026
+  and are live on /studio.
 - **Color-critical re-uploads**: original camera exports of
   `hero/Sound-event.JPG`, `hero/Sound-Event2.JPG`, `hero/outside3.webp`,
   `hero/outside5.webp` (homepage hero), and `hero/1.webp` would let the

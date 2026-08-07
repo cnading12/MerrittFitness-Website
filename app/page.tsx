@@ -267,11 +267,14 @@ export default function Home() {
       <main className="bg-[#faf8f5] font-sans">
         {/* HERO — same treatment as the venue pages: full-bleed photo under
             the transparent navbar */}
+        {/* A real street photo of the sanctuary alone — not the rendering
+            that included the workspace building. The tower sits left of
+            center, so bias the mobile crop toward it. */}
         <PageHero
           size="tall"
           image={{
-            src: "/images/hero/outside5.webp",
-            alt: "The restored 1905 building that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood",
+            src: "/images/hero/1.webp",
+            alt: "The restored 1905 brick sanctuary that houses Merritt Wellness, on its tree-lined corner in Denver's Sloans Lake neighborhood",
           }}
           eyebrow="Sloans Lake, Denver"
           title={
@@ -280,7 +283,7 @@ export default function Home() {
               <span className="block font-bold">Built for Gathering</span>
             </>
           }
-          imageClassName="object-[82%_center] md:object-center"
+          imageClassName="object-[44%_center] md:object-center"
           subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot vaulted ceilings."
           ctas={[
             { label: "Host an Event", href: "/private-events" },

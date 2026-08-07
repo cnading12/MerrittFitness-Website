@@ -29,6 +29,8 @@ export const venueImages = {
   mainHallRoseWindowWide: { src: '/images/pages/venue/main-hall-rose-window-wide.webp', alt: "The main hall of the restored 1905 sanctuary, with a rose window and four arched stained-glass windows above a polished wood floor", width: 2400, height: 1360 },
   sunlitHallWide: { src: '/images/pages/venue/sunlit-hall-wide.webp', alt: "Sunlight warms the wood floor of the vaulted main hall, looking toward the shoji-screen partition and antique pews", width: 2400, height: 1480 },
   sunlitHallPartitionWide: { src: '/images/pages/venue/sunlit-hall-partition-wide.webp', alt: "Sunlight streaks the long wood floor of the empty hall, facing the wood-framed partition wall and arched windows", width: 2400, height: 1480 },
+  // Street photo of the sanctuary alone (no workspace building in frame).
+  exteriorSanctuary: { src: '/images/hero/1.webp', alt: "The restored 1905 brick sanctuary on its tree-lined corner in Sloans Lake on a sunny day", width: 1920, height: 1256 },
 } as const;
 
 export const weddingsImages = {
@@ -37,6 +39,15 @@ export const weddingsImages = {
   cakeTableCouple: { src: '/images/pages/weddings/cake-table-couple.webp', alt: "A bride and groom share a look over their wedding cake beneath a draped floral arch in the reception hall", width: 1143, height: 1600 },
   headTableCake: { src: '/images/pages/weddings/head-table-cake.webp', alt: "A decorated head table with a tiered wedding cake set against the hall's wooden partition and stained glass", width: 900, height: 1600 },
   gettingReady: { src: '/images/pages/weddings/getting-ready.webp', alt: "A bride laughs with her attendants while getting ready in the venue's stone-walled suite", width: 1010, height: 1093 },
+  ceremonyArch: { src: '/images/pages/weddings/ceremony-arch.webp', alt: "A petal-lined aisle runs beneath a white-draped wedding arch toward the altar as guests take their seats", width: 1440, height: 960 },
+  ceremonyArchSide: { src: '/images/pages/weddings/ceremony-arch-side.webp', alt: "Guests seated for a wedding ceremony beneath the timber beams, looking down the aisle through a draped floral arch", width: 1440, height: 960 },
+} as const;
+
+// Merritt Workspace next door: dedicated desks, private offices, and studios.
+export const coworkImages = {
+  dedicatedDesks: { src: '/images/pages/studio/dedicated-desks.webp', alt: "Members work at dedicated desks in the wood-beamed coworking hall at Merritt Workspace", width: 1600, height: 1067 },
+  privateOffice: { src: '/images/pages/studio/private-office.webp', alt: "A member works at an ultrawide monitor in a sunlit private office at Merritt Workspace", width: 1600, height: 1067 },
+  corporateNetworking: { src: '/images/pages/private-events/corporate-networking.webp', alt: "Professionals talk in a circle beneath the rose window and projection screen after a corporate gathering in the main hall", width: 1600, height: 1067 },
 } as const;
 
 export const concertsImages = {

@@ -10,7 +10,7 @@ import RateTable from '@/components/venue/RateTable';
 import InquiryForm from '@/components/venue/InquiryForm';
 import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
-import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages } from '@/app/data/venue-images';
+import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages, coworkImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
 import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -55,7 +55,7 @@ const typeImages: Record<string, { src: string; alt: string }> = {
   congregations: congregationsImages.communityCircle,
   'celebrations-of-life': venueImages.seatedSemicircle,
   parties: concertsImages.danceFloorCrowd,
-  corporate: venueImages.hallProjectionScreen,
+  corporate: coworkImages.corporateNetworking,
 };
 
 export default function PrivateEventsPage() {
