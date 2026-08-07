@@ -55,7 +55,7 @@ const faqs: Faq[] = [
   {
     question: 'What days can we book our wedding?',
     answer:
-      'Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday and Sunday evening weddings starting at 4 PM or later are also available (Sunday services wrap by 4:30 PM), and they bill at the lower Sunday-to-Friday rate. For anything outside those windows, reach out and we will talk through whether it can work.',
+      'Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday and Sunday evening weddings starting at 4 PM or later are also available (Sunday services wrap by 4:30 PM), and they bill at the lower Sunday-to-Friday rate. For any other date or time, like a full Friday wedding day, reach out and we will talk through whether it can work.',
   },
   {
     question: 'Can we hold both the ceremony and the reception here?',
@@ -111,14 +111,6 @@ const galleryImages = [
   weddingsImages.headTableCake,
   weddingsImages.gettingReady,
   venueImages.sunlitHall,
-  venueImages.exteriorFront,
-];
-
-const galleryPlaceholders = [
-  'Reception setup with round tables',
-  'Detail shots: florals, place settings, signage',
-  'Dusk exterior with the windows lit',
-  'Couple portrait outside the building',
 ];
 
 export default function WeddingsPage() {
@@ -197,8 +189,8 @@ export default function WeddingsPage() {
               We host weddings on Saturdays, so the building and our full attention belong to
               one celebration. Friday and Sunday evening weddings starting at 4 PM or later
               can work beautifully too, and they bill at the lower Sunday-to-Friday rate.
-              Have a date in mind outside those windows? Reach out and we will talk it
-              through.
+              Have a different date or time in mind, like a full Friday wedding day? Reach
+              out and we will talk it through.
             </p>
           </div>
         </div>
@@ -216,9 +208,8 @@ export default function WeddingsPage() {
         <div className="max-w-7xl mx-auto px-6">
           <Gallery
             heading="Weddings in the Hall"
-            subheading="Real weddings, no staging. The labeled slots are shots we are adding after upcoming weddings this season."
+            subheading="Real weddings, no staging."
             images={galleryImages}
-            placeholders={galleryPlaceholders}
           />
         </div>
       </section>

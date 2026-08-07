@@ -82,6 +82,32 @@ designed graphics that are not venue photography.
 | shavasana.webp | wellness | 900x1174 after crop | REJECTED | Severely underexposed and noisy; below hero resolution |
 | yoga-class.webp | wellness | 1600x1200 | duplicate | Byte-identical to 3-yoga-class.webp |
 
+## Missing photos — the shot list (updated Aug 2026)
+
+All "photo coming soon" placeholder slots have been removed from the live
+pages ahead of launch; this list is now the only record of what to shoot or
+collect. When a photo lands, process it with
+`scripts/process-venue-images.mjs` (which now preserves color profiles) and
+place it on the page.
+
+- **Weddings**: reception setup with round tables; detail shots (florals,
+  place settings, signage); dusk exterior with the windows lit; couple
+  portrait outside the building. A full-resolution export of
+  `10-Celebration - Edited.jpg` from the photographer would sharpen the
+  weddings hero, which currently runs from a 1080px file.
+- **Celebrations of life / parties / corporate**: no photography exists.
+  Their cards on /private-events temporarily borrow venue shots (seated
+  semicircle, dance-floor crowd, projection screen); replace when real
+  events are shot.
+- **Studio & Workspace**: flex studio, dedicated desk, and private office
+  photos (owner is gathering these; the page's three sections are text-only
+  until all three exist).
+- **Color-critical re-uploads**: original camera exports of
+  `hero/Sound-event.JPG`, `hero/Sound-Event2.JPG`, `hero/outside3.webp`,
+  `hero/outside5.webp` (homepage hero), and `hero/1.webp` would let the
+  pipeline restore their true colors; their current files carry no color
+  profile and no original survives.
+
 ## What the folders still need
 
 - **wedding/**: no reception-with-round-tables shot, no detail shots

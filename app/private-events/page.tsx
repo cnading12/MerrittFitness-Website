@@ -13,7 +13,7 @@ import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
 import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
-import { ArrowRight, HeartHandshake, PartyPopper, Briefcase, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 const PATH = '/private-events';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
@@ -44,21 +44,18 @@ export const metadata: Metadata = {
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
 };
 
-// Card images for event types that have dedicated pages.
+// Card images per event type. The types without their own photography yet
+// (celebrations, parties, corporate) borrow the closest venue shot — each
+// image appears only once in this grid. Swap in real photos when they exist.
 const typeImages: Record<string, { src: string; alt: string }> = {
   weddings: weddingsImages.celebrationKiss,
   concerts: concertsImages.songwritersRound,
   'art-shows': artShowsImages.exhibitionStainedGlass,
   'wellness-classes': classesImages.danceClassStringLights,
   congregations: congregationsImages.communityCircle,
-};
-
-// Icon bands stand in for photography on the types that are not shot yet, so
-// every card in the grid carries the same header height.
-const typeIcons: Record<string, typeof HeartHandshake> = {
-  'celebrations-of-life': HeartHandshake,
-  parties: PartyPopper,
-  corporate: Briefcase,
+  'celebrations-of-life': venueImages.seatedSemicircle,
+  parties: concertsImages.danceFloorCrowd,
+  corporate: venueImages.hallProjectionScreen,
 };
 
 export default function PrivateEventsPage() {
@@ -122,7 +119,6 @@ export default function PrivateEventsPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {eventTypes.map((type) => {
               const img = typeImages[type.key];
-              const Icon = typeIcons[type.key];
               const card = (
                 <>
                   {img ? (
@@ -138,9 +134,7 @@ export default function PrivateEventsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="relative aspect-[4/3] bg-gradient-to-br from-[#735e59]/10 to-[#735e59]/20 flex items-center justify-center">
-                      {Icon && <Icon size={44} strokeWidth={1.5} className="text-[#735e59]/50" />}
-                    </div>
+                    <div className="relative aspect-[4/3] bg-gradient-to-br from-[#735e59]/10 to-[#735e59]/20" />
                   )}
                   <div className="p-8">
                     <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-2">{type.title}</h3>
