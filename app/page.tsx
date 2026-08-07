@@ -474,27 +474,14 @@ export default function Home() {
         <section
           id="booking"
           className="py-24 bg-[#735e59] relative overflow-hidden texture-dark"
-        >          <div className="absolute inset-0">
-          {/* Swirls on their own layer so their strength is tunable */}
-          <div
-            className="absolute inset-0 opacity-25 pointer-events-none"
-            style={{
-              backgroundImage: 'url("/images/overlays/Swirls.png")',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          ></div>
-          <Image
-            src="/images/hero/1.webp"
-            alt="Merritt Wellness Denver yoga studio interior booking background"
-            fill
-            className="object-cover opacity-10"
-            loading="lazy"
-            placeholder="blur"
-            blurDataURL={getBlurDataURL("/images/hero/1.webp")}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
-        </div>
+          style={{
+            // The taupe layer on top softens the swirl lines; raise its alpha to fade them further
+            backgroundImage:
+              'linear-gradient(rgba(115, 94, 89, 0.25), rgba(115, 94, 89, 0.25)), url("/images/overlays/Swirls.png")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">
