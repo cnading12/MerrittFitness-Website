@@ -134,7 +134,7 @@ export const events: Event[] = [
   {
     id: "mile-high-qualchata",
     title: "Mile High Qualchata",
-    date: "2026-08-05",
+    date: "2026-08-12",
     time: "6:30 PM",
     endTime: "8:30 PM",
     description: "Join Mile High Qualchata for weekly salsa and bachata classes every Wednesday from 6:30-8:30PM: one hour of salsa and one hour of bachata. Our goal is to teach you the basics of social dancing so that you can feel confident joining Denver's growing social dance scene across many amazing venues in the city. By the end, you'll have a working knowledge of social dancing within these dance styles, and will be able to go to any dance function and move confidently with a partner! $5 per class. Please note: classes are taking a break for the month of July and will resume in August.",
@@ -296,6 +296,49 @@ export const events: Event[] = [
     instagramHandle: "westernwishproductions",
     practitionerName: "WesternWish Productions",
     recurrence: "Second Sunday of every month"
+  },
+
+  // ============ AUGUST 2026 ============
+  {
+    id: "ground-and-flow-chakra-vinyasa-2026",
+    title: "Ground & Flow",
+    date: "2026-08-21",
+    sessionDates: ["2026-08-21", "2026-08-28", "2026-09-18"],
+    time: "9:30 AM",
+    endTime: "10:30 AM",
+    description: "A 7-week chakra inspired vinyasa series exploring movement, breath, and embodied awareness. Each week focuses on one chakra through mindful movement, breathwork, and meditation, supporting balance and self-discovery. Held Friday mornings 9:30–10:30 AM: 8/21 — Grounded, 8/28 — Creative, 9/18 — Confident, with additional dates to be announced. Open to all levels! Bring a mat, water bottle, and journal — props will be provided. Facilitated by Cayla Chambers MA, LPC, R-DMT, RYT 200.",
+    imageUrl: "/images/event-banners/Cayla-Headshot.jpg",
+    imagePosition: "center 30%",
+    ticketUrl: "https://www.fullmindbodyspiritcounseling.com/movement-medicine",
+    ticketLabel: "Register",
+    instagramHandle: "full.mind.body.spirit",
+    practitionerName: "Cayla Chambers MA, LPC, R-DMT"
+  },
+  {
+    id: "holosomatic-breathwork-aug-2026",
+    title: "Holosomatic Breathwork",
+    date: "2026-08-11",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "Anxiety. Overthinking. Self-doubt. These are patterns. It's not who you are. Holosomatic Breathwork uses breath, movement, and sound to quiet your mind and reconnect you with your body's intelligence. Back to clarity. Back to trust. Back to yourself. This is body-led healing. And it changes everything. Doors open at 5:45 PM. All experience levels welcome. $40 per person.",
+    imageUrl: "/images/events/community/jules.webp",
+    ticketUrl: "https://somaticjules.com/events/",
+    instagramHandle: "SomaticJules",
+    practitionerName: "Juliana Stoddart"
+  },
+  {
+    id: "soften-unwind-yin-massage-sound-bath-aug-2026",
+    title: "Soften & Unwind: A Restorative Evening",
+    date: "2026-08-13",
+    time: "6:30 PM",
+    endTime: "8:00 PM",
+    description: "Join us for a special event designed to calm your nervous system and invite deep relaxation. Hosted by Anissa M. Cordova, PhD (Psychotherapist, Emotional Resilience Coach, Sound Bath Facilitator) and Courtney Greth, LMT (End-of-Life Doula, Reiki Practitioner, Biodynamic Craniosacral Therapist). Courtney will guide gentle yin yoga, with optional individualized massage offered to a limited number of participants. The evening will flow into a soothing sound bath led by Anissa, with reiki gently woven throughout to support your rest.",
+    imageUrl: "/images/events/venue/wellness/Recenter (202).jpg",
+    imagePosition: "center 30%",
+    ticketUrl: "https://www.recentertherapeuticmassage.com",
+    ticketLabel: "Reserve Your Spot",
+    instagramHandle: "recenterdenver",
+    practitionerName: "Anissa M. Cordova & Courtney Greth"
   },
 
   // ============ JULY 2026 ============
