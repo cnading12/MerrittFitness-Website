@@ -297,7 +297,7 @@ export default function Home() {
               </span>
               <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] font-serif">
                 One historic room,
-                <span className="block font-bold text-[#735e59]">six ways in</span>
+                <span className="block font-bold text-[#735e59]">infinite possibilities</span>
               </h2>
               <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mt-6"></div>
             </div>
@@ -331,9 +331,41 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Divider between the event types and the story section */}
+        <div className="flex items-center justify-center gap-4 py-4" aria-hidden="true">
+          <div className="w-24 h-px bg-gradient-to-r from-transparent to-[#735e59]/40"></div>
+          <div className="w-2 h-2 rounded-full bg-[#735e59]/40"></div>
+          <div className="w-24 h-px bg-gradient-to-l from-transparent to-[#735e59]/40"></div>
+        </div>
+
         {/* ABOUT SECTION - Enhanced headings and descriptions only */}
-        <section id="about" className="relative py-24 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5]">
-          <div className="max-w-7xl mx-auto px-6">
+        <section id="about" className="relative py-24 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5] overflow-hidden">
+          {/* Watercolor washes for depth, echoing the brand's texture */}
+          <div className="absolute -top-24 -right-24 w-[480px] h-[480px] pointer-events-none z-0">
+            <Image
+              src="/images/overlays/WaterColor.png"
+              alt=""
+              width={480}
+              height={480}
+              className="w-full h-full object-contain opacity-70"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
+            />
+          </div>
+          <div className="absolute -bottom-32 -left-28 w-[480px] h-[480px] pointer-events-none z-0">
+            <Image
+              src="/images/overlays/WaterColor.png"
+              alt=""
+              width={480}
+              height={480}
+              className="w-full h-full object-contain opacity-60 rotate-180"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
+            />
+          </div>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div className="space-y-8">
