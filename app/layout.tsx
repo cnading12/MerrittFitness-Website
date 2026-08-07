@@ -7,8 +7,8 @@ import "./globals-ios.css";
 export const metadata: Metadata = {
   metadataBase: new URL('https://merrittwellness.net'),
   title: 'Merritt Wellness | Historic Event, Wedding & Wellness Venue in Sloans Lake Denver CO',
-  description: 'Merritt Wellness is a restored 1905 church in Denver\'s Sloans Lake neighborhood — a historic event, wedding, and wellness venue hosting weddings, sound baths, yoga, meditation, and private events. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
-  keywords: 'Denver wellness venue, event venue Sloans Lake, Denver wedding venue, historic church wedding venue, sound bath Denver, sound immersion Denver, yoga and meditation space rental Denver, meditation Denver, wellness events Denver, historic event venue Denver, Sloans Lake event space, Denver workshop venue',
+  description: 'Merritt Wellness is a restored 1905 landmark in Denver\'s Sloans Lake neighborhood — a historic event, wedding, and wellness venue hosting weddings, sound baths, yoga, meditation, and private events. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
+  keywords: 'Denver wellness venue, event venue Sloans Lake, Denver wedding venue, historic wedding venue Denver, sound bath Denver, sound immersion Denver, yoga and meditation space rental Denver, meditation Denver, wellness events Denver, historic event venue Denver, Sloans Lake event space, Denver workshop venue',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
         url: 'https://merrittwellness.net/images/hero/outside3.webp',
         width: 1200,
         height: 630,
-        alt: 'Historic Merritt Wellness building exterior - 1905 church in Denver Sloans Lake',
+        alt: 'Historic Merritt Wellness building exterior - restored 1905 building in Denver Sloans Lake',
       },
     ],
     locale: 'en_US',
@@ -128,7 +128,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
               "@id": "https://merrittwellness.net/#business",
               "name": "Merritt Wellness",
-              "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
+              "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 landmark hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
               "url": "https://merrittwellness.net",
               "telephone": "+1-720-357-9499",
               "email": "manager@merrittwellness.net",
@@ -200,7 +200,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {
                   "@type": "LocationFeatureSpecification",
                   "name": "Historic Architecture",
-                  "value": "Beautifully restored 1905 church building"
+                  "value": "Beautifully restored 1905 landmark building"
                 },
                 {
                   "@type": "LocationFeatureSpecification",

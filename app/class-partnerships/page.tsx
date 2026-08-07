@@ -18,13 +18,13 @@ const OG_IMAGE = 'https://merrittwellness.net/images/pages/classes/dance-class-s
 export const metadata: Metadata = {
   title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
   description:
-    'Host yoga, breathwork, sound baths, dance, and martial arts in a restored 1905 Denver church. Book a one-time workshop, a pop-up series, or a weekly block; full-coverage floor mat, rollaway mirrors, and partner rates for regulars.',
+    'Host yoga, breathwork, sound baths, dance, and martial arts at a historic Denver wellness center. Book a one-time workshop, a pop-up series, or a weekly block; full-coverage floor mat, rollaway mirrors, and partner rates for regulars.',
   keywords:
     'yoga studio rental Denver, dance studio rental Denver, martial arts space Denver, recurring class space Denver, movement studio rental Sloans Lake, fitness class venue Denver',
   openGraph: {
     title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
-      'One workshop or every week: a 1905 church hall with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
+      'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1603, alt: classesImages.danceClassStringLights.alt }],
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
-      'One workshop or every week: a 1905 church hall with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
+      'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -89,7 +89,7 @@ export default function ClassPartnershipsPage() {
               path: PATH,
               name: 'Merritt Wellness — Wellness & Movement Class Space',
               description:
-                'Space for yoga, breathwork, sound baths, dance, and martial arts in a restored 1905 Denver church, from one-time workshops to weekly classes.',
+                'Space for yoga, breathwork, sound baths, dance, and martial arts at a historic Denver wellness center, from one-time workshops to weekly classes.',
               images: [classesImages.danceClassStringLights.src, venueImages.fullCoverageMat.src],
             })
           ),
@@ -138,11 +138,11 @@ export default function ClassPartnershipsPage() {
               practices that want them.
             </p>
             <p>
-              To find a class time that fits, check the{' '}
-              <Link href="/calendar" className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold">
-                What&apos;s On calendar
-              </Link>{' '}
-              to see what is already scheduled, or email{' '}
+              To find a class time that fits, check real-time availability on the{' '}
+              <Link href="/book" className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold">
+                booking calendar
+              </Link>
+              , which shows every open date and time, or email{' '}
               <a
                 href={`mailto:${contact.inquiries.email}`}
                 className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold"

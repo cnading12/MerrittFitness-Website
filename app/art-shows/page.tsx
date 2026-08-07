@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
 import SpecsBlock from '@/components/venue/SpecsBlock';
-import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
@@ -17,13 +16,13 @@ const OG_IMAGE = 'https://merrittwellness.net/images/pages/art-shows/exhibition-
 export const metadata: Metadata = {
   title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
   description:
-    'Host art shows, gallery openings, and pop-up exhibitions in a restored 1905 Denver church: natural light, hardwood floors, stained glass, and room for 125 guests near Sloans Lake.',
+    'Host art shows, gallery openings, and pop-up exhibitions in a historic Denver art gallery: natural light, hardwood floors, stained glass, and room for 125 guests near Sloans Lake.',
   keywords:
     'art show venue Denver, gallery space rental Denver, pop-up gallery Denver, exhibition space Denver, art opening venue Denver, artist market venue Colorado',
   openGraph: {
     title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
     description:
-      'Natural light, hardwood floors, and stained glass that flatters the work. A 1905 church hall for openings and exhibitions.',
+      'Natural light, hardwood floors, and stained glass that flatters the work. A century-old gallery hall for openings and exhibitions.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1920, height: 1440, alt: artShowsImages.exhibitionStainedGlass.alt }],
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Art Show & Exhibition Venue in Denver',
     description:
-      'Natural light, hardwood floors, and stained glass that flatters the work. A 1905 church hall for openings and exhibitions.',
+      'Natural light, hardwood floors, and stained glass that flatters the work. A century-old gallery hall for openings and exhibitions.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -71,6 +70,16 @@ const faqs: Faq[] = [
     answer:
       'Yes. Multi-day exhibitions are booked as consecutive rental windows; booking 8 or more total hours triggers an automatic 10% discount. Reach out and we will map dates together.',
   },
+  {
+    question: 'How late can an opening run, and when do we hang and take down?',
+    answer:
+      'Events end by 10 PM. Hanging, styling, and breakdown all happen within your booked rental window, so build that time into the hours you reserve.',
+  },
+  {
+    question: 'Is the gallery space accessible?',
+    answer:
+      'The front entrance has ramp access and the main hall is on the entry level. Main hall restrooms are downstairs and are not ADA accessible; ADA restrooms are available next door at Merritt Workspace.',
+  },
 ];
 
 export default function ArtShowsPage() {
@@ -84,7 +93,7 @@ export default function ArtShowsPage() {
               path: PATH,
               name: 'Merritt Wellness — Art Show & Exhibition Venue',
               description:
-                'Restored 1905 church exhibition venue in Denver with natural light, hardwood floors, stained glass, and capacity for 125 guests.',
+                'Historic 1905 art gallery and exhibition hall in Denver with natural light, hardwood floors, stained glass, and capacity for 125 guests.',
               images: [artShowsImages.exhibitionStainedGlass.src, artShowsImages.vaultedHallExhibition.src],
             })
           ),
@@ -196,15 +205,8 @@ export default function ArtShowsPage() {
         </div>
       </section>
 
-      {/* Policies */}
+      {/* FAQ — policies (hours, setup, accessibility, alcohol) live here too */}
       <section className="py-24 bg-white/60">
-        <div className="max-w-7xl mx-auto px-6">
-          <PoliciesBlock heading="Worth Knowing Before You Hang" />
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <FaqSection faqs={faqs} heading="Exhibition Questions, Answered" />
         </div>

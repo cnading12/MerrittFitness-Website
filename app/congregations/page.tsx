@@ -13,7 +13,7 @@ const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
 export const metadata: Metadata = {
   title: 'A Home for Your Congregation in Denver | Merritt Wellness',
   description:
-    'A 1905 church in Denver open to congregations and spiritual communities of every tradition. Two churches already meet here on Sundays; daytime and Sunday evening slots remain. Flat monthly rates, non-profit discount, sound system and parking included.',
+    'A 1905 sanctuary in Denver open to congregations and spiritual communities of every tradition. Two churches already meet here on Sundays; daytime and Sunday evening slots remain. Flat monthly rates, sound system and parking included.',
   keywords:
     'church space for rent Denver, congregation meeting space Denver, worship space rental Denver, interfaith meeting space Denver, spiritual community venue Denver, church without a building Denver',
   openGraph: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 };
 
 const included = [
-  `Sanctuary seating for up to ${specs.capacity}, cathedral ceilings, original stained glass, hardwood floors`,
+  `Sanctuary seating for up to ${specs.capacity}, vaulted ceilings, original stained glass, hardwood floors`,
   'Surround sound system, projector, and screen already installed',
   `${specs.parkingSpots} on-site parking spots`,
   'Cafe lounge and breakout rooms for fellowship, childcare, and classes',
@@ -55,7 +55,7 @@ export default function CongregationsPage() {
               path: PATH,
               name: 'Merritt Wellness — Congregation Partnerships',
               description:
-                'A restored 1905 church in Denver hosting congregations and spiritual communities of every tradition, with Sunday and weekday availability.',
+                'A restored 1905 sanctuary in Denver hosting congregations and spiritual communities of every tradition, with Sunday and weekday availability.',
               images: [congregationsImages.sundayService.src, venueImages.sunlitHallPartition.src, congregationsImages.communityCircle.src],
             })
           ),
@@ -93,7 +93,7 @@ export default function CongregationsPage() {
           <div className="space-y-6 text-lg text-[#6b5f5b] leading-relaxed">
             <p>
               This building was raised as a Methodist church in 1905 and spent more than a
-              century doing exactly what it was built for. The cathedral ceilings, the rose
+              century doing exactly what it was built for. The vaulted ceilings, the rose
               window, the worn-smooth hardwood: none of it is decoration. It is what a
               building looks like when generations of people have gathered in it, week after
               week, for the things that mattered most to them.

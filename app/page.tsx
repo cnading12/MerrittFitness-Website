@@ -66,7 +66,7 @@ export default function Home() {
     "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
     "@id": "https://merrittwellness.net/#business",
     "name": "Merritt Wellness",
-    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
+    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 landmark for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
     "url": "https://merrittwellness.net",
     "telephone": "+1-720-357-9499",
     "email": "manager@merrittwellness.net",
@@ -157,7 +157,7 @@ export default function Home() {
         "itemOffered": {
           "@type": "Service",
           "name": "Wedding Venue",
-          "description": "Historic 1905 church wedding venue in Denver's Sloans Lake neighborhood"
+          "description": "Historic 1905 sanctuary wedding venue in Denver's Sloans Lake neighborhood"
         }
       },
       {
@@ -181,7 +181,7 @@ export default function Home() {
         "itemOffered": {
           "@type": "Service",
           "name": "Sound Healing",
-          "description": "Sound bath sessions with perfect church acoustics"
+          "description": "Sound bath sessions with perfect sanctuary acoustics"
         }
       }
     ]
@@ -198,7 +198,7 @@ export default function Home() {
         "name": "Can I host a wedding or private event at Merritt Wellness?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. The restored 1905 church hosts weddings, concerts, art shows, celebrations of life, parties, and corporate offsites for up to 125 guests, with published hourly pricing, 22 on-site parking spots, and a built-in sound system. See merrittwellness.net/weddings and merrittwellness.net/private-events, or call (720) 357-9499."
+          "text": "Yes. The historic 1905 event center hosts weddings, concerts, art shows, celebrations of life, parties, and corporate offsites for up to 125 guests, with published hourly pricing, 22 on-site parking spots, and a built-in sound system. See merrittwellness.net/weddings and merrittwellness.net/private-events, or call (720) 357-9499."
         }
       },
       {
@@ -238,7 +238,7 @@ export default function Home() {
         "name": "What makes Merritt Wellness unique for wellness events?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Merritt Wellness is housed in a stunning 1905 historic church featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
+          "text": "Merritt Wellness is housed in a stunning 1905 historic sanctuary featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
         }
       },
       {
@@ -271,17 +271,17 @@ export default function Home() {
           size="tall"
           image={{
             src: "/images/hero/outside5.webp",
-            alt: "The restored 1905 church that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood",
+            alt: "The restored 1905 building that houses Merritt Wellness, seen from the street in Denver's Sloans Lake neighborhood",
           }}
           eyebrow="Sloans Lake, Denver"
           title={
             <>
-              A Restored 1905 Church
+              A Restored 1905 Sanctuary
               <span className="block font-bold">Built for Gathering</span>
             </>
           }
           imageClassName="object-[82%_center] md:object-center"
-          subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot cathedral ceilings."
+          subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot vaulted ceilings."
           ctas={[
             { label: "Host an Event", href: "/private-events" },
             { label: "Wellness & Classes", href: "/class-partnerships", variant: "ghost" },
@@ -384,7 +384,7 @@ export default function Home() {
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. The building offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
                     </p>
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
                       Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
@@ -400,7 +400,7 @@ export default function Home() {
                   </div>
                   <div className="text-center group">
                     <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">24ft</div>
-                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Cathedral Ceilings</div>
+                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Vaulted Ceilings</div>
                   </div>
                   <div className="text-center group">
                     <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">2,400</div>
@@ -477,7 +477,7 @@ export default function Home() {
           style={{
             // The taupe layer on top softens the swirl lines; raise its alpha to fade them further
             backgroundImage:
-              'linear-gradient(rgba(115, 94, 89, 0.65), rgba(115, 94, 89, 0.65)), url("/images/overlays/Swirls.png")',
+              'linear-gradient(rgba(115, 94, 89, 0.75), rgba(115, 94, 89, 0.75)), url("/images/overlays/Swirls.png")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}

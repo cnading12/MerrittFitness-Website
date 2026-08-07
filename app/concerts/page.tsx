@@ -18,13 +18,13 @@ const OG_IMAGE = 'https://merrittwellness.net/images/pages/concerts/songwriters-
 export const metadata: Metadata = {
   title: 'Concert & Performance Venue in Denver | Merritt Wellness',
   description:
-    'Host concerts, recitals, album releases, and performances in a restored 1905 Denver church with a built-in surround sound system, 24-foot ceilings, and room for 125 guests. Sloans Lake, with 22 parking spots.',
+    'Host concerts, recitals, album releases, and performances in a historic Denver concert hall with a built-in surround sound system, 24-foot ceilings, and room for 125 guests. Sloans Lake, with 22 parking spots.',
   keywords:
     'small concert venue Denver, performance space Denver, recital venue Denver, album release venue Denver, live music venue rental Denver, intimate concert venue Colorado',
   openGraph: {
     title: 'Concert & Performance Venue in Denver | Merritt Wellness',
     description:
-      'A 1905 church hall built for sound: surround system, cathedral acoustics, and an audience of up to 125.',
+      'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1800, alt: concertsImages.songwritersRound.alt }],
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Concert & Performance Venue in Denver',
     description:
-      'A 1905 church hall built for sound: surround system, cathedral acoustics, and an audience of up to 125.',
+      'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -85,7 +85,7 @@ export default function ConcertsPage() {
               path: PATH,
               name: 'Merritt Wellness — Concert & Performance Venue',
               description:
-                'Restored 1905 church concert and performance venue in Denver with a surround sound system, cathedral ceilings, and capacity for 125 guests.',
+                'Historic 1905 concert hall in Denver with a surround sound system, vaulted ceilings, and capacity for 125 guests.',
               images: [concertsImages.songwritersRound.src, concertsImages.danceFloorCrowd.src],
             })
           ),
@@ -108,7 +108,7 @@ export default function ConcertsPage() {
             <span className="block font-bold">Built for Sound</span>
           </>
         }
-        subtitle="Cathedral ceilings and a century of acoustics, with a built-in surround system and an audience of up to 125. Sloans Lake, Denver."
+        subtitle="Vaulted ceilings and a century of acoustics, with a built-in surround system and an audience of up to 125. Sloans Lake, Denver."
         ctas={[
           { label: 'Check Availability & Book', href: '/book' },
           { label: 'Plan Your Show', href: '#inquiry', variant: 'ghost' },

@@ -13,13 +13,13 @@ const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/exterior-front.
 export const metadata: Metadata = {
   title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
   description:
-    'Studio and workspace options for Denver practitioners: the Merritt Wellness flex studio waitlist, private offices and studios at Merritt Workspace next door, and dedicated desks with included venue hours in the 1905 church hall.',
+    'Studio and workspace options for Denver practitioners: the Merritt Wellness flex studio waitlist, private offices and studios at Merritt Workspace next door, and dedicated desks with included venue hours in the historic event center.',
   keywords:
     'practitioner studio Denver, wellness studio space Denver, coworking for practitioners Denver, private office Sloans Lake, dedicated desk Denver, therapy office Denver',
   openGraph: {
     title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
     description:
-      'An office next door, a 1905 church hall for your sessions, included with membership. Studio waitlist open.',
+      'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2048, height: 1142, alt: venueImages.exteriorFront.alt }],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
     description:
-      'An office next door, a 1905 church hall for your sessions, included with membership. Studio waitlist open.',
+      'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -65,7 +65,7 @@ export default function StudioPage() {
             <span className="block font-bold">One Home for Your Practice</span>
           </>
         }
-        subtitle="The 1905 church and Merritt Workspace stand side by side in Sloans Lake. Between them: studios, offices, desks, and a hall your clients will remember."
+        subtitle="The 1905 event center and Merritt Workspace stand side by side in Sloans Lake. Between them: studios, offices, desks, and a hall your clients will remember."
         ctas={[
           { label: 'Join the Studio Waitlist', href: '#waitlist' },
           { label: 'See Member Benefits', href: '#member-benefit', variant: 'ghost' },
@@ -120,7 +120,7 @@ export default function StudioPage() {
             {workspace.name} is the coworking property directly next door, run by the same
             family. Practitioners and small businesses take private offices and private
             studios there: your own key, your own room, a real business address, and the
-            church hall a few steps away when a session needs more space than an office.
+            event center a few steps away when a session needs more space than an office.
             Inventory and current pricing live on their site, which stays up to date as rooms
             turn over.
           </p>
@@ -140,7 +140,7 @@ export default function StudioPage() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-5xl font-light text-[#4a3f3c] font-serif mb-6">
               A desk next door.
-              <span className="block font-bold">A cathedral included.</span>
+              <span className="block font-bold">The event center included.</span>
             </h2>
             <p className="text-lg text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto">
               {workspace.name} members can book the Merritt Wellness hall at no additional

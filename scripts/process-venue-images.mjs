@@ -152,6 +152,17 @@ async function derive(planPath) {
     // Never upscale (withoutEnlargement).
     pipeline = pipeline.resize(maxEdge, maxEdge, { fit: 'inside', withoutEnlargement: true });
 
+    // Carry the source's ICC profile into the derivative. Most venue originals
+    // are iPhone Display P3; sharp does NOT convert pixels to sRGB, so
+    // stripping the profile (the default) makes browsers misread P3 values as
+    // sRGB and every photo goes flat and desaturated. `assignIcc` on a plan
+    // entry tags a source whose profile a previous tool already stripped.
+    if (item.assignIcc) {
+      pipeline = pipeline.withIccProfile(item.assignIcc);
+    } else {
+      pipeline = pipeline.keepIccProfile();
+    }
+
     // Walk quality down until the derivative is under budget.
     const budget = item.role === 'hero' ? 350 * 1024 : 200 * 1024;
     let quality = 80;

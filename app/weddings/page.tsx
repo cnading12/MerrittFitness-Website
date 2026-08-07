@@ -21,15 +21,15 @@ const PATH = '/weddings';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/weddings/og-weddings.jpg';
 
 export const metadata: Metadata = {
-  title: 'Denver Wedding Venue in a Restored 1905 Church | Merritt Wellness',
+  title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
   description:
-    'Historic Denver wedding venue near Sloans Lake: a restored 1905 church with 24-foot cathedral ceilings, original stained glass, and room for up to 125 guests. See real pricing and schedule a tour.',
+    'Historic Denver wedding venue near Sloans Lake: a restored 1905 sanctuary with 24-foot vaulted ceilings, original stained glass, and room for up to 125 guests. Saturday weddings, real pricing, tours by appointment.',
   keywords:
-    'Denver wedding venue, historic wedding venue Denver, church wedding venue Denver, small wedding venue Denver, Sloans Lake wedding venue, intimate wedding venue Colorado',
+    'Denver wedding venue, historic wedding venue Denver, sanctuary wedding venue Denver, small wedding venue Denver, Sloans Lake wedding venue, intimate wedding venue Colorado',
   openGraph: {
-    title: 'Denver Wedding Venue in a Restored 1905 Church | Merritt Wellness',
+    title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
     description:
-      'Cathedral ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
+      'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1080, height: 567, alt: weddingsImages.celebrationKiss.alt }],
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Denver Wedding Venue in a Restored 1905 Church',
+    title: 'Denver Wedding Venue in a Restored 1905 Sanctuary',
     description:
-      'Cathedral ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
+      'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -51,6 +51,11 @@ const faqs: Faq[] = [
     question: 'How many guests can the venue hold?',
     answer:
       'Up to 125 guests. The main hall is about 1,100 square feet, with roughly 2,400 square feet across the full building including the upstairs, cafe lounge, and breakout rooms.',
+  },
+  {
+    question: 'What days can we book our wedding?',
+    answer:
+      'Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday and Sunday evening weddings starting at 4 PM or later are also available (Sunday services wrap by 4:30 PM), and they bill at the lower Sunday-to-Friday rate. For anything outside those windows, reach out and we will talk through whether it can work.',
   },
   {
     question: 'Can we hold both the ceremony and the reception here?',
@@ -129,7 +134,7 @@ export default function WeddingsPage() {
               path: PATH,
               name: 'Merritt Wellness — Wedding Venue',
               description:
-                'Historic Denver wedding venue in a restored 1905 church near Sloans Lake, with 24-foot cathedral ceilings, original stained glass, and capacity for 125 guests.',
+                'Historic Denver wedding venue in a restored 1905 sanctuary near Sloans Lake, with 24-foot vaulted ceilings, original stained glass, and capacity for 125 guests.',
               images: [
                 venueImages.mainHallRoseWindow.src,
                 weddingsImages.celebrationKiss.src,
@@ -153,10 +158,10 @@ export default function WeddingsPage() {
         title={
           <>
             A Denver Wedding Venue
-            <span className="block font-bold">Inside a 1905 Church</span>
+            <span className="block font-bold">Inside a 1905 Sanctuary</span>
           </>
         }
-        subtitle="Cathedral ceilings, original stained glass, and one room your guests will never forget. Sloans Lake, ten minutes from downtown."
+        subtitle="Vaulted ceilings, original stained glass, and one room your guests will never forget. Sloans Lake, ten minutes from downtown."
         ctas={[
           { label: 'Check Availability & Book', href: '/book' },
           { label: 'Schedule a Tour', href: '#inquiry', variant: 'ghost' },
@@ -173,11 +178,29 @@ export default function WeddingsPage() {
             The room is the decor
           </h2>
           <p className="text-lg md:text-xl text-[#6b5f5b] leading-relaxed">
-            This is an intact 1905 church: 24-foot cathedral ceilings, original stained glass,
-            and hardwood floors that have held a century of gatherings. It photographs
+            This is an intact 1905 sanctuary: 24-foot vaulted ceilings, original stained
+            glass, and hardwood floors that have held a century of gatherings. It photographs
             beautifully as it stands, so you can spend your budget on the people and the party
             instead of transforming a blank box.
           </p>
+        </div>
+      </section>
+
+      {/* When weddings happen — Saturdays, with Friday/Sunday evening exceptions */}
+      <section className="pb-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm text-center">
+            <h2 className="text-2xl md:text-3xl font-light text-[#4a3f3c] font-serif mb-4">
+              Weddings here are <span className="font-bold">Saturday celebrations</span>
+            </h2>
+            <p className="text-[#6b5f5b] leading-relaxed max-w-2xl mx-auto">
+              We host weddings on Saturdays, so the building and our full attention belong to
+              one celebration. Friday and Sunday evening weddings starting at 4 PM or later
+              can work beautifully too, and they bill at the lower Sunday-to-Friday rate.
+              Have a date in mind outside those windows? Reach out and we will talk it
+              through.
+            </p>
+          </div>
         </div>
       </section>
 

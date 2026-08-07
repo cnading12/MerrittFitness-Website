@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Recurring Booking Rates | Merritt Wellness Denver',
     description:
-      'Hold a weekly block in a 1905 church hall: 20% partner rates, simple monthly billing, one home for your community.',
+      'Hold a weekly block in a historic Denver event center: 20% partner rates, simple monthly billing, one home for your community.',
     url: `https://merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1800, height: 2400, alt: venueImages.sunlitHallPartition.alt }],
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Recurring Booking Rates | Merritt Wellness Denver',
     description:
-      'Hold a weekly block in a 1905 church hall: 20% partner rates, simple monthly billing, one home for your community.',
+      'Hold a weekly block in a historic Denver event center: 20% partner rates, simple monthly billing, one home for your community.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://merrittwellness.net${PATH}` },
@@ -67,7 +67,7 @@ export default function RecurringPage() {
               path: PATH,
               name: 'Merritt Wellness — Recurring Booking Partnerships',
               description:
-                'Recurring booking partnerships at a restored 1905 Denver church: 20% partner rates at 8+ monthly hours with simple monthly billing.',
+                'Recurring booking partnerships at a historic 1905 Denver event center: 20% partner rates at 8+ monthly hours with simple monthly billing.',
               images: [venueImages.sunlitHallPartition.src, venueImages.mainHallRoseWindow.src],
             })
           ),

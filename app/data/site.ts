@@ -120,7 +120,7 @@ export const specItems = [
   { label: 'Upstairs', value: '~1,600 sq ft' },
   { label: 'Full building', value: '~2,400 sq ft' },
   { label: 'On-site parking', value: '22 spots' },
-  { label: 'Cathedral ceilings', value: '24 feet' },
+  { label: 'Vaulted ceilings', value: '24 feet' },
 ] as const;
 
 export const amenities = [
@@ -219,7 +219,7 @@ export const eventTypes: EventTypeBlock[] = [
     title: 'Weddings',
     href: '/weddings',
     description:
-      'Ceremonies and receptions under 24-foot cathedral ceilings, with original stained glass and room for up to 125 guests.',
+      'Ceremonies and receptions under 24-foot vaulted ceilings, with original stained glass and room for up to 125 guests.',
   },
   {
     key: 'concerts',

@@ -15,25 +15,25 @@ export interface VenueImage {
 }
 
 export const venueImages = {
-  mainHallRoseWindow: { src: '/images/pages/venue/main-hall-rose-window.webp', alt: "The main hall of the restored 1905 church, with a rose window and five arched stained-glass windows above a polished wood floor", width: 1800, height: 2400 },
+  mainHallRoseWindow: { src: '/images/pages/venue/main-hall-rose-window.webp', alt: "The main hall of the restored 1905 sanctuary, with a rose window and five arched stained-glass windows above a polished wood floor", width: 1800, height: 2400 },
   sunlitHall: { src: '/images/pages/venue/sunlit-hall.webp', alt: "Sunlight warms the wood floor of the vaulted main hall, looking toward the shoji-screen partition and antique pews", width: 1800, height: 2400 },
-  exteriorFront: { src: '/images/pages/venue/exterior-front.webp', alt: "Front view of the restored 1905 brick church and its adjoining workspace building under a dramatic sky", width: 2048, height: 1142 },
+  exteriorFront: { src: '/images/pages/venue/exterior-front.webp', alt: "Front view of the restored 1905 brick building and its adjoining workspace under a dramatic sky", width: 2048, height: 1142 },
   cafeLounge: { src: '/images/pages/venue/cafe-lounge.webp', alt: "The lounge area with cafe tables, counter seating, and a carved wooden pew beneath stained-glass windows", width: 1600, height: 1200 },
   seatedSemicircle: { src: '/images/pages/venue/seated-semicircle.webp', alt: "Rows of chairs arranged in a semicircle across the wood floor of the vaulted event hall", width: 1600, height: 1500 },
-  exteriorSummer: { src: '/images/pages/venue/exterior-summer.webp', alt: "The historic brick church seen from the tree-lined sidewalk on a sunny summer day", width: 1600, height: 1200 },
+  exteriorSummer: { src: '/images/pages/venue/exterior-summer.webp', alt: "The historic brick building seen from the tree-lined sidewalk on a sunny summer day", width: 1600, height: 1200 },
   sunlitHallPartition: { src: '/images/pages/venue/sunlit-hall-partition.webp', alt: "Sunlight streaks the long wood floor of the empty hall, facing the wood-framed partition wall and arched windows", width: 1800, height: 2400 },
   fullCoverageMat: { src: '/images/pages/venue/full-coverage-mat.webp', alt: "The hall's single full-coverage roll-out floor mat spans the room wall to wall beneath arched stained-glass windows", width: 2400, height: 1791 },
   hallProjectionScreen: { src: '/images/pages/venue/hall-projection-screen.webp', alt: "The empty hall with polished wood floors, arched stained-glass windows, and a projection screen beneath the rose window", width: 1200, height: 1600 },
   // Landscape hero crops of the portrait originals, so wide hero sections
   // show the architecture instead of a zoomed mid-band.
-  mainHallRoseWindowWide: { src: '/images/pages/venue/main-hall-rose-window-wide.webp', alt: "The main hall of the restored 1905 church, with a rose window and four arched stained-glass windows above a polished wood floor", width: 2400, height: 1360 },
+  mainHallRoseWindowWide: { src: '/images/pages/venue/main-hall-rose-window-wide.webp', alt: "The main hall of the restored 1905 sanctuary, with a rose window and four arched stained-glass windows above a polished wood floor", width: 2400, height: 1360 },
   sunlitHallWide: { src: '/images/pages/venue/sunlit-hall-wide.webp', alt: "Sunlight warms the wood floor of the vaulted main hall, looking toward the shoji-screen partition and antique pews", width: 2400, height: 1480 },
   sunlitHallPartitionWide: { src: '/images/pages/venue/sunlit-hall-partition-wide.webp', alt: "Sunlight streaks the long wood floor of the empty hall, facing the wood-framed partition wall and arched windows", width: 2400, height: 1480 },
 } as const;
 
 export const weddingsImages = {
-  celebrationKiss: { src: '/images/pages/weddings/celebration-kiss.webp', alt: "A wedding party cheers as the couple kisses before the grand stained-glass window of the church hall", width: 1080, height: 649 },
-  aisleRecessional: { src: '/images/pages/weddings/aisle-recessional.webp', alt: "Newlyweds walk back down the aisle to applause beneath the church's stained-glass windows", width: 1080, height: 707 },
+  celebrationKiss: { src: '/images/pages/weddings/celebration-kiss.webp', alt: "A wedding party cheers as the couple kisses before the grand stained-glass window of the sanctuary", width: 1080, height: 649 },
+  aisleRecessional: { src: '/images/pages/weddings/aisle-recessional.webp', alt: "Newlyweds walk back down the aisle to applause beneath the sanctuary's stained-glass windows", width: 1080, height: 707 },
   cakeTableCouple: { src: '/images/pages/weddings/cake-table-couple.webp', alt: "A bride and groom share a look over their wedding cake beneath a draped floral arch in the reception hall", width: 1143, height: 1600 },
   headTableCake: { src: '/images/pages/weddings/head-table-cake.webp', alt: "A decorated head table with a tiered wedding cake set against the hall's wooden partition and stained glass", width: 900, height: 1600 },
   gettingReady: { src: '/images/pages/weddings/getting-ready.webp', alt: "A bride laughs with her attendants while getting ready in the venue's stone-walled suite", width: 1010, height: 1093 },
@@ -41,7 +41,7 @@ export const weddingsImages = {
 
 export const concertsImages = {
   songwritersRound: { src: '/images/pages/concerts/songwriters-round.webp', alt: "Four musicians perform a songwriters' round beneath the rose window as an audience looks on", width: 2400, height: 1800 },
-  danceFloorCrowd: { src: '/images/pages/concerts/dance-floor-crowd.webp', alt: "A crowd dances on the wood floor of the church hall beneath its arched windows during an evening event", width: 1200, height: 1600 },
+  danceFloorCrowd: { src: '/images/pages/concerts/dance-floor-crowd.webp', alt: "A crowd dances on the wood floor of the historic hall beneath its arched windows during an evening event", width: 1200, height: 1600 },
   acousticAudience: { src: '/images/pages/concerts/acoustic-audience.webp', alt: "An audience watches an acoustic performance beneath the stained-glass rose window of the historic hall", width: 1600, height: 1412 },
   tangoStarryCeiling: { src: '/images/pages/concerts/tango-starry-ceiling.webp', alt: "Couples dance tango beneath a starry projected ceiling, the hall's tall arched window glowing behind them", width: 1600, height: 1200 },
 } as const;
@@ -68,7 +68,7 @@ export const classesImages = {
 } as const;
 
 export const congregationsImages = {
-  communityCircle: { src: '/images/pages/congregations/community-circle.webp', alt: "A community congregation gathers in a circle of chairs for a discussion in the church hall", width: 1600, height: 1200 },
+  communityCircle: { src: '/images/pages/congregations/community-circle.webp', alt: "A community congregation gathers in a circle of chairs for a discussion in the main hall", width: 1600, height: 1200 },
   sundayService: { src: '/images/pages/congregations/sunday-service.webp', alt: "Pastor Tate preaches beside an interpreter during a bilingual Sunday service in the hall", width: 1130, height: 900 },
 } as const;
 
