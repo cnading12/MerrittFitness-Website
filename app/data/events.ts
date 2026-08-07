@@ -206,11 +206,12 @@ export const events: Event[] = [
     practitionerName: "Mile High Qualchata"
   },
 
-  // ============ RECURRING: SLOW FLOW + NERVOUS SYSTEM RESET ============
+  // ============ ENDING: SLOW FLOW + NERVOUS SYSTEM RESET (LAST CLASS AUG 25, 2026) ============
   {
     id: "slow-flow-nervous-system-reset",
     title: "Slow Flow + Nervous System Reset",
     date: "2026-05-05",
+    endDate: "2026-08-25",
     time: "10:00 AM",
     endTime: "11:00 AM",
     description: "Experience the connection between body, breath, and awareness in a weekly all-levels class that teaches you tools and techniques to maintain steadiness in a busy world. What you need: Yoga Mat, Block, Blanket, Strap. Cost: $15 suggested donation (Venmo or Cash).",
@@ -221,11 +222,12 @@ export const events: Event[] = [
     recurrence: "Every Tuesday"
   },
 
-  // ============ RECURRING: SINGLE MOMS THRIVE ============
+  // ============ ENDING: SINGLE MOMS THRIVE (LAST CLASS AUG 27, 2026) ============
   {
     id: "single-moms-thrive",
     title: "Single Moms Thrive",
     date: "2026-05-07",
+    endDate: "2026-08-27",
     time: "10:00 AM",
     endTime: "11:00 AM",
     description: "A Yoga Practice for Single Moms. The community you've been craving. Learn tools and techniques to stay steady among all challenges. Feel the relief from true Self Care. You are not alone. Recommended: Yoga Mat, Block, Blanket, Strap. $15 suggested donation (Venmo @iamkris10 or Cash).",
