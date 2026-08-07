@@ -17,7 +17,7 @@ const EnhancedGallery = () => {
     {
       id: 24,
       src: "/images/hero/church-1.webp",
-      title: "Historic Church Exterior",
+      title: "Historic Exterior",
       desc: "Our beautifully restored 1905 sanctuary",
       category: "space"
     },
@@ -209,21 +209,21 @@ const EnhancedGallery = () => {
     },
     {
       id: 27,
-      src: "/images/events/venue/art/hero.webp",
+      src: "/images/pages/art-shows/art-show-tables.webp",
       title: "Art Show",
       desc: "Creative expression in our sacred space",
       category: "art"
     },
     {
       id: 28,
-      src: "/images/events/venue/art/hero-2.webp",
+      src: "/images/pages/art-shows/visitors-browsing.webp",
       title: "Art Exhibition",
       desc: "Local artists showcase their work",
       category: "art"
     },
     {
       id: 36,
-      src: "/images/events/venue/art/Karen-1.webp",
+      src: "/images/pages/art-shows/partition-wall-paintings.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -236,7 +236,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 37,
-      src: "/images/events/venue/art/Karen-2.webp",
+      src: "/images/pages/art-shows/paintings-over-pews.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -249,7 +249,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 38,
-      src: "/images/events/venue/art/Karen-3.webp",
+      src: "/images/pages/art-shows/exhibition-stained-glass.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -262,7 +262,7 @@ const EnhancedGallery = () => {
     },
     {
       id: 39,
-      src: "/images/events/venue/art/Karen-4.webp",
+      src: "/images/pages/art-shows/vaulted-hall-exhibition.webp",
       title: "Karen Borthick Fine Art",
       desc: "Original artwork displayed in our Merritt Wellness Gallery",
       category: "art",
@@ -277,7 +277,7 @@ const EnhancedGallery = () => {
       id: 16,
       src: "/images/hero/outside5.webp",
       title: "Historic Sanctuary",
-      desc: "1905 church transformed for modern wellness",
+      desc: "A 1905 landmark transformed for modern wellness",
       category: "space"
     }
   ];

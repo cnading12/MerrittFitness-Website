@@ -2,10 +2,60 @@
 'use client';
 
 import EnhancedGallery from "@/components/EnhancedGallery";
+import PageHero from "@/components/venue/PageHero";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getBlurDataURL } from "@/lib/blur-data";
+import { Landmark, Sun, HeartHandshake, Music2 } from "lucide-react";
+import {
+  venueImages,
+  weddingsImages,
+  concertsImages,
+  artShowsImages,
+  classesImages,
+  congregationsImages,
+} from "@/app/data/venue-images";
+
+// The six doors into the venue — same list, same order as the Events menu.
+const homeEventTypes = [
+  {
+    label: "Weddings",
+    href: "/weddings",
+    image: weddingsImages.celebrationKiss,
+    description: "Ceremonies and receptions under the rose window, for up to 125 guests.",
+  },
+  {
+    label: "Concerts & Performances",
+    href: "/concerts",
+    image: concertsImages.songwritersRound,
+    description: "A hall shaped for sound, with the surround system already in the room.",
+  },
+  {
+    label: "Art Shows & Exhibitions",
+    href: "/art-shows",
+    image: artShowsImages.visitorsBrowsing,
+    description: "Natural light and century-old walls that let the work carry the room.",
+  },
+  {
+    label: "Wellness & Movement Classes",
+    href: "/class-partnerships",
+    image: classesImages.breathworkClass,
+    description: "Yoga, breathwork, sound baths, dance, and martial arts, all week long.",
+  },
+  {
+    label: "Faith & Community Gatherings",
+    href: "/congregations",
+    image: congregationsImages.communityCircle,
+    description: "A sanctuary since 1905, open to communities of every tradition.",
+  },
+  {
+    label: "All Private Events",
+    href: "/private-events",
+    image: venueImages.sunlitHall,
+    description: "Celebrations of life, parties, quinceañeras, showers, and offsites, with published pricing.",
+  },
+];
 
 export default function Home() {
   const [calendarLoaded, setCalendarLoaded] = useState(false);
@@ -16,7 +66,7 @@ export default function Home() {
     "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
     "@id": "https://merrittwellness.net/#business",
     "name": "Merritt Wellness",
-    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 church for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
+    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 landmark for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
     "url": "https://merrittwellness.net",
     "telephone": "+1-720-357-9499",
     "email": "manager@merrittwellness.net",
@@ -107,7 +157,7 @@ export default function Home() {
         "itemOffered": {
           "@type": "Service",
           "name": "Wedding Venue",
-          "description": "Historic 1905 church wedding venue in Denver's Sloans Lake neighborhood"
+          "description": "Historic 1905 sanctuary wedding venue in Denver's Sloans Lake neighborhood"
         }
       },
       {
@@ -131,7 +181,72 @@ export default function Home() {
         "itemOffered": {
           "@type": "Service",
           "name": "Sound Healing",
-          "description": "Sound bath sessions with perfect church acoustics"
+          "description": "Sound bath sessions with perfect sanctuary acoustics"
+        }
+      }
+    ]
+  };
+
+  // Site-wide FAQ schema lives on the homepage only, so the event-type pages'
+  // own FAQPage blocks (weddings, concerts, etc.) never collide with it.
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Can I host a wedding or private event at Merritt Wellness?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The historic 1905 event center hosts weddings, concerts, art shows, celebrations of life, parties, and corporate offsites for up to 125 guests, with published hourly pricing, 22 on-site parking spots, and a built-in sound system. See merrittwellness.net/weddings and merrittwellness.net/private-events, or call (720) 357-9499."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where can I find sound bath sessions in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What yoga classes are available near Sloans Lake Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness in Sloans Lake offers a variety of yoga classes including Vinyasa, Hatha, Restorative, and Hot Yoga. Our historic 2,400 sq ft space features 24-foot ceilings and abundant natural light, perfect for all levels of practice. Located at 2246 Irving St, Denver CO 80211."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does it cost to rent a wellness space in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a meditation center in the Sloans Lake area of Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! Merritt Wellness is a meditation and wellness center located in the heart of Sloans Lake, Denver. Our beautifully restored 1905 historic building provides a peaceful sanctuary for meditation, mindfulness, breathwork, and holistic healing practices. Visit us at 2246 Irving St, Denver CO 80211."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What makes Merritt Wellness unique for wellness events?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Merritt Wellness is housed in a stunning 1905 historic sanctuary featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you offer private yoga sessions in Denver?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
         }
       }
     ]
@@ -144,78 +259,116 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
       <main className="bg-[#faf8f5] font-sans">
-        {/* HERO - Enhanced alt text only + MOBILE RIGHT FOCUS */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/50 via-[#735e59]/20 to-[#735e59]/60"></div>
-          <Image
-            src="/images/hero/outside5.webp"
-            alt="Historic Merritt Wellness yoga studio exterior in Denver Sloans Lake neighborhood - 1905 church building"
-            fill
-            priority
-            placeholder="blur"
-            blurDataURL={getBlurDataURL("/images/hero/outside5.webp")}
-            className="object-cover object-[85%_top] md:object-top brightness-75 scale-105 animate-slow-zoom" />
+        {/* HERO — same treatment as the venue pages: full-bleed photo under
+            the transparent navbar */}
+        {/* A real street photo of the sanctuary alone — not the rendering
+            that included the workspace building. The tower sits left of
+            center, so bias the mobile crop toward it. */}
+        <PageHero
+          size="tall"
+          image={{
+            src: "/images/hero/1.webp",
+            alt: "The restored 1905 brick sanctuary that houses Merritt Wellness, on its tree-lined corner in Denver's Sloans Lake neighborhood",
+          }}
+          eyebrow="Sloans Lake, Denver"
+          title={
+            <>
+              A Restored 1905 Sanctuary
+              <span className="block font-bold">Built for Gathering</span>
+            </>
+          }
+          imageClassName="object-[44%_center] md:object-center"
+          subtitle="Yoga, breathwork, sound baths, and dance all week long; weddings, concerts, and celebrations under 24-foot vaulted ceilings."
+          ctas={[
+            { label: "Host an Event", href: "/private-events" },
+            { label: "Wellness & Classes", href: "/class-partnerships", variant: "ghost" },
+          ]}
+        />
 
-          {/* Enhanced floating elements */}
-          <div className="absolute top-20 left-10 w-2 h-2 bg-[#f2eee9]/40 rounded-full animate-float blur-sm"></div>
-          <div className="absolute top-40 right-20 w-1 h-1 bg-[#f2eee9]/30 rounded-full animate-float-delay blur-sm"></div>
-          <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-[#f2eee9]/35 rounded-full animate-float-slow blur-sm"></div>
-          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-[#f2eee9]/25 rounded-full animate-float blur-sm"></div>
-
-          <div className="relative z-20 text-center text-[#f2eee9] px-6 max-w-5xl mx-auto">
-            <div className="mb-8 animate-fade-in-up">
-              <h1 className="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none font-serif">
-                <span className="block font-thin drop-shadow-lg">Merritt</span>
-                <span className="block font-bold drop-shadow-lg">Wellness</span>
-              </h1>
-              <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/80 to-transparent mx-auto mb-8"></div>
-              {/* ENHANCED: Better local keywords in hero description */}
-              <p className="text-xl md:text-2xl font-light leading-relaxed max-w-3xl mx-auto opacity-95 drop-shadow-md">
-                Denver's premier historic wellness sanctuary in Sloans Lake - where 1905 sacred architecture meets modern yoga, meditation, and mindful movement
-              </p>
+        {/* WHAT HAPPENS HERE — the six doors in, mirroring the Events menu */}
+        <section className="pt-14 pb-24">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-14">
+              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
+                What happens here
+              </span>
+              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] font-serif">
+                One historic room,
+                <span className="block font-bold text-[#735e59]">infinite possibilities</span>
+              </h2>
+              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mt-6"></div>
             </div>
-
-            {/* Enhanced CTA Section */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up-delay">
-              <Link
-                href="#booking"
-                className="group relative bg-[#f2eee9] text-[#735e59] font-semibold px-12 py-5 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 overflow-hidden backdrop-blur-sm"
-              >
-                <span className="relative z-10 flex items-center">
-                  <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
-                  </svg>
-                  Reserve Your Experience
-                </span>
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </Link>
-              <Link
-                href="/about"
-                className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-semibold px-12 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9]"
-              >
-                <span className="flex items-center">
-                  Discover the Space
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Enhanced scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-[#f2eee9]/70 rounded-full flex justify-center backdrop-blur-sm">
-              <div className="w-1 h-3 bg-[#f2eee9]/70 rounded-full mt-2 animate-pulse"></div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {homeEventTypes.map((type) => (
+                <Link
+                  key={type.href}
+                  href={type.href}
+                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl border border-[#735e59]/10 hover:-translate-y-2 transition-all duration-300"
+                >
+                  <div className="relative aspect-[4/3]">
+                    <Image
+                      src={type.image.src}
+                      alt={type.image.alt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      placeholder={getBlurDataURL(type.image.src) ? "blur" : "empty"}
+                      blurDataURL={getBlurDataURL(type.image.src)}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-7">
+                    <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-2 group-hover:text-[#735e59] transition-colors duration-200">
+                      {type.label}
+                    </h3>
+                    <p className="text-[#6b5f5b] text-sm leading-relaxed">{type.description}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
+        {/* Divider between the event types and the story section */}
+        <div className="flex items-center justify-center gap-4 py-4" aria-hidden="true">
+          <div className="w-24 h-px bg-gradient-to-r from-transparent to-[#735e59]/40"></div>
+          <div className="w-2 h-2 rounded-full bg-[#735e59]/40"></div>
+          <div className="w-24 h-px bg-gradient-to-l from-transparent to-[#735e59]/40"></div>
+        </div>
+
         {/* ABOUT SECTION - Enhanced headings and descriptions only */}
-        <section id="about" className="relative py-24 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5]">
-          <div className="max-w-7xl mx-auto px-6">
+        <section id="about" className="relative py-24 bg-gradient-to-b from-[#faf8f5] via-[#f2eee9]/50 to-[#faf8f5] overflow-hidden">
+          {/* Watercolor washes for depth, echoing the brand's texture */}
+          <div className="absolute -top-24 -right-24 w-[480px] h-[480px] pointer-events-none z-0">
+            <Image
+              src="/images/overlays/WaterColor.png"
+              alt=""
+              width={480}
+              height={480}
+              className="w-full h-full object-contain opacity-70"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
+            />
+          </div>
+          <div className="absolute -bottom-32 -left-28 w-[480px] h-[480px] pointer-events-none z-0">
+            <Image
+              src="/images/overlays/WaterColor.png"
+              alt=""
+              width={480}
+              height={480}
+              className="w-full h-full object-contain opacity-60 rotate-180"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
+            />
+          </div>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               {/* Left Content - Enhanced with local keywords */}
               <div className="space-y-8">
@@ -234,7 +387,7 @@ export default function Home() {
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 Methodist church that has served our community for over a century. This historic landmark offers Denver yogis, meditation practitioners, and wellness professionals a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. The building offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
                     </p>
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
                       Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
@@ -245,12 +398,12 @@ export default function Home() {
                 {/* Enhanced Stats */}
                 <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[#735e59]/20">
                   <div className="text-center group">
-                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">119</div>
+                    <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">{new Date().getFullYear() - 1905}</div>
                     <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Years Serving Denver</div>
                   </div>
                   <div className="text-center group">
                     <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">24ft</div>
-                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Cathedral Ceilings</div>
+                    <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Vaulted Ceilings</div>
                   </div>
                   <div className="text-center group">
                     <div className="text-3xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">2,400</div>
@@ -275,42 +428,42 @@ export default function Home() {
               {/* Right Features Grid - Enhanced with local keywords */}
               <div className="grid grid-cols-2 gap-6 auto-rows-fr">
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🏛️</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Landmark className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-amber-700 transition-colors duration-300 flex-shrink-0 font-serif">Historic Denver Landmark</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Historic Denver Landmark</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Original 1905 Methodist church architecture with preserved stained glass, soaring ceilings, and timeless elegance in the heart of Sloans Lake
+                    Original 1905 architecture with preserved stained glass, soaring ceilings, and hand-worn hardwood in the heart of Sloans Lake
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">☀️</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Sun className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-yellow-700 transition-colors duration-300 flex-shrink-0 font-serif">Natural Light Studio</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Natural Light, All Day</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Floor-to-ceiling windows bathe Denver's most beautiful yoga space in natural light throughout the day
+                    Tall arched windows and stained glass fill the hall with light that flatters a morning class and an evening reception alike
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/20 to-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🤝</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <HeartHandshake className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Inclusive Wellness Haven</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Open to Everyone</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    A non-denominational sanctuary welcoming all Denver wellness practitioners, paths, and people
+                    A non-denominational sanctuary welcoming every practice, tradition, celebration, and community
                   </p>
                 </div>
 
                 <div className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#a08b84]/30 to-[#a08b84]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                    <span className="text-3xl filter group-hover:brightness-110">🎵</span>
+                  <div className="w-16 h-16 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                    <Music2 className="w-7 h-7 text-[#735e59]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Perfect Sound Healing Acoustics</h3>
+                  <h3 className="text-xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 flex-shrink-0 font-serif">Acoustics That Carry</h3>
                   <p className="text-[#6b5f5b] text-sm leading-relaxed flex-1">
-                    Original church acoustics create Denver's most immersive sound bath and meditation experience
+                    Built for voices in 1905; the same acoustics now serve sound baths, concerts, and first dances
                   </p>
                 </div>
               </div>
@@ -319,112 +472,19 @@ export default function Home() {
         </section>
 
         <EnhancedGallery />
-        <section className="py-24 bg-[#faf8f5] relative overflow-hidden">
-          {/* Top-left watercolor decoration */}
-          <div className="absolute -top-20 -left-20 w-[500px] h-[500px] pointer-events-none z-0">
-            <Image
-              src="/images/overlays/WaterColor.png"
-              alt=""
-              width={500}
-              height={500}
-              className="w-full h-full object-contain opacity-80"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
-            />
-          </div>
-
-          {/* Bottom-left watercolor decoration */}
-          <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] pointer-events-none z-0">
-            <Image
-              src="/images/overlays/WaterColor.png"
-              alt=""
-              width={500}
-              height={500}
-              className="w-full h-full object-contain opacity-70 rotate-180"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={getBlurDataURL("/images/overlays/WaterColor.png")}
-            />
-          </div>
-
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center mb-20">
-              <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-6">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Denver's Premier Wellness Venue
-              </span>
-              <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
-                Perfect for Every
-                <span className="block font-bold text-[#735e59]">Denver Wellness Practice</span>
-              </h2>
-              <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto"></div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
-              <div className="relative group">
-                <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-                  <Image
-                    src="/images/events/katrina/3.webp"
-                    alt="Dynamic yoga and movement arts classes in Denver's most spacious historic wellness venue"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    loading="lazy"
-                    placeholder="blur"
-                    blurDataURL={getBlurDataURL("/images/events/katrina/3.webp")}
-                  />
-                </div>
-                <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-xl border border-[#735e59]/10">
-                  <div className="text-3xl font-bold text-[#4a3f3c] font-serif">2,400</div>
-                  <div className="text-sm text-[#6b5f5b] uppercase tracking-wide">Square Feet</div>
-                </div>
-              </div>
-
-              <div className="space-y-12">
-                {[
-                  { emoji: "🧘", title: "Yoga Classes & Meditation", desc: "From intimate 8-person meditation circles to 60-person vinyasa flows, our historic space serves Denver's yoga community with unmatched grace and reverence." },
-                  { emoji: "🎵", title: "Live Music & Sound Wellness", desc: "Sound baths, live acoustic performances, DJ sets, and ecstatic dance gatherings transform our historic venue into Denver's premier destination for sonic healing and conscious celebration." },
-                  { emoji: "🎨", title: "Creative Workshops", desc: "Art therapy, writing circles, and mindful creativity sessions thrive in our light-filled Sloans Lake sanctuary of inspiration." },
-                  { emoji: "🥋", title: "Martial Arts & Movement", desc: "24-foot ceilings and wooden floors support Tai Chi, judo, BJJ, wrestling, and martial arts training in Denver's most unique venue." }].map((item, index) => (
-                    <div key={index} className="flex items-start space-x-6 group">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#735e59]/15 to-[#735e59]/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-3xl filter group-hover:brightness-110">{item.emoji}</span>
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-[#4a3f3c] mb-3 group-hover:text-[#735e59] transition-colors duration-300 font-serif">{item.title}</h3>
-                        <p className="text-[#6b5f5b] leading-relaxed text-lg">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section
           id="booking"
           className="py-24 bg-[#735e59] relative overflow-hidden texture-dark"
           style={{
-            backgroundImage: 'url("/images/overlays/Swirls.png")',
+            // The taupe layer on top softens the swirl lines; raise its alpha to fade them further
+            backgroundImage:
+              'linear-gradient(rgba(115, 94, 89, 0.75), rgba(115, 94, 89, 0.75)), url("/images/overlays/Swirls.png")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
-        >          <div className="absolute inset-0">
-          <Image
-            src="/images/hero/1.webp"
-            alt="Merritt Wellness Denver yoga studio interior booking background"
-            fill
-            className="object-cover opacity-10"
-            loading="lazy"
-            placeholder="blur"
-            blurDataURL={getBlurDataURL("/images/hero/1.webp")}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#735e59]/95 via-[#735e59]/90 to-[#735e59]/95"></div>
-        </div>
+        >
 
           <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div className="mb-16">
@@ -476,7 +536,7 @@ export default function Home() {
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <Link
-                href="/booking"
+                href="/book"
                 className="group relative bg-[#f2eee9] text-[#735e59] font-bold px-16 py-6 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center text-lg">
@@ -488,26 +548,26 @@ export default function Home() {
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </Link>
 
-              <Link
-                href="/contact"
+              <a
+                href="tel:720-357-9499"
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9] text-lg"
               >
                 <span className="flex items-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Let's Create Magic Together
+                  Call (720) 357-9499
                 </span>
-              </Link>
+              </a>
             </div>
 
             {/* Enhanced Trust Indicators */}
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
-                { number: "500+", label: "Denver Events Hosted" },
-                { number: "5★", label: "Google Rating" },
-                { number: "24/7", label: "Booking Support" },
-                { number: "119", label: "Years in Denver" }
+                { number: `${new Date().getFullYear() - 1905}`, label: "Years in Denver" },
+                { number: "125", label: "Guest Capacity" },
+                { number: "22", label: "On-Site Parking Spots" },
+                { number: "2,400", label: "Square Feet" }
               ].map((item, index) => (
                 <div key={index} className="group">
                   <div className="text-3xl font-bold text-[#f2eee9] mb-2 group-hover:text-white transition-colors duration-300 font-serif">{item.number}</div>
@@ -586,7 +646,7 @@ export default function Home() {
                 </div>
 
                 <Link
-                  href="/contact"
+                  href="/book"
                   className="inline-flex items-center bg-[#735e59] text-[#f2eee9] font-semibold px-10 py-4 rounded-full shadow-lg hover:bg-[#5a4a46] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
                 >
                   <svg className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

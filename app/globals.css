@@ -65,21 +65,57 @@ html {
   position: relative;
 }
 
+/* The texture image was removed in a photo reorg; a subtle radial wash keeps
+   the depth without a 404ing background request. */
 .texture-dark::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/images/hero/texture-overlay.png');
-  background-size: 1900px 1900px;
-  background-repeat: repeat;
-  background-position: center;
-  opacity: 0.35;
+  background-image: radial-gradient(circle at 30% 20%, rgba(242, 238, 233, 0.08), transparent 55%),
+    radial-gradient(circle at 75% 80%, rgba(242, 238, 233, 0.05), transparent 50%);
   pointer-events: none;
   z-index: 1;
-  mix-blend-mode: screen;
 }
 
 .texture-dark > * {
   position: relative;
   z-index: 2;
 }
+/* ---------------------------------------------------------------------------
+   Shared animation utilities.
+   Promoted from per-page <style jsx> blocks so every page (including the
+   venue marketing pages) can use them without redefining keyframes.
+--------------------------------------------------------------------------- */
+@keyframes slow-zoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delay {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slow-zoom { animation: slow-zoom 20s ease-in-out infinite alternate; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-float-delay { animation: float-delay 8s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 10s ease-in-out infinite; }
+.animate-fade-in-up { animation: fade-in-up 1s ease-out 0.3s both; }
+.animate-fade-in-up-delay { animation: fade-in-up 1s ease-out 0.6s both; }
+
+.shadow-3xl { box-shadow: 0 35px 60px -12px rgba(115, 94, 89, 0.25); }

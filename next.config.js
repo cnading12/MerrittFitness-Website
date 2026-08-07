@@ -28,6 +28,33 @@ const nextConfig = {
     '*': ['./public/images/**/*'],
   },
 
+  // Permanent redirects from the pre-restructure routes. "events" now means
+  // private-event rentals; the public calendar lives at /calendar.
+  async redirects() {
+    return [
+      {
+        source: '/events',
+        destination: '/calendar',
+        permanent: true,
+      },
+      {
+        source: '/contact',
+        destination: '/book',
+        permanent: true,
+      },
+      {
+        source: '/booking',
+        destination: '/book',
+        permanent: true,
+      },
+      {
+        source: '/booking/:path*',
+        destination: '/book/:path*',
+        permanent: true,
+      },
+    ]
+  },
+
   // Security headers
   async headers() {
     return [

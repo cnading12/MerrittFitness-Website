@@ -13,28 +13,74 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/booking`,
+      url: `${BASE_URL}/weddings`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/private-events`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/concerts`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/art-shows`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/class-partnerships`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/congregations`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/recurring`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/studio`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/book`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/events`,
+      url: `${BASE_URL}/calendar`,
       lastModified,
       changeFrequency: 'weekly',
-      priority: 0.9,
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/about`,
       lastModified,
       changeFrequency: 'monthly',
-      priority: 0.8,
+      priority: 0.7,
     },
-    {
-      url: `${BASE_URL}/contact`,
-      lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
+    // Pending photography; add when the dedicated pages ship:
+    // `${BASE_URL}/celebrations-of-life`
+    // `${BASE_URL}/parties`
+    // `${BASE_URL}/corporate`
   ];
 }

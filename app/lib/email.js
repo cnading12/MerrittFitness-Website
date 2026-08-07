@@ -1980,3 +1980,115 @@ export async function sendConfirmationEmails(booking) {
     throw new Error(`Email process failed: ${emailResults.errors.join(', ')}`);
   }
 }
+// ---------------------------------------------------------------------------
+// Inquiry / waitlist emails (POST /api/inquiry).
+//
+// Inquiries are not bookings: there is no booking row, no group, and no
+// payment. Templates live here (not in EMAIL_TEMPLATES) because they take an
+// inquiry object, not a booking. Both sends follow the delivery rules at the
+// top of CLAUDE.md: sendEmailWithRetry, Idempotency-Key per inquiry id,
+// client ack BEFORE the staff notification, and the staff notification goes
+// to the manager (new inquiries never route to client services).
+// ---------------------------------------------------------------------------
+
+const INQUIRY_KIND_LABELS = {
+  event: 'Event inquiry',
+  tour: 'Tour request',
+  waitlist: 'Studio waitlist',
+  congregation: 'Congregation inquiry',
+  'class-partnership': 'Class partnership inquiry',
+};
+
+function inquiryKindLabel(inquiry) {
+  return INQUIRY_KIND_LABELS[inquiry.kind] || 'Inquiry';
+}
+
+// A short per-inquiry detail used in subjects so no two inquiries produce
+// byte-identical messages (identical repeated content is a spam/thread-collapse
+// magnet — see delivery rule 8).
+function inquirySubjectDetail(inquiry) {
+  const parts = [inquiry.name];
+  if (inquiry.eventType) parts.push(inquiry.eventType);
+  if (inquiry.eventDate) parts.push(inquiry.eventDate);
+  if (inquiry.startWindow) parts.push(inquiry.startWindow);
+  return parts.filter(Boolean).join(' · ');
+}
+
+function inquiryDetailRows(inquiry) {
+  const rows = [
+    ['Name', inquiry.name],
+    ['Email', inquiry.email],
+    ['Phone', inquiry.phone],
+    ['Page', inquiry.page],
+    ['Event type', inquiry.eventType],
+    ['Preferred date', inquiry.eventDate],
+    ['Guest count', inquiry.guestCount],
+    ['Desired start window', inquiry.startWindow],
+  ];
+  return rows
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<tr><td style="padding: 4px 12px 4px 0; color: #6b5f5b; white-space: nowrap;"><strong>${k}</strong></td><td style="padding: 4px 0; color: #4a3f3c;">${v}</td></tr>`)
+    .join('');
+}
+
+export async function sendInquiryAck(inquiry) {
+  const isWaitlist = inquiry.kind === 'waitlist';
+  const heading = isWaitlist ? "You're on the list" : 'We received your inquiry';
+  const body = isWaitlist
+    ? `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${inquiry.startWindow}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
+    : `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (720) 357-9499.</p>`;
+
+  const template = {
+    subject: `${heading} — Merritt Wellness (${inquirySubjectDetail(inquiry)})`,
+    html: `
+      <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 560px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+        ${LOGO_HEADER}
+        <h2 style="color: #735e59; text-align: center;">${heading}</h2>
+        ${body}
+        <table style="margin: 16px 0; border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
+        ${inquiry.message ? `<p style="color: #6b5f5b; line-height: 1.6; border-left: 3px solid #a08b84; padding-left: 12px;">${inquiry.message}</p>` : ''}
+        <p style="color: #4a3f3c; line-height: 1.6;">Warmly,<br/>The Merritt Wellness team<br/>2246 Irving Street, Denver</p>
+      </div>`,
+  };
+
+  const ops = getOpsEmails();
+  return sendEmailWithRetry({
+    from: EMAIL_CONFIG.from,
+    to: [inquiry.email],
+    replyTo: ops.manager || STAFF_FALLBACK_EMAILS[0],
+    ...template,
+  }, {
+    label: `inquiry ack ${inquiry.id}`,
+    idempotencyKey: `inquiry-ack/${inquiry.id}`,
+    kind: 'inquiry-ack',
+  });
+}
+
+export async function sendInquiryNotification(inquiry) {
+  const template = {
+    subject: `${inquiryKindLabel(inquiry)}: ${inquirySubjectDetail(inquiry)}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 16px;">
+        <h2 style="color: #735e59;">${inquiryKindLabel(inquiry)}</h2>
+        <table style="border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
+        ${inquiry.message ? `<h3 style="color: #735e59; margin-bottom: 4px;">Message</h3><p style="color: #333; line-height: 1.5; white-space: pre-wrap;">${inquiry.message}</p>` : ''}
+        <p style="color: #888; font-size: 12px;">Submitted via merrittwellness.net (${inquiry.page || 'unknown page'}). Reply goes straight to the inquirer.</p>
+      </div>`,
+  };
+
+  // New inquiries route to the manager ONLY — never client services (that
+  // address is for existing booked clients).
+  const ops = getOpsEmails();
+  const to = ops.manager || STAFF_FALLBACK_EMAILS[0];
+
+  return sendEmailWithRetry({
+    from: EMAIL_CONFIG.from,
+    to: [to],
+    replyTo: inquiry.email,
+    ...template,
+  }, {
+    label: `inquiry notification ${inquiry.id}`,
+    idempotencyKey: `inquiry-notification/${inquiry.id}`,
+    kind: 'inquiry-notification',
+  });
+}
