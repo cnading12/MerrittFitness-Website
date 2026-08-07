@@ -129,9 +129,10 @@ export default function StudioPage() {
               </h2>
               <p className="text-[#6b5f5b] leading-relaxed mb-8">
                 {workspace.name} is the coworking property directly next door, run by the same
-                family. Practitioners and small businesses take private offices and private
-                studios there: your own key, your own room, a real business address, and the
-                event center a few steps away when a session needs more space than an office.
+                family. Practitioners and small businesses take rooms there in every size,
+                from single-person private offices to larger studios with space for a whole
+                team: your own key, your own room, a real business address, and the event
+                center a few steps away when a session needs more space than an office.
                 Inventory and current pricing live on their site, which stays up to date as
                 rooms turn over.
               </p>
