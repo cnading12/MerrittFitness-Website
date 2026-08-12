@@ -300,6 +300,19 @@ export const events: Event[] = [
 
   // ============ AUGUST 2026 ============
   {
+    id: "temple-of-pisces-aug-2026",
+    title: "Welcome to the Temple of Pisces",
+    date: "2026-08-27",
+    time: "6:00 PM",
+    endTime: "8:00 PM",
+    description: "A Pisces lunar eclipse gathering with Ashley Tracey & Jacki Carr. An evening in the eclipse portal — letting go, and writing a new story. Join us in our historic sanctuary for this special workshop under the lunar eclipse. Follow along on Instagram at @jackicarr and @thewholisticsoul.",
+    imageUrl: "/images/event-banners/temple-of-pisces.webp",
+    imageFit: "contain",
+    ticketUrl: "https://www.eventbrite.com/e/1992464903161?aff=oddtdtcreator",
+    instagramHandle: "jackicarr",
+    practitionerName: "Ashley Tracey & Jacki Carr"
+  },
+  {
     id: "ground-and-flow-chakra-vinyasa-2026",
     title: "Ground & Flow",
     date: "2026-08-21",
