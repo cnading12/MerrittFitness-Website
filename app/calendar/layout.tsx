@@ -76,11 +76,13 @@ function absoluteImage(url: string): string {
   return url.startsWith('http') ? url : `${BASE_URL}${url}`;
 }
 
-// Keep events whose final relevant date is today or later (recurring series always kept).
+// Keep events whose final relevant date is today or later. An open-ended recurring
+// series has no final date, so it is always kept; one with an endDate expires like
+// any other event once that date passes.
 function isUpcoming(event: Event): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  if (event.recurrence) return true;
+  if (event.recurrence && !event.endDate) return true;
   const last = event.endDate || event.date;
   return new Date(`${last}T23:59:59`) >= today;
 }
