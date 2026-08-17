@@ -15,6 +15,9 @@ export const contact = {
     email: 'manager@merrittwellness.net',
     phone: '(720) 357-9499',
     phoneHref: 'tel:720-357-9499',
+    // E.164, for JSON-LD `telephone` properties. Schema.org consumers expect
+    // an unambiguous international form, not the display format.
+    phoneE164: '+1-720-357-9499',
   },
   clientServices: {
     email: 'clientservices@merrittwellness.net',
@@ -41,6 +44,51 @@ export const contact = {
 export const workspace = {
   name: 'Merritt Workspace',
   url: 'https://merrittworkspace.net',
+} as const;
+
+// Opening hours, in one place. Feeds both the visible copy and the
+// openingHoursSpecification in the JSON-LD graph.
+export const hours = {
+  opens: '06:00',
+  closes: '22:00',
+  display: '6 AM to 10 PM, seven days a week',
+} as const;
+
+// REVIEW DATA — READ BEFORE EDITING.
+//
+// These numbers go straight into `aggregateRating` in the JSON-LD graph and
+// are rendered visibly on the site. Google requires an aggregate rating to
+// reflect real, verifiable reviews; an invented count is grounds for a
+// structured-data manual penalty, and a fabricated 5.0/47 block had to be
+// stripped from this codebase once already. Only ever set these from the
+// live Google Business Profile, and update `count` when it actually moves.
+//
+// Verified with the owner: 5.0 across 20 Google reviews (August 2026).
+export const reviews = {
+  ratingValue: 5.0,
+  bestRating: 5,
+  count: 20,
+  source: 'Google',
+  // Swap in the Business Profile's short review link once available; this
+  // maps-search URL resolves to the same profile in the meantime.
+  url: 'https://www.google.com/maps/search/?api=1&query=Merritt+Wellness+2246+Irving+St+Denver+CO+80211',
+} as const;
+
+// Neighborhoods and cities the venue actually draws from. Used for
+// `areaServed` in the graph — keep it to places a renter would plausibly
+// travel from, not a padded list of every Colorado municipality.
+export const areaServed = {
+  neighborhoods: [
+    "Sloans Lake",
+    'Highland',
+    'West Highland',
+    'Berkeley',
+    'Regis',
+    'West Colfax',
+    'Jefferson Park',
+    'Villa Park',
+  ],
+  cities: ['Denver', 'Edgewater', 'Lakewood', 'Wheat Ridge', 'Arvada', 'Golden'],
 } as const;
 
 export interface NavChild {

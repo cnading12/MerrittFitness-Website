@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
+import { rateBands } from '@/app/lib/venue-rates';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, coworkImages } from '@/app/data/venue-images';
@@ -43,6 +45,17 @@ export default function StudioPage() {
 
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Partnerships' }, { name: 'Studio & Workspace' }]}
+        service={{
+          name: 'Practitioner Studio & Workspace',
+          serviceType: 'Studio and office space for practitioners',
+          description:
+            'Studio and office space for Denver practitioners, including a flex studio at Merritt Wellness and dedicated desks and private offices next door at Merritt Workspace with venue hours included.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

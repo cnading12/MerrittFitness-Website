@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
@@ -81,6 +82,17 @@ const faqs: Faq[] = [
 export default function ClassPartnershipsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Wellness & Movement Classes' }]}
+        service={{
+          name: 'Wellness & Movement Class Space Rental',
+          serviceType: 'Class and studio space rental',
+          description:
+            'Studio space in a historic Denver hall for yoga, breathwork, sound baths, dance, and martial arts — as a one-time workshop, a pop-up series, or a standing weekly block, with a full-coverage floor mat and rollaway mirrors on site.',
+          priceFrom: rateBands[0].weekdayRecurring,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

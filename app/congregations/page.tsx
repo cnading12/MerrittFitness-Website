@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
+import { rateBands } from '@/app/lib/venue-rates';
 import Gallery from '@/components/venue/Gallery';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
@@ -47,6 +49,17 @@ const included = [
 export default function CongregationsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Faith & Community Gatherings' }]}
+        service={{
+          name: 'Congregation & Worship Space Rental',
+          serviceType: 'Worship space rental',
+          description:
+            'A 1905 Denver sanctuary open to congregations and spiritual communities of every tradition, on flat monthly rates with sound system and parking included.',
+          priceFrom: rateBands[0].weekdayRecurring,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -1,12 +1,17 @@
 import { Metadata } from 'next'
+import { breadcrumbJsonLd, jsonLdScript } from '@/lib/site-schema'
+
+// Age is computed, never typed. The old Twitter description hardcoded "119
+// years", which was wrong the moment the year turned.
+const yearsServing = new Date().getFullYear() - 1905
 
 export const metadata: Metadata = {
-  title: 'About Us | Merritt Wellness - Historic 1905 Wellness Venue in Sloans Lake Denver',
-  description: 'Discover the story of Merritt Wellness - a beautifully restored 1905 landmark transformed into Denver\'s premier wellness sanctuary. Located in Sloans Lake, offering yoga, sound baths, meditation, and holistic healing in a historic space with 24-foot ceilings.',
-  keywords: 'Merritt Wellness history, historic yoga studio Denver, 1905 wellness center Denver, Sloans Lake wellness venue, Denver meditation space history, historic event venue Denver, yoga retreat Denver, wellness sanctuary Colorado',
+  title: "Our Story | Merritt Wellness — a Restored 1905 Sanctuary in Sloans Lake, Denver",
+  description: `Built in 1905 as Merritt Methodist Church and restored as a gathering place for Denver, Merritt Wellness has served the Sloans Lake neighborhood for ${yearsServing} years. Today the sanctuary hosts weddings, concerts, art shows, congregations, and weekly yoga, breathwork, sound bath, and dance classes under 24-foot vaulted ceilings.`,
+  keywords: 'Merritt Wellness history, Merritt Methodist Church Denver, historic venue Sloans Lake, 1905 landmark Denver, restored church venue Denver, historic event venue Denver, Denver community gathering space',
   openGraph: {
-    title: 'About Merritt Wellness | Historic 1905 Wellness Space in Denver',
-    description: 'Discover the story of Merritt Wellness - a beautifully restored 1905 landmark transformed into Denver\'s premier wellness sanctuary in Sloans Lake.',
+    title: "Our Story | Merritt Wellness — a Restored 1905 Sanctuary in Denver",
+    description: `A 1905 landmark that has gathered Denver's Sloans Lake neighborhood for ${yearsServing} years, now a venue for weddings, concerts, classes, and community gatherings.`,
     url: 'https://merrittwellness.net/about',
     siteName: 'Merritt Wellness',
     images: [
@@ -22,8 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'About Merritt Wellness | Historic Wellness Space Since 1905',
-    description: 'Discover our 119-year history of community gathering in Denver\'s Sloans Lake neighborhood.',
+    title: 'Our Story | Merritt Wellness — a Restored 1905 Sanctuary in Denver',
+    description: `${yearsServing} years of community gathering in Denver's Sloans Lake neighborhood, from Merritt Methodist Church to the venue it is today.`,
     images: ['https://merrittwellness.net/images/hero/outside3.webp'],
   },
   alternates: {
@@ -36,5 +41,15 @@ export default function AboutLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  // Rendered from the layout because app/about/page.tsx is a client
+  // component; the markup has to be in the initial HTML.
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(breadcrumbJsonLd('/about', [{ name: 'About' }]))}
+      />
+      {children}
+    </>
+  )
 }

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getBlurDataURL } from '@/lib/blur-data';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
@@ -12,7 +13,7 @@ import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages, coworkImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
-import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
+import { extendedDiscount, cardFeePercent, addOns, rateBands } from '@/app/lib/venue-rates';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const PATH = '/private-events';
@@ -61,6 +62,17 @@ const typeImages: Record<string, { src: string; alt: string }> = {
 export default function PrivateEventsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'All Private Events' }]}
+        service={{
+          name: 'Private Event Venue Rental',
+          serviceType: 'Private event venue',
+          description:
+            'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 Denver event center for up to 125 guests.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

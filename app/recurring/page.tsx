@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import RateTable from '@/components/venue/RateTable';
 import InquiryForm from '@/components/venue/InquiryForm';
-import { venueJsonLd } from '@/lib/venue-schema';
+import FaqSection from '@/components/venue/FaqSection';
+import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages } from '@/app/data/venue-images';
 import { rateBands, recurringDiscount, money, minimumHours } from '@/app/lib/venue-rates';
+import { coPromotion, contact } from '@/app/data/site';
 import { ArrowRight } from 'lucide-react';
 
 const PATH = '/recurring';
@@ -56,9 +59,60 @@ const partnerUses = [
   },
 ];
 
+// Every answer below restates a rule that already exists somewhere in this
+// codebase — the discount constants in booking-pricing.js, the monthly
+// bank-transfer billing in monthly-billing.js, the co-promotion block in
+// site.ts. Nothing here is a new policy. If a rule changes, change it at the
+// source and let these read from it; do not invent an answer to fill a gap.
+const faqs: Faq[] = [
+  {
+    question: 'What counts as a recurring booking?',
+    answer: `Any standing block totalling ${recurringDiscount.minMonthlyHours} or more hours a month. A weekly two-hour class clears it on its own. There is no application, no promo code, and nothing to negotiate — book the block and every hour bills at the partner rate, ${recurringDiscount.percent}% below standard.`,
+  },
+  {
+    question: 'How much do recurring bookings cost?',
+    answer: `The partner rate is ${recurringDiscount.percent}% off whatever your booking would otherwise cost, so it tracks guest count and day the same way standard rates do. For groups under 30 that is ${money(rateBands[0].weekday)} an hour down to ${money(rateBands[0].weekdayRecurring)}. The same ${recurringDiscount.percent}% comes off Saturday rates. Each session has a ${minimumHours}-hour minimum.`,
+  },
+  {
+    question: 'How and when am I billed?',
+    answer: 'Monthly, by bank transfer, at your stored partner rate, for the sessions that actually happened that month — not a flat retainer. Bank transfer carries no card processing fee, so the rate you agree is the rate you pay.',
+  },
+  {
+    question: 'What happens if I skip a week or need to change the schedule?',
+    answer: `You are billed for sessions that occur, so a skipped week is not billed. Schedule changes made before the charge date land on that month's invoice. Once your block is running, changes go through client services at ${contact.clientServices.email} or ${contact.clientServices.phone}.`,
+  },
+  {
+    question: 'Do I keep the same room and time every week?',
+    answer: 'Yes — that is the point of a standing block. Same room, same hours, week after week, so your community learns one place and one time rather than chasing a room around a schedule.',
+  },
+  {
+    question: 'Who books recurring blocks here?',
+    answer: 'Yoga, breathwork, sound bath, dance, and martial arts teachers; congregations and spiritual communities, two of which meet here every Sunday; bands and theatre groups rehearsing; and neighborhood groups that meet monthly. If it happens on a schedule and needs open floor, tall ceilings, and good sound, it fits.',
+  },
+  {
+    question: 'Will you help promote my class?',
+    answer: `${coPromotion.body} That applies to recurring blocks the same as one-off events: ${coPromotion.channels.join(', ').toLowerCase()}.`,
+  },
+  {
+    question: 'Can I try a one-off session before committing to a block?',
+    answer: `Yes, and most partners do. Book a single session at the standard rate, see how the room works for your practice, and convert to a standing block when you are ready. Reach out at ${contact.inquiries.phone} or ${contact.inquiries.email} and we will walk you through the room first.`,
+  },
+];
+
 export default function RecurringPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Partnerships' }, { name: 'Recurring Bookings & Rates' }]}
+        service={{
+          name: 'Recurring Booking Partnership',
+          serviceType: 'Recurring venue partnership',
+          description:
+            'A standing weekly block in a historic Denver hall at partner rates, with simple monthly billing, for instructors, congregations, rehearsals, and community groups.',
+          priceFrom: rateBands[0].weekdayRecurring,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -72,6 +126,10 @@ export default function RecurringPage() {
             })
           ),
         }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(PATH, faqs)) }}
       />
 
       <PageHero
@@ -157,6 +215,13 @@ export default function RecurringPage() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <FaqSection faqs={faqs} heading="Partnership Questions, Answered" />
         </div>
       </section>
 

@@ -15,8 +15,21 @@ export function middleware(request) {
   // Create response
   const response = NextResponse.next();
 
+  // Indexing.
+  //
+  // This used to unconditionally set `X-Robots-Tag: index, follow` on EVERY
+  // response, including the checkout and confirmation pages that robots.txt
+  // disallows and every /api/ route. An HTTP header beats robots.txt for any
+  // crawler that reaches the URL another way (a link, a redirect, a shared
+  // receipt), so the header was actively inviting thin transactional pages
+  // into the index. The default — no header at all — already means
+  // "index, follow", so the only directive worth sending is the negative one.
+  const NOINDEX_PREFIXES = ['/api/', '/book/payment', '/book/success'];
+  if (NOINDEX_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix))) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
+
   // Add security headers
-  response.headers.set('X-Robots-Tag', 'index, follow');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-XSS-Protection', '1; mode=block');

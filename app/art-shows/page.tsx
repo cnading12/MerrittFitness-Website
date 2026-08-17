@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
@@ -8,7 +9,7 @@ import InquiryForm from '@/components/venue/InquiryForm';
 import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, artShowsImages } from '@/app/data/venue-images';
-import { extendedDiscount } from '@/app/lib/venue-rates';
+import { extendedDiscount, rateBands } from '@/app/lib/venue-rates';
 
 const PATH = '/art-shows';
 const OG_IMAGE = 'https://merrittwellness.net/images/pages/art-shows/exhibition-stained-glass.webp';
@@ -85,6 +86,17 @@ const faqs: Faq[] = [
 export default function ArtShowsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Art Shows & Exhibitions' }]}
+        service={{
+          name: 'Art Show & Exhibition Space',
+          serviceType: 'Gallery and exhibition space',
+          description:
+            'Gallery openings, exhibitions, and pop-up artist markets in a historic Denver hall with natural light, hardwood floors, and tall walls.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

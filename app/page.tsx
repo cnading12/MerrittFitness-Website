@@ -1,13 +1,17 @@
-// app/page.tsx - ENHANCED SEO VERSION (Structure Unchanged)
 'use client';
 
 import EnhancedGallery from "@/components/EnhancedGallery";
 import PageHero from "@/components/venue/PageHero";
+import FaqSection from "@/components/venue/FaqSection";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getBlurDataURL } from "@/lib/blur-data";
-import { Landmark, Sun, HeartHandshake, Music2 } from "lucide-react";
+import { Landmark, Sun, HeartHandshake, Music2, Star } from "lucide-react";
+import { faqJsonLd, type Faq } from "@/lib/venue-schema";
+import { jsonLdScript } from "@/lib/site-schema";
+import { rateBands, money, recurringDiscount, minimumHours } from "@/app/lib/venue-rates";
+import { contact, specs, reviews } from "@/app/data/site";
 import {
   venueImages,
   weddingsImages,
@@ -57,211 +61,73 @@ const homeEventTypes = [
   },
 ];
 
+// Site-wide FAQ, shown on the homepage AND emitted as the site's only
+// FAQPage node (the event-type pages carry their own, scoped to their path).
+//
+// These are ONE array feeding both the visible accordion and the JSON-LD, on
+// purpose: Google requires FAQ markup to match content a visitor can actually
+// see on the page. This block used to be schema-only, with no FAQ rendered
+// anywhere — an orphaned-markup violation — and its answers described a
+// yoga-only studio at a flat "$95/hour", which is neither what the venue is
+// nor what it charges. Every figure below now comes from the booking
+// engine's own constants via venue-rates.
+const faqs: Faq[] = [
+  {
+    question: 'What kinds of events can you host at Merritt Wellness?',
+    answer: `Weddings, private events, concerts and performances, art shows, faith and community gatherings, and wellness and movement classes. The building is a restored ${specs.built} sanctuary in Denver's Sloans Lake neighborhood holding up to ${specs.capacity} guests, and it is booked for everything from a Saturday wedding to a standing Tuesday yoga class to a celebration of life. Rates are published, so you can price your event without waiting on a quote.`,
+  },
+  {
+    question: 'Can I teach a weekly yoga, dance, or movement class there?',
+    answer: `Yes — recurring class partnerships are one of the main things the venue does. Instructors hold a standing weekly block in the main hall for yoga, breathwork, sound baths, dance, martial arts, and more. Bookings of ${recurringDiscount.minMonthlyHours} or more hours a month get ${recurringDiscount.percent}% off every hour and simple monthly billing, so a weekly block runs ${money(rateBands[0].weekdayRecurring)} an hour. The hall has a full-coverage roll-out floor mat, ${specs.mirrorFeet} feet of rollaway mirrors, and a house sound system. See merrittwellness.net/class-partnerships.`,
+  },
+  {
+    question: 'How much does it cost to rent the venue in Denver?',
+    answer: `Hourly, by guest count and day. Sunday through Friday: ${rateBands
+      .map((band) => `${money(band.weekday)} for ${band.guests.toLowerCase()}`)
+      .join(', ')}. Saturdays: ${rateBands
+      .map((band) => `${money(band.saturday)} for ${band.guests.toLowerCase()}`)
+      .join(', ')}. There is a ${minimumHours}-hour minimum, setup and breakdown happen inside your booked window, and longer bookings and recurring partners earn further discounts.`,
+  },
+  {
+    question: 'Where can I find sound baths, breathwork, and yoga classes in Denver?',
+    answer: `Merritt Wellness hosts public sound baths, breathwork gatherings, yin and vinyasa yoga, salsa and bachata classes, and community circles most weeks, run by independent Denver practitioners. The ${specs.ceilingFeet}-foot vaulted ceilings and original sanctuary acoustics are the reason so many sound and breath practitioners choose the room. Every upcoming session, with times, prices, and booking links, is listed at merrittwellness.net/calendar.`,
+  },
+  {
+    question: 'How many guests fit, and is there parking?',
+    answer: `Up to ${specs.capacity} guests, with a ~${specs.mainHallSqFt.toLocaleString('en-US')} sq ft main hall and roughly ${specs.fullBuildingSqFt.toLocaleString('en-US')} sq ft across the full building including the upstairs, cafe lounge, and breakout rooms. There are ${specs.parkingSpots} on-site parking spots — unusual for a Denver venue this close to the city — plus street parking in the surrounding blocks.`,
+  },
+  {
+    question: 'Can we bring our own alcohol and caterer?',
+    answer: 'Yes to both. BYOB is welcome and you are free to bring any caterer you like. Any event with alcohol needs a certificate of general liability insurance, and if alcohol is being served it must be served by a TIPS-certified bartender. Alcohol cannot be sold on premises. Events end by 10 PM in line with Denver neighborhood ordinances.',
+  },
+  {
+    question: 'Is the venue wheelchair accessible?',
+    answer: 'The front entrance has ramp access into the main hall. The main hall restrooms are downstairs and are not ADA accessible; ADA restrooms are available next door at Merritt Workspace, which is part of the same property.',
+  },
+  {
+    question: 'Where is Merritt Wellness located?',
+    answer: `${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip} — on the west side of Denver in the ${contact.address.neighborhood} neighborhood, minutes from Highland, Berkeley, West Colfax, Jefferson Park, and Edgewater. Call ${contact.inquiries.phone} or email ${contact.inquiries.email} to arrange a tour.`,
+  },
+];
+
 export default function Home() {
   const [calendarLoaded, setCalendarLoaded] = useState(false);
 
-  // ENHANCED: More powerful local SEO structured data
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
-    "@id": "https://merrittwellness.net/#business",
-    "name": "Merritt Wellness",
-    "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 landmark for weddings, private events, yoga classes, meditation, sound healing, and workshops.",
-    "url": "https://merrittwellness.net",
-    "telephone": "+1-720-357-9499",
-    "email": "manager@merrittwellness.net",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "2246 Irving St",
-      "addressLocality": "Denver",
-      "addressRegion": "CO",
-      "postalCode": "80211",
-      "addressCountry": "US"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": "39.750981971554395",
-      "longitude": "-105.03225422320789"
-    },
-    "openingHours": [
-      "Mo-Su 06:00-22:00"
-    ],
-    "priceRange": "$95/hour",
-    "paymentAccepted": ["Credit Card", "Cash", "Check", "Venmo", "Zelle"],
-    "image": [
-      "https://merrittwellness.net/images/hero/outside3.webp",
-      "https://merrittwellness.net/images/hero/1.webp",
-      "https://merrittwellness.net/images/events/venue/wellness/2.webp"
-    ],
-    "sameAs": [
-      "https://www.instagram.com/merrittwellnessdenver",
-      "https://www.facebook.com/MerrittWellnessDenver/"
-    ],
-    "amenityFeature": [
-      {
-        "@type": "LocationFeatureSpecification",
-        "name": "Historic Building",
-        "value": true
-      },
-      {
-        "@type": "LocationFeatureSpecification",
-        "name": "24-foot Ceilings",
-        "value": true
-      },
-      {
-        "@type": "LocationFeatureSpecification",
-        "name": "Natural Light",
-        "value": true
-      },
-      {
-        "@type": "LocationFeatureSpecification",
-        "name": "Perfect Acoustics",
-        "value": true
-      },
-      {
-        "@type": "LocationFeatureSpecification",
-        "name": "Parking Available",
-        "value": true
-      }
-    ],
-    "hasMap": "https://maps.google.com/?q=2246+Irving+St,+Denver,+CO+80211",
-    "areaServed": [
-      {
-        "@type": "City",
-        "name": "Denver"
-      },
-      {
-        "@type": "Neighborhood",
-        "name": "Sloans Lake",
-        "containedInPlace": "Denver, CO"
-      },
-      {
-        "@type": "Neighborhood",
-        "name": "Highland",
-        "containedInPlace": "Denver, CO"
-      },
-      {
-        "@type": "Neighborhood",
-        "name": "Berkeley",
-        "containedInPlace": "Denver, CO"
-      },
-      {
-        "@type": "Neighborhood",
-        "name": "Regis",
-        "containedInPlace": "Denver, CO"
-      }
-    ],
-    "makesOffer": [
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Wedding Venue",
-          "description": "Historic 1905 sanctuary wedding venue in Denver's Sloans Lake neighborhood"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Yoga Classes",
-          "description": "Professional yoga instruction in historic Denver venue"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Event Venue Rental",
-          "description": "Historic 2,400 sq ft space for workshops, retreats, and private events"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Sound Healing",
-          "description": "Sound bath sessions with perfect sanctuary acoustics"
-        }
-      }
-    ]
-  };
-
-  // Site-wide FAQ schema lives on the homepage only, so the event-type pages'
-  // own FAQPage blocks (weddings, concerts, etc.) never collide with it.
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Can I host a wedding or private event at Merritt Wellness?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. The historic 1905 event center hosts weddings, concerts, art shows, celebrations of life, parties, and corporate offsites for up to 125 guests, with published hourly pricing, 22 on-site parking spots, and a built-in sound system. See merrittwellness.net/weddings and merrittwellness.net/private-events, or call (720) 357-9499."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Where can I find sound bath sessions in Denver?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Merritt Wellness offers immersive sound bath healing sessions in our historic 1905 venue in Sloans Lake, Denver. Our 24-foot ceilings and perfect acoustics create an ideal environment for sound healing with crystal bowls and gongs. Book online at merrittwellness.net or call (720) 357-9499."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What yoga classes are available near Sloans Lake Denver?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Merritt Wellness in Sloans Lake offers a variety of yoga classes including Vinyasa, Hatha, Restorative, and Hot Yoga. Our historic 2,400 sq ft space features 24-foot ceilings and abundant natural light, perfect for all levels of practice. Located at 2246 Irving St, Denver CO 80211."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How much does it cost to rent a wellness space in Denver?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Merritt Wellness offers space rental starting at $95/hour for yoga instructors, wellness practitioners, and event hosts. We offer partnership pricing for regular bookings of 2+ hours weekly. Contact us at (720) 357-9499 for custom quotes and availability."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is there a meditation center in the Sloans Lake area of Denver?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes! Merritt Wellness is a meditation and wellness center located in the heart of Sloans Lake, Denver. Our beautifully restored 1905 historic building provides a peaceful sanctuary for meditation, mindfulness, breathwork, and holistic healing practices. Visit us at 2246 Irving St, Denver CO 80211."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What makes Merritt Wellness unique for wellness events?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Merritt Wellness is housed in a stunning 1905 historic sanctuary featuring 24-foot ceilings, perfect natural acoustics ideal for sound healing, abundant natural light, and roughly 2,400 square feet of total space — anchored by a ~1,100 sq ft main hall, with ~1,600 sq ft upstairs and additional downstairs rooms. Our venue in Denver's Sloans Lake neighborhood has been thoughtfully restored to honor its heritage while creating a modern wellness sanctuary."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Do you offer private yoga sessions in Denver?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, Merritt Wellness accommodates private yoga sessions, small group classes, and personal wellness practices. Our flexible scheduling and beautiful historic space make it perfect for intimate sessions. Book online or call (720) 357-9499 to schedule your private session."
-        }
-      }
-    ]
-  };
+  // NOTE: the LocalBusiness block that used to live here has been REMOVED.
+  // It shared an @id with the block in app/layout.tsx while disagreeing with
+  // it (priceRange "$95/hour" vs "$$", string vs numeric coordinates,
+  // areaServed illegally nested inside PostalAddress), which left crawlers
+  // merging two conflicting nodes. The single canonical business node is now
+  // built in lib/site-schema.ts and rendered once from the root layout.
 
   return (
     <>
-      {/* ENHANCED: Structured Data for Local SEO */}
+      {/* The business and website nodes come from the root layout. This page
+          adds only the site-wide FAQPage, whose questions are rendered
+          visibly further down. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={jsonLdScript(faqJsonLd('/', faqs))}
       />
 
       <main className="bg-[#faf8f5] font-sans">
@@ -473,6 +339,15 @@ export default function Home() {
 
         <EnhancedGallery />
 
+        {/* FAQ — the visible counterpart to the FAQPage JSON-LD above. These
+            two read from the same `faqs` array so the markup can never
+            describe answers a visitor cannot find on the page. */}
+        <section className="py-20 bg-[#faf8f5]">
+          <div className="max-w-7xl mx-auto px-6">
+            <FaqSection faqs={faqs} heading="Questions About the Venue, Answered" />
+          </div>
+        </section>
+
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section
           id="booking"
@@ -532,6 +407,31 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Visible rating. This is what makes the `aggregateRating` in
+                the JSON-LD legitimate: Google requires an aggregate rating to
+                correspond to review content a visitor can see and verify, and
+                this links straight out to the Google Business Profile the
+                figures come from. If the review count changes, update
+                `reviews` in app/data/site.ts — never hardcode it here. */}
+            <a
+              href={reviews.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 mb-10 px-6 py-3 rounded-full bg-[#f2eee9]/10 backdrop-blur-sm border border-[#f2eee9]/20 hover:bg-[#f2eee9]/20 transition-colors duration-300"
+            >
+              <span className="flex items-center gap-0.5" aria-hidden="true">
+                {Array.from({ length: reviews.bestRating }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-[#f2eee9] text-[#f2eee9]" />
+                ))}
+              </span>
+              <span className="text-[#f2eee9] font-semibold">
+                {reviews.ratingValue.toFixed(1)} out of {reviews.bestRating}
+              </span>
+              <span className="text-[#f2eee9]/70 text-sm">
+                from {reviews.count} {reviews.source} reviews
+              </span>
+            </a>
 
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">

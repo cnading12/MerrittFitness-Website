@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
@@ -15,6 +16,7 @@ import {
   cardFeePercent,
   money,
   saturdayExample,
+  rateBands,
 } from '@/app/lib/venue-rates';
 
 const PATH = '/weddings';
@@ -121,6 +123,17 @@ export default function WeddingsPage() {
 
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Weddings' }]}
+        service={{
+          name: 'Wedding Venue Rental',
+          serviceType: 'Wedding venue',
+          description:
+            'Ceremonies and receptions in a restored 1905 Denver sanctuary with 24-foot vaulted ceilings, original stained glass, a downstairs getting-ready suite, and room for up to 125 guests.',
+          priceFrom: rateBands[0].saturday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
