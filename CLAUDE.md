@@ -76,6 +76,34 @@ prevent them:
    filters — not a code bug. `tests/email-observability.test.mjs` locks the
    logging in.
 
+## Supabase keep-alive — do not remove
+
+Supabase pauses Free-plan projects after ~7 consecutive days with no database
+activity, and the venue regularly goes a week between bookings. A paused
+project means the next renter's booking simply fails and they have to rebook.
+Restoring is a manual dashboard action the app cannot trigger, so the fix is
+prevention:
+
+- `/api/cron/supabase-keepalive` runs **daily** (`0 14 * * *` in `vercel.json`)
+  and issues one real query — `pingDatabase` in `app/lib/database.js`. Any
+  genuine query resets Supabase's inactivity clock; daily leaves ~6 days of
+  slack so a few failed runs can't cost us the project.
+- The read is the authoritative liveness check. The `cron_runs` audit row it
+  also writes is **best-effort** — a missing `cron_runs` table must never make
+  a healthy database look down.
+- If the ping fails, the route returns 500 (visible in Vercel's cron dashboard)
+  and emails staff via `sendDatabaseUnreachableAlert`, deduped per UTC day.
+  Silent failure is the whole thing being defended against.
+- Do **not** replace this with a fake test booking. A throwaway booking row
+  would touch Google Calendar, availability, admin views and the email
+  pipeline, and any failure between create and delete leaves a phantom event on
+  the live venue calendar. Supabase's timer only cares about database activity.
+- Requires `CRON_SECRET` (already set for the monthly-billing cron).
+  `tests/supabase-keepalive.test.mjs` locks all of the above in.
+
+The real fix is a paid Supabase plan (paid projects are never auto-paused).
+Keep this cron even then — it doubles as a daily database health check.
+
 ## Email architecture map
 
 - `app/lib/email.js` — templates + individual send functions + retry wrapper.

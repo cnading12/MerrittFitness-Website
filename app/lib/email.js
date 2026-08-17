@@ -2092,3 +2092,46 @@ export async function sendInquiryNotification(inquiry) {
     kind: 'inquiry-notification',
   });
 }
+
+// Staff-only alarm: the daily Supabase keep-alive ping could not reach the
+// database. Purely internal — no client ever receives this.
+//
+// Why it exists: the keep-alive cron is the only thing standing between a
+// quiet week and a paused project, and a cron that silently stops working
+// looks exactly like one that is working. This turns that silence into an
+// email, days before a renter would hit the failure.
+//
+// The idempotency key is scoped to the UTC day, so a same-day retry (or a
+// second manual run) dedupes at Resend, while a database that stays down
+// produces one fresh alert each day.
+export async function sendDatabaseUnreachableAlert({ error, checkedAt = new Date() } = {}) {
+  const day = checkedAt.toISOString().slice(0, 10);
+  const recipients = getStaffRecipients();
+
+  return sendEmailWithRetry({
+    from: EMAIL_CONFIG.from,
+    to: recipients,
+    subject: `⚠️ Merritt Wellness database unreachable (${day})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 16px;">
+        <h2 style="color: #b3261e;">Database keep-alive failed</h2>
+        <p style="color: #333; line-height: 1.5;">
+          The daily Supabase keep-alive check could not reach the database at
+          ${checkedAt.toISOString()}. While this is failing, new bookings on
+          merrittwellness.net may fail too.
+        </p>
+        <p style="color: #333; line-height: 1.5;"><strong>Error:</strong> ${error || 'unknown'}</p>
+        <h3 style="color: #735e59; margin-bottom: 4px;">What to check</h3>
+        <ol style="color: #333; line-height: 1.6;">
+          <li>Open the Supabase dashboard. If the project shows as <em>paused</em>, click Restore — it takes a few minutes.</li>
+          <li>If it is active, check Supabase status for an ongoing incident.</li>
+          <li>Once it is back, re-run the keep-alive to confirm: it should return <code>ok: true</code>.</li>
+        </ol>
+        <p style="color: #888; font-size: 12px;">Sent by the supabase-keepalive cron job.</p>
+      </div>`,
+  }, {
+    label: `database unreachable alert ${day}`,
+    idempotencyKey: `database-unreachable-alert/${day}`,
+    kind: 'database-unreachable-alert',
+  });
+}

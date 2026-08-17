@@ -358,5 +358,62 @@ export async function updateBookingStatus(bookingId, status, additionalData = {}
   }
 }
 
+// Keep-alive ping — the thing that stops Supabase from pausing the project.
+//
+// Supabase pauses Free-plan projects after ~7 consecutive days with no
+// database activity. Restoring a paused project takes minutes and cannot be
+// triggered from the app, so a quiet stretch between bookings used to mean the
+// next renter's booking simply failed. Any real query resets that clock, so a
+// daily cron (app/api/cron/supabase-keepalive) calls this.
+//
+// Two steps, deliberately different in weight:
+//   1. READ (authoritative) — a `head: true` count against `bookings`. This is
+//      a real PostgREST → Postgres query, which is all Supabase needs to see,
+//      and it doubles as a health check: if this fails the database is already
+//      unreachable and staff get alerted.
+//   2. WRITE (best-effort) — one audit row in `cron_runs`. Nice to have for
+//      "did the ping actually run?" forensics, and it exercises the write path
+//      too, but a failure here (e.g. the cron_runs migration was never run)
+//      must NOT report the database as down. Logged, then ignored.
+export async function pingDatabase({ jobName = 'supabase-keepalive', triggeredBy = 'vercel-cron' } = {}) {
+  const startedAt = Date.now();
+
+  let count = null;
+  try {
+    const { count: bookingCount, error } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw new Error(error.message);
+    count = bookingCount ?? null;
+  } catch (error) {
+    const latencyMs = Date.now() - startedAt;
+    console.error(`❌ [DB] Keep-alive read failed after ${latencyMs}ms:`, error.message);
+    return { ok: false, latencyMs, bookingCount: null, auditRowWritten: false, error: error.message };
+  }
+
+  const latencyMs = Date.now() - startedAt;
+  console.log(`✅ [DB] Keep-alive read OK in ${latencyMs}ms (${count} bookings)`);
+
+  let auditRowWritten = false;
+  try {
+    const { error } = await supabase.from('cron_runs').insert({
+      job_name: jobName,
+      succeeded_count: 1,
+      skipped_count: 0,
+      failed_count: 0,
+      duration_ms: latencyMs,
+      details: { triggeredBy, bookingCount: count, readLatencyMs: latencyMs },
+    });
+    if (error) throw new Error(error.message);
+    auditRowWritten = true;
+  } catch (error) {
+    // Non-fatal by design — see the note above.
+    console.warn('⚠️ [DB] Keep-alive audit row not written:', error.message);
+  }
+
+  return { ok: true, latencyMs, bookingCount: count, auditRowWritten, error: null };
+}
+
 // Export the supabase client
 export { supabase };

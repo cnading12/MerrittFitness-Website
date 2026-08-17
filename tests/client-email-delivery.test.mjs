@@ -297,3 +297,9 @@ test('inquiry route exports maxDuration', async () => {
   assert.ok(route.maxDuration >= 60,
     `inquiry route must export maxDuration ≥ 60, got ${route.maxDuration}`);
 });
+
+test('supabase-keepalive route exports maxDuration', async () => {
+  const route = await import('../app/api/cron/supabase-keepalive/route.js');
+  assert.ok(route.maxDuration >= 60,
+    `supabase-keepalive route must export maxDuration ≥ 60, got ${route.maxDuration}`);
+});

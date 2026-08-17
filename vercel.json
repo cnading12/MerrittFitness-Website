@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/monthly-recurring-billing",
       "schedule": "0 22 28-31 * *"
+    },
+    {
+      "path": "/api/cron/supabase-keepalive",
+      "schedule": "0 14 * * *"
     }
   ]
 }
