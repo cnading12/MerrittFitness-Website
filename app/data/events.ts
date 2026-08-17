@@ -291,7 +291,7 @@ export const events: Event[] = [
     date: "2026-07-12",
     time: "6:00 PM",
     description: "An intimate, listening room-style event series where independent musicians share original songs and the stories behind them in a supportive acoustic setting. Doors at 5:30 PM, show at 6:00 PM.",
-    imageUrl: "/images/event-banners/Western-Wish.png",
+    imageUrl: "/images/pages/concerts/songwriters-round.webp",
     ticketUrl: "https://www.westernwish.com/events",
     instagramHandle: "westernwishproductions",
     practitionerName: "WesternWish Productions",
