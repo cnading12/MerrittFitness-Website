@@ -298,6 +298,21 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ SEPTEMBER 2026 ============
+  {
+    id: "keeping-passion-alive-date-night-sep-2026",
+    title: "Keeping Passion Alive: A Date Night with Dr. Jennifer Finlayson-Fife",
+    date: "2026-09-11",
+    time: "6:00 PM",
+    endTime: "9:00 PM",
+    description: "Most relationships start with a spark—a magnetic pull and genuine desire for connection. But somewhere between managing schedules, balancing budgets, and keeping up with the kids, that spark often fizzles and our partners can start to feel more like roommates than lovers. During this date night, Dr. Jennifer will teach couples how they can keep passion alive in their relationship amidst the responsibilities and routines of adulthood. She'll explore: • Why passionate marriages aren't about new techniques, but about creating genuine intimacy—really knowing your spouse and being known by them in return • How to weave sexuality into the day-to-day through the way we connect with and relate to ourselves and our partner • What it takes to let go of masking and control, and instead bring your full, imperfect self to your relationship • How to move beyond duty and routine toward mutual desire and deeper connection. Join us for an unforgettable evening with your spouse where you'll learn how to create and maintain a relationship that is alive, restorative, and deeply fulfilling.",
+    imageUrl: "/images/event-banners/Keeping-Passion-Alive.png",
+    imagePosition: "center top",
+    ticketUrl: "https://buytickets.at/jenniferfinlaysonfifephd/2150655",
+    ticketLabel: "Get Tickets",
+    practitionerName: "Dr. Jennifer Finlayson-Fife"
+  },
+
   // ============ AUGUST 2026 ============
   {
     id: "temple-of-pisces-aug-2026",
