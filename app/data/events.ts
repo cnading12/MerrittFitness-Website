@@ -298,7 +298,60 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ OCTOBER 2026 ============
+  {
+    id: "sacred-pause-breathwork-oct-2026",
+    title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
+    date: "2026-10-25",
+    time: "5:00 PM",
+    description: "Transformational breathwork is a beautiful practice that helps us slow down, quiet the noise, release what our bodies have been carrying, and become more present to God, ourselves, and others. While breathwork is practiced in many different ways, these gatherings are intentionally Christ-centered. My hope is that this becomes a monthly place for women to pause, breathe, reconnect, and remember they are deeply loved. Hosted by Julie Roebken, certified trauma-informed breathwork facilitator. Doors open at 4:45 PM — come early to find your spot and get settled. $25 registration, with 20% going to Re-fined, a local nonprofit supporting women impacted by sexual exploitation. For more info: julie@mindfulhaus.com, 303-717-4442, or www.mindfulhaus.com.",
+    imageUrl: "/images/event-banners/Julie_headshot2.jpeg",
+    imagePosition: "center 20%",
+    ticketUrl: "https://mindfulhaus.as.me/SacredPauseOct25",
+    ticketLabel: "Register",
+    practitionerName: "Julie Roebken"
+  },
+
+  // ============ SEPTEMBER 2026 ============
+  {
+    id: "sacred-pause-breathwork-sep-2026",
+    title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
+    date: "2026-09-24",
+    time: "6:00 PM",
+    description: "Transformational breathwork is a beautiful practice that helps us slow down, quiet the noise, release what our bodies have been carrying, and become more present to God, ourselves, and others. While breathwork is practiced in many different ways, these gatherings are intentionally Christ-centered. My hope is that this becomes a monthly place for women to pause, breathe, reconnect, and remember they are deeply loved. Hosted by Julie Roebken, certified trauma-informed breathwork facilitator. Doors open at 5:45 PM — come early to find your spot and get settled. $25 registration, with 20% going to Re-fined, a local nonprofit supporting women impacted by sexual exploitation. For more info: julie@mindfulhaus.com, 303-717-4442, or www.mindfulhaus.com.",
+    imageUrl: "/images/event-banners/Julie_headshot2.jpeg",
+    imagePosition: "center 20%",
+    ticketUrl: "https://mindfulhaus.as.me/SacredPauseSept24",
+    ticketLabel: "Register",
+    practitionerName: "Julie Roebken"
+  },
+  {
+    id: "keeping-passion-alive-date-night-sep-2026",
+    title: "Keeping Passion Alive: A Date Night with Dr. Jennifer Finlayson-Fife",
+    date: "2026-09-11",
+    time: "6:00 PM",
+    endTime: "9:00 PM",
+    description: "Most relationships start with a spark—a magnetic pull and genuine desire for connection. But somewhere between managing schedules, balancing budgets, and keeping up with the kids, that spark often fizzles and our partners can start to feel more like roommates than lovers. During this date night, Dr. Jennifer will teach couples how they can keep passion alive in their relationship amidst the responsibilities and routines of adulthood. She'll explore: • Why passionate marriages aren't about new techniques, but about creating genuine intimacy—really knowing your spouse and being known by them in return • How to weave sexuality into the day-to-day through the way we connect with and relate to ourselves and our partner • What it takes to let go of masking and control, and instead bring your full, imperfect self to your relationship • How to move beyond duty and routine toward mutual desire and deeper connection. Join us for an unforgettable evening with your spouse where you'll learn how to create and maintain a relationship that is alive, restorative, and deeply fulfilling.",
+    imageUrl: "/images/event-banners/Keeping-Passion-Alive.png",
+    imagePosition: "center top",
+    ticketUrl: "https://buytickets.at/jenniferfinlaysonfifephd/2150655",
+    ticketLabel: "Get Tickets",
+    practitionerName: "Dr. Jennifer Finlayson-Fife"
+  },
+
   // ============ AUGUST 2026 ============
+  {
+    id: "sacred-pause-breathwork-aug-2026",
+    title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
+    date: "2026-08-30",
+    time: "5:00 PM",
+    description: "Transformational breathwork is a beautiful practice that helps us slow down, quiet the noise, release what our bodies have been carrying, and become more present to God, ourselves, and others. While breathwork is practiced in many different ways, these gatherings are intentionally Christ-centered. My hope is that this becomes a monthly place for women to pause, breathe, reconnect, and remember they are deeply loved. Hosted by Julie Roebken, certified trauma-informed breathwork facilitator. Doors open at 4:45 PM — come early to find your spot and get settled. $25 registration, with 20% going to Re-fined, a local nonprofit supporting women impacted by sexual exploitation. For more info: julie@mindfulhaus.com, 303-717-4442, or www.mindfulhaus.com.",
+    imageUrl: "/images/event-banners/Julie_headshot2.jpeg",
+    imagePosition: "center 20%",
+    ticketUrl: "https://mindfulhaus.as.me/SacredPauseAug30",
+    ticketLabel: "Register",
+    practitionerName: "Julie Roebken"
+  },
   {
     id: "temple-of-pisces-aug-2026",
     title: "Welcome to the Temple of Pisces",
