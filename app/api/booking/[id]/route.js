@@ -84,7 +84,11 @@ export async function GET(request, context) {
       total_amount: booking.total_amount,
       totalAmount: booking.total_amount, // Alias for frontend compatibility
       subtotal: booking.subtotal,
-      promo_code: booking.promo_code ?? null,
+      // promo_code is deliberately NOT returned. It is a secret string — the
+      // whole point of moving the dictionary server-side was to keep codes out
+      // of anything a browser can read, and booking URLs get forwarded and
+      // pasted around. No page renders it; `is_sponsored` below is the derived
+      // boolean the success page actually needs.
       // Sponsored = comped booking (no payment). Derived from the stored promo
       // code (with support for an explicit is_sponsored column if ever added).
       is_sponsored: booking.is_sponsored === true || isSponsoredBooking(booking),

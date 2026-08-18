@@ -500,6 +500,9 @@ describe('response bodies do not leak internals', () => {
       'stripe_customer_id:',
       'stripe_subscription_id:',
       'calendar_event_id:',
+      // A promo code is a secret string; the audit's whole first finding was
+      // keeping codes out of anything a browser can read.
+      'promo_code:',
     ]) {
       assert.ok(
         !responseBlock.includes(field),
