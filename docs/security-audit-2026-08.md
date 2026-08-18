@@ -23,6 +23,17 @@ Nothing here is optional; the RLS fix is only half-deployed until step 2.
 The app falls back to the anon key until this is set, so nothing breaks in the
 meantime — but step 2 must not happen before this.
 
+### 1b. Note: this project has no `inquiries` table
+
+Discovered during rollout. `scripts/migrations/2026_add_inquiries_table.sql` has
+never been run, so `/api/inquiry` has been falling back to email-only for every
+marketing-form submission — by design (`storeInquiry` logs and continues so a
+lead is never lost), but it means there is no durable record of inquiries.
+Not a security issue, and unrelated to this audit, but worth knowing.
+
+Both the RLS migration and its rollback skip tables that don't exist, so
+neither is affected.
+
 ### 2. Run the RLS migration
 
 In the Supabase SQL editor, run

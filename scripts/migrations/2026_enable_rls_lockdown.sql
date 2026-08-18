@@ -137,11 +137,27 @@ alter default privileges in schema public revoke all on tables from anon, authen
 -- emergency measure: set the env var and re-run this migration as soon as the
 -- site is stable.
 --
---   alter table bookings     disable row level security;
---   alter table inquiries    disable row level security;
---   alter table email_events disable row level security;
---   alter table cron_runs    disable row level security;
---   grant all on table public.bookings, public.inquiries,
---                       public.email_events, public.cron_runs
---     to anon, authenticated;
+-- Guarded the same way the forward direction is: ALTER TABLE and GRANT have no
+-- IF EXISTS form for this, and a table that was never created (this project has
+-- no `inquiries` table, for instance) aborts the whole block — leaving the
+-- rollback half applied during an outage, which is the worst possible moment.
+--
+--   do $$
+--   declare t text;
+--   begin
+--     foreach t in array array['bookings','inquiries','email_events','cron_runs'] loop
+--       if exists (select 1 from information_schema.tables
+--                  where table_schema='public' and table_name=t) then
+--         execute format('alter table public.%I disable row level security', t);
+--         execute format('grant all on table public.%I to anon, authenticated', t);
+--         raise notice 'rolled back %', t;
+--       end if;
+--     end loop;
+--   end $$;
+--
+--   alter default privileges in schema public grant all on tables to anon, authenticated;
+--
+-- Deliberately no shorter "just fix bookings" variant: GRANT has no IF EXISTS,
+-- so a trimmed-down version reintroduces exactly the failure this block exists
+-- to avoid. The DO block above is one paste and always works.
 -- ---------------------------------------------------------------------------
