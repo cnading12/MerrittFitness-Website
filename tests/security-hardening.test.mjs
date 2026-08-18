@@ -609,6 +609,18 @@ describe('the calendar does not leak private event titles', () => {
   });
 });
 
+describe('oversized request bodies', () => {
+  test('booking intake rejects an oversized body before buffering it', () => {
+    const source = read('app/api/booking-request/route.js');
+    assert.ok(source.includes('MAX_BODY_BYTES'), 'a body-size backstop must exist');
+    assert.ok(
+      source.includes("content-length"),
+      'the check must read Content-Length so the body is never buffered'
+    );
+    assert.ok(source.includes('413'), 'oversized bodies should get a 413');
+  });
+});
+
 describe('renter-supplied URLs', () => {
   // THE BUG: websiteUrl accepted any string, including `javascript:` — and it
   // is rendered as a link in the staff notification email.

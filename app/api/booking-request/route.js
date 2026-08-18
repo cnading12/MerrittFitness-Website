@@ -30,6 +30,17 @@ export const maxDuration = 60;
 // Security can deny everyone else — see app/lib/supabase-server.js.
 const supabase = supabaseServer;
 
+// Backstop above the schema's own caps (8 MB ID photo + 10 MB COI, each
+// inflated ~4/3 by base64, plus the form fields). Anything larger than this is
+// not a booking. Checked against Content-Length BEFORE the body is buffered,
+// so a deliberately huge payload doesn't get read into the function's heap
+// just for zod to reject it a moment later.
+//
+// This is a backstop, not the real limit: Content-Length is attacker-supplied
+// and absent on chunked uploads, so it catches the honest-but-huge and the
+// lazy cases only. The per-field caps in the schema below are the real bound.
+const MAX_BODY_BYTES = 30 * 1024 * 1024;
+
 // UPDATED: Enhanced validation schema with setup/teardown and home address
 const IndividualBookingSchema = z.object({
   id: z.number(),
@@ -841,6 +852,15 @@ export async function POST(request) {
     const headers = new Headers(limited.headers);
     Object.entries(cors).forEach(([key, value]) => headers.set(key, value));
     return new Response(limited.body, { status: limited.status, headers });
+  }
+
+  const declaredLength = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    console.warn(`🚫 Rejecting oversized booking body: ${declaredLength} bytes`);
+    return Response.json(
+      { success: false, error: 'Request body too large', code: 'BODY_TOO_LARGE' },
+      { status: 413, headers: cors }
+    );
   }
 
   try {
