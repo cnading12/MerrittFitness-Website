@@ -15,6 +15,9 @@ export const contact = {
     email: 'manager@merrittwellness.net',
     phone: '(720) 357-9499',
     phoneHref: 'tel:720-357-9499',
+    // E.164, for JSON-LD `telephone` properties. Schema.org consumers expect
+    // an unambiguous international form, not the display format.
+    phoneE164: '+1-720-357-9499',
   },
   clientServices: {
     email: 'clientservices@merrittwellness.net',
@@ -41,6 +44,67 @@ export const contact = {
 export const workspace = {
   name: 'Merritt Workspace',
   url: 'https://merrittworkspace.net',
+} as const;
+
+// Opening hours, in one place. Feeds the visible copy AND the
+// openingHoursSpecification in the JSON-LD graph, so both stay identical to
+// the Google Business Profile — a listing and a site that disagree about
+// hours is a NAP inconsistency Google can see.
+//
+// These MUST match the Business Profile exactly. Verified against it in
+// August 2026: Monday to Saturday 7 AM to 10 PM, Sunday 4:30 PM to 10 PM.
+//
+// The site previously advertised a blanket "6 AM to 10 PM, seven days a
+// week", which contradicted the Business Profile on both counts and
+// contradicted this very file: `sundaySchedule` below states the building is
+// held by congregations until 4:30 PM every Sunday, so it was never
+// bookable from 6 AM on a Sunday.
+export const hours = {
+  /** Monday through Saturday */
+  weekdayOpens: '07:00',
+  weekdayCloses: '22:00',
+  /** Sunday — congregations hold the sanctuary until 4:30 PM. */
+  sundayOpens: '16:30',
+  sundayCloses: '22:00',
+  display: 'Monday to Saturday, 7 AM to 10 PM, and Sunday evenings from 4:30 PM',
+} as const;
+
+// REVIEW DATA — READ BEFORE EDITING.
+//
+// These numbers go straight into `aggregateRating` in the JSON-LD graph and
+// are rendered visibly on the site. Google requires an aggregate rating to
+// reflect real, verifiable reviews; an invented count is grounds for a
+// structured-data manual penalty, and a fabricated 5.0/47 block had to be
+// stripped from this codebase once already. Only ever set these from the
+// live Google Business Profile, and update `count` when it actually moves.
+//
+// Verified with the owner: 5.0 across 20 Google reviews (August 2026).
+export const reviews = {
+  ratingValue: 5.0,
+  bestRating: 5,
+  count: 20,
+  source: 'Google',
+  // The Business Profile's own share link, supplied by the owner. This is
+  // what the visible rating on the homepage links to, and it is the proof
+  // behind `aggregateRating` — keep it pointing at the real profile.
+  url: 'https://maps.app.goo.gl/AfqGvGfAzVwbMka3A',
+} as const;
+
+// Neighborhoods and cities the venue actually draws from. Used for
+// `areaServed` in the graph — keep it to places a renter would plausibly
+// travel from, not a padded list of every Colorado municipality.
+export const areaServed = {
+  neighborhoods: [
+    "Sloans Lake",
+    'Highland',
+    'West Highland',
+    'Berkeley',
+    'Regis',
+    'West Colfax',
+    'Jefferson Park',
+    'Villa Park',
+  ],
+  cities: ['Denver', 'Edgewater', 'Lakewood', 'Wheat Ridge', 'Arvada', 'Golden'],
 } as const;
 
 export interface NavChild {

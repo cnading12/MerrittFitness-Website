@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getBlurDataURL } from '@/lib/blur-data';
-import { events, Event } from '@/app/data/events';
+import { events, Event, formatPrice } from '@/app/data/events';
 import { Calendar, Clock, Ticket, Instagram, Facebook, Repeat, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays, MessageCircle } from 'lucide-react';
 
 // A display event that may carry multiple occurrence dates for recurring events
@@ -234,7 +234,15 @@ function EventCard({ event }: { event: DisplayEvent }) {
   const isRecurring = !!(event.recurrence && event.occurrenceDates && event.occurrenceDates.length > 0);
 
   return (
-    <article className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col h-full">
+    // The id makes each event individually linkable at /calendar#<event-id>,
+    // which is also the `url` its Event JSON-LD points at. Without it every
+    // event on the page would resolve to the same bare /calendar URL and be
+    // indistinguishable to a crawler. scroll-mt clears the fixed navbar when
+    // an anchor is followed.
+    <article
+      id={event.id}
+      className="group scroll-mt-32 bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#735e59]/10 hover:-translate-y-2 flex flex-col h-full"
+    >
       {/* Image with date badge */}
       <div className={`relative aspect-[16/10] overflow-hidden flex-shrink-0${event.imageFit === 'contain' ? ' bg-white' : ''}`}>
         <Image
@@ -288,6 +296,16 @@ function EventCard({ event }: { event: DisplayEvent }) {
             {event.endTime && ` - ${event.endTime}`}
           </span>
         </div>
+
+        {/* Price, for ticketed events whose figure is published here. Events
+            without a ticket link show their price in the action row below
+            instead, so this would only duplicate it. */}
+        {event.price && event.ticketUrl && (
+          <div className="flex items-center gap-2 text-[#735e59] text-sm mb-3">
+            <Ticket className="w-4 h-4 shrink-0" />
+            <span className="font-medium">{formatPrice(event.price)}</span>
+          </div>
+        )}
 
         {/* Upcoming dates list for recurring events and fixed multi-session series.
             Hidden for events with more than 4 occurrences in the month — the
@@ -380,6 +398,14 @@ function EventCard({ event }: { event: DisplayEvent }) {
         {/* Actions - pushed to bottom */}
         <div className="flex flex-col gap-3 mt-auto">
           <div className="flex items-center gap-3">
+            {/* The primary action.
+                A "Free Event" badge is shown ONLY when the event is actually
+                marked free. It used to be the fallback for anything without a
+                ticketUrl, which advertised paid Venmo-collected classes
+                ($35 yoga, $15 donation classes) as free. Events that are
+                neither ticketed nor free fall through to a price badge, or to
+                nothing at all when no price is published — never to a claim
+                the venue cannot stand behind. */}
             {event.ticketUrl ? (
               <a
                 href={event.ticketUrl}
@@ -390,12 +416,17 @@ function EventCard({ event }: { event: DisplayEvent }) {
                 <Ticket className="w-4 h-4" />
                 {event.ticketLabel || 'Get Tickets'}
               </a>
-            ) : (
+            ) : event.free ? (
               <div className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold px-6 py-3.5 rounded-xl">
                 <Calendar className="w-4 h-4" />
                 Free Event
               </div>
-            )}
+            ) : event.price ? (
+              <div className="flex-1 inline-flex items-center justify-center gap-2 bg-[#735e59]/10 text-[#735e59] font-semibold px-6 py-3.5 rounded-xl border border-[#735e59]/20">
+                <Ticket className="w-4 h-4 shrink-0" />
+                <span className="text-sm">{formatPrice(event.price)}</span>
+              </div>
+            ) : null}
 
             {event.instagramHandle && !event.practitionerName && (
               <a
@@ -520,8 +551,69 @@ export default function EventsPage() {
             </h1>
             <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#f2eee9]/60 to-transparent mx-auto mb-6" />
             <p className="text-lg md:text-xl text-[#f2eee9]/80 max-w-2xl mx-auto leading-relaxed">
-              Join us for transformative experiences in our historic sanctuary
+              Sound baths, breathwork, yoga, dance, live music, and community
+              gatherings — open to the public in our historic 1905 sanctuary in
+              Sloans Lake, Denver.
             </p>
+          </div>
+        </section>
+
+        {/* What actually happens here.
+            The page used to say only "transformative experiences in our
+            historic sanctuary" — evocative, but it named none of the things
+            people actually search for, so the only indexable text on the
+            venue's highest-intent public page was the event cards themselves.
+            This block states the real recurring programme in plain language
+            and links each thread to the page that sells it. */}
+        <section className="pt-16 pb-4">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
+              What happens here
+              <span className="block font-bold text-[#735e59]">most weeks</span>
+            </h2>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-8" />
+            <div className="space-y-5 text-left md:text-center">
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                Merritt Wellness is a public venue as much as a private one. In
+                any given month the calendar below holds{' '}
+                <strong className="font-semibold text-[#4a3f3c]">sound baths</strong> and
+                sound immersions, <strong className="font-semibold text-[#4a3f3c]">breathwork</strong>{' '}
+                gatherings, yin, restorative and vinyasa{' '}
+                <strong className="font-semibold text-[#4a3f3c]">yoga classes</strong>,
+                salsa and bachata{' '}
+                <strong className="font-semibold text-[#4a3f3c]">dance classes</strong>,
+                songwriters&apos; rounds and live concerts, somatic therapy
+                sessions, neighborhood meetings, and two Sunday church services
+                — nearly all of it run by independent Denver practitioners who
+                rent the hall.
+              </p>
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                The 24-foot vaulted ceilings and original sanctuary acoustics
+                are why so many sound and breath practitioners choose this room,
+                and the 22 on-site parking spots are why their students keep
+                coming back. Everything listed here is open to the public;
+                prices and booking links are on each card.
+              </p>
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                Teach something?{' '}
+                <Link
+                  href="/class-partnerships"
+                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
+                >
+                  Host a class or workshop here
+                </Link>
+                , or hold a{' '}
+                <Link
+                  href="/recurring"
+                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
+                >
+                  standing weekly block at partner rates
+                </Link>
+                . Every public event you run here gets co-promoted on this
+                calendar, our community board, and our social channels at no
+                charge.
+              </p>
+            </div>
           </div>
         </section>
 

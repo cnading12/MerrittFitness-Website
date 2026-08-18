@@ -1,3 +1,24 @@
+// What it costs to attend an event.
+//
+// WHY THIS IS A FIELD AND NOT PROSE: prices used to live only inside
+// `description` text ("$35 per person", "$25 registration"). That meant two
+// things went wrong. The Event JSON-LD emitted an `offers` block with no
+// `price` or `priceCurrency`, which Google's Event spec requires whenever
+// offers are present. And the calendar card decided "is this free?" purely by
+// asking whether a `ticketUrl` existed — so a $35 class collected over Venmo
+// rendered a green "Free Event" badge to every visitor. Both are driven off
+// this field now.
+export interface EventPrice {
+  /** Lowest amount a person can pay to attend, in USD. */
+  from: number;
+  /** Highest amount, for tiered pricing (early bird through door price). */
+  to?: number;
+  /** Per-unit qualifier, e.g. "per person", "per class". */
+  unit?: string;
+  /** How it is collected or conditioned, e.g. "suggested donation", "Venmo or cash". */
+  note?: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -5,6 +26,21 @@ export interface Event {
   time: string; // e.g., "7:00 PM"
   endTime?: string; // Optional end time
   description: string;
+  /**
+   * What attending costs. Omit when the price is not published here — for
+   * example when it lives behind an external ticket page and changes there.
+   * Filling this in is what lets the event show a price in Google's event
+   * results, so add it whenever the figure is known and stable.
+   */
+  price?: EventPrice;
+  /**
+   * Set to true ONLY for events that are genuinely free to attend. This is
+   * what drives both the "Free Event" badge and `isAccessibleForFree` in the
+   * structured data. An event with no `price` and no `free` is treated as
+   * "price not published", NOT as free — never set this to silence a missing
+   * price.
+   */
+  free?: boolean;
   imageUrl: string;
   imagePosition?: string; // CSS object-position value, e.g., "center top", "center 30%"
   imageFit?: 'cover' | 'contain'; // CSS object-fit value, defaults to 'cover'
@@ -19,11 +55,25 @@ export interface Event {
   sessionDates?: string[]; // Optional explicit list of session dates (ISO) for a fixed multi-session series with irregular spacing
 }
 
+/**
+ * Human-readable price label, e.g. "$15 per class · suggested donation".
+ * Shared by the calendar card and any other surface that shows a price, so
+ * the two can never disagree.
+ */
+export function formatPrice(price: EventPrice): string {
+  const range =
+    price.to && price.to !== price.from ? `$${price.from}–$${price.to}` : `$${price.from}`;
+  return [`${range}${price.unit ? ` ${price.unit}` : ''}`, price.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 // Add your events here - events with dates in the past will be automatically filtered out
 export const events: Event[] = [
   // ============ RECURRING: SUNDAY MORNING SERVICE ============
   {
     id: "sunday-morning-service",
+    free: true,
     title: "Sunday Morning Service",
     date: "2026-04-26",
     time: "7:30 AM",
@@ -36,6 +86,7 @@ export const events: Event[] = [
   // ============ RECURRING: SUNDAY AFTERNOON SERVICE ============
   {
     id: "sunday-afternoon-service",
+    free: true,
     title: "Sunday Afternoon Service",
     date: "2026-04-26",
     time: "1:00 PM",
@@ -80,6 +131,7 @@ export const events: Event[] = [
   // ============ RECURRING: SLOANS LAKE CITIZENS GROUP ============
   {
     id: "sloans-lake-citizens-group",
+    free: true,
     title: "Sloans Lake Citizens Group",
     date: "2026-05-21",
     time: "6:00 PM",
@@ -108,7 +160,7 @@ export const events: Event[] = [
     title: "Sound Immersion with the Harmonic Quintessence",
     date: "2026-07-28",
     time: "7:00 PM",
-    description: "Join us for a deeply restorative evening of sound, healing, and connection at Merritt Wellness Center at Sloan's Lake. Experience a unique Sound Immersion created by five talented sound practitioners working together to weave a rich tapestry of healing vibrations. Through gongs, crystal singing bowls, metal bowls, drums, chimes, flutes, and sacred instruments, you will be invited into a space of relaxation, reflection, and energetic renewal. As the sounds surround you, allow yourself to release stress, quiet the mind, and reconnect with the wisdom within. This immersive experience is designed to support balance, peace, and a deeper connection to yourself and the present moment. Following the immersion, guests are invited to enjoy tea and connect with our sacred community. Come as you are. Leave feeling grounded, refreshed, and renewed.",
+    description: "Join us for a deeply restorative evening of sound, healing, and connection at Merritt Wellness Center at Sloans Lake. Experience a unique Sound Immersion created by five talented sound practitioners working together to weave a rich tapestry of healing vibrations. Through gongs, crystal singing bowls, metal bowls, drums, chimes, flutes, and sacred instruments, you will be invited into a space of relaxation, reflection, and energetic renewal. As the sounds surround you, allow yourself to release stress, quiet the mind, and reconnect with the wisdom within. This immersive experience is designed to support balance, peace, and a deeper connection to yourself and the present moment. Following the immersion, guests are invited to enjoy tea and connect with our sacred community. Come as you are. Leave feeling grounded, refreshed, and renewed.",
     imageUrl: "/images/event-banners/Sound Immersion Event Header 2026.png",
     imageFit: "contain",
     ticketUrl: "https://link.automationonamission.com/widget/bookings/sound-immersion-hq",
@@ -118,6 +170,7 @@ export const events: Event[] = [
   // ============ PAST: YOGA WITH TERRI STAFFORD (ENDED JUNE 5, 2026) ============
   {
     id: "terri-stafford-yoga",
+    price: { from: 35, unit: "per person", note: "reserve via Venmo" },
     title: "Yoga with Terri Stafford",
     date: "2026-04-03",
     endDate: "2026-06-05",
@@ -133,6 +186,7 @@ export const events: Event[] = [
   // ============ RECURRING: MILE HIGH QUALCHATA ============
   {
     id: "mile-high-qualchata",
+    price: { from: 5, unit: "per class" },
     title: "Mile High Qualchata",
     date: "2026-08-12",
     time: "6:30 PM",
@@ -209,6 +263,7 @@ export const events: Event[] = [
   // ============ RECURRING: SLOW FLOW + NERVOUS SYSTEM RESET (ENDS AUGUST 31, 2026) ============
   {
     id: "slow-flow-nervous-system-reset",
+    price: { from: 15, unit: "per class", note: "suggested donation, Venmo or cash" },
     title: "Slow Flow + Nervous System Reset",
     date: "2026-05-05",
     endDate: "2026-08-31",
@@ -225,6 +280,7 @@ export const events: Event[] = [
   // ============ RECURRING: SINGLE MOMS THRIVE (ENDS AUGUST 31, 2026) ============
   {
     id: "single-moms-thrive",
+    price: { from: 15, unit: "per class", note: "suggested donation, Venmo or cash" },
     title: "Single Moms Thrive",
     date: "2026-05-07",
     endDate: "2026-08-31",
@@ -241,6 +297,7 @@ export const events: Event[] = [
   // ============ MARCH 2026 ============
   {
     id: "full-moon-breathwork-mar-2026",
+    price: { from: 40, unit: "per person" },
     title: "Full Moon Holosomatic Breathwork",
     date: "2026-03-03",
     time: "6:00 PM",
@@ -303,6 +360,7 @@ export const events: Event[] = [
   // ============ OCTOBER 2026 ============
   {
     id: "sacred-pause-breathwork-oct-2026",
+    price: { from: 25, unit: "registration" },
     title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
     date: "2026-10-25",
     time: "5:00 PM",
@@ -317,6 +375,7 @@ export const events: Event[] = [
   // ============ SEPTEMBER 2026 ============
   {
     id: "sacred-pause-breathwork-sep-2026",
+    price: { from: 25, unit: "registration" },
     title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
     date: "2026-09-24",
     time: "6:00 PM",
@@ -344,6 +403,7 @@ export const events: Event[] = [
   // ============ AUGUST 2026 ============
   {
     id: "sacred-pause-breathwork-aug-2026",
+    price: { from: 25, unit: "registration" },
     title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
     date: "2026-08-30",
     time: "5:00 PM",
@@ -384,6 +444,7 @@ export const events: Event[] = [
   },
   {
     id: "holosomatic-breathwork-aug-2026",
+    price: { from: 40, unit: "per person" },
     title: "Holosomatic Breathwork",
     date: "2026-08-11",
     time: "6:00 PM",
@@ -412,6 +473,7 @@ export const events: Event[] = [
   // ============ JULY 2026 ============
   {
     id: "sacred-pause-breathwork-jul-2026",
+    price: { from: 25, unit: "registration" },
     title: "A Sacred Pause: A Christ-Centered Breathwork Gathering for Women",
     date: "2026-07-19",
     time: "5:00 PM",
@@ -424,6 +486,7 @@ export const events: Event[] = [
   },
   {
     id: "holosomatic-breathwork-jul-08-2026",
+    price: { from: 40, unit: "per person" },
     title: "Holosomatic Breathwork",
     date: "2026-07-08",
     time: "6:00 PM",
@@ -481,6 +544,7 @@ export const events: Event[] = [
   },
   {
     id: "channel-one-sound-system-jun-2026",
+    price: { from: 20, to: 35, unit: "per person", note: "early bird through door price" },
     title: "Channel One Sound System",
     date: "2026-06-07",
     time: "6:00 PM",
@@ -493,6 +557,7 @@ export const events: Event[] = [
   },
   {
     id: "holosomatic-breathwork-jun-2026",
+    price: { from: 40, unit: "per person" },
     title: "Holosomatic Breathwork",
     date: "2026-06-18",
     time: "6:00 PM",
@@ -518,6 +583,7 @@ export const events: Event[] = [
   },
   {
     id: "holosomatic-breathwork-may-2026",
+    price: { from: 40, unit: "per person" },
     title: "Holosomatic Breathwork",
     date: "2026-05-13",
     time: "6:00 PM",
@@ -545,6 +611,7 @@ export const events: Event[] = [
   // ============ APRIL 2026 ============
   {
     id: "holosomatic-breathwork-apr-2026",
+    price: { from: 30, to: 40, unit: "per person", note: "early bird through regular" },
     title: "Holosomatic Breathwork",
     date: "2026-04-14",
     time: "6:00 PM",

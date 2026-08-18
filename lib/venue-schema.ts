@@ -7,7 +7,7 @@
 
 import { contact, specs } from '@/app/data/site';
 
-const BASE_URL = 'https://merrittwellness.net';
+const BASE_URL = 'https://www.merrittwellness.net';
 
 export interface VenueJsonLdOptions {
   /** Page path, e.g. "/weddings" */
@@ -31,7 +31,7 @@ export function venueJsonLd({ path, name, description, images }: VenueJsonLdOpti
     description,
     url: `${BASE_URL}${path}`,
     image: images.map(absoluteUrl),
-    telephone: contact.inquiries.phone,
+    telephone: contact.inquiries.phoneE164,
     email: contact.inquiries.email,
     address: {
       '@type': 'PostalAddress',

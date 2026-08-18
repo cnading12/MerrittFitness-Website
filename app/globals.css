@@ -16,12 +16,18 @@
   
   --background: var(--brand-warm-white);
   --foreground: var(--brand-text);
+
+  /* Typography. --font-serif and --font-sans are injected by next/font in
+     app/layout.tsx (Cormorant Garamond and Jost). The fallbacks below keep
+     the original stacks so a font failure degrades exactly as it used to. */
+  --stack-serif: var(--font-serif), 'Cormorant Garamond', Georgia, serif;
+  --stack-sans: var(--font-sans), 'Jost', Helvetica, sans-serif;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Jost', Helvetica, sans-serif;
+  font-family: var(--stack-sans);
   font-weight: 400;
   margin: 0;
   padding: 0;
@@ -30,7 +36,7 @@ body {
 
 /* Elegant heading typography to match logo serif */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--stack-serif);
 }
 
 /* Utility classes for brand colors */
@@ -42,8 +48,8 @@ h1, h2, h3, h4, h5, h6 {
 .border-brand { border-color: var(--brand-primary); }
 
 /* Font family utilities */
-.font-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
-.font-sans { font-family: 'Jost', Helvetica, sans-serif; }
+.font-serif { font-family: var(--stack-serif); }
+.font-sans { font-family: var(--stack-sans); }
 
 /* Smooth scrolling */
 html {

@@ -7,7 +7,11 @@
 
 import { NextResponse } from 'next/server'
 
-import { securityHeaders, isWebhookPath } from './app/lib/security-headers.js'
+import {
+  securityHeaders,
+  isWebhookPath,
+  isNoindexPath,
+} from './app/lib/security-headers.js'
 
 export function middleware(request) {
   // CRITICAL: Skip middleware for webhook endpoints.
@@ -18,10 +22,34 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
+  // CANONICAL HOST: www.merrittwellness.net.
+  //
+  // Do NOT add a www -> apex redirect here. The apex already redirects to www
+  // at the platform level:
+  //
+  //   curl -sSIL <apex>
+  //   HTTP/2 307
+  //   location: https://www.merrittwellness.net/
+  //   HTTP/2 200
+  //
+  // A middleware redirect in the other direction would bounce every request
+  // between the two hosts forever and take the whole site down. An earlier
+  // revision of this file did exactly that, on the mistaken belief that www
+  // was the dead host; it was caught before it shipped. If the canonical host
+  // is ever moved to the apex, change the platform redirect FIRST and
+  // BASE_URL in lib/site-schema.ts to match — never add a redirect here.
+
   const isApi = request.nextUrl.pathname.startsWith('/api/');
 
+  // Indexing. API routes were already excluded; this also covers the
+  // mid-booking pages (/book/payment, /book/success, /book/payment-complete),
+  // which robots.txt disallows but which an `X-Robots-Tag: index, follow`
+  // would have overridden for any crawler arriving by link or shared receipt.
+  // See isNoindexPath for the full reasoning.
+  const noindex = isNoindexPath(request.nextUrl.pathname);
+
   const response = NextResponse.next();
-  for (const [name, value] of Object.entries(securityHeaders({ isApi }))) {
+  for (const [name, value] of Object.entries(securityHeaders({ isApi, noindex }))) {
     response.headers.set(name, value);
   }
 
