@@ -2,8 +2,19 @@
 // PRODUCTION VERSION - Better error handling and fallback
 
 import { checkCalendarAvailability } from '../../lib/calendar.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsHeaders, corsPreflightResponse } from '../../lib/http.js';
+
+// Each call is a Google Calendar API request against a finite daily quota.
+// Burn the quota and real renters see "calendar unavailable". The booking UI
+// fetches one date at a time as the renter clicks around, so 60/minute is
+// well above normal browsing and well below quota-exhausting.
+const RATE_LIMIT = { bucket: 'check-availability', limit: 60, windowMs: 60_000 };
 
 export async function GET(request) {
+  const limited = enforceRateLimit(request, RATE_LIMIT, corsHeaders(request, { methods: 'GET, OPTIONS' }));
+  if (limited) return limited;
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
@@ -128,13 +139,6 @@ export async function GET(request) {
 }
 
 // Handle preflight requests
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function OPTIONS(request) {
+  return corsPreflightResponse(request, { methods: 'GET, OPTIONS' });
 }

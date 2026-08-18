@@ -21,6 +21,42 @@ const EMAIL_CONFIG = {
   clientServicesEmail: 'clientservices@merrittwellness.net'
 };
 
+// ---------------------------------------------------------------------------
+// HTML escaping — apply to EVERY renter-supplied value in a template
+// ---------------------------------------------------------------------------
+//
+// These templates build HTML with string interpolation, and most of the values
+// come straight off the booking form: event name, contact name, business name,
+// special requests, address, phone, the inquiry message. Interpolated raw, a
+// renter can close the surrounding tag and write their own markup into the
+// message — and the message goes out over OUR domain, from OUR address, in an
+// email the recipient already trusts. The two things that buys an attacker:
+//
+//   - Staff notifications become a phishing channel: a "special request" that
+//     reads `</td><td><a href="https://evil.example">Click to approve</a>` is
+//     rendered by the manager's mail client as if we wrote it.
+//   - The renter's own confirmation can be dressed up with fake payment
+//     instructions and forwarded on to a third party as proof of what "Merritt
+//     Wellness sent me".
+//
+// It is not classic XSS — mail clients don't run scripts — but it is a
+// spoofing and phishing primitive, and it also lets malformed input break the
+// layout of every downstream template.
+//
+// `esc` handles the five HTML-significant characters. That is sufficient for
+// text nodes AND for quoted attribute values (both quote styles are escaped),
+// which is what these templates use.
+export function esc(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
 // Every member of staff who MUST receive booking/operations notifications.
 // Used as the guaranteed fallback when the OPS_EMAIL_* env vars are missing or
 // blank, so a misconfiguration can never silently drop a staff recipient. The
@@ -126,7 +162,7 @@ function renderManagerScheduleAdjustments(details, booking) {
           <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #b91c1c; margin: 0 0 8px 0;">⚠️ Action needed — contact the renter</h3>
             <p style="margin: 0 0 8px 0; color: #7f1d1d;">
-              The renter chose "resolve it with our team" for ${resolveWithStaff.length === 1 ? 'this date' : 'these dates'}. Each one was dropped from their schedule (not calendared, not billed) — reach out to ${booking.contact_name || 'the renter'} to work out a replacement:
+              The renter chose "resolve it with our team" for ${resolveWithStaff.length === 1 ? 'this date' : 'these dates'}. Each one was dropped from their schedule (not calendared, not billed) — reach out to ${esc(booking.contact_name || 'the renter')} to work out a replacement:
             </p>
             <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; line-height: 1.8;">
               ${resolveWithStaff.map((ex) => `<li><strong>${formatBillingDate(ex.date)}</strong></li>`).join('')}
@@ -228,7 +264,7 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
         ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: '#7c3aed' })}
         ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: '#0d9488' })}
         ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: '#0f766e' })}
-        ${row(booking.promo_code ? `Discount (${booking.promo_code})` : 'Extended booking discount (8+ hours)', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
+        ${row(booking.promo_code ? `Discount (${esc(booking.promo_code)})` : 'Extended booking discount (8+ hours)', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
         ${row('Subtotal', money(subtotal), { bold: true, border: true })}
         ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: '#ea580c' })}
         ${row(isGroup ? `Total (all ${groupContext.total} events)` : 'Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}
@@ -285,7 +321,7 @@ export function buildGroupContext(booking, group) {
 // email's event flagged so the reader can place this notification in the group.
 function renderGroupEventList(groupContext) {
   return groupContext.events.map((e) => {
-    const when = `${formatEventDateShort(e.date)}${e.time ? ` &middot; ${e.time}` : ''}`;
+    const when = `${formatEventDateShort(e.date)}${e.time ? ` &middot; ${esc(e.time)}` : ''}`;
     const current = e.isCurrent ? ' <strong>(this email)</strong>' : '';
     return `<li style="margin-bottom: 4px;">${when}${current}</li>`;
   }).join('');
@@ -320,7 +356,7 @@ function renderMultiEventBanner(groupContext, { audience }) {
 export
 const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking, groupContext = null) => ({
-    subject: `Booking Confirmed: ${booking.event_name} on ${booking.event_date}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
+    subject: `Booking Confirmed: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -349,11 +385,11 @@ const EMAIL_TEMPLATES = {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Event:</td>
-                <td style="padding: 8px 0; color: #111827;">${booking.event_name}</td>
+                <td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td>
-                <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${booking.event_type?.replace('-', ' ')}</td>
+                <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Date:</td>
@@ -361,7 +397,7 @@ const EMAIL_TEMPLATES = {
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Time:</td>
-                <td style="padding: 8px 0; color: #111827;">${booking.event_time}</td>
+                <td style="padding: 8px 0; color: #111827;">${esc(booking.event_time)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #374151; font-weight: 600;">Duration:</td>
@@ -429,7 +465,7 @@ const EMAIL_TEMPLATES = {
           ${booking.special_requests ? `
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">💬 Your Special Requests</h3>
-            <p style="margin: 0; color: #451a03;">${booking.special_requests}</p>
+            <p style="margin: 0; color: #451a03;">${esc(booking.special_requests)}</p>
           </div>
           ` : ''}
 
@@ -456,7 +492,7 @@ const EMAIL_TEMPLATES = {
   }),
 
   managerNotification: (booking, groupContext = null) => ({
-    subject: `🆕 New Booking: ${booking.event_name} on ${booking.event_date}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
+    subject: `🆕 New Booking: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         ${LOGO_HEADER}
@@ -468,7 +504,7 @@ const EMAIL_TEMPLATES = {
         ${isSponsoredBooking(booking) ? `
         <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h2 style="color: #065f46; margin: 0 0 8px 0;">🎁 SPONSORED — No Payment Collected</h2>
-          <p style="color: #047857; margin: 0;">This booking was comped with a sponsored promo code (<strong>${booking.promo_code || 'sponsored'}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
+          <p style="color: #047857; margin: 0;">This booking was comped with a sponsored promo code (<strong>${esc(booking.promo_code || 'sponsored')}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
         </div>
         ` : ''}
 
@@ -479,19 +515,19 @@ const EMAIL_TEMPLATES = {
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 120px;">Event:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.event_name}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td>
-              <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${booking.event_type?.replace('-', ' ')}</td>
+              <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Date:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.event_date}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_date)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Time:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.event_time}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_time)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Duration:</td>
@@ -540,7 +576,7 @@ const EMAIL_TEMPLATES = {
           ${booking.special_requests ? `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
               <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Special Requests:</p>
-              <p style="color: #111827; margin: 0; background: white; padding: 10px; border-radius: 4px;">${booking.special_requests}</p>
+              <p style="color: #111827; margin: 0; background: white; padding: 10px; border-radius: 4px;">${esc(booking.special_requests)}</p>
             </div>
           ` : ''}
         </div>
@@ -553,35 +589,35 @@ const EMAIL_TEMPLATES = {
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 120px;">Name:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.contact_name}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.contact_name)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td>
               <td style="padding: 8px 0; color: #111827;">
-                <a href="mailto:${booking.email}" style="color: #059669; text-decoration: none;">${booking.email}</a>
+                <a href="mailto:${esc(booking.email)}" style="color: #059669; text-decoration: none;">${esc(booking.email)}</a>
               </td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td>
               <td style="padding: 8px 0; color: #111827;">
-                ${booking.phone ? `<a href="tel:${booking.phone}" style="color: #059669; text-decoration: none;">${booking.phone}</a>` : 'Not provided'}
+                ${booking.phone ? `<a href="tel:${esc(booking.phone)}" style="color: #059669; text-decoration: none;">${esc(booking.phone)}</a>` : 'Not provided'}
               </td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.home_address || 'Not provided'}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.home_address || 'Not provided')}</td>
             </tr>
             ${booking.business_name ? `
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.business_name}</td>
+              <td style="padding: 8px 0; color: #111827;">${esc(booking.business_name)}</td>
             </tr>
             ` : ''}
             <tr>
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td>
               <td style="padding: 8px 0; color: #111827;">
                 ${booking.id_photo_data
-                  ? `Attached to this email (<code>${booking.id_photo_name || 'id-photo'}</code>)`
+                  ? `Attached to this email (<code>${esc(booking.id_photo_name || 'id-photo')}</code>)`
                   : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter</span>'}
               </td>
             </tr>
@@ -600,7 +636,7 @@ const EMAIL_TEMPLATES = {
               <td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td>
               <td style="padding: 8px 0; color: #111827;">
                 ${booking.coi_document_data
-                  ? `Attached to this email (<code>${booking.coi_document_name || 'coi'}</code>)`
+                  ? `Attached to this email (<code>${esc(booking.coi_document_name || 'coi')}</code>)`
                   : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter before the event</span>'}
               </td>
             </tr>
@@ -647,7 +683,7 @@ const EMAIL_TEMPLATES = {
     const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
 
     return {
-      subject: `Recurring booking confirmed: ${booking.event_name}`,
+      subject: `Recurring booking confirmed: ${esc(booking.event_name)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -657,9 +693,9 @@ const EMAIL_TEMPLATES = {
               <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
             </div>
 
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${booking.contact_name},</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
             <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
-              Your recurring rental for <strong>${booking.event_name}</strong> is all set. Your payment method is on file and we will auto-charge on the first of each month going forward.
+              Your recurring rental for <strong>${esc(booking.event_name)}</strong> is all set. Your payment method is on file and we will auto-charge on the first of each month going forward.
             </p>
 
             <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -757,7 +793,7 @@ const EMAIL_TEMPLATES = {
     const paymentMethod = (details?.paymentMethod || booking.payment_method || 'ach').toUpperCase();
 
     return {
-      subject: `New recurring booking: ${booking.event_name}`,
+      subject: `New recurring booking: ${esc(booking.event_name)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           ${LOGO_HEADER}
@@ -769,8 +805,8 @@ const EMAIL_TEMPLATES = {
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #1f2937; margin: 0 0 15px 0;">Series Details</h3>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Series:</td><td style="padding: 8px 0; color: #111827;">${booking.event_name}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td><td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${booking.event_type?.replace('-', ' ') || ''}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Series:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td><td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' ') || '')}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Start date:</td><td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td><td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td><td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td></tr>
@@ -803,14 +839,14 @@ const EMAIL_TEMPLATES = {
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #059669; margin: 0 0 15px 0;">Renter Information</h3>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Name:</td><td style="padding: 8px 0; color: #111827;">${booking.contact_name}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${booking.email}" style="color: #059669; text-decoration: none;">${booking.email}</a></td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td><td style="padding: 8px 0; color: #111827;">${booking.phone || 'Not provided'}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td><td style="padding: 8px 0; color: #111827;">${booking.home_address || 'Not provided'}</td></tr>
-              ${booking.business_name ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td><td style="padding: 8px 0; color: #111827;">${booking.business_name}</td></tr>` : ''}
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td><td style="padding: 8px 0; color: #111827;">${booking.id_photo_data ? `Attached (<code>${booking.id_photo_name || 'id-photo'}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter</span>'}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Name:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.contact_name)}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${esc(booking.email)}" style="color: #059669; text-decoration: none;">${esc(booking.email)}</a></td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.phone || 'Not provided')}</td></tr>
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.home_address || 'Not provided')}</td></tr>
+              ${booking.business_name ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.business_name)}</td></tr>` : ''}
+              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td><td style="padding: 8px 0; color: #111827;">${booking.id_photo_data ? `Attached (<code>${esc(booking.id_photo_name || 'id-photo')}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter</span>'}</td></tr>
               <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol:</td><td style="padding: 8px 0; color: #111827;">${booking.serving_alcohol === true ? '<strong style="color: #b45309;">Yes — alcohol present</strong>' : booking.serving_alcohol === false ? 'No' : 'Not specified'}</td></tr>
-              ${booking.serving_alcohol === true ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td><td style="padding: 8px 0; color: #111827;">${booking.coi_document_data ? `Attached (<code>${booking.coi_document_name || 'coi'}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter before the event</span>'}</td></tr>` : ''}
+              ${booking.serving_alcohol === true ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td><td style="padding: 8px 0; color: #111827;">${booking.coi_document_data ? `Attached (<code>${esc(booking.coi_document_name || 'coi')}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter before the event</span>'}</td></tr>` : ''}
             </table>
           </div>
 
@@ -837,7 +873,7 @@ const EMAIL_TEMPLATES = {
   // and treats identical repeated content as a strong spam/promotions signal,
   // which is how "sent by Resend" still ended up as "client never saw it".
   clientOnboarding: (booking) => ({
-    subject: `Welcome to Merritt Wellness — Important Info for ${booking.event_name || 'Your Upcoming Event'}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''}`,
+    subject: `Welcome to Merritt Wellness — Important Info for ${esc(booking.event_name || 'Your Upcoming Event')}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -851,10 +887,10 @@ const EMAIL_TEMPLATES = {
           <!-- Welcome Message -->
           <div style="margin-bottom: 25px;">
             <p style="color: #374151; line-height: 1.6; margin: 0;">
-              Hi ${booking.contact_name},
+              Hi ${esc(booking.contact_name)},
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
-              Thank you so much for booking <strong>${booking.event_name || 'your event'}</strong>${booking.event_date ? ` on ${formatEventDateShort(booking.event_date)}` : ''} at Merritt Wellness. We truly appreciate your business and are excited to host you in our space.
+              Thank you so much for booking <strong>${esc(booking.event_name || 'your event')}</strong>${booking.event_date ? ` on ${formatEventDateShort(booking.event_date)}` : ''} at Merritt Wellness. We truly appreciate your business and are excited to host you in our space.
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
               Now that your booking is confirmed and payment and agreements are complete, we want to share a few important details to ensure everything runs smoothly leading up to—and during—your event.
@@ -1011,7 +1047,7 @@ const EMAIL_TEMPLATES = {
   publicEventMarketing: (booking) => ({
     // The date keeps repeat bookings of the same event name out of a single
     // collapsed Gmail thread (see the clientOnboarding subject note).
-    subject: `Let's promote ${booking.event_name}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''} together — materials we need from you`,
+    subject: `Let's promote ${esc(booking.event_name)}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''} together — materials we need from you`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -1025,10 +1061,10 @@ const EMAIL_TEMPLATES = {
           <!-- Intro -->
           <div style="margin-bottom: 25px;">
             <p style="color: #374151; line-height: 1.6; margin: 0;">
-              Hi ${booking.contact_name},
+              Hi ${esc(booking.contact_name)},
             </p>
             <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
-              Thank you for booking <strong>${booking.event_name}</strong> as a <strong>public event</strong> at Merritt Wellness. Because it's open to the community, we'd love to help you spread the word — at no extra cost — as part of a collaborative marketing effort. Here's exactly what we offer and the materials we'll need from you to make it happen.
+              Thank you for booking <strong>${esc(booking.event_name)}</strong> as a <strong>public event</strong> at Merritt Wellness. Because it's open to the community, we'd love to help you spread the word — at no extra cost — as part of a collaborative marketing effort. Here's exactly what we offer and the materials we'll need from you to make it happen.
             </p>
           </div>
 
@@ -1145,7 +1181,7 @@ const EMAIL_TEMPLATES = {
     }).join('');
 
     return {
-      subject: `Your ${monthLabel} invoice — ${booking.event_name}`,
+      subject: `Your ${monthLabel} invoice — ${esc(booking.event_name)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
           <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -1155,9 +1191,9 @@ const EMAIL_TEMPLATES = {
               <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
             </div>
 
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${booking.contact_name},</p>
+            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
             <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
-              Here is your upcoming ${monthLabel} invoice for <strong>${booking.event_name}</strong>. The charge below will appear on your ${paymentMethod === 'ach' ? 'bank' : 'card'} statement shortly after the billing date.
+              Here is your upcoming ${monthLabel} invoice for <strong>${esc(booking.event_name)}</strong>. The charge below will appear on your ${paymentMethod === 'ach' ? 'bank' : 'card'} statement shortly after the billing date.
             </p>
 
             <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -1231,11 +1267,11 @@ const EMAIL_TEMPLATES = {
     const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
     const renderRow = (r) => `<tr>
-      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.contactName || ''}<br><span style="color: #6b7280; font-size: 12px;">${r.eventName || ''}</span></td>
+      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${esc(r.contactName || '')}<br><span style="color: #6b7280; font-size: 12px;">${esc(r.eventName || '')}</span></td>
       <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.occurrenceCount != null ? r.occurrenceCount : '—'}</td>
       <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.totalHours != null ? `${r.totalHours} hrs` : '—'}</td>
       <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.amount != null ? money(r.amount) : '—'}</td>
-      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${r.note || ''}</td>
+      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${esc(r.note || '')}</td>
     </tr>`;
 
     const tableHead = `<thead><tr>
@@ -1305,7 +1341,7 @@ const EMAIL_TEMPLATES = {
             ${results.failed.length > 0 ? `
             <div style="background: #fee2e2; padding: 16px; border-radius: 8px; margin-top: 20px;">
               <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">Failure Details</h3>
-              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${r.eventName || r.bookingId}:</strong> ${r.error || 'Unknown error'}</p>`).join('')}
+              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${esc(r.eventName || r.bookingId)}:</strong> ${esc(r.error || 'Unknown error')}</p>`).join('')}
             </div>
             ` : ''}
 
@@ -1552,6 +1588,22 @@ function extractBase64FromDataUrl(dataUrl) {
   return dataUrl.slice(commaIndex + 'base64,'.length);
 }
 
+// The renter chooses the uploaded file's name, and it becomes the filename of
+// an attachment that lands in a staff mailbox. Strip anything that could be
+// read as a path or a control character before it gets there: a name like
+// "../../.bashrc" or one carrying a newline is the renter's choice, not ours,
+// and mail clients vary in how carefully they handle it.
+function safeAttachmentFilename(name, fallback) {
+  const cleaned = String(name || '')
+    // Path separators and traversal segments.
+    .replace(/[\\/]/g, '_')
+    .replace(/\.{2,}/g, '.')
+    // Control characters (a newline here can split a MIME header).
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim();
+  return cleaned || fallback;
+}
+
 // Build a Resend attachment object from the ID photo columns on a booking row,
 // or null if no photo is present. Resend accepts a `content` base64 string.
 function buildIdPhotoAttachment(booking) {
@@ -1561,7 +1613,7 @@ function buildIdPhotoAttachment(booking) {
   // Derive a filename with the correct extension when the stored name lacks one.
   const mime = booking.id_photo_type || 'image/jpeg';
   const ext = mime.split('/')[1]?.split('+')[0] || 'jpg';
-  const rawName = (booking.id_photo_name || `id-photo-${booking.id}`).trim();
+  const rawName = safeAttachmentFilename(booking.id_photo_name, `id-photo-${booking.id}`);
   const filename = /\.[a-z0-9]+$/i.test(rawName) ? rawName : `${rawName}.${ext}`;
 
   return {
@@ -1579,7 +1631,7 @@ function buildCoiAttachment(booking) {
 
   const mime = booking.coi_document_type || 'application/pdf';
   const ext = mime === 'application/pdf' ? 'pdf' : (mime.split('/')[1]?.split('+')[0] || 'pdf');
-  const rawName = (booking.coi_document_name || `coi-${booking.id}`).trim();
+  const rawName = safeAttachmentFilename(booking.coi_document_name, `coi-${booking.id}`);
   const filename = /\.[a-z0-9]+$/i.test(rawName) ? rawName : `${rawName}.${ext}`;
 
   return {
@@ -2027,7 +2079,9 @@ function inquiryDetailRows(inquiry) {
   ];
   return rows
     .filter(([, v]) => v)
-    .map(([k, v]) => `<tr><td style="padding: 4px 12px 4px 0; color: #6b5f5b; white-space: nowrap;"><strong>${k}</strong></td><td style="padding: 4px 0; color: #4a3f3c;">${v}</td></tr>`)
+    // `k` is our own label; `v` is whatever the inquirer typed, so it is the
+    // half that gets escaped.
+    .map(([k, v]) => `<tr><td style="padding: 4px 12px 4px 0; color: #6b5f5b; white-space: nowrap;"><strong>${k}</strong></td><td style="padding: 4px 0; color: #4a3f3c;">${esc(v)}</td></tr>`)
     .join('');
 }
 
@@ -2035,7 +2089,7 @@ export async function sendInquiryAck(inquiry) {
   const isWaitlist = inquiry.kind === 'waitlist';
   const heading = isWaitlist ? "You're on the list" : 'We received your inquiry';
   const body = isWaitlist
-    ? `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${inquiry.startWindow}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
+    ? `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${esc(inquiry.startWindow)}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
     : `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (720) 357-9499.</p>`;
 
   const template = {
@@ -2046,7 +2100,7 @@ export async function sendInquiryAck(inquiry) {
         <h2 style="color: #735e59; text-align: center;">${heading}</h2>
         ${body}
         <table style="margin: 16px 0; border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
-        ${inquiry.message ? `<p style="color: #6b5f5b; line-height: 1.6; border-left: 3px solid #a08b84; padding-left: 12px;">${inquiry.message}</p>` : ''}
+        ${inquiry.message ? `<p style="color: #6b5f5b; line-height: 1.6; border-left: 3px solid #a08b84; padding-left: 12px;">${esc(inquiry.message)}</p>` : ''}
         <p style="color: #4a3f3c; line-height: 1.6;">Warmly,<br/>The Merritt Wellness team<br/>2246 Irving Street, Denver</p>
       </div>`,
   };
@@ -2071,8 +2125,8 @@ export async function sendInquiryNotification(inquiry) {
       <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 16px;">
         <h2 style="color: #735e59;">${inquiryKindLabel(inquiry)}</h2>
         <table style="border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
-        ${inquiry.message ? `<h3 style="color: #735e59; margin-bottom: 4px;">Message</h3><p style="color: #333; line-height: 1.5; white-space: pre-wrap;">${inquiry.message}</p>` : ''}
-        <p style="color: #888; font-size: 12px;">Submitted via merrittwellness.net (${inquiry.page || 'unknown page'}). Reply goes straight to the inquirer.</p>
+        ${inquiry.message ? `<h3 style="color: #735e59; margin-bottom: 4px;">Message</h3><p style="color: #333; line-height: 1.5; white-space: pre-wrap;">${esc(inquiry.message)}</p>` : ''}
+        <p style="color: #888; font-size: 12px;">Submitted via merrittwellness.net (${esc(inquiry.page || 'unknown page')}). Reply goes straight to the inquirer.</p>
       </div>`,
   };
 

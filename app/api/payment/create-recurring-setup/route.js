@@ -7,24 +7,19 @@
 // monthly auto-debit avoids the 3% card processing fee on every invoice.
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '../../../lib/supabase-server.js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
+import { corsHeaders, corsPreflightResponse } from '../../../lib/http.js';
 
 const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
 }));
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// Creates a Stripe Customer and SetupIntent per call. Cap it so a booking id
+// can't be used to spray Stripe objects.
+const RATE_LIMIT = { bucket: 'create-recurring-setup', limit: 15, windowMs: 60_000 };
 
 async function getOrCreateCustomerForBooking(booking, paymentMethod) {
   // Reuse the Stripe Customer if one was already created for this booking —
@@ -74,6 +69,11 @@ async function getOrCreateCustomerForBooking(booking, paymentMethod) {
 }
 
 export async function POST(request) {
+  const CORS_HEADERS = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, RATE_LIMIT, CORS_HEADERS);
+  if (limited) return limited;
+
   try {
     const { bookingId, paymentMethod } = await request.json();
 
@@ -170,13 +170,14 @@ export async function POST(request) {
     return Response.json(
       {
         success: false,
-        error: error.message || 'Failed to create setup intent',
+        // Stripe messages can leak internals; the log above has the detail.
+        error: 'Failed to create setup intent',
       },
       { status: 500, headers: CORS_HEADERS }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflightResponse(request);
 }

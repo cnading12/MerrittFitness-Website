@@ -1,49 +1,37 @@
 // middleware.js
-// FIXED VERSION - Excludes webhook endpoints
+//
+// Applies the security headers to every page response. The policy itself —
+// and the reasoning behind each header — lives in app/lib/security-headers.js
+// so it can be unit tested without the Next runtime (see
+// tests/security-headers.test.mjs).
 
 import { NextResponse } from 'next/server'
 
+import { securityHeaders, isWebhookPath } from './app/lib/security-headers.js'
+
 export function middleware(request) {
-  // CRITICAL: Skip middleware for webhook endpoints
-  // Webhooks need raw request bodies and can't have any interference
-  if (request.nextUrl.pathname.startsWith('/api/webhooks/') || 
-      request.nextUrl.pathname.startsWith('/api/stripe-webhook')) {
-    console.log('⚡ Bypassing middleware for webhook:', request.nextUrl.pathname);
+  // CRITICAL: Skip middleware for webhook endpoints.
+  // Stripe verifies a signature over the raw request body; anything done to
+  // that request risks breaking verification, which would silently stop paid
+  // bookings from ever being confirmed.
+  if (isWebhookPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
-  // Create response
+  const isApi = request.nextUrl.pathname.startsWith('/api/');
+
   const response = NextResponse.next();
-
-  // Add security headers
-  response.headers.set('X-Robots-Tag', 'index, follow');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-
-  // Get user agent for security checks
-  const userAgent = request.headers.get('user-agent') || '';
-
-  // Block suspicious requests (basic protection)
-  const suspiciousPatterns = [
-    'sqlmap', 'nikto', 'scanner', 'hack'
-  ];
-
-  const isSuspicious = suspiciousPatterns.some(pattern =>
-    userAgent.toLowerCase().includes(pattern)
-  );
-
-  if (isSuspicious) {
-    console.log('🚫 Blocked suspicious request:', userAgent);
-    return new Response('Access Denied', { status: 403 });
+  for (const [name, value] of Object.entries(securityHeaders({ isApi }))) {
+    response.headers.set(name, value);
   }
 
-  // Log API requests for monitoring (but not webhooks)
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    console.log('📊 API request from:', ip, 'to:', request.nextUrl.pathname);
-  }
+  // Note: no user-agent blocklist.
+  //
+  // The previous version 403'd any request whose UA contained "sqlmap",
+  // "nikto", "scanner" or "hack". That stopped nobody — a scanner's UA is a
+  // command-line flag away from anything — while blocking legitimate visitors
+  // whose UA happened to contain "hack" as a substring. Rate limiting and
+  // input validation are what actually bound abuse here.
 
   return response;
 }

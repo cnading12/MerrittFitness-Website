@@ -18,7 +18,7 @@
 // Everything is wrapped per-booking so one failure doesn't halt the run.
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from './supabase-server.js';
 import { lazyClient } from './lazy-client.js';
 
 import { computeOccurrences, summarizeOccurrences } from './recurring-occurrences.js';
@@ -37,11 +37,6 @@ const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
 }));
-
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
-));
 
 const DEFAULT_HOURLY_RATE = 95;
 

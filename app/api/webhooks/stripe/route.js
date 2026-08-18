@@ -2,7 +2,11 @@
 // FIXED VERSION 5.2 - Handles 307 redirects
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import {
+  supabaseServer as supabase,
+  supabaseConfigured,
+  usingServiceRoleKey,
+} from '../../../lib/supabase-server.js';
 import { lazyClient } from '../../../lib/lazy-client.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { ensureCalendarEvent, sendBookingEmails, isPublicBooking } from '../../../lib/booking-fulfillment.js';
@@ -14,11 +18,6 @@ const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 }));
 
-// Initialize Supabase
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
 
 // CRITICAL: Configuration to prevent Next.js issues
 export const dynamic = 'force-dynamic';
@@ -537,7 +536,8 @@ export async function GET() {
       stripeKey: !!process.env.STRIPE_SECRET_KEY,
       resendKey: !!process.env.RESEND_API_KEY,
       supabaseUrl: !!process.env.SUPABASE_URL,
-      supabaseKey: !!process.env.SUPABASE_ANON_KEY
+      supabaseKey: supabaseConfigured(),
+      supabaseUsingServiceRole: usingServiceRoleKey()
     },
     version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
   });

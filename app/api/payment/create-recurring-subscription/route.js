@@ -8,6 +8,8 @@
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
+import { corsHeaders, corsPreflightResponse } from '../../../lib/http.js';
 
 // CRITICAL: This route sends the recurring setup + onboarding emails inline.
 // Without this, Vercel's default (~10s) function timeout kills the handler
@@ -15,13 +17,16 @@ import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js'
 // sends email MUST export a maxDuration.
 export const maxDuration = 60;
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// Creates a Stripe Subscription and sends the recurring email set. Idempotent,
+// but each call still costs Stripe API traffic and email budget.
+const RATE_LIMIT = { bucket: 'create-recurring-subscription', limit: 10, windowMs: 60_000 };
 
 export async function POST(request) {
+  const CORS_HEADERS = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, RATE_LIMIT, CORS_HEADERS);
+  if (limited) return limited;
+
   try {
     const { bookingId, setupIntentId } = await request.json();
 
@@ -73,13 +78,14 @@ export async function POST(request) {
     return Response.json(
       {
         success: false,
-        error: error.message || 'Failed to create recurring subscription',
+        // Stripe / database messages stay in the log, not the response.
+        error: 'Failed to create recurring subscription',
       },
       { status: 500, headers: CORS_HEADERS }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflightResponse(request);
 }

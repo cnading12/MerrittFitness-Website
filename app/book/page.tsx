@@ -132,24 +132,26 @@ export default function BookingPage() {
   const [promoCode, setPromoCode] = useState('');
   const [promoCodeApplied, setPromoCodeApplied] = useState(false);
   const [promoCodeError, setPromoCodeError] = useState('');
+  const [promoCodeChecking, setPromoCodeChecking] = useState(false);
 
-  // Valid promo codes configuration. Mirrors VALID_PROMO_CODES in
-  // app/lib/booking-pricing.js (the server re-validates). The `sponsored` flag
-  // comps the entire booking — $0 total, no fees, no card required.
-  const VALID_PROMO_CODES = {
-    // `partner: true` marks the 20% partnership code as a "recurring partner"
-    // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
-    // coverage on repeat events — but everyone, partners included, pays on their
-    // first event. Mirrors VALID_PROMO_CODES in app/lib/booking-pricing.js.
-    'MerrittMagic': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-    // Fully comped — $0 total, no card, confirmed immediately (this behavior
-    // used to live on MerrittSponsor100).
-    'COLESTEST': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
-    // Venue comped but STAFFING still billed: the only charge is the $35
-    // first-hour onboarding (<40 attendees, required even for returning
-    // renters) or $30/hr full-event supervision (40+ attendees).
-    'MerrittSponsor100': { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true }
-  };
+  // Metadata for the ONE code the renter successfully applied, as returned by
+  // /api/validate-promo. Null until a code validates.
+  //
+  // The promo dictionary itself deliberately does NOT live here. This is a
+  // client component, so anything in it ships in the public JS bundle — and
+  // the dictionary contains a fully-comped sponsorship code that skips Stripe,
+  // confirms the booking immediately and puts it on the live calendar. Reading
+  // the bundle was enough to book the venue for free. The codes now live only
+  // in app/lib/booking-pricing.js and are checked over the network.
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount: number;
+    description: string;
+    partner?: boolean;
+    sponsored?: boolean;
+    staffingBilled?: boolean;
+    minHours?: number | null;
+  } | null>(null);
 
   // Automatic extended-booking discount (mirrors app/lib/booking-pricing.js —
   // the server is the source of truth and re-applies it at intake): single-event
@@ -615,37 +617,70 @@ export default function BookingPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // Promo code validation function
-  const applyPromoCode = () => {
+  // Promo code validation. Asks the server rather than checking a local
+  // dictionary — see the `appliedPromo` state above for why the codes are not
+  // allowed anywhere in this file.
+  const applyPromoCode = async () => {
     setPromoCodeError('');
 
-    if (!promoCode.trim()) {
+    const code = promoCode.trim();
+    if (!code) {
       setPromoCodeError('Please enter a promo code');
       return;
     }
 
-    const promoData = VALID_PROMO_CODES[promoCode.trim()];
-    if (promoData) {
-      // Check minimum hours requirement if applicable
-      if (promoData.minHours) {
-        const pricing = calculatePricing();
-        if (pricing.totalHours < promoData.minHours) {
-          setPromoCodeApplied(false);
-          setPromoCodeError(`This code requires a reservation of ${promoData.minHours}+ hours. Your current booking is ${pricing.totalHours} hour${pricing.totalHours !== 1 ? 's' : ''}.`);
-          return;
-        }
+    setPromoCodeChecking(true);
+    let promoData;
+    try {
+      const response = await fetch('/api/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result?.valid) {
+        setPromoCodeApplied(false);
+        setAppliedPromo(null);
+        // 429 from the guess-rate limiter reads as "invalid code" otherwise,
+        // which would have the renter retyping a code that is actually fine.
+        setPromoCodeError(
+          response.status === 429
+            ? 'Too many attempts. Please wait a moment and try again.'
+            : (result?.error || 'Invalid promo code')
+        );
+        return;
       }
-      setPromoCodeApplied(true);
-      setPromoCodeError('');
-    } else {
+      promoData = result;
+    } catch {
       setPromoCodeApplied(false);
-      setPromoCodeError('Invalid promo code');
+      setAppliedPromo(null);
+      setPromoCodeError('Could not check that code right now. Please try again.');
+      return;
+    } finally {
+      setPromoCodeChecking(false);
     }
+
+    // Check minimum hours requirement if applicable
+    if (promoData.minHours) {
+      const pricing = calculatePricing();
+      if (pricing.totalHours < promoData.minHours) {
+        setPromoCodeApplied(false);
+        setAppliedPromo(null);
+        setPromoCodeError(`This code requires a reservation of ${promoData.minHours}+ hours. Your current booking is ${pricing.totalHours} hour${pricing.totalHours !== 1 ? 's' : ''}.`);
+        return;
+      }
+    }
+
+    setAppliedPromo(promoData);
+    setPromoCodeApplied(true);
+    setPromoCodeError('');
   };
 
   const removePromoCode = () => {
     setPromoCode('');
     setPromoCodeApplied(false);
+    setAppliedPromo(null);
     setPromoCodeError('');
   };
 
@@ -674,7 +709,7 @@ export default function BookingPage() {
       : HOURLY_RATE + tier * RATE_TIER_INCREMENT;
   };
   const ON_SITE_ASSISTANCE_FEE = 35; // First-hour onboarding/setup help (flat, once per submission)
-  const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners (MerrittMagic)
+  const MAT_RENTAL_FEE = 100; // Full-floor roll-out mat: $100/booking, waived for partners
   const DIVIDER_REMOVAL_FEE = 1000; // Cafe/lounge divider removal: flat $1000/booking, never waived. Mirrors app/lib/booking-pricing.js.
   const EVENT_SUPERVISION_RATE = 30; // Per hour — on-site supervisor for 40+ attendee events, billed for the entire event
   const EVENT_SUPERVISION_GROUP_THRESHOLD = 40; // Attendee count that triggers supervision requirement
@@ -704,20 +739,17 @@ export default function BookingPage() {
     // mandatory on-site staff coverage — but NOT on their first event, which
     // everyone pays for. Returning-renter status alone does not grant the
     // exemption; only the partnership code does.
-    const appliedPromo = promoCodeApplied && promoCode.trim()
-      ? VALID_PROMO_CODES[promoCode.trim() as keyof typeof VALID_PROMO_CODES]
-      : undefined;
-    const isRecurringPartner = (appliedPromo as { partner?: boolean } | undefined)?.partner === true;
+    const activePromo = promoCodeApplied ? appliedPromo : null;
+    const isRecurringPartner = activePromo?.partner === true;
     const exemptFromStaffCoverage = isRecurringPartner && formData.isFirstEvent !== true;
 
-    // The staffing-billed sponsorship (MerrittSponsor100) comps everything
+    // The staffing-billed sponsorship code comps everything
     // except staff coverage, so staffing is always charged: small events carry
     // the $35 onboarding even for returning renters, and 40+ attendee events
     // pay full-event supervision. Mirrors app/lib/booking-pricing.js.
-    const staffingBilledSponsor =
-      (appliedPromo as { staffingBilled?: boolean } | undefined)?.staffingBilled === true;
+    const staffingBilledSponsor = activePromo?.staffingBilled === true;
 
-    // The MerrittMagic partnership code waives the tables/chairs equipment fees
+    // The partnership code waives the tables/chairs equipment fees
     // for everyone who applies it — no first-event caveat, unlike staff coverage.
     const waivesEquipmentFees = isRecurringPartner;
 
@@ -774,7 +806,7 @@ export default function BookingPage() {
 
         // Tables / chairs equipment fees: each item type is billed separately and
         // scaled by group size, and they stack when both are used. Waived for
-        // renters on the MerrittMagic partnership code.
+        // renters on the partnership code.
         if (!waivesEquipmentFees) {
           const equipmentFeePerItem = attendees >= TABLES_CHAIRS_GROUP_THRESHOLD
             ? TABLES_CHAIRS_FEE_LARGE
@@ -807,18 +839,17 @@ export default function BookingPage() {
     let promoDescription = '';
     let sponsored = false;
     let promoCodeUsed = promoCodeApplied ? promoCode.trim() : '';
-    if (promoCodeApplied && promoCode.trim() && VALID_PROMO_CODES[promoCode.trim()]) {
-      const promoData = VALID_PROMO_CODES[promoCode.trim()];
+    if (activePromo) {
       // Enforce minimum hours requirement when a code carries one
-      if (!promoData.minHours || totalHours >= promoData.minHours) {
+      if (!activePromo.minHours || totalHours >= activePromo.minHours) {
         // Staffing-billed sponsorships discount everything EXCEPT staff
         // coverage: onboarding / supervision fees stay payable in full.
-        const discountBase = (promoData as { staffingBilled?: boolean }).staffingBilled === true
+        const discountBase = activePromo.staffingBilled === true
           ? preDiscountSubtotal - onsiteAssistanceFee - eventSupervisionFee
           : preDiscountSubtotal;
-        promoDiscount = Math.round(discountBase * promoData.discount);
-        promoDescription = promoData.description;
-        sponsored = promoData.sponsored === true;
+        promoDiscount = Math.round(discountBase * activePromo.discount);
+        promoDescription = activePromo.description;
+        sponsored = activePromo.sponsored === true;
       }
     }
 
@@ -1284,7 +1315,7 @@ export default function BookingPage() {
   // Drives the live per-booking supervision/assistance notices below.
   const exemptFromStaffCoverage = pricing.isRecurringPartner && formData.isFirstEvent !== true;
 
-  // MerrittMagic (the partnership code) waives the tables/chairs equipment fees
+  // The partnership code waives the tables/chairs equipment fees
   // for everyone who applies it — drives the live per-booking fee labels below.
   const waivesEquipmentFees = pricing.isRecurringPartner;
 
@@ -2006,7 +2037,7 @@ export default function BookingPage() {
                     {/* Tables & Chairs equipment fees. Each item type is $25 for
                         events under 40 attendees and $50 for 40+, billed per
                         booking and stacking when both are used. Waived on
-                        MerrittMagic. */}
+                        the partnership code. */}
                     {(() => {
                       const equipmentFee = (parseInt(booking.expectedAttendees, 10) || 0) >= 40 ? 50 : 25;
                       return (
@@ -2036,7 +2067,7 @@ export default function BookingPage() {
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
                             {waivesEquipmentFees
-                              ? 'Tables and chairs are included at no extra charge with your MerrittMagic partnership.'
+                              ? 'Tables and chairs are included at no extra charge with your partnership.'
                               : 'Each is $25 for events under 40 attendees and $50 for 40+ attendees. Fees stack if you use both.'}
                           </p>
                         </div>
@@ -2046,7 +2077,7 @@ export default function BookingPage() {
                     {/* Roll-out mat rental. Flat $100/booking whether the renter uses
                         one section or the full floor — covers our staff setting up the
                         mat (~30 min, inside the booked window) — unless the renter is a
-                        partner (MerrittMagic), in which case it's free but self-serviced.
+                        partner, in which case it's free but self-serviced.
                         Either way setup/breakdown happens within the booked window. */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -2061,13 +2092,13 @@ export default function BookingPage() {
                         />
                         <span>
                           Rent the roll-out mat{' '}
-                          {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
+                          {promoCodeApplied && appliedPromo?.partner === true
                             ? '(included with partnership)'
                             : '(+$100)'}
                         </span>
                       </label>
                       <p className="text-xs text-gray-500 mt-2">
-                        {promoCodeApplied && promoCode.trim() === 'MerrittMagic'
+                        {promoCodeApplied && appliedPromo?.partner === true
                           ? 'Our roll-out mat can fill the entire main hall — use just a section or the whole floor. Included at no charge for partners. As a partner, setup and breakdown of the mat are your responsibility and must happen within your reserved time.'
                           : 'Our roll-out mat can fill the entire main hall — great for martial arts, yoga, and sound baths. Use just a section or the whole floor; the cost is the same $100. Our team handles setup for you, but it takes place during your booked event time — expect about 30 minutes.'}
                       </p>
@@ -3417,9 +3448,10 @@ export default function BookingPage() {
                       />
                       <button
                         onClick={applyPromoCode}
-                        className="px-3 py-2 bg-[#735e59] text-white text-sm rounded-lg hover:bg-[#5a4a46] transition-colors"
+                        disabled={promoCodeChecking}
+                        className="px-3 py-2 bg-[#735e59] text-white text-sm rounded-lg hover:bg-[#5a4a46] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        Apply
+                        {promoCodeChecking ? 'Checking…' : 'Apply'}
                       </button>
                     </div>
                     {promoCodeError && (
