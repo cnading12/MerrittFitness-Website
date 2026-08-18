@@ -7,8 +7,8 @@
 // selected tables + chairs + mat, and the calendar event / confirmation email
 // showed "None requested" / "No" for all of them.
 //
-// The fully-comped code is COLESTEST (it took over the no-payment behavior
-// that used to live on MerrittSponsor100, which now bills staffing).
+// The fully-comped code takes no payment at all; the separate sponsorship
+// code still bills staffing.
 //
 // We mock every external dependency (Supabase, Google Calendar, Resend,
 // Stripe) so both routes can be invoked end-to-end without network calls.
@@ -293,7 +293,7 @@ async function fireWebhook(bookingId) {
 
 test('sponsored booking: equipment flags are persisted to the DB row', async () => {
   resetState();
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
   assert.equal(body.sponsored, true, 'booking should be recognized as sponsored');
@@ -308,7 +308,7 @@ test('sponsored booking: equipment flags are persisted to the DB row', async () 
 
 test('sponsored booking: calendar event lists tables, chairs, and mat', async () => {
   resetState();
-  await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
+  await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE' }));
 
   assert.equal(calendarInserts.length, 1, 'sponsored path must create the calendar event immediately');
   const description = calendarInserts[0].description;
@@ -319,7 +319,7 @@ test('sponsored booking: calendar event lists tables, chairs, and mat', async ()
 
 test('sponsored booking: confirmation + manager emails reflect the equipment selections', async () => {
   resetState();
-  await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
+  await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE' }));
 
   const confirmation = sentEmails.find((e) => /Booking Confirmed/i.test(e.subject));
   assert.ok(confirmation, `customer confirmation email should be sent; got subjects: ${sentEmails.map((e) => e.subject).join(' | ')}`);
@@ -338,7 +338,7 @@ test('partially-migrated DB: a missing UNRELATED column must not drop the equipm
   // ONLY the missing column — not the whole "newest columns" layer.
   dbState.missingColumns = new Set(['serving_alcohol']);
 
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
 
@@ -368,7 +368,7 @@ test('equipment columns missing entirely: sponsored calendar + emails still refl
     'needs_tables', 'needs_chairs', 'tables_chairs_fees', 'needs_mat', 'mat_rental_fee',
   ]);
 
-  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'COLESTEST' }));
+  const { response, body } = await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE' }));
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
 
@@ -384,7 +384,7 @@ test('equipment columns missing entirely: sponsored calendar + emails still refl
 test('sponsored booking: divider removal is persisted and surfaces on calendar + emails', async () => {
   resetState();
   const { response, body } = await submitBooking(
-    buildSubmission({ promoCode: 'COLESTEST', needsDividerRemoval: true })
+    buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE', needsDividerRemoval: true })
   );
   assert.equal(response.status, 200, JSON.stringify(body));
   assert.equal(body.success, true);
@@ -413,7 +413,7 @@ test('sponsored booking: divider removal is persisted and surfaces on calendar +
 
 test('booking without divider removal shows the dividers as in place', async () => {
   resetState();
-  await submitBooking(buildSubmission({ promoCode: 'COLESTEST', needsDividerRemoval: false }));
+  await submitBooking(buildSubmission({ promoCode: 'MERRITT-COMP-MZ2BVJYE', needsDividerRemoval: false }));
 
   const description = calendarInserts[0]?.description || '';
   assert.match(description, /Cafe\/lounge dividers: In place/, 'calendar should show the dividers staying in place');

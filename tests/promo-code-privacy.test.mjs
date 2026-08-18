@@ -2,7 +2,7 @@
 //
 // The booking page used to carry the whole promo dictionary in a client
 // component, so every code shipped in the public JavaScript bundle. One of
-// them (`COLESTEST`) comps the booking 100%: a sponsored booking skips Stripe
+// them comps the booking 100%: a sponsored booking skips Stripe
 // entirely, is confirmed on the spot, and books the live Google Calendar.
 // Reading devtools was therefore enough to rent the venue for free.
 //
@@ -21,7 +21,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const { VALID_PROMO_CODES } = await import('../app/lib/booking-pricing.js');
+const { VALID_PROMO_CODES, SPONSORED_PROMO_CODES } = await import('../app/lib/booking-pricing.js');
+const { SPONSORED_PROMO_CODES: CALENDAR_SPONSORED_CODES } =
+  await import('../app/lib/calendar-flags.js');
 const { POST: validatePromo } = await import('../app/api/validate-promo/route.js');
 const { __resetRateLimits } = await import('../app/lib/rate-limit.js');
 
@@ -145,4 +147,43 @@ test('the code lookup cannot be tricked by inherited Object properties', async (
     const { body } = await postCode(probe, '198.51.100.12');
     assert.equal(body.valid, false, `"${probe}" must not validate as a promo code`);
   }
+});
+
+
+test('the calendar-flags copy of the sponsored list matches booking-pricing', () => {
+  // app/lib/calendar-flags.js keeps its own copy of this list so it can stay
+  // free of heavier imports. That is a deliberate trade, but it means a
+  // rotated code has to be changed in TWO places — and forgetting the second
+  // one fails silently: the booking is still comped, but it stops being
+  // labelled "Sponsored" on the calendar and in staff emails, so nobody
+  // notices until someone asks why a free booking looks like a paid one.
+  assert.deepEqual(
+    [...CALENDAR_SPONSORED_CODES].sort(),
+    [...SPONSORED_PROMO_CODES].sort(),
+    'calendar-flags.js SPONSORED_PROMO_CODES has drifted from booking-pricing.js'
+  );
+});
+
+test('the retired promo codes are gone everywhere', () => {
+  // These shipped in the public bundle and must never come back — not in the
+  // dictionary, not in a comment, not in a test fixture.
+  const RETIRED = ['MerrittMagic', 'COLESTEST', 'MerrittSponsor100'];
+  const files = [
+    ...sourceFiles('app'),
+    ...sourceFiles('components'),
+    ...readdirSync('app/lib').map((f) => join('app/lib', f)).filter((f) => f.endsWith('.js')),
+  ];
+
+  const offenders = [];
+  for (const file of files) {
+    const contents = readFileSync(file, 'utf8');
+    for (const code of RETIRED) {
+      // The rotation note in booking-pricing.js names them on purpose, as a
+      // record of what was burned. Everything else must be clean.
+      if (contents.includes(code) && !file.endsWith('booking-pricing.js')) {
+        offenders.push(`${file} still references retired code "${code}"`);
+      }
+    }
+  }
+  assert.deepEqual(offenders, [], offenders.join('\n'));
 });

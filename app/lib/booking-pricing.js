@@ -52,7 +52,7 @@ export function hourlyRateFor(attendees, isSat = false) {
 // Recurring volume discount. A recurring schedule whose slots guarantee at
 // least 8 hours in EVERY calendar month (weekly slots land ≥4×, biweekly ≥2×,
 // monthly 1×) automatically bills 20% off the attendee-tiered hourly rate —
-// both the weekday and Saturday band rates. This mirrors the MerrittMagic
+// both the weekday and Saturday band rates. This mirrors the partnership
 // partnership discount (also 20% for 8+ hrs/month) but applies itself: no
 // promo code needed on the recurring application. The discount is decided
 // once at intake from the schedule and baked into the stored rates, so every
@@ -227,7 +227,7 @@ export const EVENT_SUPERVISION_GROUP_THRESHOLD = 40;
 export const STRIPE_FEE_PERCENTAGE = 3;            // % surcharge for card payments
 
 // Equipment fees for tables and chairs. Charged per item type, per booking, and
-// scaled by group size. Renters on the MerrittMagic partnership code are waived
+// scaled by group size. Renters on the partnership code are waived
 // these fees entirely (see calculateAccuratePricing).
 export const TABLES_CHAIRS_FEE_SMALL = 25;         // < 40 attendees, per item type (tables / chairs)
 export const TABLES_CHAIRS_FEE_LARGE = 50;         // 40+ attendees, per item type (tables / chairs)
@@ -270,24 +270,38 @@ export const EXTENDED_BOOKING_DISCOUNT_DESCRIPTION =
 // Promo codes. These must stay in sync with the client-side dictionary in
 // app/booking/page.tsx — the server is the source of truth, but the UI shows
 // the discount before submit, so any drift is user-visible.
+// ROTATED 2026-08. The previous codes (MerrittMagic / COLESTEST /
+// MerrittSponsor100) were hardcoded in a client component and therefore shipped
+// in the public JavaScript bundle for as long as that code was deployed —
+// anyone who opened devtools could read them, and one of them comps a booking
+// 100%. Treat the old strings as burned; they are dead and must never come
+// back.
+//
+// The replacements carry ~40 bits of entropy in the suffix (8 characters from a
+// 31-character alphabet with 0/O and 1/I/L removed, so nothing is confusable
+// when read aloud or typed off an email). Combined with the 10-guesses-per-
+// minute cap on /api/validate-promo, guessing one is not a realistic attack.
+//
+// Matching is EXACT and case-sensitive (see calculateAccuratePricing below), so
+// share them exactly as written here.
 export const VALID_PROMO_CODES = {
   // The 20% partnership discount also flags the renter as a "recurring partner"
   // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
   // coverage — except on their very first event, which everyone pays for.
-  MerrittMagic: { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
+  'MERRITT-PARTNER-W3BJG56Q': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
   // Fully sponsored events: 100% off, zero fees, no payment collected. The
   // renter is never sent to checkout — the booking is confirmed immediately.
   // The `sponsored` flag is what the booking flow keys off of to skip payment
   // and what the calendar / emails use to label the reservation "Sponsored".
-  // (This fully-comped behavior used to live on MerrittSponsor100.)
-  COLESTEST: { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
+  // (This is the fully-comped code — no payment, no card, self-confirming.)
+  'MERRITT-COMP-MZ2BVJYE': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
   // Venue-sponsored events where STAFFING is still billed: venue time, Saturday
   // premium, equipment, and mat are all comped, but mandatory staff coverage is
   // charged in full — the flat $35 first-hour onboarding for <40-attendee
   // events (required on every sponsored event, even for returning renters), or
   // $30/hr supervision for the ENTIRE event at 40+ attendees (e.g. 70 people
   // for 4 hours = $120). Payment IS collected, so no `sponsored` flag here.
-  MerrittSponsor100: { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true },
+  'MERRITT-SPONSOR-Z68KV6YY': { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true },
 };
 
 // Codes that comp the entire booking (no payment, no card). Kept as a derived
@@ -378,7 +392,7 @@ export function endsBy10PM(startTime, hoursRequested) {
 //   * 2-hour minimum per booking unless the renter is recurring.
 //   * Tables and chairs each add an equipment fee, per booking, scaled by group
 //     size: <40 attendees = $25, 40+ = $50. Tables and chairs stack (a 60-person
-//     event using both pays $50 + $50 = $100). Renters on the MerrittMagic
+//     event using both pays $50 + $50 = $100). Renters on the partnership code
 //     partnership code are waived these fees entirely.
 //   * Cafe/lounge divider removal adds a flat $1,000 per booking that requests
 //     it (staff removes and reinstalls the glass/wood dividers). Never waived.
@@ -430,14 +444,14 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   // does not grant the exemption; only the partnership code does.
   const isRecurringPartner = isPartnerPromoCode(clientPromoCode);
 
-  // The MerrittMagic partnership code also waives the tables/chairs equipment
+  // The partnership code also waives the tables/chairs equipment
   // fees. Unlike the staff-coverage exemption, this waiver has no first-event
-  // caveat — anyone on MerrittMagic pays no equipment fee.
+  // caveat — anyone on the partnership code pays no equipment fee.
   const waivesEquipmentFees = isPartnerPromoCode(clientPromoCode);
   const exemptFromStaffCoverage =
     isRecurringPartner && contactInfo.isFirstEvent !== true;
 
-  // The staffing-billed sponsorship (MerrittSponsor100) comps everything except
+  // The staffing-billed sponsorship code comps everything except
   // staff coverage — so staffing is always charged: small events carry the $35
   // first-hour onboarding even for returning renters who didn't opt in, and 40+
   // attendee events pay full-event supervision as usual.
@@ -482,7 +496,7 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
     // Tables / chairs equipment fees. Each item type is billed separately and
     // scaled by group size; they stack when both are used. Waived for renters on
-    // the MerrittMagic partnership code.
+    // the partnership code.
     if (!waivesEquipmentFees) {
       const equipmentFeePerItem = attendees >= TABLES_CHAIRS_GROUP_THRESHOLD
         ? TABLES_CHAIRS_FEE_LARGE

@@ -29,10 +29,16 @@ export const SUPERVISION_GROUP_THRESHOLD = 40;
 // Codes that comp the entire booking (no payment collected). Mirrors
 // SPONSORED_PROMO_CODES in app/lib/booking-pricing.js — duplicated here so this
 // module stays dependency-free (same rationale as SUPERVISION_GROUP_THRESHOLD).
-// NOTE: MerrittSponsor100 is intentionally NOT in this list anymore — it now
-// bills staffing (onboarding / supervision), so payment IS collected and the
-// "fully comped, no payment" badge and $0.00 labels must not apply to it.
-export const SPONSORED_PROMO_CODES = ['COLESTEST'];
+// NOTE: the staffing-billed sponsorship code is intentionally NOT in this list
+// — it bills staffing (onboarding / supervision), so payment IS collected and
+// the "fully comped, no payment" badge and $0.00 labels must not apply to it.
+//
+// ⚠️ This list is a COPY. If you rotate a promo code in booking-pricing.js you
+// must rotate it here too, or sponsored bookings silently stop being labelled
+// "Sponsored" on the calendar and in emails while still being comped — a
+// failure with no error attached to it.
+// tests/promo-code-privacy.test.mjs asserts the two lists agree.
+export const SPONSORED_PROMO_CODES = ['MERRITT-COMP-MZ2BVJYE'];
 
 // A booking is "sponsored" when it was comped via a sponsored promo code (or an
 // explicit is_sponsored flag, if the column is ever added). Derived from the
