@@ -6,18 +6,13 @@
 // bill and how the monthly cron (next PR) will add each subsequent month.
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from './supabase-server.js';
 import { lazyClient } from './lazy-client.js';
 
 const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
   typescript: false,
 }));
-
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
 
 // Cached on a first call; we only need one product + one $0 price to share
 // across every recurring booking since actual amounts come from invoice items.

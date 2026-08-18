@@ -2,8 +2,7 @@
 // FIXED VERSION - Eliminates duplicate calendar event creation
 
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from '../../lib/lazy-client.js';
+import { supabaseServer as supabase } from '../../lib/supabase-server.js';
 import { z } from 'zod';
 import {
   isSaturday,
@@ -17,6 +16,8 @@ import {
 // Stripe, so this route confirms them immediately and runs the same side
 // effects directly via the shared fulfillment helper.
 import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsHeaders, corsPreflightResponse, withCors, requestTooLarge } from '../../lib/http.js';
 
 // CRITICAL: The sponsored path sends the calendar + email pipeline inline.
 // Without this, Vercel's default (~10s) function timeout kills the handler
@@ -24,11 +25,19 @@ import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
 // send. Every route that sends email MUST export a maxDuration.
 export const maxDuration = 60;
 
-// Initialize Supabase
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// This is the most expensive anonymous endpoint in the app: it accepts an ID
+// photo plus an optional COI (megabytes of base64), writes them to the
+// database, and on the sponsored path also books the Google Calendar and sends
+// the whole email set. Five submissions per 10 minutes is generous for a human
+// filling in a booking form — including retries after a validation error — and
+// far too slow to be a useful way to fill the database.
+const RATE_LIMIT = { bucket: 'booking-request', limit: 5, windowMs: 10 * 60_000 };
+
+// Backstop above the schema's own caps (8 MB ID photo + 10 MB COI, base64
+// inflated by ~4/3, plus form fields). Anything larger than this is not a
+// booking, so don't buffer it.
+const MAX_BODY_BYTES = 30 * 1024 * 1024;
+
 
 // UPDATED: Enhanced validation schema with setup/teardown and home address
 const IndividualBookingSchema = z.object({
@@ -116,10 +125,23 @@ const ContactInfoSchema = z.object({
     .optional()
     .default(''),
 
+  // Free-text URL from the renter. Constrained to http(s) so a `javascript:`
+  // or `data:` value can never be stored and later rendered as a clickable
+  // link in a staff view or an email. A bare domain ("example.com") is
+  // accepted and normalized, since that is what people actually type.
   websiteUrl: z.string()
     .max(200, 'URL too long')
     .optional()
-    .default(''),
+    .default('')
+    .transform(value => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return '';
+      if (/^https?:\/\//i.test(trimmed)) return trimmed;
+      // Anything carrying an explicit non-http scheme is rejected outright
+      // rather than silently prefixed into a nonsense URL.
+      if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return '';
+      return `https://${trimmed}`;
+    }),
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
@@ -598,7 +620,8 @@ async function bookingHandler(request) {
         return Response.json({
           success: false,
           error: 'Failed to create recurring application',
-          details: error.message,
+          // Deliberately no `details`: the underlying message can carry
+          // Postgres column names and constraint text. It's in the log above.
           code: 'RECURRING_CREATION_FAILED'
         }, { status: 500 });
       }
@@ -795,7 +818,7 @@ async function bookingHandler(request) {
     return Response.json({
       success: false,
       error: 'Failed to create bookings',
-      details: error.message,
+      // Deliberately no `details` — see the recurring path above.
       code: 'INTERNAL_ERROR'
     }, { status: 500 });
   }
@@ -803,49 +826,32 @@ async function bookingHandler(request) {
 
 // Export the handler
 export async function POST(request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+  const headers = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, RATE_LIMIT, headers);
+  if (limited) return limited;
+
+  const oversized = requestTooLarge(request, MAX_BODY_BYTES);
+  if (oversized) return withCors(oversized, request);
 
   try {
-    const response = await bookingHandler(request);
-
-    const headers = new Headers(response.headers);
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      headers.set(key, value);
-    });
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: headers,
-    });
-
+    return withCors(await bookingHandler(request), request);
   } catch (error) {
     console.error('Handler error:', error);
+    // The message can carry database or Stripe internals; log it, don't ship it.
     return Response.json(
       {
         success: false,
         error: 'Server error',
-        details: error.message
       },
       {
         status: 500,
-        headers: corsHeaders
+        headers,
       }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function OPTIONS(request) {
+  return corsPreflightResponse(request);
 }

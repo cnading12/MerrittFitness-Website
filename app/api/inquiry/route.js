@@ -6,24 +6,25 @@
 // the `inquiries` table (best effort) and sends two emails.
 
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from '../../lib/lazy-client.js';
+import { supabaseServer as supabase } from '../../lib/supabase-server.js';
 import { z } from 'zod';
 import { sendInquiryAck, sendInquiryNotification } from '../../lib/email.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
 
 // This route sends email. Without an explicit maxDuration, Vercel's default
 // (~10s) timeout can kill the function between the ack and the staff
 // notification. Every route that sends email MUST export a maxDuration.
 export const maxDuration = 60;
 
+// Every accepted submission sends TWO Resend emails (the inquirer's ack and
+// the staff notification). Unthrottled that is an email bomb aimed at our own
+// sender reputation as much as at the manager's inbox. Five per 10 minutes
+// covers a person submitting from more than one page; a script gets nowhere.
+const RATE_LIMIT = { bucket: 'inquiry', limit: 5, windowMs: 10 * 60_000 };
+
 // Resend free plan allows 2 requests/second; space consecutive sends.
 const EMAIL_RATE_LIMIT_DELAY_MS = 600;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
 
 const InquirySchema = z.object({
   kind: z.enum(['event', 'tour', 'waitlist', 'congregation', 'class-partnership']),
@@ -67,6 +68,9 @@ async function storeInquiry(inquiry) {
 }
 
 export async function POST(request) {
+  const limited = enforceRateLimit(request, RATE_LIMIT);
+  if (limited) return limited;
+
   let body;
   try {
     body = await request.json();

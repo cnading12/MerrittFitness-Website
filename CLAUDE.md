@@ -114,3 +114,62 @@ Keep this cron even then — it doubles as a daily database health check.
 - Recurring bookings: emails fire from
   `app/api/payment/create-recurring-subscription/route.js`, with the Stripe
   webhook `setup_intent.succeeded` handler as an idempotent safety net.
+
+## 🔒 Security rules — read before touching auth, payments, or templates
+
+The app takes card payments and stores government-issued ID photos, so these
+are invariants, not preferences. Each one exists because the opposite was
+found in the code.
+
+1. **Promo codes are server-side only.** They live in `VALID_PROMO_CODES`
+   (`app/lib/booking-pricing.js`) and are checked over the network via
+   `POST /api/validate-promo`. They must NEVER appear in a `.tsx`/`.jsx` file
+   — those compile into the public bundle, and one of the codes comps a
+   booking 100% (skips Stripe, self-confirms, books the live calendar), so
+   shipping it was enough to rent the venue for free. Don't put a code in
+   user-facing copy either. `tests/promo-code-privacy.test.mjs` scans the
+   client source and fails if any code reappears.
+
+2. **Prices are always recomputed server-side.** `calculateAccuratePricing` /
+   `computeRecurringIntakePricing` decide the amount; the client's `pricing`
+   block is display-only and is never trusted. Stripe amounts come from the
+   stored `total_amount`, never from the request.
+
+3. **Supabase runs on the service-role key, with RLS deny-all.** Use the shared
+   client in `app/lib/supabase-server.js` — do not call `createClient` anywhere
+   else. The anon key is designed to be public; RLS
+   (`scripts/migrations/2026_enable_rls_lockdown.sql`) is what protects the
+   renter PII, and the service-role key is what lets the server bypass it.
+   Rollout order matters: set `SUPABASE_SERVICE_ROLE_KEY` and deploy BEFORE
+   running the migration.
+
+4. **Escape every renter-supplied value in an email template.** Use `esc()`
+   from `app/lib/email.js` on anything off the booking or inquiry form. These
+   templates are string-interpolated HTML sent from our domain, so unescaped
+   input turns a staff notification into a phishing channel.
+   `tests/email-html-injection.test.mjs` covers this.
+
+5. **Secrets are compared with `requireAdminAuth` / `requireCronAuth`**
+   (`app/lib/auth.js`), never with `!==`. They are constant-time and fail
+   closed when the env var is missing. `tests/admin-cron-auth.test.mjs`.
+
+6. **Every anonymous route gets a rate limit.** Add `enforceRateLimit` from
+   `app/lib/rate-limit.js` to any new public endpoint — especially ones that
+   send email, store uploads, or call the Google Calendar API. Note the
+   limiter is per-instance and best-effort (see the file's own caveats).
+
+7. **No wildcard CORS.** Use `corsHeaders(request)` from `app/lib/http.js`,
+   which reflects only our own origins.
+
+8. **API responses are allowlists.** `/api/booking/[id]` returns only the
+   fields the payment/success pages render. The booking id is the only
+   credential this app has, so don't widen that response — and never return
+   `id_photo_*` or `coi_document_*`.
+
+9. **Don't return raw `error.message` to clients.** Log it; send a generic
+   message. Database and Stripe errors leak schema and internals.
+
+10. **CSP: don't add a nonce.** Pages are statically prerendered, so the HTML
+    carries no nonce and a nonce (or `'strict-dynamic'`) would block every
+    script on the site, checkout included. See the long comment in
+    `app/lib/security-headers.js` before changing `script-src`.
