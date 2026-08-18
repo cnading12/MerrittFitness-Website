@@ -46,12 +46,27 @@ export const workspace = {
   url: 'https://merrittworkspace.net',
 } as const;
 
-// Opening hours, in one place. Feeds both the visible copy and the
-// openingHoursSpecification in the JSON-LD graph.
+// Opening hours, in one place. Feeds the visible copy AND the
+// openingHoursSpecification in the JSON-LD graph, so both stay identical to
+// the Google Business Profile — a listing and a site that disagree about
+// hours is a NAP inconsistency Google can see.
+//
+// These MUST match the Business Profile exactly. Verified against it in
+// August 2026: Monday to Saturday 7 AM to 10 PM, Sunday 4:30 PM to 10 PM.
+//
+// The site previously advertised a blanket "6 AM to 10 PM, seven days a
+// week", which contradicted the Business Profile on both counts and
+// contradicted this very file: `sundaySchedule` below states the building is
+// held by congregations until 4:30 PM every Sunday, so it was never
+// bookable from 6 AM on a Sunday.
 export const hours = {
-  opens: '06:00',
-  closes: '22:00',
-  display: '6 AM to 10 PM, seven days a week',
+  /** Monday through Saturday */
+  weekdayOpens: '07:00',
+  weekdayCloses: '22:00',
+  /** Sunday — congregations hold the sanctuary until 4:30 PM. */
+  sundayOpens: '16:30',
+  sundayCloses: '22:00',
+  display: 'Monday to Saturday, 7 AM to 10 PM, and Sunday evenings from 4:30 PM',
 } as const;
 
 // REVIEW DATA — READ BEFORE EDITING.
@@ -69,9 +84,10 @@ export const reviews = {
   bestRating: 5,
   count: 20,
   source: 'Google',
-  // Swap in the Business Profile's short review link once available; this
-  // maps-search URL resolves to the same profile in the meantime.
-  url: 'https://www.google.com/maps/search/?api=1&query=Merritt+Wellness+2246+Irving+St+Denver+CO+80211',
+  // The Business Profile's own share link, supplied by the owner. This is
+  // what the visible rating on the homepage links to, and it is the proof
+  // behind `aggregateRating` — keep it pointing at the real profile.
+  url: 'https://maps.app.goo.gl/AfqGvGfAzVwbMka3A',
 } as const;
 
 // Neighborhoods and cities the venue actually draws from. Used for

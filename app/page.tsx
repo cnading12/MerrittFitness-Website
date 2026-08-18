@@ -521,10 +521,14 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Denver Studio Hours</h3>
+                      {/* Reads from `hours` so this can never drift from the
+                          Google Business Profile. It used to claim 6 AM to
+                          10 PM every day, which was wrong twice over. */}
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Available for bookings<br />
-                        Monday - Sunday<br />
-                        <span className="text-sm text-[#a08b84]">6:00 AM - 10:00 PM Mountain Time</span>
+                        Monday - Saturday<br />
+                        <span className="text-sm text-[#a08b84]">7:00 AM - 10:00 PM Mountain Time</span><br />
+                        <span className="text-sm text-[#a08b84]">Sundays from 4:30 PM</span>
                       </p>
                     </div>
                   </div>

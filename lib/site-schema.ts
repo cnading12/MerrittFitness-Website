@@ -181,21 +181,25 @@ function businessNode() {
     foundingDate: String(specs.built),
     // Hours live in one constant; the legacy `openingHours` string is kept
     // alongside the structured form because some consumers still read it.
-    openingHours: [`Mo-Su ${hours.opens}-${hours.closes}`],
+    // Sunday is a separate entry because congregations hold the sanctuary
+    // until 4:30 PM — collapsing all seven days into one range is what made
+    // this disagree with the Google Business Profile.
+    openingHours: [
+      `Mo-Sa ${hours.weekdayOpens}-${hours.weekdayCloses}`,
+      `Su ${hours.sundayOpens}-${hours.sundayCloses}`,
+    ],
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
-        dayOfWeek: [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ],
-        opens: hours.opens,
-        closes: hours.closes,
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        opens: hours.weekdayOpens,
+        closes: hours.weekdayCloses,
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: ['Sunday'],
+        opens: hours.sundayOpens,
+        closes: hours.sundayCloses,
       },
     ],
     // A range, not a single figure. "$95/hour" is not a valid priceRange —

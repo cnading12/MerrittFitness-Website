@@ -12,6 +12,28 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
+  // Canonical host: everything lives on the apex domain.
+  //
+  // Every canonical URL, the sitemap, the JSON-LD graph, and metadataBase all
+  // use https://merrittwellness.net with no www. The Google Business Profile,
+  // however, points at https://www.merrittwellness.net/ — a host that does
+  // not currently resolve — so the "Website" button on the Maps listing is a
+  // dead link, and the www URLs Google has indexed go nowhere.
+  //
+  // This redirect makes www consolidate into the apex the moment the hostname
+  // is actually pointed at this deployment. It cannot fix the dead link on
+  // its own: until www.merrittwellness.net is added as a domain in Vercel
+  // (and its DNS record exists), no request ever reaches this middleware.
+  // See SEO_CHANGES.md.
+  const host = request.headers.get('host') || '';
+  if (host.startsWith('www.')) {
+    const canonical = request.nextUrl.clone();
+    canonical.host = host.slice(4);
+    canonical.port = '';
+    canonical.protocol = 'https';
+    return NextResponse.redirect(canonical, 308);
+  }
+
   // Create response
   const response = NextResponse.next();
 
