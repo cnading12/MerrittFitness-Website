@@ -14,8 +14,7 @@
 // once-per-group onboarding, calendar-failure tolerance) stays identical
 // across both paths instead of drifting between two copies.
 
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from './lazy-client.js';
+import { supabaseServer } from './supabase-server.js';
 import { createCalendarEvent } from './calendar.js';
 import {
   sendBookingConfirmation,
@@ -40,10 +39,9 @@ export function isPublicBooking(booking) {
 const EMAIL_RATE_LIMIT_DELAY_MS = 600;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 // Create the calendar event for a booking if it doesn't already have one, and
 // persist the resulting event id. Calendar failures are logged and swallowed

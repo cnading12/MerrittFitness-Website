@@ -2,8 +2,8 @@
 // FIXED VERSION 5.2 - Handles 307 redirects
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { supabaseServer } from '../../../lib/supabase-server.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { ensureCalendarEvent, sendBookingEmails, isPublicBooking } from '../../../lib/booking-fulfillment.js';
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
@@ -15,10 +15,9 @@ const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
 }));
 
 // Initialize Supabase
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 // CRITICAL: Configuration to prevent Next.js issues
 export const dynamic = 'force-dynamic';
@@ -88,9 +87,12 @@ export async function POST(request) {
     console.error('❌ [WEBHOOK] Webhook signature verification failed');
     console.error('❌ [WEBHOOK] Error:', error.message);
     console.error('💡 [WEBHOOK] Check that STRIPE_WEBHOOK_SECRET matches Stripe dashboard');
-    return Response.json({ 
+    return Response.json({
       error: 'Invalid signature',
-      details: error.message
+      // Only in development: the verification error text is useful when
+      // wiring the endpoint up, but this branch is reachable by anyone
+      // POSTing to the webhook URL.
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 400 });
   }
   
@@ -537,7 +539,8 @@ export async function GET() {
       stripeKey: !!process.env.STRIPE_SECRET_KEY,
       resendKey: !!process.env.RESEND_API_KEY,
       supabaseUrl: !!process.env.SUPABASE_URL,
-      supabaseKey: !!process.env.SUPABASE_ANON_KEY
+      supabaseKey: !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY),
+      supabaseRole: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : 'anon'
     },
     version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
   });

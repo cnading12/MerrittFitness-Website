@@ -2,8 +2,7 @@
 // FIXED VERSION - Eliminates duplicate calendar event creation
 
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from '../../lib/lazy-client.js';
+import { supabaseServer } from '../../lib/supabase-server.js';
 import { z } from 'zod';
 import {
   isSaturday,
@@ -27,10 +26,9 @@ import { corsHeaders, corsPreflight } from '../../lib/cors.js';
 export const maxDuration = 60;
 
 // Initialize Supabase
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 // UPDATED: Enhanced validation schema with setup/teardown and home address
 const IndividualBookingSchema = z.object({
@@ -600,7 +598,10 @@ async function bookingHandler(request) {
         return Response.json({
           success: false,
           error: 'Failed to create recurring application',
-          details: error.message,
+          // Detail deliberately omitted: error.message here is a raw Postgres
+          // or Stripe message (column names, constraint text, key prefixes).
+          // The real error is in the server log; `code` is what the frontend
+          // branches on.
           code: 'RECURRING_CREATION_FAILED'
         }, { status: 500 });
       }
@@ -720,9 +721,12 @@ async function bookingHandler(request) {
 
       } catch (error) {
         console.error('❌ Failed to create individual booking:', error);
+        // `bookingErrors` is returned to the caller (see BOOKING_CREATION_FAILED
+        // below), so it names which booking failed but not why — the underlying
+        // message can carry database internals.
         bookingErrors.push({
           booking: booking.eventName,
-          error: error.message
+          error: 'Could not be created'
         });
       }
     }
@@ -797,7 +801,7 @@ async function bookingHandler(request) {
     return Response.json({
       success: false,
       error: 'Failed to create bookings',
-      details: error.message,
+      // Detail deliberately omitted — see the note on RECURRING_CREATION_FAILED.
       code: 'INTERNAL_ERROR'
     }, { status: 500 });
   }

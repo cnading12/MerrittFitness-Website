@@ -1,14 +1,12 @@
 import { createSecurePaymentIntent } from '../../../lib/stripe-config.js';
 import { getBooking } from '../../../lib/database.js';
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from '../../../lib/lazy-client.js';
+import { supabaseServer } from '../../../lib/supabase-server.js';
 import { enforceRateLimit } from '../../../lib/rate-limit.js';
 import { corsHeaders, corsPreflight } from '../../../lib/cors.js';
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 export async function POST(request) {
   // Same-origin flow only; the wildcard this replaced let any site drive

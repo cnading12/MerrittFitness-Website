@@ -7,8 +7,8 @@
 // monthly auto-debit avoids the 3% card processing fee on every invoice.
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { supabaseServer } from '../../../lib/supabase-server.js';
 import { enforceRateLimit } from '../../../lib/rate-limit.js';
 import { corsHeaders, corsPreflight } from '../../../lib/cors.js';
 
@@ -17,10 +17,9 @@ const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: false,
 }));
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 
 

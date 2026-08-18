@@ -19,13 +19,11 @@
 // Writes are strictly best-effort: a logging failure (table not migrated yet,
 // Supabase hiccup) must never break or delay-fail an actual email send.
 
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from './lazy-client.js';
+import { supabaseServer, resolveSupabaseKey } from './supabase-server.js';
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 // Insert one row into email_events. Never throws.
 export async function recordEmailEvent({
@@ -39,7 +37,7 @@ export async function recordEmailEvent({
   attempts = null,
   errorMessage = null,
 } = {}) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) return;
+  if (!process.env.SUPABASE_URL || !resolveSupabaseKey()) return;
 
   try {
     const { error } = await supabase.from('email_events').insert({

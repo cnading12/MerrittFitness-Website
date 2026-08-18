@@ -64,7 +64,9 @@ export async function POST(request) {
     payload = RequestSchema.parse(await request.json());
   } catch (err) {
     return Response.json(
-      { success: false, error: 'Invalid request', details: err.errors || String(err) },
+      // Zod issues describe the caller's own payload and are safe to echo;
+      // String(err) on a non-Zod throw is not, so it is not returned.
+      { success: false, error: 'Invalid request', details: err.errors ?? undefined },
       { status: 400, headers: CORS_HEADERS }
     );
   }

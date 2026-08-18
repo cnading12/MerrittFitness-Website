@@ -18,8 +18,8 @@
 // Everything is wrapped per-booking so one failure doesn't halt the run.
 
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from './lazy-client.js';
+import { supabaseServer } from './supabase-server.js';
 
 import { computeOccurrences, summarizeOccurrences } from './recurring-occurrences.js';
 import { syncRecurringCalendarEvents } from './recurring-calendar.js';
@@ -38,10 +38,9 @@ const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: false,
 }));
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 const DEFAULT_HOURLY_RATE = 95;
 

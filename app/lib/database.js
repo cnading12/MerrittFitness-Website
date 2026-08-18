@@ -1,36 +1,20 @@
 // app/lib/database.js
 // ENHANCED VERSION - Better connection handling and error diagnosis
 
-import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from './lazy-client.js';
+import { createServerSupabaseClient, usingServiceRole } from './supabase-server.js';
 
-// Enhanced Supabase connection with better error handling
+// Enhanced Supabase connection with better error handling.
+//
+// Credential selection (service_role, falling back to anon) lives in
+// supabase-server.js — see that file for why, and for the rollout order that
+// must be followed before enabling Row Level Security.
 const supabase = lazyClient(() => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    throw new Error('Missing Supabase environment variables');
-  }
-
   console.log('🔗 Initializing Supabase connection...');
   console.log('📍 Supabase URL:', process.env.SUPABASE_URL?.substring(0, 30) + '...');
+  console.log('🔑 Supabase role:', usingServiceRole() ? 'service_role' : 'anon (fallback)');
 
-  const client = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-      db: {
-        schema: 'public',
-      },
-      global: {
-        headers: {
-          'x-application-name': 'merritt-fitness-booking-system',
-        },
-      },
-    }
-  );
+  const client = createServerSupabaseClient();
 
   console.log('✅ Supabase client initialized');
   return client;
@@ -98,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_master_id ON bookings(master_booking_id)
         return {
           success: false,
           error: 'Invalid Supabase API key',
-          solution: 'Check SUPABASE_ANON_KEY in environment variables'
+          solution: 'Check SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) in environment variables'
         };
       }
 

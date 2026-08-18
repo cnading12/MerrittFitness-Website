@@ -76,6 +76,56 @@ prevent them:
    filters — not a code bug. `tests/email-observability.test.mjs` locks the
    logging in.
 
+## Security invariants — do not weaken
+
+`tests/security-hardening.test.mjs` locks all of these in. Each one corresponds
+to a real weakness found in the August 2026 audit.
+
+1. **Promo codes are server-only.** `VALID_PROMO_CODES` lives in
+   `app/lib/booking-pricing.js` and must never be copied into a client
+   component. `app/book/page.tsx` used to carry its own copy, so the fully
+   comped sponsorship code shipped in the public JS bundle — and a sponsored
+   booking skips Stripe, auto-confirms, and lands on the live venue calendar.
+   The client asks `POST /api/promo/validate`, which returns a submitted
+   code's metadata but never lists codes and answers every miss identically.
+
+2. **The server recomputes every price.** `calculateAccuratePricing` is the
+   only pricing authority; the `pricing` object a client posts is advisory.
+   Never trust a client-supplied total, discount, or fee.
+
+3. **Every unauthenticated route calls `enforceRateLimit`**
+   (`app/lib/rate-limit.js`). Add a limit when you add a route — the test
+   enumerates them. The limiter is in-memory (per serverless instance), which
+   stops scripted abuse but not a distributed attacker; if that changes, swap
+   `hit()`'s body for a shared store, not the call sites.
+
+4. **No wildcard CORS.** Use `corsHeaders`/`corsPreflight` from
+   `app/lib/cors.js`. Five routes — including Stripe PaymentIntent creation —
+   used to answer every origin with `*`.
+
+5. **Secrets compare in constant time.** Use `requireAdminAuth` /
+   `requireCronAuth` from `app/lib/admin-auth.js`. Never `provided !== expected`.
+
+6. **Database access goes through `app/lib/supabase-server.js`**, which
+   prefers `SUPABASE_SERVICE_ROLE_KEY`. Never construct a client with
+   `SUPABASE_ANON_KEY` directly — anon keys are publicly shareable by design
+   and safe only behind RLS. See
+   `scripts/migrations/2026_enable_row_level_security.sql`, including its
+   rollout order: **set the service-role env var BEFORE enabling RLS**, or
+   every booking fails.
+
+7. **Error responses stay generic on unauthenticated routes.** Log
+   `error.message`; return a fixed string plus a `code`. Raw messages carry
+   Postgres column/constraint text and Stripe internals.
+
+8. **`GET /api/booking/[id]` is unauthenticated** — the UUID is the only
+   credential. Its response is an explicit allowlist. Do not add phone, home
+   address, ID photo, COI, or Stripe/Calendar object ids to it.
+
+9. **The Stripe webhook bypass must stay first in `middleware.js`.** Stripe
+   signs the raw body; anything touching that path breaks verification and
+   silently drops payment confirmations.
+
 ## Supabase keep-alive — do not remove
 
 Supabase pauses Free-plan projects after ~7 consecutive days with no database

@@ -6,8 +6,7 @@
 // the `inquiries` table (best effort) and sends two emails.
 
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-import { lazyClient } from '../../lib/lazy-client.js';
+import { supabaseServer } from '../../lib/supabase-server.js';
 import { z } from 'zod';
 import { sendInquiryAck, sendInquiryNotification } from '../../lib/email.js';
 import { enforceRateLimit } from '../../lib/rate-limit.js';
@@ -21,10 +20,9 @@ export const maxDuration = 60;
 const EMAIL_RATE_LIMIT_DELAY_MS = 600;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 const InquirySchema = z.object({
   kind: z.enum(['event', 'tour', 'waitlist', 'congregation', 'class-partnership']),

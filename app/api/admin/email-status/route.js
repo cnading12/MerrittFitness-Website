@@ -22,15 +22,14 @@
 // (same pattern as /api/admin/trigger-monthly-billing). Fails closed.
 
 import { Resend } from 'resend';
-import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { supabaseServer } from '../../../lib/supabase-server.js';
 import { requireAdminAuth } from '../../../lib/admin-auth.js';
 import { enforceRateLimit } from '../../../lib/rate-limit.js';
 
-const supabase = lazyClient(() => createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-));
+// Shared server client. Prefers the service-role key so Row Level
+// Security can deny everyone else — see app/lib/supabase-server.js.
+const supabase = supabaseServer;
 
 const resend = lazyClient(() => new Resend(process.env.RESEND_API_KEY));
 
