@@ -2,6 +2,8 @@ import { createSecurePaymentIntent } from '../../../lib/stripe-config.js';
 import { getBooking } from '../../../lib/database.js';
 import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
+import { corsHeaders, corsPreflight } from '../../../lib/cors.js';
 
 const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
@@ -9,11 +11,16 @@ const supabase = lazyClient(() => createClient(
 ));
 
 export async function POST(request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+  // Same-origin flow only; the wildcard this replaced let any site drive
+  // Stripe PaymentIntent creation from a visitor's browser.
+  const cors = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, 'payment');
+  if (limited) {
+    const headers = new Headers(limited.headers);
+    Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
+    return new Response(limited.body, { status: limited.status, headers });
+  }
 
   try {
     const { bookingId, paymentMethod = 'card' } = await request.json();
@@ -23,7 +30,7 @@ export async function POST(request) {
     if (!bookingId) {
       return Response.json({ 
         error: 'Booking ID is required' 
-      }, { status: 400, headers: corsHeaders });
+      }, { status: 400, headers: cors });
     }
 
     // Get booking details
@@ -32,7 +39,7 @@ export async function POST(request) {
       console.error('❌ Booking not found:', bookingId);
       return Response.json({ 
         error: 'Booking not found' 
-      }, { status: 404, headers: corsHeaders });
+      }, { status: 404, headers: cors });
     }
 
     console.log('📋 Found booking:', booking.event_name, 'Amount:', booking.total_amount);
@@ -42,7 +49,7 @@ export async function POST(request) {
       return Response.json({
         error: 'Booking is already confirmed',
         redirect: `/booking/success?booking_id=${bookingId}`
-      }, { status: 400, headers: corsHeaders });
+      }, { status: 400, headers: cors });
     }
 
     // Sponsored / zero-amount bookings never require payment. Guard against a
@@ -52,7 +59,7 @@ export async function POST(request) {
       return Response.json({
         error: 'No payment required for this booking',
         redirect: `/booking/success?booking_id=${bookingId}`
-      }, { status: 400, headers: corsHeaders });
+      }, { status: 400, headers: cors });
     }
 
     // Prepare data for Stripe
@@ -91,25 +98,19 @@ export async function POST(request) {
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount,
       currency: paymentIntent.currency
-    }, { headers: corsHeaders });
+    }, { headers: cors });
 
   } catch (error) {
     console.error('❌ Payment intent creation error:', error);
     
     return Response.json({
       success: false,
-      error: error.message || 'Failed to create payment intent'
-    }, { status: 500, headers: corsHeaders });
+      // Generic: error.message from Stripe/Supabase can leak internals.
+      error: 'Failed to create payment intent'
+    }, { status: 500, headers: cors });
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function OPTIONS(request) {
+  return corsPreflight(request);
 }

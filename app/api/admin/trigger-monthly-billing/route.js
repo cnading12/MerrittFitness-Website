@@ -20,20 +20,16 @@
 import { NextResponse } from 'next/server';
 
 import { runMonthlyBilling } from '../../../lib/monthly-billing.js';
+import { requireAdminAuth } from '../../../lib/admin-auth.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
 
-function requireAdminAuth(request) {
-  const provided = request.headers.get('x-admin-secret') || '';
-  const expected = process.env.ADMIN_API_SECRET;
-  if (!expected) {
-    return { ok: false, error: 'ADMIN_API_SECRET not configured', status: 500 };
-  }
-  if (provided !== expected) {
-    return { ok: false, error: 'Unauthorized', status: 401 };
-  }
-  return { ok: true };
-}
+
 
 export async function POST(request) {
+  // Caps wrong-secret attempts against the admin surface.
+  const limited = enforceRateLimit(request, 'admin');
+  if (limited) return limited;
+
   const auth = requireAdminAuth(request);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -88,6 +84,8 @@ export async function POST(request) {
     });
   } catch (err) {
     console.error('❌ Admin trigger-monthly-billing failed:', err);
+    // This route is authenticated, so the detailed message is safe to return —
+    // it is the whole point of a manual re-run.
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }

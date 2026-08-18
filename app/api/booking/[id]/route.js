@@ -1,8 +1,15 @@
 // app/api/booking/[id]/route.js
 import { getBooking } from '../../../lib/database.js';
 import { isSponsoredBooking } from '../../../lib/calendar-flags.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
 
 export async function GET(request, context) {
+  // The booking id is the only credential this endpoint has (see the note on
+  // the response body below), so cap lookups to blunt any attempt to sweep
+  // the UUID space.
+  const limited = enforceRateLimit(request, 'booking-read');
+  if (limited) return limited;
+
   try {
     // FIXED: Properly await params in Next.js 15
     const resolvedParams = await context.params;
@@ -34,10 +41,27 @@ export async function GET(request, context) {
       status: booking.status
     });
 
-    // Return booking data with consistent field names
+    // Return booking data with consistent field names.
+    //
+    // SCOPE NOTE: this endpoint is unauthenticated — knowing the booking's
+    // UUID is the only thing required to read it. That is acceptable for the
+    // fields the post-submission pages actually render (the renter follows a
+    // link containing their own id), but it means every field here is one
+    // leaked/forwarded URL away from disclosure. So the response is an
+    // explicit allowlist of what the payment, success, and payment-complete
+    // pages consume — NOT the whole row.
+    //
+    // Deliberately withheld: phone, home address, the government-issued ID
+    // photo, the COI document, business_name, website_url, and the Stripe /
+    // Google Calendar object ids (payment_intent_id, stripe_customer_id,
+    // stripe_subscription_id, calendar_event_id). None are rendered by any
+    // page, and the internal ids are useful only to an attacker correlating
+    // this booking with other systems. If a page ever needs one of these,
+    // add it here consciously rather than widening the response by default.
     return Response.json({
       id: booking.id,
       masterBookingId: booking.master_booking_id,
+      master_booking_id: booking.master_booking_id ?? null,
       event_name: booking.event_name,
       eventName: booking.event_name, // Alias for frontend compatibility
       event_type: booking.event_type,
@@ -48,13 +72,11 @@ export async function GET(request, context) {
       eventTime: booking.event_time, // Alias for frontend compatibility
       hours_requested: booking.hours_requested,
       hoursRequested: booking.hours_requested, // Alias for frontend compatibility
+      attendees: booking.attendees ?? null,
       contact_name: booking.contact_name,
       contactName: booking.contact_name, // Alias for frontend compatibility
+      // Needed by the Stripe Elements setup to prefill the receipt email.
       email: booking.email,
-      phone: booking.phone,
-      business_name: booking.business_name,
-      businessName: booking.business_name, // Alias for frontend compatibility
-      website_url: booking.website_url,
       special_requests: booking.special_requests,
       specialRequests: booking.special_requests, // Alias for frontend compatibility
       payment_method: booking.payment_method,
@@ -62,22 +84,16 @@ export async function GET(request, context) {
       total_amount: booking.total_amount,
       totalAmount: booking.total_amount, // Alias for frontend compatibility
       subtotal: booking.subtotal,
-      stripe_fee: booking.stripe_fee,
       promo_code: booking.promo_code ?? null,
       // Sponsored = comped booking (no payment). Derived from the stored promo
       // code (with support for an explicit is_sponsored column if ever added).
       is_sponsored: booking.is_sponsored === true || isSponsoredBooking(booking),
       status: booking.status,
       created_at: booking.created_at,
-      updated_at: booking.updated_at,
-      payment_intent_id: booking.payment_intent_id,
-      calendar_event_id: booking.calendar_event_id,
-      // Recurring-series fields (null for single-event bookings).
+      // Recurring-series fields (null for single-event bookings). The schedule
+      // itself is rendered on the setup page; the Stripe ids behind it are not.
       recurring_details: booking.recurring_details ?? null,
-      stripe_subscription_id: booking.stripe_subscription_id ?? null,
-      stripe_customer_id: booking.stripe_customer_id ?? null,
-      pending_recurring_setup: booking.pending_recurring_setup ?? null,
-      master_booking_id: booking.master_booking_id ?? null
+      pending_recurring_setup: booking.pending_recurring_setup ?? null
     });
     
   } catch (error) {

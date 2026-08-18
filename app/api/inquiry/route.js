@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../lib/lazy-client.js';
 import { z } from 'zod';
 import { sendInquiryAck, sendInquiryNotification } from '../../lib/email.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
 
 // This route sends email. Without an explicit maxDuration, Vercel's default
 // (~10s) timeout can kill the function between the ack and the staff
@@ -67,6 +68,11 @@ async function storeInquiry(inquiry) {
 }
 
 export async function POST(request) {
+  // Two Resend emails per call, from an unauthenticated form — the cheapest
+  // thing on the site to abuse into a burned email quota.
+  const limited = enforceRateLimit(request, 'inquiry');
+  if (limited) return limited;
+
   let body;
   try {
     body = await request.json();

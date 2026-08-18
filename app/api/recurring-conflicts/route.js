@@ -15,12 +15,8 @@ import {
   findOccurrenceConflicts,
 } from '../../lib/recurring-occurrences.js';
 import { findBusyRangesInRange } from '../../lib/calendar.js';
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsHeaders, corsPreflight } from '../../lib/cors.js';
 
 const SlotSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
@@ -51,6 +47,18 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request) {
+  // Allowlisted origins only (was `*`).
+  const CORS_HEADERS = corsHeaders(request);
+
+  // Every accepted call fans out into a Google Calendar freebusy query over
+  // up to 12 months, so this is the most expensive read on the site.
+  const limited = enforceRateLimit(request, 'availability');
+  if (limited) {
+    const headers = new Headers(limited.headers);
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => headers.set(k, v));
+    return new Response(limited.body, { status: limited.status, headers });
+  }
+
   let payload;
   try {
     payload = RequestSchema.parse(await request.json());
@@ -151,6 +159,6 @@ export async function POST(request) {
   );
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflight(request);
 }

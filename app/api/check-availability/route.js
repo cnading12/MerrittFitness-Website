@@ -2,8 +2,15 @@
 // PRODUCTION VERSION - Better error handling and fallback
 
 import { checkCalendarAvailability } from '../../lib/calendar.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsPreflight } from '../../lib/cors.js';
 
 export async function GET(request) {
+  // Each miss costs a Google Calendar API quota unit; the venue's own booking
+  // page needs only a handful per session.
+  const limited = enforceRateLimit(request, 'availability');
+  if (limited) return limited;
+
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
@@ -127,14 +134,7 @@ export async function GET(request) {
   }
 }
 
-// Handle preflight requests
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+// Handle preflight requests. Allowlisted origins only (was `*`).
+export async function OPTIONS(request) {
+  return corsPreflight(request, { methods: 'GET, OPTIONS' });
 }

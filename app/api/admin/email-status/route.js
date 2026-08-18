@@ -24,6 +24,8 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { requireAdminAuth } from '../../../lib/admin-auth.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
 
 const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_URL,
@@ -39,19 +41,13 @@ const MAX_DELIVERY_LOOKUPS = 15;
 const LOOKUP_SPACING_MS = 600;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function requireAdminAuth(request) {
-  const provided = request.headers.get('x-admin-secret') || '';
-  const expected = process.env.ADMIN_API_SECRET;
-  if (!expected) {
-    return { ok: false, error: 'ADMIN_API_SECRET not configured', status: 500 };
-  }
-  if (provided !== expected) {
-    return { ok: false, error: 'Unauthorized', status: 401 };
-  }
-  return { ok: true };
-}
+
 
 export async function GET(request) {
+  // Caps wrong-secret attempts against the admin surface.
+  const limited = enforceRateLimit(request, 'admin');
+  if (limited) return limited;
+
   const auth = requireAdminAuth(request);
   if (!auth.ok) {
     return Response.json({ error: auth.error }, { status: auth.status });

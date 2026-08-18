@@ -8,6 +8,8 @@
 import { finalizeRecurringSetup } from '../../../lib/recurring-billing.js';
 import { sendRecurringSetupEmails } from '../../../lib/email.js';
 import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
+import { corsHeaders, corsPreflight } from '../../../lib/cors.js';
 
 // CRITICAL: This route sends the recurring setup + onboarding emails inline.
 // Without this, Vercel's default (~10s) function timeout kills the handler
@@ -15,13 +17,20 @@ import { syncRecurringCalendarEvents } from '../../../lib/recurring-calendar.js'
 // sends email MUST export a maxDuration.
 export const maxDuration = 60;
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+
 
 export async function POST(request) {
+  // Allowlisted origins only (was `*`, which let any site create Stripe
+  // objects from a visitor's browser).
+  const CORS_HEADERS = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, 'payment');
+  if (limited) {
+    const headers = new Headers(limited.headers);
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => headers.set(k, v));
+    return new Response(limited.body, { status: limited.status, headers });
+  }
+
   try {
     const { bookingId, setupIntentId } = await request.json();
 
@@ -73,13 +82,14 @@ export async function POST(request) {
     return Response.json(
       {
         success: false,
-        error: error.message || 'Failed to create recurring subscription',
+        // Generic: the underlying Stripe/Postgres message can carry internals.
+        error: 'Failed to create recurring subscription',
       },
       { status: 500, headers: CORS_HEADERS }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflight(request);
 }

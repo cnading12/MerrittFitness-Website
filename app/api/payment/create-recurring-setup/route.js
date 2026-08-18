@@ -9,6 +9,8 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { lazyClient } from '../../../lib/lazy-client.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
+import { corsHeaders, corsPreflight } from '../../../lib/cors.js';
 
 const stripe = lazyClient(() => new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
@@ -20,11 +22,7 @@ const supabase = lazyClient(() => createClient(
   process.env.SUPABASE_ANON_KEY
 ));
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+
 
 async function getOrCreateCustomerForBooking(booking, paymentMethod) {
   // Reuse the Stripe Customer if one was already created for this booking —
@@ -74,6 +72,17 @@ async function getOrCreateCustomerForBooking(booking, paymentMethod) {
 }
 
 export async function POST(request) {
+  // Allowlisted origins only (was `*`, which let any site create Stripe
+  // objects from a visitor's browser).
+  const CORS_HEADERS = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, 'payment');
+  if (limited) {
+    const headers = new Headers(limited.headers);
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => headers.set(k, v));
+    return new Response(limited.body, { status: limited.status, headers });
+  }
+
   try {
     const { bookingId, paymentMethod } = await request.json();
 
@@ -170,13 +179,14 @@ export async function POST(request) {
     return Response.json(
       {
         success: false,
-        error: error.message || 'Failed to create setup intent',
+        // Generic: the underlying Stripe/Postgres message can carry internals.
+        error: 'Failed to create setup intent',
       },
       { status: 500, headers: CORS_HEADERS }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflight(request);
 }

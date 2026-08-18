@@ -17,6 +17,8 @@ import {
 // Stripe, so this route confirms them immediately and runs the same side
 // effects directly via the shared fulfillment helper.
 import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsHeaders, corsPreflight } from '../../lib/cors.js';
 
 // CRITICAL: The sponsored path sends the calendar + email pipeline inline.
 // Without this, Vercel's default (~10s) function timeout kills the handler
@@ -803,17 +805,26 @@ async function bookingHandler(request) {
 
 // Export the handler
 export async function POST(request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+  const cors = corsHeaders(request);
+
+  // Each accepted request writes a bookings row plus up to ~18 MB of base64
+  // ID/COI documents, so an unbounded endpoint is a storage bill waiting to
+  // happen. Ten applications per hour is far above any real renter.
+  const limited = enforceRateLimit(request, 'booking-request', {
+    message:
+      'Too many booking submissions from this connection. Please wait a few minutes and try again, or email manager@merrittwellness.net.',
+  });
+  if (limited) {
+    const headers = new Headers(limited.headers);
+    Object.entries(cors).forEach(([key, value]) => headers.set(key, value));
+    return new Response(limited.body, { status: limited.status, headers });
+  }
 
   try {
     const response = await bookingHandler(request);
 
     const headers = new Headers(response.headers);
-    Object.entries(corsHeaders).forEach(([key, value]) => {
+    Object.entries(cors).forEach(([key, value]) => {
       headers.set(key, value);
     });
 
@@ -824,28 +835,23 @@ export async function POST(request) {
     });
 
   } catch (error) {
+    // Log the real error; return a generic one. `error.message` here can carry
+    // Postgres/Stripe internals (column names, constraint text, key prefixes)
+    // that a caller has no business seeing.
     console.error('Handler error:', error);
     return Response.json(
       {
         success: false,
         error: 'Server error',
-        details: error.message
       },
       {
         status: 500,
-        headers: corsHeaders
+        headers: cors
       }
     );
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function OPTIONS(request) {
+  return corsPreflight(request);
 }

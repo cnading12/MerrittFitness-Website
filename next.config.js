@@ -55,7 +55,13 @@ const nextConfig = {
     ]
   },
 
-  // Security headers
+  // Security headers.
+  //
+  // middleware.js sets the full set (CSP, HSTS, Permissions-Policy) on
+  // everything it matches, but its matcher deliberately skips _next/static,
+  // _next/image, and the Stripe webhook. These are the baseline that applies
+  // to every response including those, so a static asset or an optimized
+  // image is never served without them.
   async headers() {
     return [
       {
@@ -71,12 +77,15 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
           },
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
+          // X-XSS-Protection intentionally omitted: deprecated, ignored by
+          // current browsers, and its legacy filter had its own bugs. The CSP
+          // in middleware.js is the real control.
         ],
       },
     ]
