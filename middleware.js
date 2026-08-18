@@ -30,9 +30,11 @@ import { NextResponse } from 'next/server'
 const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
 
-  // Stripe.js must load from Stripe's own CDN — it is the only permitted
-  // third-party script origin.
-  'script-src': ["'self'", "'unsafe-inline'", 'https://js.stripe.com'],
+  // Stripe.js must load from Stripe's own CDN — the only permitted
+  // third-party script origin. `*.js.stripe.com` is required too: Stripe.js
+  // starts frames on sharded origins for performance, and omitting it breaks
+  // the Payment Element.
+  'script-src': ["'self'", "'unsafe-inline'", 'https://js.stripe.com', 'https://*.js.stripe.com'],
 
   // Stripe injects styles for its Payment Element; Google Fonts serves the
   // site's typeface stylesheet; Tailwind emits inline style attributes.
@@ -40,14 +42,28 @@ const CSP_DIRECTIVES = {
   'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
 
   // next/image emits data: and blob: URLs; Unsplash is the configured remote
-  // image host (see next.config.js remotePatterns).
-  'img-src': ["'self'", 'data:', 'blob:', 'https://images.unsplash.com'],
+  // image host (see next.config.js remotePatterns); Stripe serves the card
+  // brand logos rendered inside the Payment Element.
+  'img-src': ["'self'", 'data:', 'blob:', 'https://images.unsplash.com', 'https://*.stripe.com'],
 
-  // XHR/fetch targets: the site's own API and Stripe's.
-  'connect-src': ["'self'", 'https://api.stripe.com', 'https://js.stripe.com'],
+  // XHR/fetch targets: the site's own API, and Stripe's. `*.stripe.com` covers
+  // api/js/q/errors.stripe.com — Stripe.js posts telemetry and error reports to
+  // the latter two, and a CSP that omits them produces console violations on
+  // every payment. m.stripe.network is Stripe's fraud-signal (Radar) origin:
+  // blocking it degrades fraud detection silently rather than visibly.
+  'connect-src': ["'self'", 'https://*.stripe.com', 'https://m.stripe.network'],
 
-  // Stripe renders its card/bank fields inside iframes it owns.
-  'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+  // Stripe renders its card fields, the Financial Connections bank-linking
+  // flow used for ACH, and its Radar fingerprinting frame inside iframes it
+  // owns. ACH is the default for recurring bookings, so *.js.stripe.com here
+  // is load-bearing, not optional.
+  'frame-src': [
+    "'self'",
+    'https://js.stripe.com',
+    'https://*.js.stripe.com',
+    'https://hooks.stripe.com',
+    'https://m.stripe.network',
+  ],
 
   // No Flash/Java/plugin content anywhere.
   'object-src': ["'none'"],

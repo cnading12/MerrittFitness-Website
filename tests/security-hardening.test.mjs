@@ -413,6 +413,32 @@ describe('security headers', () => {
     assert.ok(source.includes('Permissions-Policy'));
   });
 
+  test('the CSP allows every origin Stripe needs', () => {
+    // A CSP that is too tight breaks checkout instead of protecting it, and
+    // the failure is quiet: the Radar fraud frame and Stripe's telemetry are
+    // blocked without any user-visible error. ACH (the default for recurring
+    // bookings) runs through Financial Connections on a *.js.stripe.com
+    // frame, so that wildcard is load-bearing.
+    const source = read('middleware.js');
+    const required = [
+      ['script-src', 'https://js.stripe.com'],
+      ['script-src', 'https://*.js.stripe.com'],
+      ['frame-src', 'https://*.js.stripe.com'],   // Financial Connections / ACH
+      ['frame-src', 'https://hooks.stripe.com'],
+      ['frame-src', 'https://m.stripe.network'],  // Radar fraud signals
+      ['connect-src', 'https://*.stripe.com'],    // api / q / errors
+      ['img-src', 'https://*.stripe.com'],        // card brand logos
+    ];
+    for (const [directive, origin] of required) {
+      const block = source.slice(source.indexOf(`'${directive}'`));
+      const end = block.indexOf('],') >= 0 ? block.indexOf('],') + 2 : block.length;
+      assert.ok(
+        block.slice(0, end).includes(origin),
+        `CSP ${directive} must allow ${origin} or Stripe checkout breaks`
+      );
+    }
+  });
+
   test('API responses are marked no-store and noindex', () => {
     const source = read('middleware.js');
     assert.ok(source.includes("'Cache-Control', 'no-store, max-age=0'"));
