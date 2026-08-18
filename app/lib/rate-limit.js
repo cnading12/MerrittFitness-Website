@@ -23,32 +23,55 @@
 //   move the counters to Redis (Upstash) or enable rate limiting at the
 //   Vercel edge/WAF layer.
 //
-//   The client IP comes from x-forwarded-for, which is only trustworthy
-//   because Vercel overwrites it at the edge. If this app is ever served from
-//   somewhere that passes the header through unchecked, the limiter can be
-//   evaded by spoofing it, and it must be revisited.
+//   Client identity comes from proxy headers, which are only as trustworthy
+//   as the proxy in front of the app. See clientIpFrom below for exactly which
+//   header and which entry is trusted, and why.
 
 // bucketName -> Map<clientKey, { count, resetAt }>
 const buckets = new Map();
 
 // Hard cap on tracked clients per bucket, so a flood of unique IPs can't grow
-// the map without bound. When exceeded we drop the whole bucket: the limiter
-// briefly forgets everyone rather than leaking memory. Expired entries are
-// pruned first, so this only trips under genuinely large fan-out.
+// the map without bound. Expired entries are pruned first; if that isn't
+// enough, the oldest entries are evicted. This only trips under genuinely
+// large fan-out.
 const MAX_TRACKED_CLIENTS = 5000;
 
-// Best-effort client identity. Vercel sets x-forwarded-for at the edge and
-// the leftmost entry is the real client; anything a caller appends lands to
-// the right of it and is ignored here.
+// Best-effort client identity.
+//
+// WHICH x-forwarded-for ENTRY TO TRUST — this is the whole security of the
+// limiter, so the reasoning matters:
+//
+// The header is a comma-separated chain, `client, proxy1, proxy2`. The
+// LEFTMOST entry is the original client, but it is also the part a caller can
+// forge — under the "append" behavior most proxies default to, a request that
+// arrives already carrying `X-Forwarded-For: <random>` ends up with that
+// forged value at the front. Trusting it would let an attacker mint a fresh
+// bucket per request and bypass every limit here.
+//
+// The RIGHTMOST entry is the one added by the proxy closest to us, which a
+// caller cannot forge. That is what we use.
+//
+// On Vercel specifically this distinction is currently moot: the platform
+// OVERWRITES x-forwarded-for with the observed client IP rather than
+// appending to it, precisely to stop spoofing, so the header holds exactly
+// one value. We take the rightmost entry anyway — it is the choice that stays
+// correct if the app ever moves behind a proxy that appends, and it costs
+// nothing today.
+//
+// x-real-ip is set by the platform and cannot be influenced by the caller, so
+// it is preferred outright when present.
 export function clientIpFrom(request) {
+  const realIp = request.headers?.get?.('x-real-ip');
+  if (realIp && realIp.trim()) return realIp.trim();
+
   const forwarded = request.headers?.get?.('x-forwarded-for') || '';
-  const first = forwarded.split(',')[0]?.trim();
-  if (first) return first;
-  return (
-    request.headers?.get?.('x-real-ip') ||
-    request.headers?.get?.('cf-connecting-ip') ||
-    'unknown'
-  );
+  const parts = forwarded.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length > 0) return parts[parts.length - 1];
+
+  // No proxy headers at all (local dev, a direct hit). Everything shares one
+  // bucket — the safe direction to fail, since an unidentifiable caller must
+  // not get an unlimited pass.
+  return 'unknown';
 }
 
 function pruneExpired(bucket, now) {
@@ -78,7 +101,18 @@ export function rateLimit(request, { bucket = 'default', limit = 10, windowMs = 
   if (!entry || entry.resetAt <= now) {
     if (store.size >= MAX_TRACKED_CLIENTS) {
       pruneExpired(store, now);
-      if (store.size >= MAX_TRACKED_CLIENTS) store.clear();
+      // Still oversized after dropping expired windows: evict oldest-first.
+      // Map preserves insertion order, so the earliest keys are the least
+      // recently created. Evicting a few beats clearing the whole bucket,
+      // which would briefly forget every client currently being throttled.
+      if (store.size >= MAX_TRACKED_CLIENTS) {
+        const excess = store.size - MAX_TRACKED_CLIENTS + 1;
+        let dropped = 0;
+        for (const key of store.keys()) {
+          store.delete(key);
+          if (++dropped >= excess) break;
+        }
+      }
     }
     store.set(key, { count: 1, resetAt: now + windowMs });
     return { allowed: true, remaining: limit - 1, retryAfterSeconds: 0 };

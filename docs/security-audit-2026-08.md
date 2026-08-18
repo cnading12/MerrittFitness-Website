@@ -99,13 +99,18 @@ upgrade.
 CSP-nonce XSS, several DoS); `jws` had a high-severity HMAC
 signature-verification flaw reachable through Google Calendar auth.
 
-Upgraded to `next@16.3.1`, ran `npm audit fix`, and bumped `uuid` to v14.
-Production advisories went from **12 (6 high, 6 moderate) to 4 moderate**, all
-of which are the same transitive `uuid` bounds-check issue via `googleapis`.
-That one is **not reachable**: it requires calling uuid v3/v5/v6 with a `buf`
-argument, and both `gaxios` and `googleapis-common` only call `uuid.v4()` with
-no arguments. Closing it would mean jumping `googleapis` 126 → 175 on a live
-booking calendar, which is a worse trade than the finding.
+Upgraded `next` to 16.3.1, `uuid` to v14, `googleapis` 126 → 175, and ran
+`npm audit fix`. Production advisories went from **12 (6 high, 6 moderate) to
+zero**.
+
+I initially left `googleapis` pinned, judging a 49-major-version jump on a
+live booking calendar riskier than the one unreachable advisory it closed.
+The parallel review took the upgrade, so I verified it rather than guessing:
+the app's entire Google surface is `google.calendar('v3')`,
+`new google.auth.GoogleAuth`, `events.list` and `events.insert`. Under v175 all
+of those still exist, a real RSA-signed JWT auth client constructs, and an
+`events.list` call gets as far as the network layer — i.e. the API shape is
+intact. Taking the upgrade was the better call.
 
 ### Medium
 
@@ -143,15 +148,31 @@ No CSP, no HSTS, no Permissions-Policy, and `X-XSS-Protection: 1; mode=block`
 *create* vulnerabilities). Added a CSP plus HSTS and Permissions-Policy in
 `app/lib/security-headers.js`, and set `X-XSS-Protection: 0`.
 
-A note on the CSP: the strong form (per-request nonce + `strict-dynamic`) was
+Two notes on the CSP.
+
+**No nonce.** The strong form (per-request nonce + `strict-dynamic`) was
 implemented, tested against a production build, and **reverted**. Pages here
 are statically prerendered, so the cached HTML carries no nonce attributes —
 verified: 15 script tags, zero nonces — and `strict-dynamic` makes browsers
 ignore `'self'`, which blocked every script on the site including checkout.
 The shipped policy uses `'unsafe-inline'` for scripts and keeps the directives
 that still bind an injected script: `connect-src`, `form-action`, `base-uri`,
-`object-src`, `frame-ancestors`. Verified in a real browser across four pages
-plus the payment page: zero violations, Stripe.js loads.
+`object-src`, `frame-ancestors`.
+
+**Origin list.** My first pass allowed only `js.stripe.com`, `hooks.stripe.com`
+and `api.stripe.com`. Per Stripe's own CSP guidance that is too narrow:
+`*.js.stripe.com` is required because Stripe.js starts Payment Element frames
+on sharded origins (and the ACH Financial Connections flow, the default for
+recurring bookings, runs in those frames); `m.stripe.network` carries Radar
+fraud signals and fails *silently* when blocked; and `*.stripe.com` is needed
+for the telemetry and error endpoints Stripe.js posts to. Those came from the
+parallel review and are now in.
+
+Verified in a real browser across four pages plus the payment page and the
+full promo flow: zero violations, Stripe.js loads, the Google Calendar and
+Maps embeds render. Caveat worth stating plainly: this environment has no
+Stripe keys and no live booking, so the Payment Element never mounts — the
+Stripe origins above rest on Stripe's documentation, not on my observation.
 
 **9. Timing-unsafe secret comparison** — *Fixed*
 
@@ -231,4 +252,39 @@ Not everything needed fixing. These were checked and are correct as written:
 | `tests/email-html-injection.test.mjs` | Tag-breakout payload neutralized in confirmation, staff and inquiry emails |
 | `tests/rate-limit.test.mjs` | Limits, per-IP and per-bucket isolation, window expiry, no limit disclosed in the 429 |
 | `tests/admin-cron-auth.test.mjs` | Fail-closed on unset secret, length-mismatch safety, Bearer form required |
-| `tests/security-headers.test.mjs` | CSP directives, Stripe/Google allowances, no nonce+unsafe-inline, webhook bypass |
+| `tests/security-headers.test.mjs` | CSP directives, Stripe/Google allowances, no nonce+unsafe-inline, API no-store, webhook bypass |
+| `tests/security-invariants.test.mjs` | Structural guards: every anonymous route declares a rate limit (and the Stripe webhook does not), no wildcard CORS, no ad-hoc Supabase client, no `NEXT_PUBLIC_` service key, migration covers every table and can't abort |
+
+
+---
+
+## Reconciliation with the parallel review
+
+A second review ran independently on `claude/website-security-audit-dhzu3x`.
+The two overlapped heavily — both found the promo-code leak, the missing RLS,
+the absent rate limiting, wildcard CORS, missing headers, and the timing-unsafe
+secret comparison, and both reached the same conclusion that a CSP nonce is
+incompatible with static prerendering here.
+
+**Taken from that branch into this one:**
+
+| Finding | Why it mattered |
+| --- | --- |
+| Stripe CSP origins (`*.js.stripe.com`, `m.stripe.network`, `*.stripe.com`) | My narrower list would have produced console violations on every payment and risked the Payment Element / ACH frames |
+| `Cache-Control: no-store` + `noindex` on API responses | `/api/booking/[id]` returns renter PII; without it a shared cache or CDN may store one renter's booking and serve it to the next caller |
+| `googleapis` 126 → 175 | Closes the last 4 advisories; verified safe against our API surface |
+| Rightmost `x-forwarded-for`, prefer `x-real-ip` | Not exploitable on Vercel today (the platform overwrites the header rather than appending), but the leftmost entry is caller-forgeable anywhere that appends — this fails safer |
+| Existence-guarded `REVOKE` in the migration | A real bug in my version: `REVOKE` has no `IF EXISTS`, so a missing `email_events`/`cron_runs` table would abort the script with RLS half applied |
+| `ALTER DEFAULT PRIVILEGES`, rollback block, grant-verification query | Future tables locked by default; a documented way out if the migration is run before the env var is live |
+| Structural regression tests | Catch a route added later that forgets a rate limit, or a module that builds its own Supabase client |
+
+**Kept from this branch (absent there):**
+
+| Finding | Status on the other branch |
+| --- | --- |
+| Email HTML injection (~50 interpolations, inquiry rows, attachment filenames) | `app/lib/email.js` untouched — not addressed |
+| Calendar event titles leaking from `/api/recurring-conflicts` | Still returns `conflict.summary`, i.e. `🔒 BOOKED: <renter's event name>`, to anonymous callers |
+| Google Calendar + Maps `frame-src` | Absent from that CSP. Confirmed in a browser: both embeds are refused, so the home-page calendar and map would render blank |
+| User-agent blocklist removed | Still present, still blocking visitors whose UA contains "hack" |
+| `websiteUrl` scheme validation | Still accepts `javascript:` |
+| `promo_code` removed from the booking API response | Still returned to anyone holding a booking id |

@@ -18,8 +18,10 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
+  const isApi = request.nextUrl.pathname.startsWith('/api/');
+
   const response = NextResponse.next();
-  for (const [name, value] of Object.entries(securityHeaders())) {
+  for (const [name, value] of Object.entries(securityHeaders({ isApi }))) {
     response.headers.set(name, value);
   }
 

@@ -24,8 +24,13 @@
 --   1. Copy the service_role key from Supabase → Project Settings → API.
 --   2. Add it to Vercel as `SUPABASE_SERVICE_ROLE_KEY` (all environments).
 --      It is a SECRET: never prefix it with NEXT_PUBLIC_, never commit it.
---   3. Redeploy and confirm the app still books/reads normally.
+--   3. Redeploy, and CONFIRM the key actually took effect before continuing —
+--      the function logs warn "⚠️ Supabase is using the ANON key" when it did
+--      not. Running step 4 while the app is still on the anon key takes
+--      bookings down.
 --   4. Only then run this file in the Supabase SQL editor.
+--   5. Smoke-test: submit a booking through /book and confirm the row lands
+--      and the confirmation email sends.
 --
 -- Running this BEFORE step 2 will break booking, inquiries and the cron jobs,
 -- because the anon key will no longer be able to touch these tables.
@@ -33,10 +38,7 @@
 -- AFTER: rotate the anon key if you believe it was ever exposed. With RLS on
 -- and no policies, a leaked anon key is inert — but rotating costs nothing.
 --
--- Verify afterwards with:
---   select relname, relrowsecurity from pg_class
---   where relname in ('bookings','inquiries','email_events','cron_runs');
---   -- relrowsecurity must be `t` for every row present.
+-- Verification queries are at the bottom of this file, along with a rollback.
 
 -- `bookings` — renter PII, ID photos, COIs, payment amounts and status.
 alter table if exists public.bookings enable row level security;
@@ -73,7 +75,73 @@ alter table if exists public.cron_runs force row level security;
 -- Belt and braces: revoke the default table grants from the public-facing
 -- roles as well, so a future `alter table ... disable row level security`
 -- (or a policy added by mistake) is not on its own enough to expose the data.
-revoke all on public.bookings     from anon, authenticated;
-revoke all on public.inquiries    from anon, authenticated;
-revoke all on public.email_events from anon, authenticated;
-revoke all on public.cron_runs    from anon, authenticated;
+--
+-- It also makes probing uniform. RLS-with-no-policies returns "no rows";
+-- having no grant at all returns "no permission", and PostgREST's error text
+-- differs between the two in ways that tell a caller whether a table exists.
+--
+-- REVOKE has no IF EXISTS form, and a bare REVOKE against a table that hasn't
+-- been created yet raises an error that aborts the whole migration — which
+-- matters here because `email_events` and `cron_runs` come from migrations
+-- that may not have been run. Hence the existence check.
+--
+--   anon          = the publicly shareable key.
+--   authenticated = Supabase Auth end users. This app has none.
+--   service_role  = the server. Untouched; it bypasses RLS by design.
+do $$
+declare
+  t text;
+begin
+  foreach t in array array['bookings', 'inquiries', 'email_events', 'cron_runs']
+  loop
+    if exists (
+      select 1 from information_schema.tables
+      where table_schema = 'public' and table_name = t
+    ) then
+      execute format('revoke all on table public.%I from anon, authenticated', t);
+      raise notice 'RLS enabled and grants revoked for public.%', t;
+    else
+      raise notice 'Skipping public.% (table does not exist yet)', t;
+    end if;
+  end loop;
+end
+$$;
+
+-- Any table added to `public` LATER is unreachable by the anon key by
+-- default, so a future migration cannot silently re-expose renter data by
+-- forgetting to repeat the lockdown above.
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- VERIFY
+--
+-- Both of these should hold afterwards. The first reports RLS on every table:
+--
+--   select tablename, rowsecurity from pg_tables
+--    where schemaname = 'public'
+--      and tablename in ('bookings','inquiries','email_events','cron_runs');
+--
+-- The second should return NO rows — no lingering anon/authenticated grants:
+--
+--   select table_name, grantee, privilege_type
+--     from information_schema.role_table_grants
+--    where table_schema = 'public'
+--      and grantee in ('anon','authenticated');
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- ROLLBACK — only if SUPABASE_SERVICE_ROLE_KEY was not actually live and
+-- bookings are now failing.
+--
+-- This puts renter PII back within reach of the anon key, so treat it as an
+-- emergency measure: set the env var and re-run this migration as soon as the
+-- site is stable.
+--
+--   alter table bookings     disable row level security;
+--   alter table inquiries    disable row level security;
+--   alter table email_events disable row level security;
+--   alter table cron_runs    disable row level security;
+--   grant all on table public.bookings, public.inquiries,
+--                       public.email_events, public.cron_runs
+--     to anon, authenticated;
+-- ---------------------------------------------------------------------------

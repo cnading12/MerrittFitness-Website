@@ -52,13 +52,43 @@ test('CSP confines network egress, form posts, base URI and plugins', () => {
   assert.match(csp, /default-src 'self'/);
 });
 
-test('CSP still permits Stripe and the Google embeds', () => {
+test('CSP permits every origin Stripe requires', () => {
+  // Straight from Stripe's CSP guidance. Getting any of these wrong breaks
+  // checkout or silently degrades fraud detection, so each is pinned.
   const csp = cspOf();
-  // Getting this wrong breaks checkout, so it is worth a regression test.
-  assert.match(csp, /script-src[^;]*https:\/\/js\.stripe\.com/, 'Stripe.js must load');
-  assert.match(csp, /frame-src[^;]*https:\/\/js\.stripe\.com/, 'Stripe payment frames must load');
-  assert.match(csp, /connect-src[^;]*https:\/\/api\.stripe\.com/, 'Stripe API calls must be allowed');
-  assert.match(csp, /frame-src[^;]*https:\/\/calendar\.google\.com/, 'the calendar embed must load');
+  const directive = (name) => csp.split(';').find((d) => d.trim().startsWith(name)) || '';
+
+  const script = directive('script-src');
+  assert.ok(script.includes('https://js.stripe.com'), 'Stripe.js must load');
+  assert.ok(
+    script.includes('https://*.js.stripe.com'),
+    'Stripe.js starts Payment Element frames on sharded origins — omitting this breaks card fields and the ACH flow'
+  );
+
+  const frame = directive('frame-src');
+  assert.ok(frame.includes('https://js.stripe.com'));
+  assert.ok(frame.includes('https://*.js.stripe.com'));
+  assert.ok(frame.includes('https://hooks.stripe.com'), '3-D Secure frames');
+  assert.ok(
+    frame.includes('https://m.stripe.network'),
+    'Stripe Radar fraud signals — blocking this degrades fraud detection SILENTLY'
+  );
+
+  const connect = directive('connect-src');
+  assert.ok(
+    connect.includes('https://*.stripe.com'),
+    'covers api/q/errors.stripe.com; narrowing to api.stripe.com alone produces violations on every payment'
+  );
+});
+
+test('CSP permits the Google Calendar and Maps embeds', () => {
+  // These fail QUIETLY — the iframes render blank with only a console
+  // violation — so they are easy to drop when tightening the policy. The
+  // calendar embed is on the home page and /book; the map is on the home page.
+  const csp = cspOf();
+  const frame = csp.split(';').find((d) => d.trim().startsWith('frame-src')) || '';
+  assert.ok(frame.includes('https://calendar.google.com'), 'the "What\'s On" calendar embed must load');
+  assert.ok(frame.includes('https://www.google.com'), 'the Maps embed must load');
   assert.match(csp, /style-src[^;]*https:\/\/fonts\.googleapis\.com/, 'Google Fonts must load');
 });
 

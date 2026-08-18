@@ -169,7 +169,14 @@ found in the code.
 9. **Don't return raw `error.message` to clients.** Log it; send a generic
    message. Database and Stripe errors leak schema and internals.
 
-10. **CSP: don't add a nonce.** Pages are statically prerendered, so the HTML
-    carries no nonce and a nonce (or `'strict-dynamic'`) would block every
-    script on the site, checkout included. See the long comment in
-    `app/lib/security-headers.js` before changing `script-src`.
+10. **CSP: don't add a nonce, and don't narrow the Stripe origins.** Pages are
+    statically prerendered, so the HTML carries no nonce and a nonce (or
+    `'strict-dynamic'`) would block every script on the site, checkout
+    included. The origin list is Stripe's own — `*.js.stripe.com` carries the
+    Payment Element and ACH frames, and `m.stripe.network` (Radar) fails
+    silently when blocked. `calendar.google.com` / `www.google.com` in
+    `frame-src` are the calendar and map embeds, which also fail quietly. See
+    `app/lib/security-headers.js` before touching any of it.
+
+11. **API responses are `no-store`.** They carry renter PII, so no shared cache
+    or CDN may hold them. Set in `securityHeaders({ isApi: true })`.

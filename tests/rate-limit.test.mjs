@@ -109,11 +109,37 @@ test('extra headers (CORS) survive onto the 429', () => {
   assert.equal(blocked.headers.get('Access-Control-Allow-Origin'), 'https://merrittwellness.net');
 });
 
-test('client IP comes from the LEFTMOST x-forwarded-for entry', () => {
-  // Vercel sets this header at the edge and the real client is leftmost.
-  // Anything a caller appends lands to the right and must be ignored, or the
-  // limiter could be evaded by padding the header.
-  assert.equal(clientIpFrom(requestFrom('7.7.7.7, 10.0.0.1, 10.0.0.2')), '7.7.7.7');
+test('client IP comes from the RIGHTMOST x-forwarded-for entry', () => {
+  // The leftmost entry is caller-forgeable: under the "append" behavior most
+  // proxies default to, a request arriving with the header already set puts
+  // the attacker's value at the front. Trusting it would let anyone mint a
+  // fresh bucket per request. The rightmost entry is the one our closest
+  // proxy added.
+  assert.equal(clientIpFrom(requestFrom('1.2.3.4, 10.0.0.1, 10.0.0.2')), '10.0.0.2');
+});
+
+test('a forged x-forwarded-for prefix cannot mint fresh buckets', () => {
+  // The concrete bypass this prevents: vary the spoofed prefix each request
+  // and never hit the limit.
+  __resetRateLimits();
+  const opts = { bucket: 'test-spoof', limit: 2, windowMs: 60_000 };
+
+  rateLimit(requestFrom('9.9.9.1, 10.0.0.5'), opts);
+  rateLimit(requestFrom('9.9.9.2, 10.0.0.5'), opts);
+  assert.equal(
+    rateLimit(requestFrom('9.9.9.3, 10.0.0.5'), opts).allowed,
+    false,
+    'all three share the same real client, so the third must be refused'
+  );
+});
+
+test('x-real-ip is preferred over x-forwarded-for', () => {
+  // The platform sets x-real-ip and a caller cannot influence it.
+  const request = new Request('https://example.com/api/thing', {
+    method: 'POST',
+    headers: { 'x-forwarded-for': '1.2.3.4', 'x-real-ip': '8.8.8.8' },
+  });
+  assert.equal(clientIpFrom(request), '8.8.8.8');
 });
 
 test('requests with no forwarded IP still get counted rather than skipped', () => {
