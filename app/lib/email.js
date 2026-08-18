@@ -1271,7 +1271,7 @@ const EMAIL_TEMPLATES = {
       <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.occurrenceCount != null ? r.occurrenceCount : '—'}</td>
       <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.totalHours != null ? `${r.totalHours} hrs` : '—'}</td>
       <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.amount != null ? money(r.amount) : '—'}</td>
-      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${r.note || ''}</td>
+      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${esc(r.note || '')}</td>
     </tr>`;
 
     const tableHead = `<thead><tr>
@@ -1341,7 +1341,7 @@ const EMAIL_TEMPLATES = {
             ${results.failed.length > 0 ? `
             <div style="background: #fee2e2; padding: 16px; border-radius: 8px; margin-top: 20px;">
               <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">Failure Details</h3>
-              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${esc(r.eventName || r.bookingId)}:</strong> ${r.error || 'Unknown error'}</p>`).join('')}
+              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${esc(r.eventName || r.bookingId)}:</strong> ${esc(r.error || 'Unknown error')}</p>`).join('')}
             </div>
             ` : ''}
 

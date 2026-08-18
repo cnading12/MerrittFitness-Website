@@ -119,9 +119,11 @@ export function buildCsp() {
 // `isApi` toggles the two headers that should differ for API responses — see
 // the entries at the bottom.
 //
-// X-Content-Type-Options is deliberately absent: it is set in next.config.js
-// instead, so it also covers the /_next/* paths the middleware matcher skips.
-// Setting it in both places would emit the header twice.
+// X-Content-Type-Options is absent here because next.config.js declares it —
+// along with X-Frame-Options, Referrer-Policy and HSTS — so those also cover
+// the /_next/* paths this middleware's matcher skips. Declaring a header in
+// both places is harmless (headers.set() replaces rather than appends); the
+// split is about coverage, not about avoiding duplicates.
 export function securityHeaders({ isApi = false } = {}) {
   return {
     'Content-Security-Policy': buildCsp(),

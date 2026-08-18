@@ -45,8 +45,13 @@ mock.module('@supabase/supabase-js', {
   },
 });
 
-const { esc, sendBookingConfirmation, sendManagerNotification, sendInquiryNotification } =
-  await import('../app/lib/email.js');
+const {
+  esc,
+  sendBookingConfirmation,
+  sendManagerNotification,
+  sendInquiryNotification,
+  sendMonthlyBillingRollupEmail,
+} = await import('../app/lib/email.js');
 
 // The payload an attacker would submit: markup that breaks out of the table
 // cell it lands in and writes a link the recipient will read as ours.
@@ -139,4 +144,40 @@ test('esc renders null and undefined as empty, never as the words', () => {
   assert.equal(esc(undefined), '');
   assert.equal(esc(0), '0', 'zero is a real value and must survive');
   assert.equal(esc(false), 'false');
+});
+
+
+test('the monthly billing roll-up escapes every per-booking cell', async () => {
+  // This one is easy to miss: the roll-up's fields look server-authored, and
+  // the email is staff-only. But `error` carries err.message from Stripe and
+  // Postgres, and those messages quote the offending value — a renter's event
+  // name reaches Stripe as an invoice-item description and can come straight
+  // back inside an error string. Every cell gets escaped, not just the ones
+  // that obviously hold renter text.
+  sent.length = 0;
+  await sendMonthlyBillingRollupEmail({
+    year: 2026,
+    month: 9,
+    dryRun: false,
+    results: {
+      succeeded: [{
+        bookingId: 'b1',
+        eventName: `Yoga${BREAKOUT}`,
+        contactName: `Ann${BREAKOUT}`,
+        amount: 100,
+        totalHours: 2,
+        occurrenceCount: 1,
+        note: `Note${BREAKOUT}`,
+      }],
+      skipped: [{ bookingId: 'b3', eventName: `Skip${BREAKOUT}`, note: `Skipped${BREAKOUT}` }],
+      failed: [{ bookingId: 'b2', eventName: `Bad${BREAKOUT}`, error: `Stripe said: ${BREAKOUT}` }],
+    },
+  });
+
+  const html = sent.map((s) => s.html).join('\n');
+  assert.ok(html.length > 0, 'a roll-up email should have been produced');
+  assert.ok(
+    !html.includes('<a href="https://evil.example/pay">'),
+    'no cell in the roll-up may render attacker-authored markup'
+  );
 });

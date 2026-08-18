@@ -278,13 +278,34 @@ incompatible with static prerendering here.
 | `ALTER DEFAULT PRIVILEGES`, rollback block, grant-verification query | Future tables locked by default; a documented way out if the migration is run before the env var is live |
 | Structural regression tests | Catch a route added later that forgets a rate limit, or a module that builds its own Supabase client |
 
+**Found only by comparing the two — a gap BOTH reviews had:**
+
+The monthly-billing roll-up email (`sendMonthlyBillingRollupEmail`) rendered
+`r.note` and `r.error` unescaped on both branches. Both look server-authored,
+which is why both reviews skipped them — but `error` carries `err.message`
+straight from Stripe and Postgres, and those messages quote the value that
+caused the failure. A renter's event name reaches Stripe as an invoice-item
+description, so it can come back inside an error string and land in a staff
+inbox as live markup. Now escaped, with a regression test. Low severity (staff-
+only email, indirect path) but it is the same class of bug as finding 5, and it
+survived two independent passes because the fields don't *look* like user input.
+
 **Kept from this branch (absent there):**
 
 | Finding | Status on the other branch |
 | --- | --- |
-| Email HTML injection (~50 interpolations, inquiry rows, attachment filenames) | `app/lib/email.js` untouched — not addressed |
-| Calendar event titles leaking from `/api/recurring-conflicts` | Still returns `conflict.summary`, i.e. `🔒 BOOKED: <renter's event name>`, to anonymous callers |
-| Google Calendar + Maps `frame-src` | Absent from that CSP. Confirmed in a browser: both embeds are refused, so the home-page calendar and map would render blank |
+| Email HTML injection — inquiry detail rows | Their branch escapes the inquiry *message* but not `inquiryDetailRows`, so the inquirer's name/email/phone/event type still render as live markup in the staff notification. Verified by running this branch's injection test against theirs: it fails. |
 | User-agent blocklist removed | Still present, still blocking visitors whose UA contains "hack" |
 | `websiteUrl` scheme validation | Still accepts `javascript:` |
 | `promo_code` removed from the booking API response | Still returned to anyone holding a booking id |
+
+The calendar-title leak and the missing Google `frame-src` were both fixed on
+that branch after the first comparison, so they are no longer differences.
+
+**Also taken from that branch on the second pass:** baseline headers
+(X-Frame-Options, Referrer-Policy, HSTS) declared in `next.config.js` as well
+as middleware, so `/_next/static` and `/_next/image` carry them too. My first
+version avoided this on the belief that declaring a header in both places
+emits it twice. That was wrong — middleware uses `headers.set()`, which
+replaces — and it was verified against a production build: exactly one of each
+header on a page response, and the static assets are now covered.

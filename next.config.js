@@ -55,18 +55,20 @@ const nextConfig = {
     ]
   },
 
-  // Security headers.
+  // Baseline security headers for EVERY response.
   //
-  // middleware.js is the source of truth for the full set (CSP with a
-  // per-request nonce, HSTS, Permissions-Policy, frame options, referrer
-  // policy) because the nonce has to be generated per request. What stays here
-  // is the one header that also needs to cover paths the middleware matcher
-  // deliberately skips — /_next/static and /_next/image — so that every asset,
-  // not just every page, is protected from content-type sniffing.
+  // middleware.js sets the full set, but its matcher deliberately skips
+  // /_next/static, /_next/image and the Stripe webhook. These four are the
+  // ones still worth having on a static asset or an optimized image, so they
+  // are declared here as well.
   //
-  // Do not re-add X-Frame-Options / Referrer-Policy / X-XSS-Protection here:
-  // they are set in middleware.js, and setting them in both places emits the
-  // header twice.
+  // Declaring a header in both places is safe, not a duplicate: middleware
+  // uses headers.set(), which replaces rather than appends. Verified against a
+  // production build — a page response carries exactly one X-Frame-Options.
+  //
+  // The CSP and Permissions-Policy stay middleware-only: the CSP differs per
+  // request class (API responses also get Cache-Control: no-store and
+  // noindex), and neither means anything on a static asset.
   async headers() {
     return [
       {
@@ -75,6 +77,21 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            // HSTS is honored from any response on the host, so putting it on
+            // assets too means a visitor who somehow lands on one first is
+            // still pinned to HTTPS.
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },
