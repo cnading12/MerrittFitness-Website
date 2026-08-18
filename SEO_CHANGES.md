@@ -147,8 +147,10 @@ fallback stacks, so a font failure degrades exactly as it used to.
   and links through to the partnership pages.
 - **`/book` metadata** no longer describes a yoga studio at a flat "$95/hour".
   It covers the venue's full range and quotes the real published band.
-- **Neighborhood spelling is "Sloans Lake"** everywhere, matching the Business
-  Profile. Don't mix in "Sloan's Lake".
+- **Neighborhood spelling is "Sloans Lake"** everywhere on the site. Note the
+  Business Profile description writes it "Sloan's Lake"; the neighborhood is
+  not part of the NAP so this is cosmetic, but pick one and keep it. Don't
+  mix both within the site.
 - Age figures are computed from 1905, never typed. `/about`'s Twitter card
   used to hardcode "119 years".
 
