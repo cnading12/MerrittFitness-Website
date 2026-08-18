@@ -11,7 +11,7 @@ import type { MetadataRoute } from 'next';
 // elsewhere. Keeping pages out of the index is the job of the noindex header
 // in middleware.js and the `robots` metadata on those routes — this file only
 // saves crawl budget.
-const BASE_URL = 'https://merrittwellness.net';
+const BASE_URL = 'https://www.merrittwellness.net';
 
 export default function robots(): MetadataRoute.Robots {
   return {

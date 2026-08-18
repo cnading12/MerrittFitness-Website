@@ -1,7 +1,7 @@
 # SEO — Merritt Wellness
 
-Canonical domain: `https://merrittwellness.net`. Stack: Next.js 16 (App Router),
-React 19, Tailwind 3.
+Canonical host: `https://www.merrittwellness.net` (**with** www — see below).
+Stack: Next.js 16 (App Router), React 19, Tailwind 3.
 
 This file records the current SEO architecture and the reasoning behind the
 parts that are easy to break. `tests/seo-invariants.test.mjs` locks the ones
@@ -183,12 +183,57 @@ have been fixed in code:
    states the sanctuary is held by congregations until 4:30 PM every Sunday.
    The site was contradicting both the profile and its own data. `hours` is
    now per-day and the JSON-LD emits two `OpeningHoursSpecification` entries.
-2. **Host.** The profile's Website field points at `www.merrittwellness.net`,
-   which does not resolve, so the "Website" button on the Maps listing is a
-   dead link. Every canonical, the sitemap, and the JSON-LD use the apex
-   domain. `middleware.js` now 308s www → apex, but that only takes effect
-   once www is attached as a domain in Vercel — until then nothing reaches
-   the middleware. **This needs a DNS/Vercel change, not a code change.**
+2. **Host.** Resolved — see the section below. The profile is right and the
+   codebase was wrong.
+
+---
+
+## Canonical host: www, not the apex
+
+Measured, not assumed:
+
+```
+$ curl -sSIL https://merrittwellness.net
+HTTP/2 307
+location: https://www.merrittwellness.net/
+HTTP/2 200
+```
+
+**The apex redirects to www.** www is the host that actually serves the site,
+it is what the Business Profile links to, and it is what Google has indexed.
+
+The codebase declared the opposite. `metadataBase`, every `alternates.canonical`,
+every sitemap URL, every OG `url`, and every schema `@id` used the bare apex —
+so **every canonical tag on the site pointed at a URL that 307-redirected to a
+different host.** That is the likely reason Google indexed www pages while the
+markup claimed the apex. All 49 of those references now use www, and
+`tests/seo-invariants.test.mjs` fails on any scheme-qualified apex URL that
+reappears in code.
+
+> **Never add a www → apex redirect in `middleware.js`.** An earlier revision of
+> this branch did exactly that, on the mistaken belief that www was the dead
+> host. Combined with the platform's existing apex → www redirect it would have
+> bounced every request between the two hosts forever and taken the site down.
+> It was caught before shipping, and `middleware.js` carries a comment saying
+> so. To move the canonical to the apex later, change the platform redirect
+> **first**, then `BASE_URL` in `lib/site-schema.ts`, then the test guard —
+> together, in that order.
+
+### The two 307s
+
+Both redirects in play are `307 Temporary`, and both would be better as `301`
+(or `308`) permanent:
+
+| Redirect | Status | Impact |
+|---|---|---|
+| `merrittfitness.net` → `www.merrittwellness.net` | 307 | **Matters most.** Cross-domain: a temporary redirect does not pass the old brand domain's accumulated authority to the new one. |
+| `merrittwellness.net` → `www.merrittwellness.net` | 307 | Lower stakes now. Same-site host canonicalisation, and the canonical tags agree with the redirect target, which does most of the work. |
+
+Neither is fixable in this repo — they are platform/registrar settings. The
+permanent/temporary toggle lives in the Vercel domain settings for whichever
+project owns each domain, or in the registrar's domain-forwarding panel if the
+forwarding happens there. Worth chasing for `merrittfitness.net`; optional for
+the apex.
 
 ---
 
@@ -209,19 +254,19 @@ Ordered by impact.
    category is still "Yoga studio", the profile is competing for yoga queries
    instead of event-venue ones.**
 
-2. **Fix the www dead link.** Add `www.merrittwellness.net` in Vercel pointing
-   at this project (Vercel will serve the 308 to the apex, and the middleware
-   redirect backs it up), and create the DNS record. Then change the profile's
-   Website field to `https://merrittwellness.net/`. Both halves matter: the
-   field fixes the Maps button, the DNS fixes every www URL Google has already
-   indexed and every citation pointing at www.
+2. **Make the `merrittfitness.net` redirect permanent.** It currently answers
+   `307 Temporary`, so none of the old brand domain's authority transfers. Find
+   the permanent/301 toggle in whichever system forwards it — Vercel domain
+   settings, or the registrar's forwarding panel — and switch it. Keep the
+   domain registered and the redirect in place indefinitely. The apex → www
+   307 is the same class of issue but much lower stakes; fix it if the toggle
+   is easy to find, otherwise leave it.
 
-3. **Verify merrittfitness.net redirects with a 301.** The old brand domain
-   forwards to merrittwellness.net, which is right, but a 301 (permanent)
-   passes authority where a 302, meta refresh, or JS redirect does not. Check
-   with `curl -I https://merrittfitness.net`. Keep the domain registered and
-   the redirect in place indefinitely. Google still has the old site indexed
-   under its own title, so it has not recrawled since the change.
+3. **Nothing to verify on the old domain — measured.** `merrittfitness.net`
+   and `www.merrittfitness.net` both forward to `www.merrittwellness.net` and
+   the destination answers 200. Only the 307-vs-301 status needs attention
+   (item 2). Google still has the old site indexed under its own title, so it
+   has not recrawled since the change; that resolves on its own.
 
 4. **Clean up the legacy "Merritt Fitness" citations.** The Yelp listing is
    still named *MERRITT FITNESS* and categorised as *Yoga* — claim it, rename

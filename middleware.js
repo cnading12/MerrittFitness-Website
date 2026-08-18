@@ -12,27 +12,22 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  // Canonical host: everything lives on the apex domain.
+  // CANONICAL HOST: www.merrittwellness.net.
   //
-  // Every canonical URL, the sitemap, the JSON-LD graph, and metadataBase all
-  // use https://merrittwellness.net with no www. The Google Business Profile,
-  // however, points at https://www.merrittwellness.net/ — a host that does
-  // not currently resolve — so the "Website" button on the Maps listing is a
-  // dead link, and the www URLs Google has indexed go nowhere.
+  // Do NOT add a www -> apex redirect here. The apex already redirects to www
+  // at the platform level:
   //
-  // This redirect makes www consolidate into the apex the moment the hostname
-  // is actually pointed at this deployment. It cannot fix the dead link on
-  // its own: until www.merrittwellness.net is added as a domain in Vercel
-  // (and its DNS record exists), no request ever reaches this middleware.
-  // See SEO_CHANGES.md.
-  const host = request.headers.get('host') || '';
-  if (host.startsWith('www.')) {
-    const canonical = request.nextUrl.clone();
-    canonical.host = host.slice(4);
-    canonical.port = '';
-    canonical.protocol = 'https';
-    return NextResponse.redirect(canonical, 308);
-  }
+  //   curl -sSIL https://merrittwellness.net
+  //   HTTP/2 307
+  //   location: https://www.merrittwellness.net/
+  //   HTTP/2 200
+  //
+  // A middleware redirect in the other direction would bounce every request
+  // between the two hosts forever and take the whole site down. An earlier
+  // revision of this file did exactly that, on the mistaken belief that www
+  // was the dead host; it was caught before it shipped. If the canonical host
+  // is ever moved to the apex, change the platform redirect FIRST and
+  // BASE_URL in lib/site-schema.ts to match — never add a redirect here.
 
   // Create response
   const response = NextResponse.next();

@@ -28,7 +28,7 @@ const jost = Jost({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://merrittwellness.net'),
+  metadataBase: new URL('https://www.merrittwellness.net'),
   // No `template` here on purpose: every interior route already sets a
   // complete, brand-suffixed title, and a template would double the brand
   // ("... | Merritt Wellness | Merritt Wellness Denver").
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     'concert venue rental Denver',
     'church space for rent Denver',
   ],
-  authors: [{ name: 'Merritt Wellness', url: 'https://merrittwellness.net' }],
+  authors: [{ name: 'Merritt Wellness', url: 'https://www.merrittwellness.net' }],
   creator: 'Merritt Wellness',
   publisher: 'Merritt Wellness',
   icons: {
@@ -70,11 +70,11 @@ export const metadata: Metadata = {
       "Merritt Wellness | Historic Event, Wedding & Class Venue in Sloans Lake, Denver",
     description:
       "A restored 1905 sanctuary for weddings, private events, concerts, and weekly wellness and movement classes. 24-foot vaulted ceilings, 125 guests, published rates.",
-    url: 'https://merrittwellness.net',
+    url: 'https://www.merrittwellness.net',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/1.webp',
+        url: 'https://www.merrittwellness.net/images/hero/1.webp',
         width: 1920,
         height: 1256,
         alt: "The restored 1905 brick sanctuary that houses Merritt Wellness, on its tree-lined corner in Denver's Sloans Lake neighborhood",
@@ -88,10 +88,10 @@ export const metadata: Metadata = {
     title: "Merritt Wellness | Historic Event & Class Venue in Sloans Lake, Denver",
     description:
       'Weddings, private events, concerts, and weekly yoga, breathwork, sound bath, and dance classes in a restored 1905 sanctuary.',
-    images: ['https://merrittwellness.net/images/hero/1.webp'],
+    images: ['https://www.merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net',
+    canonical: 'https://www.merrittwellness.net',
   },
   robots: {
     index: true,

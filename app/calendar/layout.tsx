@@ -28,11 +28,11 @@ export const metadata: Metadata = {
     title: "What's On | Sound Baths, Breathwork, Yoga & Live Music in Denver",
     description:
       "Sound baths, breathwork, yoga, dance classes, and live music open to the public in a historic 1905 sanctuary in Denver's Sloans Lake. Times, prices, and booking links.",
-    url: 'https://merrittwellness.net/calendar',
+    url: 'https://www.merrittwellness.net/calendar',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/1.webp',
+        url: 'https://www.merrittwellness.net/images/hero/1.webp',
         width: 1200,
         height: 630,
         alt: 'Merritt Wellness Events - Sound Baths and Yoga Workshops in Denver',
@@ -46,14 +46,14 @@ export const metadata: Metadata = {
     title: "What's On | Merritt Wellness Denver",
     description:
       "Sound baths, breathwork, yoga, dance classes, and live music open to the public in a historic 1905 sanctuary in Denver's Sloans Lake.",
-    images: ['https://merrittwellness.net/images/hero/1.webp'],
+    images: ['https://www.merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net/calendar',
+    canonical: 'https://www.merrittwellness.net/calendar',
   },
 };
 
-const BASE_URL = 'https://merrittwellness.net';
+const BASE_URL = 'https://www.merrittwellness.net';
 
 // Returns the America/Denver UTC offset (e.g. "-06:00" / "-07:00") for a given date,
 // so Event startDate/endDate carry an accurate timezone per DST rules.

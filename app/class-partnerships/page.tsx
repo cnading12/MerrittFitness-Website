@@ -14,7 +14,7 @@ import { rateBands, recurringDiscount, money } from '@/app/lib/venue-rates';
 import { CalendarClock, ArrowRight } from 'lucide-react';
 
 const PATH = '/class-partnerships';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/classes/dance-class-string-lights.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/classes/dance-class-string-lights.webp';
 
 export const metadata: Metadata = {
   title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
       'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1603, alt: classesImages.danceClassStringLights.alt }],
     locale: 'en_US',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [

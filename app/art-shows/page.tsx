@@ -12,7 +12,7 @@ import { venueImages, artShowsImages } from '@/app/data/venue-images';
 import { extendedDiscount, rateBands } from '@/app/lib/venue-rates';
 
 const PATH = '/art-shows';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/art-shows/exhibition-stained-glass.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/art-shows/exhibition-stained-glass.webp';
 
 export const metadata: Metadata = {
   title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
     description:
       'Natural light, hardwood floors, and stained glass that flatters the work. A century-old gallery hall for openings and exhibitions.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1920, height: 1440, alt: artShowsImages.exhibitionStainedGlass.alt }],
     locale: 'en_US',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       'Natural light, hardwood floors, and stained glass that flatters the work. A century-old gallery hall for openings and exhibitions.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [

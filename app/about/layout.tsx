@@ -12,11 +12,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Our Story | Merritt Wellness — a Restored 1905 Sanctuary in Denver",
     description: `A 1905 landmark that has gathered Denver's Sloans Lake neighborhood for ${yearsServing} years, now a venue for weddings, concerts, classes, and community gatherings.`,
-    url: 'https://merrittwellness.net/about',
+    url: 'https://www.merrittwellness.net/about',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.webp',
+        url: 'https://www.merrittwellness.net/images/hero/outside3.webp',
         width: 1200,
         height: 630,
         alt: 'Historic Merritt Wellness building exterior - restored 1905 building in Denver Sloans Lake',
@@ -29,10 +29,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Our Story | Merritt Wellness — a Restored 1905 Sanctuary in Denver',
     description: `${yearsServing} years of community gathering in Denver's Sloans Lake neighborhood, from Merritt Methodist Church to the venue it is today.`,
-    images: ['https://merrittwellness.net/images/hero/outside3.webp'],
+    images: ['https://www.merrittwellness.net/images/hero/outside3.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net/about',
+    canonical: 'https://www.merrittwellness.net/about',
   },
 }
 

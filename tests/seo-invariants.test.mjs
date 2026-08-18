@@ -8,7 +8,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -142,5 +142,57 @@ test('priceRange is a valid range, not a per-unit rate', () => {
     /\/\s*(hour|hr|day)/i.test(match[1]),
     false,
     `priceRange must not carry a per-unit suffix, got: ${match[1]}`
+  );
+});
+
+test('every absolute site URL uses the canonical host', () => {
+  // The canonical host is www.merrittwellness.net, because that is the host
+  // that actually serves the site — the apex 307-redirects to it:
+  //
+  //   curl -sSIL https://merrittwellness.net
+  //   HTTP/2 307
+  //   location: https://www.merrittwellness.net/
+  //
+  // The whole codebase used to declare the apex in canonicals, the sitemap,
+  // metadataBase, and every schema @id, so every canonical tag pointed at a
+  // URL that redirected to a different host. A stray non-www URL reintroduces
+  // that split, so this fails on any scheme-qualified apex reference.
+  //
+  // If the canonical host ever moves to the apex, change the PLATFORM
+  // redirect first, then flip this test and the codebase together.
+  // Walk the source tree directly rather than shelling out: `grep -rl` exits
+  // non-zero when it finds nothing, which is the passing case here.
+  const roots = ['app', 'lib', 'components'];
+  const offenders = [];
+
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (/\.(ts|tsx|js|mjs)$/.test(entry.name)) {
+        // Scan code only. Comment lines are skipped so documentation can
+        // quote the apex URL (the curl output above is worth keeping
+        // verbatim) without tripping the guard. Only whole-line comments are
+        // dropped — a line of real code is never skipped, and stripping `//`
+        // mid-line would wrongly swallow the `//` inside a URL literal, which
+        // is exactly what this test exists to catch.
+        const code = readFileSync(full, 'utf8')
+          .split('\n')
+          .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+          .join('\n');
+        if (/https:\/\/merrittwellness\.net/.test(code)) offenders.push(full);
+      }
+    }
+  };
+
+  const repoRoot = new URL('..', import.meta.url).pathname;
+  for (const root of roots) walk(`${repoRoot}${root}`);
+  const files = offenders.map((f) => f.replace(repoRoot, '')).join('\n');
+
+  assert.equal(
+    files,
+    '',
+    `These files use the non-canonical apex host instead of www.merrittwellness.net:\n${files}`
   );
 });

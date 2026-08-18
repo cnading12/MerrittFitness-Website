@@ -14,7 +14,7 @@ import { mixerPolicy } from '@/app/data/site';
 import { extendedDiscount, rateBands } from '@/app/lib/venue-rates';
 
 const PATH = '/concerts';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/concerts/songwriters-round.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/concerts/songwriters-round.webp';
 
 export const metadata: Metadata = {
   title: 'Concert & Performance Venue in Denver | Merritt Wellness',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: 'Concert & Performance Venue in Denver | Merritt Wellness',
     description:
       'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1800, alt: concertsImages.songwritersRound.alt }],
     locale: 'en_US',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [

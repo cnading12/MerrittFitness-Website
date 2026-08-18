@@ -24,7 +24,27 @@
 import { contact, specs, hours, reviews, areaServed, workspace } from '@/app/data/site';
 import { rateBands } from '@/app/lib/venue-rates';
 
-export const BASE_URL = 'https://merrittwellness.net';
+// CANONICAL HOST — www, and it is not arbitrary.
+//
+// www.merrittwellness.net is the host that actually serves the site; the apex
+// redirects to it at the platform level:
+//
+//   curl -sSIL https://merrittwellness.net
+//   HTTP/2 307
+//   location: https://www.merrittwellness.net/
+//   HTTP/2 200
+//
+// Everything derived from this constant — canonicals, metadataBase, sitemap
+// URLs, OG urls, and every schema @id — used to declare the apex instead, so
+// every canonical tag pointed at a URL that redirected to a different host.
+// That is also why Google has www URLs in its index while the site claimed
+// the apex, and it matches the Business Profile's Website field.
+//
+// To move the canonical to the apex later: change the PLATFORM redirect
+// first, then this constant, then the guard in tests/seo-invariants.test.mjs.
+// Never do it by adding a redirect in middleware.js — the platform redirect
+// points the other way and the two would loop forever.
+export const BASE_URL = 'https://www.merrittwellness.net';
 export const BUSINESS_ID = `${BASE_URL}/#business`;
 export const WEBSITE_ID = `${BASE_URL}/#website`;
 

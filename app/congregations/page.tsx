@@ -10,7 +10,7 @@ import { sundaySchedule, specs, contact } from '@/app/data/site';
 import { Check } from 'lucide-react';
 
 const PATH = '/congregations';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/og-venue.jpg';
 
 export const metadata: Metadata = {
   title: 'A Home for Your Congregation in Denver | Merritt Wellness',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     title: 'A Home for Your Congregation in Denver | Merritt Wellness',
     description:
       'A 1905 sanctuary open to gatherings of every tradition. Two churches meet here now; there is room for more.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: venueImages.mainHallRoseWindow.alt }],
     locale: 'en_US',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
       'A 1905 sanctuary open to gatherings of every tradition. Two churches meet here now; there is room for more.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const included = [

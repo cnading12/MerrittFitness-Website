@@ -23,7 +23,7 @@ import {
 // and the homepage contact section link to it, which is enough for both
 // crawlers and people who go looking for it.
 const PATH = '/contact';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/exterior-front.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/exterior-front.webp';
 
 export const metadata: Metadata = {
   title: "Contact Merritt Wellness | Denver Event Venue in Sloans Lake",

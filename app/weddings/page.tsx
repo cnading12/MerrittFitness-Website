@@ -20,7 +20,7 @@ import {
 } from '@/app/lib/venue-rates';
 
 const PATH = '/weddings';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/weddings/og-weddings.jpg';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/weddings/og-weddings.jpg';
 
 export const metadata: Metadata = {
   title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
     description:
       'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1080, height: 567, alt: weddingsImages.celebrationKiss.alt }],
     locale: 'en_US',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
       'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [

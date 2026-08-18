@@ -7,7 +7,7 @@
 
 import { contact, specs } from '@/app/data/site';
 
-const BASE_URL = 'https://merrittwellness.net';
+const BASE_URL = 'https://www.merrittwellness.net';
 
 export interface VenueJsonLdOptions {
   /** Page path, e.g. "/weddings" */

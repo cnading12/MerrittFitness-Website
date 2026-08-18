@@ -12,7 +12,7 @@ import { coPromotion, contact } from '@/app/data/site';
 import { ArrowRight } from 'lucide-react';
 
 const PATH = '/recurring';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/sunlit-hall-partition.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/sunlit-hall-partition.webp';
 
 export const metadata: Metadata = {
   title: 'Recurring Booking Rates | Partnerships at Merritt Wellness Denver',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Recurring Booking Rates | Merritt Wellness Denver',
     description:
       'Hold a weekly block in a historic Denver event center: 20% partner rates, simple monthly billing, one home for your community.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1800, height: 2400, alt: venueImages.sunlitHallPartition.alt }],
     locale: 'en_US',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       'Hold a weekly block in a historic Denver event center: 20% partner rates, simple monthly billing, one home for your community.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 // The type pages a recurring partner usually comes from.

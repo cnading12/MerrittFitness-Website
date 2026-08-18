@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { events } from '@/app/data/events';
 
-const BASE_URL = 'https://merrittwellness.net';
+const BASE_URL = 'https://www.merrittwellness.net';
 
 /**
  * The most recent date any published event was scheduled for. Used as the

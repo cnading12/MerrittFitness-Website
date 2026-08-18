@@ -12,7 +12,7 @@ import { getBlurDataURL } from '@/lib/blur-data';
 import { ArrowRight } from 'lucide-react';
 
 const PATH = '/studio';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/exterior-front.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/exterior-front.webp';
 
 export const metadata: Metadata = {
   title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
     description:
       'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2048, height: 1142, alt: venueImages.exteriorFront.alt }],
     locale: 'en_US',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 export default function StudioPage() {

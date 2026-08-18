@@ -17,7 +17,7 @@ import { extendedDiscount, cardFeePercent, addOns, rateBands } from '@/app/lib/v
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const PATH = '/private-events';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/og-venue.jpg';
 
 export const metadata: Metadata = {
   title: 'Private Event Venue in Denver | Historic 1905 Event Center | Merritt Wellness',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: 'Private Event Venue in Denver | Merritt Wellness',
     description:
       'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: venueImages.mainHallRoseWindow.alt }],
     locale: 'en_US',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
       'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 // Card images per event type. The types without their own photography yet

@@ -28,11 +28,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Book the Venue | Merritt Wellness Denver',
     description: `Check availability and book a historic ${specs.built} Denver event venue for up to ${specs.capacity} guests. Published rates ${rateSummary}, no mystery quotes.`,
-    url: 'https://merrittwellness.net/book',
+    url: 'https://www.merrittwellness.net/book',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/pages/venue/main-hall-rose-window.webp',
+        url: 'https://www.merrittwellness.net/images/pages/venue/main-hall-rose-window.webp',
         width: 1800,
         height: 2400,
         alt: 'The main hall of the restored 1905 sanctuary, with a rose window and five arched stained-glass windows above a polished wood floor',
@@ -45,10 +45,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Book the Venue | Merritt Wellness Denver',
     description: `Check availability and book a historic Denver event venue for up to ${specs.capacity} guests. Published rates ${rateSummary}.`,
-    images: ['https://merrittwellness.net/images/pages/venue/main-hall-rose-window.webp'],
+    images: ['https://www.merrittwellness.net/images/pages/venue/main-hall-rose-window.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net/book',
+    canonical: 'https://www.merrittwellness.net/book',
   },
 }
 
