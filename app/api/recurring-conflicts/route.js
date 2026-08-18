@@ -136,6 +136,14 @@ export async function POST(request) {
 
   // Shape into a UI-friendly payload. The frontend uses these fields directly
   // to render each row of the conflict modal.
+  //
+  // PRIVACY: this endpoint is unauthenticated, and `conflict.summary` is the
+  // raw Google Calendar title of whatever is already booked — which
+  // app/lib/calendar.js writes as `🔒 BOOKED: <event name>`. Returning it let
+  // anyone POST a wide date range and harvest the event name of every private
+  // booking on the venue calendar. The renter only needs to know THAT the slot
+  // is taken and WHEN, so the title is replaced with a fixed label; the times
+  // below are unchanged and are what the conflict modal actually works from.
   const conflicts = rawConflicts.map(({ occurrence, conflict }) => ({
     date: occurrence.date,
     slotIdx: occurrence.slotIdx,
@@ -143,7 +151,7 @@ export async function POST(request) {
     durationHours: occurrence.hours,
     rescheduledFrom: occurrence.rescheduledFrom || null,
     conflictWith: {
-      summary: conflict.summary,
+      summary: 'Another reservation',
       startMinutes: conflict.startMinutes,
       endMinutes: conflict.endMinutes,
     },

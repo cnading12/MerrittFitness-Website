@@ -53,16 +53,26 @@ const CSP_DIRECTIVES = {
   // blocking it degrades fraud detection silently rather than visibly.
   'connect-src': ["'self'", 'https://*.stripe.com', 'https://m.stripe.network'],
 
-  // Stripe renders its card fields, the Financial Connections bank-linking
-  // flow used for ACH, and its Radar fingerprinting frame inside iframes it
-  // owns. ACH is the default for recurring bookings, so *.js.stripe.com here
-  // is load-bearing, not optional.
+  // Iframes this site embeds. Two separate groups, both load-bearing:
+  //
+  //  * Stripe renders its card fields, the Financial Connections bank-linking
+  //    flow used for ACH, and its Radar fingerprinting frame inside iframes it
+  //    owns. ACH is the default for recurring bookings, so *.js.stripe.com is
+  //    required, not optional.
+  //  * The site embeds the public Google Calendar on BOTH the home page and
+  //    /book (the live availability view renters read before choosing a slot),
+  //    and the Google Maps location embed on the home page. Omitting these
+  //    renders those panels blank with only a console error — exactly the kind
+  //    of quiet breakage a CSP causes. Grep for `<iframe` before narrowing
+  //    this list.
   'frame-src': [
     "'self'",
     'https://js.stripe.com',
     'https://*.js.stripe.com',
     'https://hooks.stripe.com',
     'https://m.stripe.network',
+    'https://calendar.google.com',
+    'https://www.google.com',
   ],
 
   // No Flash/Java/plugin content anywhere.
@@ -141,27 +151,21 @@ export function middleware(request) {
     response.headers.set('X-Robots-Tag', 'index, follow');
   }
 
-  // Note: X-XSS-Protection was removed. The header is deprecated, ignored by
-  // every current browser, and its legacy filter introduced vulnerabilities of
-  // its own — the CSP above is what actually does this job now.
+  // Explicitly DISABLE the legacy XSS auditor rather than omitting the header.
+  // `1; mode=block` (what this used to send) is actively harmful: the filter
+  // browsers shipped could be induced to introduce vulnerabilities by
+  // selectively nulling out script, which is why they removed it. `0` is the
+  // value to send if the header is sent at all. The CSP above does this job.
+  response.headers.set('X-XSS-Protection', '0');
 
-  // Get user agent for security checks
-  const userAgent = request.headers.get('user-agent') || '';
-
-  // Block obvious scanner user agents. This is cosmetic — any real attacker
-  // sets a normal UA — but it trims the noise in the logs.
-  const suspiciousPatterns = [
-    'sqlmap', 'nikto', 'scanner', 'hack'
-  ];
-
-  const isSuspicious = suspiciousPatterns.some(pattern =>
-    userAgent.toLowerCase().includes(pattern)
-  );
-
-  if (isSuspicious) {
-    console.log('🚫 Blocked suspicious request:', userAgent);
-    return new Response('Access Denied', { status: 403 });
-  }
+  // Note: there is deliberately NO user-agent blocklist here.
+  //
+  // This used to 403 any request whose UA contained 'sqlmap', 'nikto',
+  // 'scanner' or 'hack'. It stopped no real attacker — a scanner's UA is one
+  // command-line flag away from Chrome's — while blocking legitimate visitors
+  // whose UA merely contained one of those substrings. It also gave a false
+  // sense of coverage. Rate limiting, input validation and the auth checks are
+  // what actually bound abuse here. Please don't reintroduce it.
 
   // Log API requests for monitoring (but not webhooks)
   if (isApi) {

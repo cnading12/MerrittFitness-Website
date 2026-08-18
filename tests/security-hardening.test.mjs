@@ -23,6 +23,7 @@ const { hit, clientKey, enforceRateLimit, LIMITS, __resetRateLimits } =
   await import('../app/lib/rate-limit.js');
 const { isAllowedOrigin, corsHeaders } = await import('../app/lib/cors.js');
 const { secretsMatch } = await import('../app/lib/admin-auth.js');
+const { esc } = await import('../app/lib/email.js');
 
 function requestWith(headers = {}) {
   return new Request('https://merrittwellness.net/api/test', { headers });
@@ -454,9 +455,32 @@ describe('security headers', () => {
     assert.ok(bypass > 0 && bypass < firstHeader, 'webhook bypass must precede header work');
   });
 
-  test('the deprecated X-XSS-Protection header is gone', () => {
-    assert.ok(!read('middleware.js').includes("set('X-XSS-Protection'"));
-    assert.ok(!read('next.config.js').includes('X-XSS-Protection:'));
+  test('the legacy XSS auditor is explicitly disabled, not left on', () => {
+    // `1; mode=block` is actively harmful — the filter could be induced to
+    // introduce vulnerabilities by selectively nulling out script, which is
+    // why browsers removed it. `0` is the only correct value to send.
+    const source = read('middleware.js');
+    assert.ok(
+      source.includes("set('X-XSS-Protection', '0')"),
+      'X-XSS-Protection must be explicitly 0'
+    );
+    assert.ok(
+      !/X-XSS-Protection'?,\s*'1/.test(source) && !read('next.config.js').includes("'1; mode=block'"),
+      'the legacy 1; mode=block value must never come back'
+    );
+  });
+
+  test('there is no user-agent blocklist', () => {
+    // It blocked real visitors whose UA contained "hack" and stopped no
+    // scanner (a UA is one command-line flag away from Chrome's).
+    const source = read('middleware.js');
+    // Match the construct, not the words — the comment above it explains why
+    // the list was removed and necessarily names the old patterns.
+    assert.ok(!/suspiciousPatterns/.test(source), 'UA blocklist must not be reintroduced');
+    assert.ok(
+      !/Access Denied/.test(source),
+      'middleware must not 403 requests on user-agent alone'
+    );
   });
 });
 
@@ -497,5 +521,104 @@ describe('response bodies do not leak internals', () => {
         `${route} must not return raw error.message — it can carry Postgres/Stripe internals`
       );
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+describe('outbound email cannot be injected with markup', () => {
+  // THE BUG: every renter-supplied field was interpolated raw into the email
+  // HTML. A renter could close the surrounding tag and write their own markup
+  // into the staff notification or their own confirmation — messages sent from
+  // our domain, our address, to a recipient who trusts them. Not XSS (mail
+  // clients don't run scripts) but a working phishing/spoofing primitive.
+  const PAYLOAD = `</td></tr><tr><td><a href="https://evil.example">Approve booking</a>`;
+
+  test('esc neutralizes every HTML-significant character', () => {
+    assert.equal(esc('<a href="x">&\'</a>'),
+      '&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;');
+    assert.equal(esc(null), '');
+    assert.equal(esc(undefined), '');
+    assert.equal(esc(0), '0');
+  });
+
+  test('a tag-breakout payload survives escaping as inert text', () => {
+    const out = esc(PAYLOAD);
+    assert.ok(!out.includes('<a '), 'no live anchor may survive');
+    assert.ok(!out.includes('</td>'), 'no live tag may survive');
+    assert.ok(out.includes('&lt;'), 'the payload must still be readable, just escaped');
+  });
+
+  test('every renter-controlled field is escaped in the templates', () => {
+    const source = read('app/lib/email.js');
+    const RENTER_FIELDS = [
+      'event_name', 'contact_name', 'business_name', 'special_requests',
+      'home_address', 'phone', 'website_url',
+    ];
+    for (const field of RENTER_FIELDS) {
+      const raw = new RegExp('\\$\\{booking\\.' + field + '\\}');
+      assert.ok(
+        !raw.test(source),
+        `app/lib/email.js interpolates booking.${field} raw — wrap it in esc()`
+      );
+    }
+    for (const field of ['message', 'name', 'startWindow']) {
+      const raw = new RegExp('\\$\\{inquiry\\.' + field + '\\}');
+      assert.ok(!raw.test(source), `inquiry.${field} must be escaped`);
+    }
+  });
+
+  test('attachment filenames are sanitized', () => {
+    const source = read('app/lib/email.js');
+    // The ID photo and COI are uploaded with renter-chosen names.
+    assert.ok(source.includes('function safeAttachmentFilename'));
+    const attachmentBlock = source.slice(source.indexOf('function buildIdPhotoAttachment'));
+    assert.ok(
+      attachmentBlock.slice(0, 1200).includes('safeAttachmentFilename'),
+      'buildIdPhotoAttachment must sanitize the filename'
+    );
+  });
+});
+
+describe('the calendar does not leak private event titles', () => {
+  // THE BUG: /api/recurring-conflicts is unauthenticated and returned the raw
+  // Google Calendar summary of each conflicting event — which calendar.js
+  // writes as `🔒 BOOKED: <event name>`. A wide date range harvested the name
+  // of every private booking at the venue.
+  test('the conflict response returns a generic label, not the calendar title', () => {
+    const source = read('app/api/recurring-conflicts/route.js');
+    assert.ok(
+      !/summary:\s*conflict\.summary/.test(source),
+      '/api/recurring-conflicts must not return the raw calendar summary'
+    );
+    assert.ok(
+      /summary:\s*'Another reservation'/.test(source),
+      'conflicts should report a fixed label instead'
+    );
+  });
+
+  test('availability lookups expose only booleans', () => {
+    // checkCalendarAvailability returns { '6:00 AM': true, ... } — no titles.
+    const source = read('app/lib/calendar.js');
+    const fn = source.slice(source.indexOf('export async function checkCalendarAvailability'));
+    const body = fn.slice(0, fn.indexOf('\nexport '));
+    assert.ok(
+      !/availability\[slot\]\s*=\s*[^;]*summary/.test(body),
+      'availability must not carry event titles'
+    );
+  });
+});
+
+describe('renter-supplied URLs', () => {
+  // THE BUG: websiteUrl accepted any string, including `javascript:` — and it
+  // is rendered as a link in the staff notification email.
+  test('the booking schema constrains websiteUrl to http(s)', () => {
+    const source = read('app/api/booking-request/route.js');
+    const block = source.slice(source.indexOf('websiteUrl:'), source.indexOf('websiteUrl:') + 1200);
+    assert.ok(block.includes('http'), 'websiteUrl must be protocol-constrained');
+    assert.ok(
+      block.includes('protocol') || block.includes('https?:'),
+      'websiteUrl must reject non-http(s) schemes such as javascript:'
+    );
   });
 });

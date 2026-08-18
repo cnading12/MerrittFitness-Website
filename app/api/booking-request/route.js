@@ -116,10 +116,29 @@ const ContactInfoSchema = z.object({
     .optional()
     .default(''),
 
+  // Renter's website / social link. Constrained to http(s): the value is
+  // rendered as a link in staff email, and an unvalidated string here accepts
+  // `javascript:` (and `data:`) URLs — a click-to-execute payload delivered
+  // from our own domain into a staff inbox. A bare domain ("example.com") is
+  // the common case and is normalized rather than rejected.
   websiteUrl: z.string()
     .max(200, 'URL too long')
     .optional()
-    .default(''),
+    .default('')
+    .transform((value) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return '';
+      return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    })
+    .refine((value) => {
+      if (!value) return true;
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }, 'Website must be a valid http(s) URL'),
 
   isRecurring: z.boolean().default(false),
   recurringDetails: z.string().optional().default(''),
