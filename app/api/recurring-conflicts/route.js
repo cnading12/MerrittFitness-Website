@@ -15,12 +15,13 @@ import {
   findOccurrenceConflicts,
 } from '../../lib/recurring-occurrences.js';
 import { findBusyRangesInRange } from '../../lib/calendar.js';
+import { enforceRateLimit } from '../../lib/rate-limit.js';
+import { corsHeaders, corsPreflightResponse } from '../../lib/http.js';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// Expands up to 12 months of occurrences and hits the Google Calendar API on
+// every call — the same finite quota /api/check-availability draws on. The
+// renter triggers this a handful of times while resolving conflicts.
+const RATE_LIMIT = { bucket: 'recurring-conflicts', limit: 20, windowMs: 60_000 };
 
 const SlotSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
@@ -51,6 +52,11 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request) {
+  const CORS_HEADERS = corsHeaders(request);
+
+  const limited = enforceRateLimit(request, RATE_LIMIT, CORS_HEADERS);
+  if (limited) return limited;
+
   let payload;
   try {
     payload = RequestSchema.parse(await request.json());
@@ -126,6 +132,12 @@ export async function POST(request) {
 
   // Shape into a UI-friendly payload. The frontend uses these fields directly
   // to render each row of the conflict modal.
+  //
+  // The busy range's `summary` is deliberately NOT returned. This endpoint is
+  // anonymous, and calendar summaries read "🔒 BOOKED: <event name>" — so
+  // echoing them would let anyone submit a wide date range and harvest the
+  // event names of every private booking at the venue. The renter only needs
+  // to know that the slot is taken and when, which is what the times convey.
   const conflicts = rawConflicts.map(({ occurrence, conflict }) => ({
     date: occurrence.date,
     slotIdx: occurrence.slotIdx,
@@ -133,7 +145,7 @@ export async function POST(request) {
     durationHours: occurrence.hours,
     rescheduledFrom: occurrence.rescheduledFrom || null,
     conflictWith: {
-      summary: conflict.summary,
+      summary: 'another reservation',
       startMinutes: conflict.startMinutes,
       endMinutes: conflict.endMinutes,
     },
@@ -151,6 +163,6 @@ export async function POST(request) {
   );
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+export async function OPTIONS(request) {
+  return corsPreflightResponse(request);
 }

@@ -10,6 +10,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
+// Imported directly rather than through middleware.js: `next/server` only
+// resolves inside the Next build, and middleware.js is a thin wrapper that
+// applies exactly this header set.
+const { securityHeaders, isNoindexPath } = await import('../app/lib/security-headers.js');
+
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 /**
@@ -89,27 +94,44 @@ test('events data: free and price are mutually exclusive', () => {
   assert.deepEqual(offenders, [], `Events declaring both \`free\` and \`price\`: ${offenders.join(', ')}`);
 });
 
-test('middleware never forces indexing on every response', () => {
-  // The regression: middleware.js set `X-Robots-Tag: index, follow` on ALL
-  // responses, including /book/payment and /book/success, which robots.txt
-  // disallows. A header beats robots.txt for any crawler that reaches the URL
-  // another way, so this was inviting thin transactional pages into the index.
-  // Absent header already means "index, follow" — only the negative directive
-  // is worth sending.
-  const middleware = read('middleware.js');
-  const forcedIndex = /X-Robots-Tag['"]\s*,\s*['"](?!noindex)[^'"]*index/.test(middleware);
+test('transactional routes are noindexed, marketing routes are not', () => {
+  // The regression: `X-Robots-Tag: index, follow` went out on EVERY non-API
+  // response, including /book/payment and /book/success, which robots.txt
+  // disallows. robots.txt only asks a crawler not to FETCH a URL; the header
+  // beats it for any crawler that arrives by link or shared receipt, so the
+  // header was actively inviting thin transactional pages into the index.
+  //
+  // This asserts the real behaviour rather than grepping middleware.js. The
+  // policy moved into app/lib/security-headers.js, so a text match against
+  // the middleware would now pass vacuously while the header was wrong.
+  const robotsFor = (pathname) =>
+    securityHeaders({
+      isApi: pathname.startsWith('/api/'),
+      noindex: isNoindexPath(pathname),
+    })['X-Robots-Tag'];
 
-  assert.equal(
-    forcedIndex,
-    false,
-    'middleware.js sets an affirmative X-Robots-Tag. Only `noindex` directives belong there — ' +
-      'the default (no header) already permits indexing.'
-  );
-  assert.match(
-    middleware,
-    /noindex/,
-    'middleware.js should still send noindex for /api/ and the mid-booking routes.'
-  );
+  for (const pathname of [
+    '/api/booking/abc123',
+    '/book/payment',
+    '/book/payment-complete',
+    '/book/success',
+  ]) {
+    assert.equal(
+      robotsFor(pathname),
+      'noindex, nofollow',
+      `${pathname} must be noindexed — it is transactional and often carries a booking id.`
+    );
+  }
+
+  // The marketing pages are the product. Never let the noindex prefixes widen
+  // far enough to swallow them; /book itself is a real landing page.
+  for (const pathname of ['/', '/weddings', '/class-partnerships', '/calendar', '/book', '/contact']) {
+    assert.equal(
+      robotsFor(pathname),
+      'index, follow',
+      `${pathname} is a marketing page and must stay indexable.`
+    );
+  }
 });
 
 test('the business node is declared in exactly one place', () => {
@@ -163,6 +185,18 @@ test('every absolute site URL uses the canonical host', () => {
   // Walk the source tree directly rather than shelling out: `grep -rl` exits
   // non-zero when it finds nothing, which is the passing case here.
   const roots = ['app', 'lib', 'components'];
+
+  // Files where naming the apex is CORRECT, not drift.
+  //
+  // The invariant is about URLs the site PUBLISHES about itself — canonicals,
+  // metadataBase, sitemap entries, OpenGraph urls, schema @ids. It is not
+  // about URLs the site RECOGNISES. app/lib/http.js keeps a CORS origin
+  // allowlist that deliberately accepts both hosts plus the old brand domain,
+  // because a browser sends whichever Origin the visitor actually loaded;
+  // dropping the apex there would reject real requests.
+  const APEX_IS_INTENTIONAL = ['app/lib/http.js'];
+
+  const repoRoot = new URL('..', import.meta.url).pathname;
   const offenders = [];
 
   const walk = (dir) => {
@@ -181,12 +215,13 @@ test('every absolute site URL uses the canonical host', () => {
           .split('\n')
           .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
           .join('\n');
+        const relative = full.replace(repoRoot, '');
+        if (APEX_IS_INTENTIONAL.includes(relative)) continue;
         if (/https:\/\/merrittwellness\.net/.test(code)) offenders.push(full);
       }
     }
   };
 
-  const repoRoot = new URL('..', import.meta.url).pathname;
   for (const root of roots) walk(`${repoRoot}${root}`);
   const files = offenders.map((f) => f.replace(repoRoot, '')).join('\n');
 

@@ -20,20 +20,17 @@
 import { NextResponse } from 'next/server';
 
 import { runMonthlyBilling } from '../../../lib/monthly-billing.js';
+import { requireAdminAuth } from '../../../lib/auth.js';
+import { enforceRateLimit } from '../../../lib/rate-limit.js';
 
-function requireAdminAuth(request) {
-  const provided = request.headers.get('x-admin-secret') || '';
-  const expected = process.env.ADMIN_API_SECRET;
-  if (!expected) {
-    return { ok: false, error: 'ADMIN_API_SECRET not configured', status: 500 };
-  }
-  if (provided !== expected) {
-    return { ok: false, error: 'Unauthorized', status: 401 };
-  }
-  return { ok: true };
-}
+// The admin secret is the only thing guarding these endpoints, so cap guess
+// attempts as well as comparing it in constant time (see app/lib/auth.js).
+const RATE_LIMIT = { bucket: 'admin', limit: 10, windowMs: 60_000 };
 
 export async function POST(request) {
+  const limited = enforceRateLimit(request, RATE_LIMIT);
+  if (limited) return limited;
+
   const auth = requireAdminAuth(request);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });

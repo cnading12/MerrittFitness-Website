@@ -1,14 +1,24 @@
 // middleware.js
-// FIXED VERSION - Excludes webhook endpoints
+//
+// Applies the security headers to every page response. The policy itself —
+// and the reasoning behind each header — lives in app/lib/security-headers.js
+// so it can be unit tested without the Next runtime (see
+// tests/security-headers.test.mjs).
 
 import { NextResponse } from 'next/server'
 
+import {
+  securityHeaders,
+  isWebhookPath,
+  isNoindexPath,
+} from './app/lib/security-headers.js'
+
 export function middleware(request) {
-  // CRITICAL: Skip middleware for webhook endpoints
-  // Webhooks need raw request bodies and can't have any interference
-  if (request.nextUrl.pathname.startsWith('/api/webhooks/') || 
-      request.nextUrl.pathname.startsWith('/api/stripe-webhook')) {
-    console.log('⚡ Bypassing middleware for webhook:', request.nextUrl.pathname);
+  // CRITICAL: Skip middleware for webhook endpoints.
+  // Stripe verifies a signature over the raw request body; anything done to
+  // that request risks breaking verification, which would silently stop paid
+  // bookings from ever being confirmed.
+  if (isWebhookPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 
@@ -17,7 +27,7 @@ export function middleware(request) {
   // Do NOT add a www -> apex redirect here. The apex already redirects to www
   // at the platform level:
   //
-  //   curl -sSIL https://merrittwellness.net
+  //   curl -sSIL <apex>
   //   HTTP/2 307
   //   location: https://www.merrittwellness.net/
   //   HTTP/2 200
@@ -29,51 +39,27 @@ export function middleware(request) {
   // is ever moved to the apex, change the platform redirect FIRST and
   // BASE_URL in lib/site-schema.ts to match — never add a redirect here.
 
-  // Create response
+  const isApi = request.nextUrl.pathname.startsWith('/api/');
+
+  // Indexing. API routes were already excluded; this also covers the
+  // mid-booking pages (/book/payment, /book/success, /book/payment-complete),
+  // which robots.txt disallows but which an `X-Robots-Tag: index, follow`
+  // would have overridden for any crawler arriving by link or shared receipt.
+  // See isNoindexPath for the full reasoning.
+  const noindex = isNoindexPath(request.nextUrl.pathname);
+
   const response = NextResponse.next();
+  for (const [name, value] of Object.entries(securityHeaders({ isApi, noindex }))) {
+    response.headers.set(name, value);
+  }
 
-  // Indexing.
+  // Note: no user-agent blocklist.
   //
-  // This used to unconditionally set `X-Robots-Tag: index, follow` on EVERY
-  // response, including the checkout and confirmation pages that robots.txt
-  // disallows and every /api/ route. An HTTP header beats robots.txt for any
-  // crawler that reaches the URL another way (a link, a redirect, a shared
-  // receipt), so the header was actively inviting thin transactional pages
-  // into the index. The default — no header at all — already means
-  // "index, follow", so the only directive worth sending is the negative one.
-  const NOINDEX_PREFIXES = ['/api/', '/book/payment', '/book/success'];
-  if (NOINDEX_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix))) {
-    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
-  }
-
-  // Add security headers
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-
-  // Get user agent for security checks
-  const userAgent = request.headers.get('user-agent') || '';
-
-  // Block suspicious requests (basic protection)
-  const suspiciousPatterns = [
-    'sqlmap', 'nikto', 'scanner', 'hack'
-  ];
-
-  const isSuspicious = suspiciousPatterns.some(pattern =>
-    userAgent.toLowerCase().includes(pattern)
-  );
-
-  if (isSuspicious) {
-    console.log('🚫 Blocked suspicious request:', userAgent);
-    return new Response('Access Denied', { status: 403 });
-  }
-
-  // Log API requests for monitoring (but not webhooks)
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    console.log('📊 API request from:', ip, 'to:', request.nextUrl.pathname);
-  }
+  // The previous version 403'd any request whose UA contained "sqlmap",
+  // "nikto", "scanner" or "hack". That stopped nobody — a scanner's UA is a
+  // command-line flag away from anything — while blocking legitimate visitors
+  // whose UA happened to contain "hack" as a substring. Rate limiting and
+  // input validation are what actually bound abuse here.
 
   return response;
 }

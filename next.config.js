@@ -53,27 +53,43 @@ const nextConfig = {
     ]
   },
 
-  // Security headers
+  // Baseline security headers for EVERY response.
+  //
+  // middleware.js sets the full set, but its matcher deliberately skips
+  // /_next/static, /_next/image and the Stripe webhook. These four are the
+  // ones still worth having on a static asset or an optimized image, so they
+  // are declared here as well.
+  //
+  // Declaring a header in both places is safe, not a duplicate: middleware
+  // uses headers.set(), which replaces rather than appends. Verified against a
+  // production build — a page response carries exactly one X-Frame-Options.
+  //
+  // The CSP and Permissions-Policy stay middleware-only: the CSP differs per
+  // request class (API responses also get Cache-Control: no-store and
+  // noindex), and neither means anything on a static asset.
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
           {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            // HSTS is honored from any response on the host, so putting it on
+            // assets too means a visitor who somehow lands on one first is
+            // still pinned to HTTPS.
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },

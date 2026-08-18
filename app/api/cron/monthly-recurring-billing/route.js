@@ -21,6 +21,7 @@
 import { NextResponse } from 'next/server';
 
 import { runMonthlyBilling } from '../../../lib/monthly-billing.js';
+import { requireCronAuth } from '../../../lib/auth.js';
 
 // Pure function so it's easy to reason about without mocking Date. Accepts
 // a Date and returns true iff that moment falls on the last calendar day of
@@ -39,15 +40,13 @@ function nextMonth(nowUtc) {
 }
 
 async function handler(request) {
-  const auth = request.headers.get('authorization') || '';
-  const expected = process.env.CRON_SECRET ? `Bearer ${process.env.CRON_SECRET}` : null;
-  if (!expected) {
-    console.error('❌ CRON_SECRET is not configured');
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
-  }
-  if (auth !== expected) {
-    console.warn('🚫 Monthly billing cron called without valid Authorization header');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Constant-time comparison, fails closed when CRON_SECRET is unset.
+  const auth = requireCronAuth(request);
+  if (!auth.ok) {
+    if (auth.status === 401) {
+      console.warn('🚫 Monthly billing cron called without valid Authorization header');
+    }
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   const now = new Date();

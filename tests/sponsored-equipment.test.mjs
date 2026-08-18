@@ -179,11 +179,17 @@ class MockStripe {
 mock.module('stripe', { defaultExport: MockStripe });
 
 // ---------- Import routes AFTER mocks are registered ----------
+const { __resetRateLimits } = await import('../app/lib/rate-limit.js');
 const { POST: postBookingRequest } = await import('../app/api/booking-request/route.js');
 const { POST: postStripeWebhook } = await import('../app/api/webhooks/stripe/route.js');
 
 // ---------- Helpers ----------
 function resetState() {
+  // The API routes are rate limited per client IP. Every request in this file
+  // arrives with no forwarded IP, so they all share one bucket and would trip
+  // the limit partway through the file. Clear the counters between cases —
+  // the limiter itself is exercised in tests/rate-limit.test.mjs.
+  __resetRateLimits();
   dbState.bookings.length = 0;
   dbState.updates.length = 0;
   dbState.inserts.length = 0;
