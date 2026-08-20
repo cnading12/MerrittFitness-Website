@@ -142,18 +142,33 @@ test('the RLS migration covers every table the app writes to', () => {
   );
 });
 
-test('the RLS migration cannot abort on a table that does not exist', () => {
-  // REVOKE has no IF EXISTS form. A bare REVOKE against a table from a
-  // migration that was never run aborts the whole script, leaving RLS half
-  // applied — the exact state that takes bookings down.
+test('no statement in the RLS migration can abort on a missing table', () => {
+  // REVOKE, GRANT and ALTER TABLE ... DISABLE have no IF EXISTS form here. A
+  // bare one against a table that was never created aborts the whole script,
+  // leaving RLS half applied. That bit us for real: this project has no
+  // `inquiries` table, and an unguarded rollback failed mid-outage.
+  //
+  // Checks the ROLLBACK block too (it lives in comments, so `--` is stripped
+  // before matching) — a rollback is run under pressure and must not be the
+  // thing that fails.
   const migration = read('scripts/migrations/2026_enable_rls_lockdown.sql');
-  const bareRevokes = migration
+
+  const unguarded = migration
     .split('\n')
-    .filter((l) => /^\s*revoke\s+all\s+on\s+(table\s+)?public\./i.test(l));
+    .map((l) => l.replace(/^\s*--\s?/, '').trim())
+    .filter((l) => {
+      if (/^execute format\(/.test(l)) return false;   // inside a DO block
+      return (
+        /^revoke\s+all\s+on\s+(table\s+)?public\./i.test(l) ||
+        /^grant\s+all\s+on\s+table\s+public\./i.test(l) ||
+        /^alter\s+table\s+(?!if\s+exists)/i.test(l)
+      );
+    });
+
   assert.deepEqual(
-    bareRevokes,
+    unguarded,
     [],
-    'REVOKE statements must be guarded by an existence check (see the DO block)'
+    `These statements abort if the table is absent — guard them:\n${unguarded.join('\n')}`
   );
 });
 

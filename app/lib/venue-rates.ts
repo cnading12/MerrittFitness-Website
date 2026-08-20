@@ -55,7 +55,7 @@ export const recurringDiscount = {
 };
 
 // Partner / non-profit discount: same 20% as the recurring volume discount
-// (the MerrittMagic partnership code applies 20% — see VALID_PROMO_CODES in
+// (the partnership code applies 20% — see VALID_PROMO_CODES in
 // booking-pricing.js).
 export const partnerDiscount = { percent: recurringDiscount.percent };
 

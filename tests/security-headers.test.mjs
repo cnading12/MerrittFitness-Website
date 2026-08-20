@@ -138,3 +138,37 @@ test('Stripe webhook paths are recognized as bypass paths', () => {
   assert.equal(isWebhookPath('/api/booking-request'), false);
   assert.equal(isWebhookPath('/book'), false);
 });
+
+test('the webhook health check is uncacheable', async () => {
+  // /api/webhooks/* is the one path the middleware skips (Stripe signs the raw
+  // body), so it never receives the Cache-Control: no-store that every other
+  // API response gets. The GET on that route is how you confirm the server is
+  // using the service-role key BEFORE enabling RLS — and a cached answer
+  // reports a stale value with total confidence, which is worse than no health
+  // check at all. It must set the headers itself.
+  const { GET } = await import('../app/api/webhooks/stripe/route.js');
+  const response = await GET();
+
+  assert.match(response.headers.get('cache-control') || '', /no-store/);
+
+  const body = await response.json();
+  assert.equal(
+    typeof body.configuration.supabaseUsingServiceRole,
+    'boolean',
+    'the RLS-gating field must always be present'
+  );
+  // Length only — never the key itself. It separates "absent" from "present
+  // but empty", which read the same in the boolean but have different fixes.
+  assert.equal(typeof body.configuration.serviceRoleKeyLength, 'number');
+
+  const serialized = JSON.stringify(body);
+  for (const secret of [
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.STRIPE_SECRET_KEY,
+    process.env.RESEND_API_KEY,
+  ]) {
+    if (secret) {
+      assert.ok(!serialized.includes(secret), 'the health check must never echo a secret value');
+    }
+  }
+});
