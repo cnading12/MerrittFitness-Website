@@ -524,21 +524,47 @@ async function handleSetupIntentSucceeded(setupIntent) {
   }
 }
 
-// Health check endpoint
+// Health check endpoint.
+//
+// This is the one route in the app that the middleware deliberately skips —
+// Stripe signs the raw request body, so nothing may touch this path — which
+// also means it never receives the `Cache-Control: no-store` that
+// securityHeaders() puts on every other /api/ response.
+//
+// That gap cost real time during the RLS rollout: this endpoint is how you
+// confirm the server is authenticating with the service-role key BEFORE
+// enabling RLS, and a cached response reports yesterday's answer with total
+// confidence. A health check that can be stale is worse than no health check,
+// because it is trusted. The headers below are therefore not optional
+// decoration — they are what makes the reading meaningful.
 export async function GET() {
-  return Response.json({
-    status: 'active',
-    message: 'Stripe webhook endpoint is ready',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    configuration: {
-      webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-      stripeKey: !!process.env.STRIPE_SECRET_KEY,
-      resendKey: !!process.env.RESEND_API_KEY,
-      supabaseUrl: !!process.env.SUPABASE_URL,
-      supabaseKey: supabaseConfigured(),
-      supabaseUsingServiceRole: usingServiceRoleKey()
+  return Response.json(
+    {
+      status: 'active',
+      message: 'Stripe webhook endpoint is ready',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      configuration: {
+        webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+        stripeKey: !!process.env.STRIPE_SECRET_KEY,
+        resendKey: !!process.env.RESEND_API_KEY,
+        supabaseUrl: !!process.env.SUPABASE_URL,
+        supabaseKey: supabaseConfigured(),
+        // The value that gates the RLS rollout. `false` here with RLS enabled
+        // means every booking insert is being denied.
+        supabaseUsingServiceRole: usingServiceRoleKey(),
+        // Distinguishes "variable absent" from "variable present but empty" —
+        // both read as false above, but they have different fixes. Never the
+        // value itself, only its length.
+        serviceRoleKeyLength: (process.env.SUPABASE_SERVICE_ROLE_KEY || '').length
+      },
+      version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
     },
-    version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
-  });
+    {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-Robots-Tag': 'noindex, nofollow'
+      }
+    }
+  );
 }
