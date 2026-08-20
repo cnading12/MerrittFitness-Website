@@ -556,7 +556,20 @@ export async function GET() {
         // Distinguishes "variable absent" from "variable present but empty" —
         // both read as false above, but they have different fixes. Never the
         // value itself, only its length.
-        serviceRoleKeyLength: (process.env.SUPABASE_SERVICE_ROLE_KEY || '').length
+        serviceRoleKeyLength: (process.env.SUPABASE_SERVICE_ROLE_KEY || '').length,
+        // Every Supabase-related variable NAME the running function can see,
+        // JSON-quoted so invisible characters are visible.
+        //
+        // This exists because a variable can be present in the Vercel
+        // dashboard, spelled correctly to the eye, and still not resolve — a
+        // trailing space or a zero-width character pasted into the NAME field
+        // renders identically there but makes process.env.SUPABASE_SERVICE_ROLE_KEY
+        // a miss. Names only, never values: a name is not a secret, and this
+        // turns "it's definitely set" into something checkable.
+        supabaseEnvKeys: Object.keys(process.env)
+          .filter((k) => /supabase/i.test(k))
+          .sort()
+          .map((k) => JSON.stringify(k))
       },
       version: '5.0.0 - Fixed 307 Redirects + Improved DB Lookup'
     },
