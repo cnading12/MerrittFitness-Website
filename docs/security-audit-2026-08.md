@@ -9,9 +9,41 @@ in the Supabase and Vercel dashboards — the code is already in place for both.
 
 ---
 
-## Action required (do these in order)
+## Status: complete (verified 2026-08-20)
 
-Nothing here is optional; the RLS fix is only half-deployed until step 2.
+Both rollout steps are done and verified in production:
+
+  * `SUPABASE_SERVICE_ROLE_KEY` is set on the `merritt-fitness-website` Vercel
+    project. `/api/webhooks/stripe` reports `supabaseUsingServiceRole: true`.
+  * RLS is enabled on `bookings`, `email_events` and `cron_runs`
+    (`inquiries` does not exist in this project and was skipped).
+  * A live booking was submitted end-to-end and the row landed with RLS
+    active — the only proof that the service-role path actually works.
+
+### What made this take four attempts
+
+The env var was configured all along, on a *different* Vercel project. The
+CLI was linked to `MerrittWorkspace-website`, so `vercel env ls` kept
+reporting a real key on a real Production environment while the function
+serving merrittwellness.net genuinely had none. Both readings were true.
+
+What finally resolved it was asking the running function to report which
+variable names it could see (`supabaseEnvKeys` on the health endpoint) rather
+than reasoning about which ones should be there. Three earlier hypotheses —
+wrong variable name, CDN caching, invisible whitespace — were all wrong.
+**When an env var "is definitely set" but behaves as unset, make the process
+enumerate its own environment first, not last.**
+
+### Known gap: orphan tables
+
+The migration hardcodes the four tables the application writes to. The
+verification query surfaced `error_logs` — a table no code in this repo
+references, still carrying full anon grants including DELETE and TRUNCATE.
+Locking down "the tables the app uses" is not the same as locking down "the
+tables that exist", and the difference is where orphans hide. Pending a check
+on whether another service writes to it.
+
+## Original action required (now complete, kept for reference)
 
 ### 1. Set `SUPABASE_SERVICE_ROLE_KEY` in Vercel
 
