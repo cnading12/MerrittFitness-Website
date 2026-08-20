@@ -124,7 +124,7 @@ export function buildCsp() {
 // the /_next/* paths this middleware's matcher skips. Declaring a header in
 // both places is harmless (headers.set() replaces rather than appends); the
 // split is about coverage, not about avoiding duplicates.
-export function securityHeaders({ isApi = false } = {}) {
+export function securityHeaders({ isApi = false, noindex = isApi } = {}) {
   return {
     'Content-Security-Policy': buildCsp(),
 
@@ -135,7 +135,11 @@ export function securityHeaders({ isApi = false } = {}) {
     // Marketing pages opt into indexing; API responses must not be indexed —
     // /api/booking/[id] returns a renter's booking, and the booking id is the
     // only credential guarding it.
-    'X-Robots-Tag': isApi ? 'noindex, nofollow' : 'index, follow',
+    //
+    // `noindex` defaults to `isApi`, so callers passing only { isApi } behave
+    // exactly as before. It is broken out because the mid-booking pages are
+    // not API routes but must not be indexed either — see isNoindexPath.
+    'X-Robots-Tag': noindex ? 'noindex, nofollow' : 'index, follow',
 
     // API responses carry booking data and renter PII. Without this, any
     // shared cache or CDN in front of the app is free to store one renter's
@@ -169,4 +173,29 @@ export function securityHeaders({ isApi = false } = {}) {
 // path is passed straight through without any middleware involvement.
 export function isWebhookPath(pathname) {
   return pathname.startsWith('/api/webhooks/') || pathname.startsWith('/api/stripe-webhook');
+}
+
+// Paths that must never be indexed.
+//
+// Two groups, for two different reasons:
+//
+//   /api/          — responses carry booking data and renter PII.
+//                    /api/booking/[id] returns a renter's booking, and the
+//                    booking id is the only credential guarding it.
+//
+//   /book/payment  — mid-booking pages. Thin, transactional, often carrying a
+//   /book/success    booking id in the query string, and a near-duplicate of
+//                    /book to a crawler.
+//
+// robots.txt (app/robots.ts) disallows the second group too, but robots.txt
+// only asks a crawler not to FETCH a URL — it does not stop one indexing a URL
+// it heard about elsewhere, and an `X-Robots-Tag: index, follow` sent on those
+// pages actively invited exactly that. These routes also declare
+// `robots: { index: false }` in their own layouts; belt and braces.
+export function isNoindexPath(pathname) {
+  return (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/book/payment') ||
+    pathname.startsWith('/book/success')
+  );
 }

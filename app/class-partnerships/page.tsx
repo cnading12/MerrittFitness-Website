@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import RateTable from '@/components/venue/RateTable';
 import Gallery from '@/components/venue/Gallery';
@@ -13,7 +14,7 @@ import { rateBands, recurringDiscount, money } from '@/app/lib/venue-rates';
 import { CalendarClock, ArrowRight } from 'lucide-react';
 
 const PATH = '/class-partnerships';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/classes/dance-class-string-lights.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/classes/dance-class-string-lights.webp';
 
 export const metadata: Metadata = {
   title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     title: 'Wellness & Movement Class Space in Denver | Merritt Wellness',
     description:
       'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1603, alt: classesImages.danceClassStringLights.alt }],
     locale: 'en_US',
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
       'One workshop or every week: a historic 1905 wellness center with a full-coverage mat, rollaway mirrors, and partner rates for regulars.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [
@@ -81,6 +82,17 @@ const faqs: Faq[] = [
 export default function ClassPartnershipsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Wellness & Movement Classes' }]}
+        service={{
+          name: 'Wellness & Movement Class Space Rental',
+          serviceType: 'Class and studio space rental',
+          description:
+            'Studio space in a historic Denver hall for yoga, breathwork, sound baths, dance, and martial arts — as a one-time workshop, a pop-up series, or a standing weekly block, with a full-coverage floor mat and rollaway mirrors on site.',
+          priceFrom: rateBands[0].weekdayRecurring,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

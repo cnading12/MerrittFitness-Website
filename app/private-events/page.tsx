@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getBlurDataURL } from '@/lib/blur-data';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
@@ -12,11 +13,11 @@ import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, weddingsImages, artShowsImages, concertsImages, classesImages, congregationsImages, coworkImages } from '@/app/data/venue-images';
 import { eventTypes } from '@/app/data/site';
-import { extendedDiscount, cardFeePercent, addOns } from '@/app/lib/venue-rates';
+import { extendedDiscount, cardFeePercent, addOns, rateBands } from '@/app/lib/venue-rates';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const PATH = '/private-events';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/og-venue.jpg';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/og-venue.jpg';
 
 export const metadata: Metadata = {
   title: 'Private Event Venue in Denver | Historic 1905 Event Center | Merritt Wellness',
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     title: 'Private Event Venue in Denver | Merritt Wellness',
     description:
       'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: venueImages.mainHallRoseWindow.alt }],
     locale: 'en_US',
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
       'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 // Card images per event type. The types without their own photography yet
@@ -61,6 +62,17 @@ const typeImages: Record<string, { src: string; alt: string }> = {
 export default function PrivateEventsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'All Private Events' }]}
+        service={{
+          name: 'Private Event Venue Rental',
+          serviceType: 'Private event venue',
+          description:
+            'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 Denver event center for up to 125 guests.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

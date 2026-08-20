@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
+import { rateBands } from '@/app/lib/venue-rates';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueJsonLd } from '@/lib/venue-schema';
 import { venueImages, coworkImages } from '@/app/data/venue-images';
@@ -10,7 +12,7 @@ import { getBlurDataURL } from '@/lib/blur-data';
 import { ArrowRight } from 'lucide-react';
 
 const PATH = '/studio';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/venue/exterior-front.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/exterior-front.webp';
 
 export const metadata: Metadata = {
   title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Studio & Workspace for Practitioners | Merritt Wellness Denver',
     description:
       'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2048, height: 1142, alt: venueImages.exteriorFront.alt }],
     locale: 'en_US',
@@ -35,7 +37,7 @@ export const metadata: Metadata = {
       'An office next door, a historic event center for your sessions, included with membership. Studio waitlist open.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 export default function StudioPage() {
@@ -43,6 +45,17 @@ export default function StudioPage() {
 
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Partnerships' }, { name: 'Studio & Workspace' }]}
+        service={{
+          name: 'Practitioner Studio & Workspace',
+          serviceType: 'Studio and office space for practitioners',
+          description:
+            'Studio and office space for Denver practitioners, including a flex studio at Merritt Wellness and dedicated desks and private offices next door at Merritt Workspace with venue hours included.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

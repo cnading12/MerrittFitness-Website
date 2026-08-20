@@ -69,7 +69,7 @@ const STAFF_FALLBACK_EMAILS = [
 // Branded logo for email headers. Email clients can't load app-relative
 // asset paths, so we reference the same navbar logo via its absolute public
 // URL. Centers itself (display:block + margin auto) regardless of parent.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://merrittwellness.net';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.merrittwellness.net';
 const LOGO_HEADER = `<img src="${SITE_URL}/images/hero/logo.png" alt="Merritt Wellness" width="180" style="display: block; margin: 0 auto 16px auto; width: 180px; max-width: 60%; height: auto;" />`;
 
 // A booking is public when the renter chose "public" on the form. Stored as a

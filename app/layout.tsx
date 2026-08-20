@@ -1,14 +1,58 @@
 import "./globals.css";
 import { Metadata } from 'next'
+import { Cormorant_Garamond, Jost } from 'next/font/google'
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { siteGraphJsonLd, jsonLdScript } from "@/lib/site-schema";
 import "./globals-ios.css";
 
+// Self-hosted through next/font instead of a render-blocking <link> to
+// fonts.googleapis.com. Same families and weights as before; next/font
+// inlines the @font-face rules, preloads the files from our own origin, and
+// removes two third-party round trips from the critical path. The CSS
+// variables are consumed by the .font-serif / .font-sans rules in
+// globals.css, which keep their original fallback stacks.
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-serif',
+})
+
+const jost = Jost({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
+  variable: '--font-sans',
+})
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://merrittwellness.net'),
-  title: 'Merritt Wellness | Historic Event, Wedding & Wellness Venue in Sloans Lake Denver CO',
-  description: 'Merritt Wellness is a restored 1905 landmark in Denver\'s Sloans Lake neighborhood — a historic event, wedding, and wellness venue hosting weddings, sound baths, yoga, meditation, and private events. 2,400 sq ft sanctuary with 24-foot ceilings. Book today!',
-  keywords: 'Denver wellness venue, event venue Sloans Lake, Denver wedding venue, historic wedding venue Denver, sound bath Denver, sound immersion Denver, yoga and meditation space rental Denver, meditation Denver, wellness events Denver, historic event venue Denver, Sloans Lake event space, Denver workshop venue',
+  metadataBase: new URL('https://www.merrittwellness.net'),
+  // No `template` here on purpose: every interior route already sets a
+  // complete, brand-suffixed title, and a template would double the brand
+  // ("... | Merritt Wellness | Merritt Wellness Denver").
+  title:
+    "Merritt Wellness | Historic Event, Wedding & Class Venue in Sloans Lake, Denver",
+  description:
+    "A restored 1905 sanctuary in Denver's Sloans Lake: weddings, private events, concerts, art shows, and weekly yoga, breathwork, sound bath, and dance classes. Up to 125 guests under 24-foot vaulted ceilings, with 22 on-site parking spots and published hourly rates from $95.",
+  keywords: [
+    'event venue Denver',
+    "Sloans Lake event space",
+    'Denver wedding venue',
+    'historic wedding venue Denver',
+    'yoga studio rental Denver',
+    'dance studio rental Denver',
+    'sound bath Denver',
+    'breathwork Denver',
+    'class space rental Denver',
+    'private event venue Denver',
+    'concert venue rental Denver',
+    'church space for rent Denver',
+  ],
+  authors: [{ name: 'Merritt Wellness', url: 'https://www.merrittwellness.net' }],
+  creator: 'Merritt Wellness',
+  publisher: 'Merritt Wellness',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -22,16 +66,18 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Merritt Wellness | Yoga, Sound Baths & Meditation in Denver',
-    description: 'Experience yoga classes, sound bath healing, and meditation at our stunning 1905 historic venue in Sloans Lake Denver. 24-foot ceilings, perfect acoustics. Book today!',
-    url: 'https://merrittwellness.net',
+    title:
+      "Merritt Wellness | Historic Event, Wedding & Class Venue in Sloans Lake, Denver",
+    description:
+      "A restored 1905 sanctuary for weddings, private events, concerts, and weekly wellness and movement classes. 24-foot vaulted ceilings, 125 guests, published rates.",
+    url: 'https://www.merrittwellness.net',
     siteName: 'Merritt Wellness',
     images: [
       {
-        url: 'https://merrittwellness.net/images/hero/outside3.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Historic Merritt Wellness building exterior - restored 1905 building in Denver Sloans Lake',
+        url: 'https://www.merrittwellness.net/images/hero/1.webp',
+        width: 1920,
+        height: 1256,
+        alt: "The restored 1905 brick sanctuary that houses Merritt Wellness, on its tree-lined corner in Denver's Sloans Lake neighborhood",
       },
     ],
     locale: 'en_US',
@@ -39,12 +85,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Merritt Wellness | Yoga, Sound Baths & Meditation Denver',
-    description: 'Experience yoga, sound baths, and meditation at our stunning 1905 venue in Sloans Lake Denver. Book your wellness journey today!',
-    images: ['https://merrittwellness.net/images/hero/outside3.webp'],
+    title: "Merritt Wellness | Historic Event & Class Venue in Sloans Lake, Denver",
+    description:
+      'Weddings, private events, concerts, and weekly yoga, breathwork, sound bath, and dance classes in a restored 1905 sanctuary.',
+    images: ['https://www.merrittwellness.net/images/hero/1.webp'],
   },
   alternates: {
-    canonical: 'https://merrittwellness.net',
+    canonical: 'https://www.merrittwellness.net',
   },
   robots: {
     index: true,
@@ -57,14 +104,20 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  category: 'wellness',
-  classification: 'business',
+  category: 'Event Venue',
   other: {
     'application-name': 'Merritt Wellness',
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    'format-detection': 'telephone=no',
+    // NOTE: `format-detection: telephone=no` used to live here. It was
+    // suppressing the browser's automatic phone-number detection on a
+    // business whose primary conversion is a phone call. Removed on purpose
+    // — do not add it back.
+    'geo.region': 'US-CO',
+    'geo.placename': 'Denver',
+    'geo.position': '39.7508;-105.0332',
+    ICBM: '39.7508, -105.0332',
   },
 }
 
@@ -77,156 +130,16 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
       <head>
-        {/* Google Fonts - Cormorant Garamond (serif) + Jost (sans) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" 
-          rel="stylesheet" 
-        />
-        
-        {/* SEO meta tags */}
-        <meta name="author" content="Merritt Wellness" />
-        <meta name="publisher" content="Merritt Wellness" />
-        <meta name="copyright" content="© 2024 Merritt Wellness. All rights reserved." />
-        <meta name="language" content="en-US" />
-        <meta name="revisit-after" content="7 days" />
-        <meta name="distribution" content="global" />
-        <meta name="rating" content="general" />
-        <meta name="referrer" content="origin-when-cross-origin" />
-        
-        {/* Geographic and local business info */}
-        <meta name="geo.region" content="US-CO" />
-        <meta name="geo.placename" content="Denver" />
-        <meta name="geo.position" content="39.750982;-105.032254" />
-        <meta name="ICBM" content="39.750982, -105.032254" />
-        
-        {/* Business-specific meta tags */}
-        <meta name="business:type" content="wellness center" />
-        <meta name="business:hours" content="Mo-Su 06:00-22:00" />
-        <meta name="business:phone" content="+1-720-357-9499" />
-        <meta name="business:email" content="manager@merrittwellness.net" />
-        <meta name="business:address" content="2246 Irving St, Denver, CO 80211" />
-        
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://www.google.com" />
-        <link rel="preconnect" href="https://calendar.google.com" />
-        
-        {/* DNS prefetch */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//www.google.com" />
-        <link rel="dns-prefetch" href="//calendar.google.com" />
-        
-        {/* Structured data for rich snippets - LocalBusiness */}
+        {/* The single source of truth for the business and website nodes.
+            Interior pages add EventVenue / FAQPage / BreadcrumbList / Event
+            nodes that reference this one by @id — they never redeclare the
+            business itself. See lib/site-schema.ts. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": ["LocalBusiness", "EventVenue", "HealthAndBeautyBusiness"],
-              "@id": "https://merrittwellness.net/#business",
-              "name": "Merritt Wellness",
-              "description": "Historic event, wedding, and wellness venue in Denver's Sloans Lake neighborhood. A restored 1905 landmark hosting weddings, private events, sound baths, yoga, meditation, breathwork, and workshops.",
-              "url": "https://merrittwellness.net",
-              "telephone": "+1-720-357-9499",
-              "email": "manager@merrittwellness.net",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "2246 Irving St",
-                "addressLocality": "Denver",
-                "addressRegion": "CO",
-                "postalCode": "80211",
-                "addressCountry": "US",
-                "areaServed": ["Sloans Lake", "Highland", "Berkeley", "Regis", "West Colfax", "Jefferson Park"]
-              },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": 39.750981971554395,
-                "longitude": -105.03225422320789
-              },
-              "openingHours": ["Mo-Su 06:00-22:00"],
-              "priceRange": "$$",
-              "currenciesAccepted": "USD",
-              "paymentAccepted": ["Cash", "Credit Card", "Venmo", "Zelle"],
-              "image": [
-                "https://merrittwellness.net/images/hero/outside3.webp",
-                "https://merrittwellness.net/images/hero/1.webp"
-              ],
-              "sameAs": [
-                "https://www.instagram.com/merrittwellnessdenver",
-                "https://www.facebook.com/MerrittWellnessDenver/"
-              ],
-              "hasOfferCatalog": {
-                "@type": "OfferCatalog",
-                "name": "Wellness Services",
-                "itemListElement": [
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "Service",
-                      "name": "Yoga Classes",
-                      "description": "Vinyasa, Hatha, Restorative, and Hot Yoga classes in historic Denver venue"
-                    }
-                  },
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "Service",
-                      "name": "Sound Bath Healing",
-                      "description": "Immersive sound healing sessions with crystal bowls and gongs in acoustically perfect space"
-                    }
-                  },
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "Service",
-                      "name": "Meditation Sessions",
-                      "description": "Guided meditation and mindfulness classes in serene sanctuary setting"
-                    }
-                  },
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "Service",
-                      "name": "Wellness Event Space Rental",
-                      "description": "2,400 sq ft historic venue for workshops, retreats, and wellness gatherings"
-                    }
-                  }
-                ]
-              },
-              "amenityFeature": [
-                {
-                  "@type": "LocationFeatureSpecification",
-                  "name": "Historic Architecture",
-                  "value": "Beautifully restored 1905 landmark building"
-                },
-                {
-                  "@type": "LocationFeatureSpecification",
-                  "name": "Square Footage",
-                  "value": "Approximately 2,400 sq ft total across the building, with a ~1,100 sq ft main hall and ~1,600 sq ft upstairs"
-                },
-                {
-                  "@type": "LocationFeatureSpecification",
-                  "name": "Ceiling Height",
-                  "value": "24 feet - ideal for sound healing"
-                },
-                {
-                  "@type": "LocationFeatureSpecification",
-                  "name": "Acoustics",
-                  "value": "Perfect natural acoustics for sound baths"
-                },
-                {
-                  "@type": "LocationFeatureSpecification",
-                  "name": "Natural Light",
-                  "value": "Abundant natural light through original windows"
-                }
-              ]
-            })
-          }}
+          dangerouslySetInnerHTML={jsonLdScript(siteGraphJsonLd())}
         />
-
       </head>
       <body className="ios-fix text-[#4a3f3c] bg-[#faf8f5] flex flex-col min-h-screen">
         <Navbar />

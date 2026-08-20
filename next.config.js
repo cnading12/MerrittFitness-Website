@@ -37,11 +37,9 @@ const nextConfig = {
         destination: '/calendar',
         permanent: true,
       },
-      {
-        source: '/contact',
-        destination: '/book',
-        permanent: true,
-      },
+      // NOTE: /contact used to redirect here to /book. It is a real page
+      // again (app/contact/page.tsx) — a redirect would shadow it, so do not
+      // reinstate this entry.
       {
         source: '/booking',
         destination: '/book',

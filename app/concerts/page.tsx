@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
+import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import RateTable from '@/components/venue/RateTable';
@@ -10,10 +11,10 @@ import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, concertsImages } from '@/app/data/venue-images';
 import { mixerPolicy } from '@/app/data/site';
-import { extendedDiscount } from '@/app/lib/venue-rates';
+import { extendedDiscount, rateBands } from '@/app/lib/venue-rates';
 
 const PATH = '/concerts';
-const OG_IMAGE = 'https://merrittwellness.net/images/pages/concerts/songwriters-round.webp';
+const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/concerts/songwriters-round.webp';
 
 export const metadata: Metadata = {
   title: 'Concert & Performance Venue in Denver | Merritt Wellness',
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     title: 'Concert & Performance Venue in Denver | Merritt Wellness',
     description:
       'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
-    url: `https://merrittwellness.net${PATH}`,
+    url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2400, height: 1800, alt: concertsImages.songwritersRound.alt }],
     locale: 'en_US',
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
       'A century-old concert hall built for sound: surround system, soaring acoustics, and an audience of up to 125.',
     images: [OG_IMAGE],
   },
-  alternates: { canonical: `https://merrittwellness.net${PATH}` },
+  alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
 };
 
 const faqs: Faq[] = [
@@ -77,6 +78,17 @@ const faqs: Faq[] = [
 export default function ConcertsPage() {
   return (
     <main className="bg-[#faf8f5] font-sans">
+      <PageSchema
+        path={PATH}
+        crumbs={[{ name: 'Events' }, { name: 'Concerts & Performances' }]}
+        service={{
+          name: 'Concert & Performance Venue Rental',
+          serviceType: 'Concert venue',
+          description:
+            'Live music, recitals, album releases, and performances in a historic Denver hall built for sound, with a house surround system and a cafe lounge for intermission.',
+          priceFrom: rateBands[0].weekday,
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
