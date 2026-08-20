@@ -161,6 +161,13 @@ test('the webhook health check is uncacheable', async () => {
   // but empty", which read the same in the boolean but have different fixes.
   assert.equal(typeof body.configuration.serviceRoleKeyLength, 'number');
 
+  // Variable NAMES only, JSON-quoted so a trailing space or zero-width
+  // character in the name is visible. A name is not a secret; a value is.
+  assert.ok(Array.isArray(body.configuration.supabaseEnvKeys));
+  for (const key of body.configuration.supabaseEnvKeys) {
+    assert.match(key, /^".*"$/, 'env key names must be JSON-quoted to expose whitespace');
+  }
+
   const serialized = JSON.stringify(body);
   for (const secret of [
     process.env.SUPABASE_SERVICE_ROLE_KEY,
