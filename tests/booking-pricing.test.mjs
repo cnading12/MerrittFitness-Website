@@ -43,6 +43,16 @@ import {
   DIVIDER_REMOVAL_FEE,
 } from '../app/lib/booking-pricing.js';
 
+// Promo codes are configuration now, not constants: app/lib/promo-codes.js
+// reads them from the environment so they never sit in this public repo. The
+// tests therefore define their own, which also keeps real codes out of the
+// test suite. Set after the imports on purpose — the lookups read process.env
+// at call time, so no import ordering games are needed.
+process.env.PROMO_CODE_PARTNER = 'TEST-PARTNER-4H7KQ2NX';
+process.env.PROMO_CODE_COMP = 'TEST-COMP-9P3RJ6WM';
+process.env.PROMO_CODE_SPONSOR = 'TEST-SPONSOR-5T8DGY2C';
+
+
 // ---------- isSaturday ----------
 
 test('isSaturday: detects a known Saturday', () => {
@@ -98,11 +108,11 @@ test('endsBy10PM: returns true when inputs are missing (validated elsewhere)', (
 // ---------- isPartnerPromoCode ----------
 
 test('isPartnerPromoCode: the partnership code is the recurring-partner code', () => {
-  assert.equal(isPartnerPromoCode('MERRITT-PARTNER-W3BJG56Q'), true);
+  assert.equal(isPartnerPromoCode('TEST-PARTNER-4H7KQ2NX'), true);
 });
 
 test('isPartnerPromoCode: other codes and junk are not partner codes', () => {
-  assert.equal(isPartnerPromoCode('MERRITT-SPONSOR-Z68KV6YY'), false);
+  assert.equal(isPartnerPromoCode('TEST-SPONSOR-5T8DGY2C'), false);
   assert.equal(isPartnerPromoCode(''), false);
   assert.equal(isPartnerPromoCode(null), false);
 });
@@ -336,7 +346,7 @@ test('pricing: recurring partner on a repeat event is EXEMPT from onboarding', (
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.isRecurringPartner, true);
   assert.equal(result.onsiteAssistanceFee, 0);
@@ -350,7 +360,7 @@ test('pricing: recurring partner who opts in still pays the $35 onboarding', () 
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
     { isFirstEvent: false, wantsOnsiteAssistance: true, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
   assert.equal(result.preDiscountSubtotal, 190 + 35);
@@ -361,7 +371,7 @@ test('pricing: recurring partner STILL pays for their first event', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 20 }],
     { isFirstEvent: true, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.isRecurringPartner, true);
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
@@ -408,7 +418,7 @@ test('pricing: 40+ attendees on a recurring partner repeat event is EXEMPT from 
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 60 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.eventSupervisionFee, 0);
   assert.equal(result.onsiteAssistanceFee, 0);
@@ -418,7 +428,7 @@ test('pricing: 40+ attendees on a recurring partner FIRST event still triggers s
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 3, expectedAttendees: 60 }],
     { isFirstEvent: true, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.eventSupervisionHours, 3);
   assert.equal(result.eventSupervisionFee, 3 * EVENT_SUPERVISION_RATE);
@@ -491,7 +501,7 @@ test('pricing: the partnership code waives the tables/chairs equipment fees enti
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 60,
        needsTables: true, needsChairs: true }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(repeat.tablesChairsFees, 0);
 
@@ -499,7 +509,7 @@ test('pricing: the partnership code waives the tables/chairs equipment fees enti
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 60,
        needsTables: true, needsChairs: true }],
     { isFirstEvent: true, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(firstEvent.tablesChairsFees, 0);
 });
@@ -550,7 +560,7 @@ test('mat: partner uses the mat at no charge', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsMat: true }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.matRentalFee, 0);   // waived for partners
   assert.equal(result.matRentalCount, 1); // still recorded as requested
@@ -579,7 +589,7 @@ test('mat: not requested means no fee and matWaived stays false', () => {
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.matRentalFee, 0);
   assert.equal(result.matRentalCount, 0);
@@ -606,7 +616,7 @@ test('dividers: fee is NOT waived for partners (unlike mat and equipment)', () =
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5,
        needsDividerRemoval: true, needsMat: true, needsTables: true }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.matRentalFee, 0);        // partner: mat waived
   assert.equal(result.tablesChairsFees, 0);    // partner: equipment waived
@@ -644,7 +654,7 @@ test('dividers: the fully-comped code comps the divider fee with everything else
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5, needsDividerRemoval: true }],
     { isFirstEvent: false, paymentMethod: 'card' },
-    'MERRITT-COMP-MZ2BVJYE'
+    'TEST-COMP-9P3RJ6WM'
   );
   assert.equal(result.dividerRemovalFee, DIVIDER_REMOVAL_FEE); // computed normally
   assert.equal(result.promoDiscount, result.preDiscountSubtotal); // then 100% comped
@@ -669,12 +679,12 @@ test('pricing: the partnership code discounts the pre-discount subtotal by 20% (
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.preDiscountSubtotal, 190); // exempt partner → no onboarding fee
   assert.equal(result.promoDiscount, 38); // 20% of 190
   assert.equal(result.subtotal, 152);
-  assert.equal(result.promoCode, 'MERRITT-PARTNER-W3BJG56Q');
+  assert.equal(result.promoCode, 'TEST-PARTNER-4H7KQ2NX');
 });
 
 // ---------- fully-comped code + staffing-billed sponsorship code ----------
@@ -685,7 +695,7 @@ test('pricing: the fully-comped code comps the entire booking — $0 total, spon
     [{ selectedDate: '2026-01-03', hoursRequested: 3, expectedAttendees: 60,
        needsTables: true, needsChairs: true, needsMat: true }], // Saturday, all fees
     { isFirstEvent: true, paymentMethod: 'card' },
-    'MERRITT-COMP-MZ2BVJYE'
+    'TEST-COMP-9P3RJ6WM'
   );
   assert.equal(result.sponsored, true);
   assert.equal(result.staffingBilledSponsor, false);
@@ -693,14 +703,14 @@ test('pricing: the fully-comped code comps the entire booking — $0 total, spon
   assert.equal(result.subtotal, 0);
   assert.equal(result.stripeFee, 0);
   assert.equal(result.total, 0);
-  assert.equal(result.promoCode, 'MERRITT-COMP-MZ2BVJYE');
-  assert.equal(isSponsoredPromoCode('MERRITT-COMP-MZ2BVJYE'), true);
+  assert.equal(result.promoCode, 'TEST-COMP-9P3RJ6WM');
+  assert.equal(isSponsoredPromoCode('TEST-COMP-9P3RJ6WM'), true);
 });
 
 test('pricing: the sponsorship code is not fully comped — it bills staffing', () => {
-  assert.equal(isSponsoredPromoCode('MERRITT-SPONSOR-Z68KV6YY'), false);
-  assert.equal(isStaffingBilledPromoCode('MERRITT-SPONSOR-Z68KV6YY'), true);
-  assert.equal(isStaffingBilledPromoCode('MERRITT-COMP-MZ2BVJYE'), false);
+  assert.equal(isSponsoredPromoCode('TEST-SPONSOR-5T8DGY2C'), false);
+  assert.equal(isStaffingBilledPromoCode('TEST-SPONSOR-5T8DGY2C'), true);
+  assert.equal(isStaffingBilledPromoCode('TEST-COMP-9P3RJ6WM'), false);
 });
 
 test('pricing: sponsorship code, small event charges ONLY the $35 onboarding', () => {
@@ -710,7 +720,7 @@ test('pricing: sponsorship code, small event charges ONLY the $35 onboarding', (
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 2, expectedAttendees: 15 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-SPONSOR-Z68KV6YY'
+    'TEST-SPONSOR-5T8DGY2C'
   );
   assert.equal(result.onsiteAssistanceFee, ON_SITE_ASSISTANCE_FEE);
   assert.equal(result.eventSupervisionFee, 0);
@@ -719,7 +729,7 @@ test('pricing: sponsorship code, small event charges ONLY the $35 onboarding', (
   assert.equal(result.total, 35);
   assert.equal(result.sponsored, false); // payment IS collected
   assert.equal(result.staffingBilledSponsor, true);
-  assert.equal(result.promoCode, 'MERRITT-SPONSOR-Z68KV6YY');
+  assert.equal(result.promoCode, 'TEST-SPONSOR-5T8DGY2C');
 });
 
 test('pricing: sponsorship code, large event charges ONLY full-event supervision', () => {
@@ -727,7 +737,7 @@ test('pricing: sponsorship code, large event charges ONLY full-event supervision
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 4, expectedAttendees: 70 }],
     { isFirstEvent: false, wantsOnsiteAssistance: false, paymentMethod: 'ach' },
-    'MERRITT-SPONSOR-Z68KV6YY'
+    'TEST-SPONSOR-5T8DGY2C'
   );
   assert.equal(result.eventSupervisionHours, 4);
   assert.equal(result.eventSupervisionFee, 4 * EVENT_SUPERVISION_RATE); // $120
@@ -744,7 +754,7 @@ test('pricing: sponsorship code comps equipment, mat, and Saturday premium — s
     [{ selectedDate: '2026-01-03', hoursRequested: 2, expectedAttendees: 20,
        needsTables: true, needsChairs: true, needsMat: true }],
     { isFirstEvent: true, paymentMethod: 'ach' },
-    'MERRITT-SPONSOR-Z68KV6YY'
+    'TEST-SPONSOR-5T8DGY2C'
   );
   // Fees are computed normally, then the discount covers everything but staffing.
   assert.equal(result.tablesChairsFees, 2 * TABLES_CHAIRS_FEE_SMALL);
@@ -759,7 +769,7 @@ test('pricing: sponsorship code card payment adds the 3% fee on the staffing cha
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 4, expectedAttendees: 70 }],
     { isFirstEvent: false, paymentMethod: 'card' },
-    'MERRITT-SPONSOR-Z68KV6YY'
+    'TEST-SPONSOR-5T8DGY2C'
   );
   assert.equal(result.subtotal, 120);
   assert.equal(result.stripeFee, 4); // round(120 * 0.03)
@@ -772,10 +782,10 @@ test('pricing: sponsorship code beats the automatic extended discount on long bo
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 15 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-SPONSOR-Z68KV6YY'
+    'TEST-SPONSOR-5T8DGY2C'
   );
   assert.equal(result.extendedDiscountApplied, false);
-  assert.equal(result.promoCode, 'MERRITT-SPONSOR-Z68KV6YY');
+  assert.equal(result.promoCode, 'TEST-SPONSOR-5T8DGY2C');
   assert.equal(result.subtotal, ON_SITE_ASSISTANCE_FEE);
 });
 
@@ -822,11 +832,11 @@ test('pricing: extended discount does not stack with a promo code — the larger
   const result = calculateAccuratePricing(
     [{ selectedDate: '2026-11-04', hoursRequested: 8, expectedAttendees: 5 }],
     { isFirstEvent: false, paymentMethod: 'ach' },
-    'MERRITT-PARTNER-W3BJG56Q'
+    'TEST-PARTNER-4H7KQ2NX'
   );
   assert.equal(result.preDiscountSubtotal, 760); // exempt partner → no onboarding fee
   assert.equal(result.promoDiscount, 152);       // 20% of 760, not 30%
-  assert.equal(result.promoCode, 'MERRITT-PARTNER-W3BJG56Q');
+  assert.equal(result.promoCode, 'TEST-PARTNER-4H7KQ2NX');
   assert.equal(result.extendedDiscountApplied, false);
 });
 

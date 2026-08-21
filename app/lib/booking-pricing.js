@@ -7,6 +7,13 @@
 // preserved. The route now imports these helpers instead of redefining them.
 
 import { computeOccurrences } from './recurring-occurrences.js';
+// Used by calculateAccuratePricing below. Imported as well as re-exported —
+// `export ... from` does not create a local binding.
+import {
+  lookupPromoCode,
+  isPartnerPromoCode,
+  isStaffingBilledPromoCode,
+} from './promo-codes.js';
 
 // Rate, fee and discount constants live in ./pricing-constants.js.
 //
@@ -220,86 +227,24 @@ export function computeRecurringIntakePricing(schedule) {
   };
 }
 
-// Promo codes. SERVER ONLY — there is no client-side copy to keep in sync, and
-// there must never be one again. The UI shows a discount before submit by
-// asking POST /api/validate-promo, which returns metadata for the ONE code
-// submitted. Nothing in this module may become reachable from a `use client`
-// component or from app/lib/venue-rates.ts; that is what put these codes in the
-// public bundle twice now (once hardcoded, once via a transitive import).
-// ROTATED 2026-08. The previous codes (MerrittMagic / COLESTEST /
-// MerrittSponsor100) were hardcoded in a client component and therefore shipped
-// in the public JavaScript bundle for as long as that code was deployed —
-// anyone who opened devtools could read them, and one of them comps a booking
-// 100%. Treat the old strings as burned; they are dead and must never come
-// back.
+// Promo codes. The code STRINGS live in environment variables and are read by
+// app/lib/promo-codes.js — they are NOT in this file, and must never be put
+// back. This repository is public, so a code committed here is a code
+// published to github.com, in the working tree and permanently in history.
+// That is how two generations of codes leaked before the bundle was ever the
+// problem. See the header of promo-codes.js for the full history.
 //
-// The replacements carry ~40 bits of entropy in the suffix (8 characters from a
-// 31-character alphabet with 0/O and 1/I/L removed, so nothing is confusable
-// when read aloud or typed off an email). Combined with the 10-guesses-per-
-// minute cap on /api/validate-promo, guessing one is not a realistic attack.
-//
-// Matching is EXACT and case-sensitive (see calculateAccuratePricing below), so
-// share them exactly as written here.
-export const VALID_PROMO_CODES = {
-  // The 20% partnership discount also flags the renter as a "recurring partner"
-  // (8+ hrs/month). Recurring partners are exempt from mandatory on-site staff
-  // coverage — except on their very first event, which everyone pays for.
-  'MERRITT-PARTNER-W3BJG56Q': { discount: 0.20, description: 'Partnership Discount (20% off)', partner: true },
-  // Fully sponsored events: 100% off, zero fees, no payment collected. The
-  // renter is never sent to checkout — the booking is confirmed immediately.
-  // The `sponsored` flag is what the booking flow keys off of to skip payment
-  // and what the calendar / emails use to label the reservation "Sponsored".
-  // (This is the fully-comped code — no payment, no card, self-confirming.)
-  'MERRITT-COMP-MZ2BVJYE': { discount: 1.0, description: 'Sponsored — Complimentary Event', sponsored: true },
-  // Venue-sponsored events where STAFFING is still billed: venue time, Saturday
-  // premium, equipment, and mat are all comped, but mandatory staff coverage is
-  // charged in full — the flat $35 first-hour onboarding for <40-attendee
-  // events (required on every sponsored event, even for returning renters), or
-  // $30/hr supervision for the ENTIRE event at 40+ attendees (e.g. 70 people
-  // for 4 hours = $120). Payment IS collected, so no `sponsored` flag here.
-  'MERRITT-SPONSOR-Z68KV6YY': { discount: 1.0, description: 'Sponsored — Venue Comped (staffing billed)', staffingBilled: true },
-};
-
-// Codes that comp the entire booking (no payment, no card). Kept as a derived
-// list so calendar / email modules can recognize a sponsored booking from its
-// stored promo_code without re-deriving the rule.
-export const SPONSORED_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
-  .filter(([, data]) => data.sponsored === true)
-  .map(([code]) => code);
-
-// True iff `code` is a recognized sponsored (fully comped) promo code.
-export function isSponsoredPromoCode(code) {
-  if (!code || typeof code !== 'string') return false;
-  return SPONSORED_PROMO_CODES.includes(code.trim());
-}
-
-// Codes that identify a "recurring partner" (8+ hrs/month, 20% partnership
-// discount). Derived from the promo dictionary so callers don't hard-code the
-// partner code. A recurring partner is exempt from mandatory on-site staff
-// coverage on repeat events — see calculateAccuratePricing.
-export const PARTNER_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
-  .filter(([, data]) => data.partner === true)
-  .map(([code]) => code);
-
-// True iff `code` is the partnership (recurring-partner) promo code. The
-// renter applying it qualifies for the supervision exemption on repeat events.
-export function isPartnerPromoCode(code) {
-  if (!code || typeof code !== 'string') return false;
-  return PARTNER_PROMO_CODES.includes(code.trim());
-}
-
-// Codes that comp everything EXCEPT mandatory staff coverage (the sponsorship
-// code). Derived from the promo dictionary like the lists above.
-export const STAFFING_BILLED_PROMO_CODES = Object.entries(VALID_PROMO_CODES)
-  .filter(([, data]) => data.staffingBilled === true)
-  .map(([code]) => code);
-
-// True iff `code` is a sponsorship code that still bills staffing (the $35
-// first-hour onboarding for small events / full-event supervision for 40+).
-export function isStaffingBilledPromoCode(code) {
-  if (!code || typeof code !== 'string') return false;
-  return STAFFING_BILLED_PROMO_CODES.includes(code.trim());
-}
+// Re-exported here so the pricing engine and its callers keep one import.
+export {
+  validPromoCodes,
+  lookupPromoCode,
+  sponsoredPromoCodes,
+  partnerPromoCodes,
+  staffingBilledPromoCodes,
+  isSponsoredPromoCode,
+  isPartnerPromoCode,
+  isStaffingBilledPromoCode,
+} from './promo-codes.js';
 
 // True iff `dateString` (YYYY-MM-DD) lands on a Saturday in local time. Parses
 // the parts directly so the result doesn't depend on the runtime timezone of
@@ -486,8 +431,8 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   let validatedPromoCode = '';
   let sponsored = false;
 
-  if (clientPromoCode && VALID_PROMO_CODES[clientPromoCode]) {
-    const promoData = VALID_PROMO_CODES[clientPromoCode];
+  const promoData = lookupPromoCode(clientPromoCode);
+  if (promoData) {
     if (promoData.minHours && totalHours < promoData.minHours) {
       // Silently ignored: the client surfaces an error already.
     } else {

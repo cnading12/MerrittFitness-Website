@@ -1,18 +1,31 @@
-// Promo codes must never reach the browser.
+// Promo codes must never reach the browser — and must never reach the REPO.
 //
-// The booking page used to carry the whole promo dictionary in a client
-// component, so every code shipped in the public JavaScript bundle. One of
-// them comps the booking 100%: a sponsored booking skips Stripe
-// entirely, is confirmed on the spot, and books the live Google Calendar.
-// Reading devtools was therefore enough to rent the venue for free.
+// One of these codes comps a booking 100%: it skips Stripe entirely, confirms
+// on the spot, and books the live Google Calendar. It is a credential, and it
+// has leaked three separate ways:
 //
-// The codes now live only in app/lib/booking-pricing.js, and the page asks
-// POST /api/validate-promo. This file pins both halves of that:
+//   1. Hardcoded in app/book/page.tsx — a client component, so it shipped in
+//      the public JS bundle. Fixed by moving it to a lib file.
+//   2. Still in the bundle after that fix, because app/page.tsx ('use client')
+//      imports app/lib/venue-rates.ts which imported booking-pricing.js. A
+//      .js lib file ships to the browser whenever a client component imports
+//      it, at any depth. Fixed by splitting the public numbers into
+//      pricing-constants.js.
+//   3. In the repository itself. This repo is PUBLIC, so every code ever
+//      committed is readable at github.com — in the tree and permanently in
+//      history. No amount of bundling discipline helps with that one.
 //
-//   1. No code string appears in any client-side source file.
-//   2. The endpoint validates one submitted code and returns only THAT code's
+// So the codes are configuration now, not source: app/lib/promo-codes.js reads
+// them from PROMO_CODE_PARTNER / PROMO_CODE_COMP / PROMO_CODE_SPONSOR. This
+// file pins what has to stay true:
+//
+//   1. No configured code appears in ANY source file — not just client ones.
+//   2. No code is reachable from a `use client` component (the import-graph
+//      walk at the bottom), so a future refactor cannot re-bundle them.
+//   3. The endpoint validates one submitted code and returns only THAT code's
 //      metadata — never the dictionary, and never a hint about other codes.
-//   3. Guessing is rate limited, so the endpoint isn't a brute-force oracle.
+//   4. Guessing is rate limited, so the endpoint isn't a brute-force oracle.
+//   5. Unset variables fail CLOSED: no codes, not all codes.
 //
 // Run with: npm test
 
@@ -21,12 +34,21 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 
-const { VALID_PROMO_CODES, SPONSORED_PROMO_CODES } = await import('../app/lib/booking-pricing.js');
-const { SPONSORED_PROMO_CODES: CALENDAR_SPONSORED_CODES } =
-  await import('../app/lib/calendar-flags.js');
+// Test codes, set before anything reads them. Deliberately not the real ones:
+// this file scans the repository for whatever is configured, so using
+// production codes here would plant them in the very tree it is guarding.
+process.env.PROMO_CODE_PARTNER = 'TEST-PARTNER-4H7KQ2NX';
+process.env.PROMO_CODE_COMP = 'TEST-COMP-9P3RJ6WM';
+process.env.PROMO_CODE_SPONSOR = 'TEST-SPONSOR-5T8DGY2C';
+
+const { validPromoCodes, sponsoredPromoCodes, __resetPromoWarning } =
+  await import('../app/lib/promo-codes.js');
+const { isSponsoredBooking } = await import('../app/lib/calendar-flags.js');
 const { POST: validatePromo } = await import('../app/api/validate-promo/route.js');
 const { __resetRateLimits } = await import('../app/lib/rate-limit.js');
 
+const VALID_PROMO_CODES = validPromoCodes();
+const SPONSORED_PROMO_CODES = sponsoredPromoCodes();
 const CODES = Object.keys(VALID_PROMO_CODES);
 
 function sourceFiles(dir, acc = []) {
@@ -150,37 +172,141 @@ test('the code lookup cannot be tricked by inherited Object properties', async (
 });
 
 
-test('the calendar-flags copy of the sponsored list matches booking-pricing', () => {
-  // app/lib/calendar-flags.js keeps its own copy of this list so it can stay
-  // free of heavier imports. That is a deliberate trade, but it means a
-  // rotated code has to be changed in TWO places — and forgetting the second
-  // one fails silently: the booking is still comped, but it stops being
-  // labelled "Sponsored" on the calendar and in staff emails, so nobody
-  // notices until someone asks why a free booking looks like a paid one.
-  assert.deepEqual(
-    [...CALENDAR_SPONSORED_CODES].sort(),
-    [...SPONSORED_PROMO_CODES].sort(),
-    'calendar-flags.js SPONSORED_PROMO_CODES has drifted from booking-pricing.js'
+test('calendar labelling follows the configured sponsored code', () => {
+  // calendar-flags.js used to keep its own hardcoded COPY of the sponsored
+  // list so it could stay free of heavier imports. Rotating a code without
+  // updating both places failed silently in the worst way: the booking was
+  // still comped, but stopped being LABELLED "Sponsored" on the calendar and
+  // in staff emails, so a free booking looked like a paid one and nobody
+  // found out until someone asked. It now derives from promo-codes.js.
+  assert.equal(SPONSORED_PROMO_CODES.length, 1, 'exactly one code comps a booking outright');
+
+  assert.equal(
+    isSponsoredBooking({ promo_code: SPONSORED_PROMO_CODES[0] }), true,
+    'a booking carrying the configured comp code must be labelled sponsored'
   );
+  // The staffing-billed sponsorship collects payment, so it is NOT sponsored
+  // in this sense and must not get the "fully comped" badge or $0.00 labels.
+  assert.equal(
+    isSponsoredBooking({ promo_code: process.env.PROMO_CODE_SPONSOR }), false,
+    'the staffing-billed code bills the renter and must not read as comped'
+  );
+  assert.equal(isSponsoredBooking({ promo_code: 'NOT-A-CODE' }), false);
+  assert.equal(isSponsoredBooking(null), false);
+});
+
+test('no configured promo code appears in ANY source file', () => {
+  // The strongest form of this check, and the one the earlier versions
+  // missed. They asked "is a code in a file that reaches the browser?" — but
+  // this repository is PUBLIC, so a code committed to a server-only file is
+  // published just the same, and stays published in the git history even
+  // after it is removed. The only safe answer is that no code is in the tree
+  // at all: they come from the environment.
+  // A test file that assigns its own fixture code to PROMO_CODE_* owns that
+  // string, so finding it there is not a leak — that is the mechanism working.
+  // Every OTHER appearance is one, including in a test: this repo is public,
+  // so a real code pasted into a fixture is just as exposed as one in app/.
+  const definedIn = (contents) =>
+    new Set([...contents.matchAll(/process\.env\.PROMO_CODE_[A-Z]+\s*=\s*['"]([^'"]+)['"]/g)]
+      .map((m) => m[1]));
+
+  const offenders = [];
+  for (const file of allSourceFiles('app').concat(
+    allSourceFiles('components'), allSourceFiles('lib'), allSourceFiles('tests')
+  )) {
+    const contents = readFileSync(file, 'utf8');
+    const owned = definedIn(contents);
+    for (const code of CODES) {
+      if (contents.includes(code) && !owned.has(code)) {
+        offenders.push(`${file} contains "${code}"`);
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    'A promo code is committed to this PUBLIC repository, where it is readable ' +
+      'by anyone — and stays readable in git history after you delete it. Set it ' +
+      'in PROMO_CODE_PARTNER / PROMO_CODE_COMP / PROMO_CODE_SPONSOR instead:\n' +
+      offenders.join('\n')
+  );
+});
+
+test('unset promo variables fail closed — no codes, not all codes', () => {
+  const saved = {
+    PROMO_CODE_PARTNER: process.env.PROMO_CODE_PARTNER,
+    PROMO_CODE_COMP: process.env.PROMO_CODE_COMP,
+    PROMO_CODE_SPONSOR: process.env.PROMO_CODE_SPONSOR,
+  };
+  try {
+    for (const key of Object.keys(saved)) delete process.env[key];
+    __resetPromoWarning();
+
+    assert.deepEqual(validPromoCodes(), {}, 'no configuration must mean no valid codes');
+    assert.deepEqual(sponsoredPromoCodes(), [], 'nothing may be treated as comped');
+    // The dangerous failure would be a booking reading as comped with no code
+    // configured — that books the venue for free.
+    assert.equal(isSponsoredBooking({ promo_code: saved.PROMO_CODE_COMP }), false);
+    assert.equal(isSponsoredBooking({ promo_code: '' }), false);
+  } finally {
+    Object.assign(process.env, saved);
+    __resetPromoWarning();
+  }
+});
+
+test('a blank or whitespace-only variable is treated as unset', () => {
+  const saved = process.env.PROMO_CODE_COMP;
+  try {
+    // A cleared dashboard field can arrive as "" or " ", and an empty-string
+    // code would otherwise become a dictionary key that matches a renter
+    // submitting nothing at all.
+    for (const blank of ['', '   ', '\n']) {
+      process.env.PROMO_CODE_COMP = blank;
+      assert.deepEqual(sponsoredPromoCodes(), [], `"${blank}" must not register a code`);
+      assert.equal(isSponsoredBooking({ promo_code: '' }), false);
+    }
+  } finally {
+    process.env.PROMO_CODE_COMP = saved;
+  }
+});
+
+test('a code pasted with surrounding whitespace still works', () => {
+  // Dashboard fields routinely pick up a trailing newline on paste, and the
+  // resulting "the code doesn't work" is invisible from the outside.
+  const saved = process.env.PROMO_CODE_COMP;
+  try {
+    process.env.PROMO_CODE_COMP = `  ${saved}\n`;
+    assert.equal(isSponsoredBooking({ promo_code: saved }), true);
+  } finally {
+    process.env.PROMO_CODE_COMP = saved;
+  }
 });
 
 test('the retired promo codes are gone everywhere', () => {
   // These shipped in the public bundle and must never come back — not in the
   // dictionary, not in a comment, not in a test fixture.
-  const RETIRED = ['MerrittMagic', 'COLESTEST', 'MerrittSponsor100'];
+  const RETIRED = [
+    // Generation 1 — hardcoded in a client component.
+    'MerrittMagic', 'COLESTEST', 'MerrittSponsor100',
+    // Generation 2 — never hardcoded, but bundled via a transitive import AND
+    // committed to this public repo. Burned on both counts.
+    'MERRITT-PARTNER-W3BJG56Q', 'MERRITT-COMP-MZ2BVJYE', 'MERRITT-SPONSOR-Z68KV6YY',
+  ];
   const files = [
-    ...sourceFiles('app'),
-    ...sourceFiles('components'),
-    ...readdirSync('app/lib').map((f) => join('app/lib', f)).filter((f) => f.endsWith('.js')),
+    ...allSourceFiles('app'),
+    ...allSourceFiles('components'),
+    ...allSourceFiles('lib'),
+    ...allSourceFiles('tests'),
   ];
 
   const offenders = [];
   for (const file of files) {
     const contents = readFileSync(file, 'utf8');
     for (const code of RETIRED) {
-      // The rotation note in booking-pricing.js names them on purpose, as a
-      // record of what was burned. Everything else must be clean.
-      if (contents.includes(code) && !file.endsWith('booking-pricing.js')) {
+      // This test names them, which is the point — it is the list of strings
+      // that must never work again. Nothing else may mention them.
+      if (contents.includes(code) && !file.endsWith('promo-code-privacy.test.mjs')) {
         offenders.push(`${file} still references retired code "${code}"`);
       }
     }

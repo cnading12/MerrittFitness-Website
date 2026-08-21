@@ -26,19 +26,22 @@
 // still guard the canonical value.
 export const SUPERVISION_GROUP_THRESHOLD = 40;
 
-// Codes that comp the entire booking (no payment collected). Mirrors
-// SPONSORED_PROMO_CODES in app/lib/booking-pricing.js — duplicated here so this
-// module stays dependency-free (same rationale as SUPERVISION_GROUP_THRESHOLD).
-// NOTE: the staffing-billed sponsorship code is intentionally NOT in this list
-// — it bills staffing (onboarding / supervision), so payment IS collected and
-// the "fully comped, no payment" badge and $0.00 labels must not apply to it.
+// Which code counts as "fully comped" now comes from app/lib/promo-codes.js,
+// which reads the configured codes out of the environment.
 //
-// ⚠️ This list is a COPY. If you rotate a promo code in booking-pricing.js you
-// must rotate it here too, or sponsored bookings silently stop being labelled
-// "Sponsored" on the calendar and in emails while still being comped — a
-// failure with no error attached to it.
-// tests/promo-code-privacy.test.mjs asserts the two lists agree.
-export const SPONSORED_PROMO_CODES = ['MERRITT-COMP-MZ2BVJYE'];
+// This used to be a hardcoded COPY of the sponsored list, kept duplicated so
+// this module stayed dependency-free. That trade is gone for two reasons: the
+// codes are no longer in source to copy, and the copy was a standing hazard —
+// rotating a code without updating both places left sponsored bookings still
+// comped but no longer LABELLED sponsored on the calendar and in staff emails,
+// a failure with no error attached to it. promo-codes.js is a leaf module with
+// no imports of its own, so taking the dependency costs nothing.
+//
+// Note the staffing-billed sponsorship code is deliberately NOT sponsored: it
+// bills staffing (onboarding / supervision), so payment IS collected and the
+// "fully comped, no payment" badge and $0.00 labels must not apply to it. That
+// distinction is the `sponsored` flag in promo-codes.js.
+import { isSponsoredPromoCode } from './promo-codes.js';
 
 // A booking is "sponsored" when it was comped via a sponsored promo code (or an
 // explicit is_sponsored flag, if the column is ever added). Derived from the
@@ -46,8 +49,7 @@ export const SPONSORED_PROMO_CODES = ['MERRITT-COMP-MZ2BVJYE'];
 export function isSponsoredBooking(booking) {
   if (!booking) return false;
   if (booking.is_sponsored === true) return true;
-  const code = (booking.promo_code || '').trim();
-  return SPONSORED_PROMO_CODES.includes(code);
+  return isSponsoredPromoCode(booking.promo_code || '');
 }
 
 export function buildStaffAttentionFlags(booking) {
