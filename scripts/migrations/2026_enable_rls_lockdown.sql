@@ -127,6 +127,57 @@ alter default privileges in schema public revoke all on tables from anon, authen
 --     from information_schema.role_table_grants
 --    where table_schema = 'public'
 --      and grantee in ('anon','authenticated');
+--
+-- THE THIRD ONE IS THE IMPORTANT ONE. Everything above checks the four tables
+-- this migration knows about. That is "the tables the app writes to", which is
+-- not the same set as "the tables that exist" — and the difference is where an
+-- orphan hides. The 2026-08 rollout found exactly one: `error_logs`, which no
+-- code in this repo references and which still carried full anon grants,
+-- DELETE and TRUNCATE included. A table nobody imports is a table nobody
+-- thinks to lock.
+--
+-- So ask the database what it actually has, rather than trusting this file's
+-- list. This should return NO rows:
+--
+--   select c.relname                        as unprotected_table,
+--          c.relrowsecurity                 as rls_enabled,
+--          coalesce(string_agg(distinct g.grantee, ', '), '(no anon grants)') as anon_grants
+--     from pg_class c
+--     join pg_namespace n on n.oid = c.relnamespace
+--     left join information_schema.role_table_grants g
+--            on g.table_schema = 'public'
+--           and g.table_name = c.relname
+--           and g.grantee in ('anon','authenticated')
+--    where n.nspname = 'public'
+--      and c.relkind = 'r'
+--      and (c.relrowsecurity = false or g.grantee is not null)
+--    group by c.relname, c.relrowsecurity
+--    order by c.relname;
+--
+-- Any row it returns is reachable with the anon key — a credential designed to
+-- be public. For each one, decide whether another service writes to it:
+--
+--   * nothing writes to it  -> lock it, using the same guarded block as above:
+--
+--       do $$
+--       declare t text;
+--       begin
+--         foreach t in array array['error_logs'] loop   -- <- names from the query
+--           if exists (select 1 from information_schema.tables
+--                      where table_schema='public' and table_name=t) then
+--             execute format('alter table public.%I enable row level security', t);
+--             execute format('revoke all on table public.%I from anon, authenticated', t);
+--             raise notice 'locked down %', t;
+--           end if;
+--         end loop;
+--       end $$;
+--
+--   * something DOES write to it with the anon key -> locking it breaks that
+--     writer. Move that service onto the service-role key first, then lock.
+--
+-- This is deliberately NOT automatic. Enabling RLS on a table an unknown
+-- service depends on turns a silent exposure into a silent outage, and this
+-- migration cannot tell which case a given orphan is.
 -- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------

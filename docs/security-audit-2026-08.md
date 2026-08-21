@@ -9,6 +9,104 @@ in the Supabase and Vercel dashboards — the code is already in place for both.
 
 ---
 
+## Re-verification, 2026-08-21 — one critical regression found
+
+The whole app was re-checked against this document: full test suite, clean
+production build, dependency audit, the client bundle, git history, and every
+invariant in CLAUDE.md read against the code.
+
+Everything held except finding 1, which was live again.
+
+**All three promo codes were back in the public JavaScript bundle.** Not
+hardcoded this time — pulled in transitively:
+
+```
+app/page.tsx ('use client')
+  -> app/lib/venue-rates.ts        rate tables for the marketing copy
+    -> app/lib/booking-pricing.js  the constants live next to the codes
+      -> VALID_PROMO_CODES         -> /_next/static/chunks/1ahc48lbz3fp7.js
+```
+
+Served on the **home** page, not the booking page. `MERRITT-COMP-MZ2BVJYE`
+comps 100%, skips Stripe, self-confirms and books the live calendar, so this
+was the original critical finding at its original severity — reading devtools
+on the front page was enough to rent the venue for free. It had been that way
+since the rotation in `7c6ccbc`.
+
+Two reasons it survived the first fix:
+
+  * The fix addressed the symptom that had been observed (a code hardcoded in
+    a client component) rather than the property that mattered (the codes must
+    not be reachable from the client bundle). Moving them to a `.js` lib file
+    changed nothing about reachability.
+  * The regression test encoded that same mistake, in its own words: *"the
+    server-only dictionary lives in a .js lib file, which never ships to the
+    client."* It grepped `.tsx`/`.jsx` for code strings. No code string was in
+    a `.tsx` file, so it passed — green, the entire time the codes were public.
+
+Fixed by splitting the numbers from the secrets: `app/lib/pricing-constants.js`
+holds the rates and fees (public by nature, safe in a bundle) and
+`venue-rates.ts` imports those; `booking-pricing.js` re-exports all of them so
+no server-side caller changed. Export surface verified identical — 39 exports,
+no value differences.
+
+The test now walks the actual client import graph from every `use client` file
+and fails if a code, or `booking-pricing.js` itself, is reachable. It is
+checked in both directions: re-pointing `venue-rates.ts` at
+`booking-pricing.js` makes it fail. That check mattered — the walker's first
+version matched imports with a pattern that excluded newlines, so it saw no
+edge out of `venue-rates.ts` (whose imports are multi-line) and passed on the
+vulnerable tree, reproducing the original failure exactly.
+
+**The lesson worth keeping:** a test that asserts the shape of last time's bug
+is not a test that the vulnerability is gone. This one described the file
+extension the codes had appeared in, not the property that had to hold. When
+the same class of bug returns by a different route, the test is the thing that
+failed first.
+
+### Also checked, and clean
+
+  * No server-only env var (`SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_API_SECRET`,
+    `CRON_SECRET`, Stripe/Resend/Google keys) appears in the client bundle,
+    and no JWT/`sk_live`/`re_` literal either. Only the two intentional
+    `NEXT_PUBLIC_` vars are shipped.
+  * Git history re-scanned (157 commits): no committed credentials. The one
+    `-----BEGIN PRIVATE KEY-----` hit is the `.env.example` placeholder plus
+    test fakes and a format check in `calendar.js`; the base64 blob that looks
+    like a key is the embedded image in `public/favicon.svg`.
+  * Booking intake builds its insert record field by field from
+    `accuratePricing` — no spread of the request body — so `status`,
+    `total_amount`, `promo_code` and `promo_discount` stay server-decided.
+  * `/api/booking/[id]` still returns the allowlist; `id_photo_*` and
+    `coi_document_*` are named in it as permanently withheld.
+  * Rate limits, CORS, constant-time auth, `maxDuration` on every
+    email-sending route, idempotency keys, no ad-hoc `createClient`: all as
+    documented.
+  * Production dependencies: `npm audit --omit=dev` reports zero.
+
+### Open items (not code — they need a dashboard)
+
+  * **`error_logs`** is still the orphan this audit flagged: no code
+    references it, and it carried full anon grants. The VERIFY section of the
+    RLS migration now includes a query that asks the database which `public`
+    tables are unprotected instead of trusting this file's hardcoded list, and
+    a guarded block to lock the ones nothing writes to. Deliberately not
+    automatic — enabling RLS on a table an unknown service depends on turns a
+    silent exposure into a silent outage.
+  * **Dev-only advisories.** `npm audit` reports 2 high, both dev-only and
+    neither reaching production: `sharp@0.34.5` (a devDependency; the copy
+    Next actually uses, `sharp@0.35.3`, is already patched) and
+    `brace-expansion` under eslint/tailwind tooling. Worth clearing on the next
+    dependency pass; not urgent.
+  * **Lint and types are still off in CI** (finding 14). `npm run lint` had
+    been broken since the Next 16 upgrade — `next lint` no longer exists and
+    the flat-config bridge threw before linting anything — so it is fixed and
+    runnable again. It reports 117 problems (75 errors, 42 warnings), none
+    security-relevant: mostly unescaped apostrophes in JSX copy and unused
+    vars. Clearing them is still the separate project this finding describes.
+
+---
+
 ## Status: complete (verified 2026-08-20)
 
 Both rollout steps are done and verified in production:
