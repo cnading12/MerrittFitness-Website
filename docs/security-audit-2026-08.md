@@ -9,6 +9,59 @@ in the Supabase and Vercel dashboards — the code is already in place for both.
 
 ---
 
+## The repository is public — promo codes moved to the environment
+
+Found while preparing to rotate the codes after the bundle fix below: the
+GitHub repository is **public** (`"visibility": "public"`). That reframes the
+whole promo-code finding.
+
+The bundle leak was real, but it was never the only exposure. Every code ever
+written into a source file has been readable at github.com — in the working
+tree, and permanently in the commit history:
+
+  * `MerrittSponsor100` — 8 commits
+  * `COLESTEST` — 4 commits
+  * `MERRITT-COMP-MZ2BVJYE` — 2 commits
+
+So rotating the codes *in source* would have published the new ones the moment
+they were pushed. The August audit's own history scan looked for API-key shapes
+(`sk_live`, JWTs, PEM bodies) and found none — correctly — but did not treat
+the promo codes as credentials, even though it had just described one as
+enough to rent the venue for free. It is a bearer token by any other name.
+
+**The codes now live in the environment**, alongside the Stripe and Resend
+keys: `PROMO_CODE_PARTNER`, `PROMO_CODE_COMP`, `PROMO_CODE_SPONSOR`, read by
+`app/lib/promo-codes.js`. Only each code's *meaning* — its discount, label and
+pricing flags — stays in source, because none of that is secret and it is what
+makes the engine readable and testable. Rotation is now a dashboard edit and a
+redeploy: no code change, no commit, nothing to leak.
+
+Two things fell out of the move:
+
+  * `calendar-flags.js` no longer keeps a hardcoded COPY of the sponsored code.
+    That copy existed to keep the module dependency-free, and it was a standing
+    hazard: rotating without updating both places left bookings still comped
+    but no longer *labelled* sponsored on the calendar and in staff emails — a
+    failure with no error attached to it. It now derives from `promo-codes.js`,
+    a leaf module with no imports of its own.
+  * Unset variables fail closed. A missing code means that role has no valid
+    code, never that everything validates. A renter seeing "invalid promo code"
+    is recoverable; a venue comped by accident is not.
+
+`tests/promo-code-privacy.test.mjs` now asserts the invariant that actually
+matters — **no configured code appears in any source file at all**, not merely
+in client-reachable ones — plus fail-closed behavior, whitespace handling on
+pasted values, and the six burned strings from all three generations. Both new
+guards were checked in the failing direction: planting a code in
+`calendar-flags.js` fails the scan, and making the lookup fall back to a
+default fails the fail-closed test.
+
+**Still worth deciding separately:** whether this repository should be public
+at all. Moving the codes out removes the credential that was exposed, but the
+next secret someone adds inherits the same problem.
+
+---
+
 ## Re-verification, 2026-08-21 — one critical regression found
 
 The whole app was re-checked against this document: full test suite, clean

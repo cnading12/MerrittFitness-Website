@@ -121,37 +121,43 @@ The app takes card payments and stores government-issued ID photos, so these
 are invariants, not preferences. Each one exists because the opposite was
 found in the code.
 
-1. **Promo codes are server-side only — and "server-side" is about the import
-   graph, not the file extension.** They live in `VALID_PROMO_CODES`
-   (`app/lib/booking-pricing.js`) and are checked over the network via
-   `POST /api/validate-promo`. One of them comps a booking 100% (skips Stripe,
-   self-confirms, books the live calendar), so shipping it is enough to rent
-   the venue for free.
+1. **Promo codes come from the environment. They are credentials, and this
+   repository is PUBLIC.** The strings live in `PROMO_CODE_PARTNER` /
+   `PROMO_CODE_COMP` / `PROMO_CODE_SPONSOR`, read by
+   `app/lib/promo-codes.js`; only their *meaning* (discount, label, flags) is
+   in source. `PROMO_CODE_COMP` comps a booking 100% — skips Stripe,
+   self-confirms, books the live calendar — so whoever has it can rent the
+   venue for free.
 
-   This has now leaked TWICE, the second time in a way the first fix and its
-   test both allowed:
+   Never put a code back in a source file. Not in `booking-pricing.js`, not in
+   a comment, not in a test fixture, not in user-facing copy. The repo is
+   public, so a committed code is published at github.com and stays published
+   in git history after you delete it.
 
-     * v1 — the dictionary was hardcoded in `app/book/page.tsx`.
-     * v2 — nothing was hardcoded anywhere, and all three codes were still in
-       `/_next/static`, served on the HOME page:
-       `app/page.tsx` (`'use client'`) → `app/lib/venue-rates.ts` →
-       `app/lib/booking-pricing.js`. A `.js` lib file ships to the browser
-       whenever a client component imports it, at any depth. Tree-shaking does
-       not save you: the derived `Object.entries(VALID_PROMO_CODES)` lists keep
-       the dictionary alive.
+   It has leaked three ways, each fix missing the next:
 
-   So the rule is: **nothing reachable from a `use client` file may import
-   `booking-pricing.js`.** Public rate/fee numbers live in
-   `app/lib/pricing-constants.js` — import those from pages and from
-   `venue-rates.ts`. Don't put a code in user-facing copy either.
+     * v1 — hardcoded in `app/book/page.tsx`, so it also shipped in the JS
+       bundle. Moved to a lib file.
+     * v2 — still in the bundle: `app/page.tsx` (`'use client'`) →
+       `app/lib/venue-rates.ts` → `booking-pricing.js`. A `.js` lib file ships
+       to the browser whenever a client component imports it, at any depth,
+       and tree-shaking does not save you — the derived
+       `Object.entries(VALID_PROMO_CODES)` lists kept the dictionary alive.
+     * v3 — the codes were in a public repo the whole time, which no bundling
+       change addresses.
 
-   `tests/promo-code-privacy.test.mjs` walks the real client import graph (every
-   `use client` file, following every relative and `@/` import) and fails if a
-   code — or `booking-pricing.js` itself — is reachable. The old version only
-   grepped `.tsx`/`.jsx` source, which is why v2 shipped green. If you change
-   that test, check it still FAILS when `venue-rates.ts` is pointed back at
-   `booking-pricing.js`; an earlier walker silently matched no multi-line
-   imports and passed on the vulnerable tree.
+   Two rules follow. **Nothing reachable from a `use client` file may import
+   `booking-pricing.js` or `promo-codes.js`** — public rate/fee numbers live
+   in `app/lib/pricing-constants.js`, so import those from pages and from
+   `venue-rates.ts`. And **unset variables fail closed**: that role gets no
+   valid code, rather than everything validating.
+
+   `tests/promo-code-privacy.test.mjs` pins all of it — no configured code in
+   any source file, none reachable from a client component, fail-closed on
+   unset, and the burned codes from v1/v2 permanently blocked. If you change
+   that test, check it still FAILS when a code is pasted into a source file and
+   when the codes are made to fail open; both earlier versions of this test
+   passed on a vulnerable tree.
 
 2. **Prices are always recomputed server-side.** `calculateAccuratePricing` /
    `computeRecurringIntakePricing` decide the amount; the client's `pricing`

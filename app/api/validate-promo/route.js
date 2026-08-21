@@ -22,7 +22,7 @@
 
 import { z } from 'zod';
 
-import { VALID_PROMO_CODES } from '../../lib/booking-pricing.js';
+import { lookupPromoCode } from '../../lib/promo-codes.js';
 import { enforceRateLimit } from '../../lib/rate-limit.js';
 
 // Codes are short, printable identifiers. Constraining the shape keeps the
@@ -56,9 +56,9 @@ export async function POST(request) {
   // calculateAccuratePricing looks them up — so a code that validates here
   // behaves identically at intake.
   const code = parsed.data.code.trim();
-  const promo = Object.prototype.hasOwnProperty.call(VALID_PROMO_CODES, code)
-    ? VALID_PROMO_CODES[code]
-    : null;
+  // lookupPromoCode guards the prototype chain, so "constructor"/"__proto__"
+  // and friends cannot validate as codes.
+  const promo = lookupPromoCode(code);
 
   if (!promo) {
     // 200 with valid:false, not 404: the outcome is a normal form result, and
