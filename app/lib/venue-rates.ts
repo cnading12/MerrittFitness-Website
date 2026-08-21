@@ -1,7 +1,14 @@
 // Display-ready rate tables for the marketing pages, derived from the SAME
-// constants the booking engine charges with (app/lib/booking-pricing.js).
+// constants the booking engine charges with (app/lib/pricing-constants.js).
 // Never hardcode a dollar figure on a page: import from here so a rate change
 // in the engine updates the marketing copy automatically.
+//
+// ⚠️ Import ONLY from ./pricing-constants.js here — never from
+// ./booking-pricing.js. The home page is a `use client` component and imports
+// this file, so everything this module pulls in is compiled into the public
+// JavaScript bundle. Importing booking-pricing.js shipped the whole promo
+// dictionary — including the 100%-off, self-confirming sponsorship code — to
+// every visitor. See the header of pricing-constants.js.
 
 import {
   hourlyRateFor,
@@ -21,7 +28,7 @@ import {
   MAT_RENTAL_FEE,
   DIVIDER_REMOVAL_FEE,
   // @ts-expect-error - plain JS module without type declarations
-} from './booking-pricing.js';
+} from './pricing-constants.js';
 
 export interface RateBand {
   guests: string;
