@@ -36,6 +36,17 @@ process.env.GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY ||
 const dbState = {
   bookings: [],
   updates: [], // records every applied update {id, patch}
+  // The delivery log (app/lib/email-log.js writes one row per send).
+  //
+  // This table was missing from the mock, so EVERY email-log insert in this
+  // file threw "Cannot read properties of undefined (reading 'slice')" — a
+  // throw that recordEmailEvent catches and downgrades to a warning, by
+  // design. The webhook tests therefore passed while logging nothing, and the
+  // warning was just noise in the output. Since the webhook is the main
+  // production path and CLAUDE.md rule 9 makes the log the only durable
+  // evidence when a client reports a missing email, the mock now models a
+  // migrated database and the assertions below check the rows land.
+  email_events: [],
 };
 
 function makeQuery(table) {
@@ -222,6 +233,7 @@ const { POST } = await import('../app/api/webhooks/stripe/route.js');
 function resetState() {
   dbState.bookings.length = 0;
   dbState.updates.length = 0;
+  dbState.email_events.length = 0;
   calendarInserts.length = 0;
   sentEmails.length = 0;
 }
@@ -325,6 +337,21 @@ test('multi-booking webhook: sends customer + manager email per booking, onboard
   });
 
   await postPaymentSucceeded({ seedBookingId: 'booking_master_C_1' });
+
+  // Rule 9: every send outcome is recorded. This is asserted HERE, on the
+  // webhook, because the webhook is the path a client's emails actually take —
+  // tests/email-observability.test.mjs covers the logging helper itself, but
+  // nothing checked that the multi-booking loop reaches it for every send.
+  assert.equal(
+    dbState.email_events.length,
+    sentEmails.length,
+    `expected one email_events row per send: ${sentEmails.length} sent, ` +
+      `${dbState.email_events.length} logged`
+  );
+  assert.ok(
+    dbState.email_events.every((row) => row.status === 'sent' && row.resend_id),
+    'every logged send should record status "sent" and a Resend id'
+  );
 
   const subjects = sentEmails.map((e) => e.subject);
   const confirmations = subjects.filter((s) => /Booking Confirmed/i.test(s));

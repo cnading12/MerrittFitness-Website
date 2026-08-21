@@ -121,14 +121,37 @@ The app takes card payments and stores government-issued ID photos, so these
 are invariants, not preferences. Each one exists because the opposite was
 found in the code.
 
-1. **Promo codes are server-side only.** They live in `VALID_PROMO_CODES`
+1. **Promo codes are server-side only — and "server-side" is about the import
+   graph, not the file extension.** They live in `VALID_PROMO_CODES`
    (`app/lib/booking-pricing.js`) and are checked over the network via
-   `POST /api/validate-promo`. They must NEVER appear in a `.tsx`/`.jsx` file
-   — those compile into the public bundle, and one of the codes comps a
-   booking 100% (skips Stripe, self-confirms, books the live calendar), so
-   shipping it was enough to rent the venue for free. Don't put a code in
-   user-facing copy either. `tests/promo-code-privacy.test.mjs` scans the
-   client source and fails if any code reappears.
+   `POST /api/validate-promo`. One of them comps a booking 100% (skips Stripe,
+   self-confirms, books the live calendar), so shipping it is enough to rent
+   the venue for free.
+
+   This has now leaked TWICE, the second time in a way the first fix and its
+   test both allowed:
+
+     * v1 — the dictionary was hardcoded in `app/book/page.tsx`.
+     * v2 — nothing was hardcoded anywhere, and all three codes were still in
+       `/_next/static`, served on the HOME page:
+       `app/page.tsx` (`'use client'`) → `app/lib/venue-rates.ts` →
+       `app/lib/booking-pricing.js`. A `.js` lib file ships to the browser
+       whenever a client component imports it, at any depth. Tree-shaking does
+       not save you: the derived `Object.entries(VALID_PROMO_CODES)` lists keep
+       the dictionary alive.
+
+   So the rule is: **nothing reachable from a `use client` file may import
+   `booking-pricing.js`.** Public rate/fee numbers live in
+   `app/lib/pricing-constants.js` — import those from pages and from
+   `venue-rates.ts`. Don't put a code in user-facing copy either.
+
+   `tests/promo-code-privacy.test.mjs` walks the real client import graph (every
+   `use client` file, following every relative and `@/` import) and fails if a
+   code — or `booking-pricing.js` itself — is reachable. The old version only
+   grepped `.tsx`/`.jsx` source, which is why v2 shipped green. If you change
+   that test, check it still FAILS when `venue-rates.ts` is pointed back at
+   `booking-pricing.js`; an earlier walker silently matched no multi-line
+   imports and passed on the vulnerable tree.
 
 2. **Prices are always recomputed server-side.** `calculateAccuratePricing` /
    `computeRecurringIntakePricing` decide the amount; the client's `pricing`
