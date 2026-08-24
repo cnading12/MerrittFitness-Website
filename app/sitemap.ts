@@ -48,6 +48,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/congregations', changeFrequency: 'monthly', priority: 0.8 },
     { path: '/studio', changeFrequency: 'monthly', priority: 0.8 },
 
+    // The single-page factual reference. High priority despite not selling
+    // anything: it is the page an assistant answering "what's a good event
+    // space in Denver?" can extract a whole recommendation from, and the one
+    // /llms.txt points at first. See app/venue-facts/page.tsx.
+    { path: '/venue-facts', changeFrequency: 'monthly', priority: 0.8 },
+
     // Supporting pages.
     { path: '/about', changeFrequency: 'yearly', priority: 0.6 },
     { path: '/contact', changeFrequency: 'yearly', priority: 0.6 },

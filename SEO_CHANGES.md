@@ -19,6 +19,9 @@ that have already regressed once.
 | Event JSON-LD | `app/calendar/layout.tsx` |
 | Business facts (NAP, hours, reviews, area served) | `app/data/site.ts` |
 | Prices (single source, derived from the booking engine) | `app/lib/venue-rates.ts` |
+| AI summary (feeds /llms.txt + /venue-facts) | `lib/ai-summary.ts` |
+| Machine-readable site brief | `app/llms.txt/route.ts` |
+| One-page factual reference | `app/venue-facts/page.tsx` |
 | Sitemap | `app/sitemap.ts` |
 | robots.txt | `app/robots.ts` |
 
@@ -70,6 +73,127 @@ already; an invented count is grounds for a structured-data manual penalty.
 **Only ever set these from the live Business Profile.**
 
 ---
+
+## Answer engines — being the venue an assistant recommends
+
+People increasingly ask Claude, ChatGPT, Gemini, or Perplexity for a venue
+instead of searching for one. That is a different game from ranking, and the
+site is now built for both.
+
+**How an assistant actually answers "what's a good wellness event space in
+Denver?"** It runs a search, fetches a handful of pages, extracts whatever it
+can state confidently, and writes a recommendation. Three things follow, and
+they drive every choice below:
+
+1. It will not click an accordion, run our JavaScript, infer a capacity from a
+   photo, or chase a price across four pages. Anything not liftable as plain
+   text on one fetch does not make the answer.
+2. It needs to know when we are *wrong* for the ask. A model with no stated
+   limits hedges on every recommendation; a model that knows we cap at 125 and
+   close at 10 PM will confidently name us for the events that fit.
+3. Much of the answer comes from *off-site* sources it trusts more than us.
+   See the human list at the bottom — that part cannot be shipped from here.
+
+### What was added
+
+| Surface | File | What it is |
+|---|---|---|
+| `/llms.txt` | `app/llms.txt/route.ts` | Machine-readable brief at the site root |
+| `/venue-facts` | `app/venue-facts/page.tsx` | The same facts, human-readable, one page |
+| Shared source | `lib/ai-summary.ts` | Builds both, from existing single-source data |
+| Crawler policy | `app/robots.ts` | Every AI agent named and allowed explicitly |
+
+`lib/ai-summary.ts` is the whole point of the design: one module assembles the
+summary, quick facts, pricing rules, fit/misfit lists, and FAQs from
+`app/data/site.ts` and `app/lib/venue-rates.ts`, and both surfaces render it.
+The rate an assistant quotes is therefore the rate checkout bills, by
+construction. **Never type a figure into these files** — the same rule as the
+marketing pages, for a sharper reason: these two present themselves as the
+authoritative summary, so a stale number gets repeated to a renter as fact.
+
+The priced revenue lines also stopped being duplicated. `serviceLines` is now
+exported from `lib/site-schema.ts` and feeds three consumers — the
+`makesOffer` / `hasOfferCatalog` schema blocks, `/llms.txt`, and
+`/venue-facts`. Add a service once, it appears in all three.
+
+### `/llms.txt`
+
+The [llmstxt.org](https://llmstxt.org) convention: one markdown file at the
+site root saying what this site is and where the substance lives — roughly
+what robots.txt is to crawlers. It is a convention, not a ratified standard,
+and no assistant is obliged to fetch it; it costs one static file and the ones
+that do look get our numbers instead of a guess assembled from a stale
+directory listing.
+
+Two things about it are deliberate:
+
+- **The route directory is literally named `llms.txt`.** That is how the App
+  Router serves an extensioned path from a Route Handler. Do not rename it —
+  the filename *is* the convention and nothing looks anywhere else.
+- **It publishes `contact.inquiries` and never `contact.clientServices`.**
+  The site labels the client-services line "existing clients only"; an
+  assistant compressing this file cannot be relied on to carry that caveat,
+  and the failure mode is a new renter's enquiry landing in the wrong inbox.
+  This is CLAUDE.md's contact-routing rule applied to a machine reader.
+
+### `/venue-facts`
+
+The rest of the site sells; this page states. Capacity, rates, square footage,
+parking, policies, what is included, every use with its entry price — and an
+equally weighted list of what the room is **not** right for.
+
+Three constraints keep it useful, all asserted by tests:
+
+- **Server component, no client JS.** Several AI fetchers read raw HTML and
+  never hydrate.
+- **Nothing behind an interaction.** Its FAQ is rendered open rather than
+  through `<FaqSection>`, whose accordion collapses answers by default. Right
+  for the marketing pages, wrong here.
+- **Every figure from `lib/ai-summary.ts`.**
+
+The "not the right room for" block is the highest-value content on the page,
+not throat-clearing. Every line is a stated policy or a physical limit —
+the 125 ceiling, the 10 PM curfew, no alcohol sales, Sunday daytime held by
+congregations, main-hall restrooms not being ADA accessible, the mixer being
+pro-only. It also reaches the renter *before* they tour rather than after they
+sign. Do not soften it.
+
+### Crawler policy
+
+`app/robots.ts` now names the AI agents explicitly: Anthropic (`ClaudeBot`,
+`Claude-User`, `Claude-SearchBot`), OpenAI (`GPTBot`, `OAI-SearchBot`,
+`ChatGPT-User`), `Google-Extended`, `Applebot` / `Applebot-Extended`,
+`PerplexityBot` / `Perplexity-User`, `meta-externalagent`, `Amazonbot`,
+`Bingbot`, and `CCBot`.
+
+The wildcard group already allowed all of them, so two of these entries are
+the ones that actually change anything: **`Google-Extended` and
+`Applebot-Extended` are permission tokens with no crawler behind them.** They
+govern whether content Google and Apple have *already* fetched may feed Gemini,
+AI Overviews, and Apple Intelligence. Naming them with `Allow: /` is the only
+way to opt in; not naming them is the opt-out.
+
+> ⚠️ **The named-group trap.** A crawler obeys exactly ONE robots.txt group —
+> the one naming its user-agent — and ignores `*` entirely once such a group
+> exists. So a named `Allow: /` group written without the disallow list would
+> hand precisely those bots `/api/` and the mid-booking pages that the wildcard
+> group is careful to withhold. Both groups reference one `DISALLOWED`
+> constant, and a test asserts every group does.
+
+This is an opt-**in**, chosen deliberately: the venue's marketing copy is
+published to be repeated. To reverse it for an agent, give it its own group
+with `disallow: '/'` — do not just delete it from the list, or it falls back to
+the permissive wildcard group.
+
+### Tests
+
+`tests/ai-discoverability.test.mjs` locks in: the required agents stay named,
+no blanket disallow appears, every named group carries the shared disallow
+list, no dollar figure is typed into the three AI-facing files, `/llms.txt`
+keeps its H1 + blockquote shape and omits client-services, `/venue-facts`
+stays a server component with its FAQ open and its limits stated, the page is
+in the sitemap and the footer, and all three surfaces read `serviceLines`.
+Each assertion was verified to fail against a deliberately broken tree.
 
 ## Events and pricing
 
@@ -297,3 +421,62 @@ Ordered by impact.
 9. **Minor: neighborhood spelling.** The site uses "Sloans Lake"; the profile
    description uses "Sloan's Lake". Neither is part of the NAP so this is
    cosmetic, but matching them is slightly better for entity consistency.
+
+---
+
+## Not done — needs a human: the answer-engine half
+
+Everything above ships from this repo. Most of what decides whether an
+assistant *names* this venue does not, because an assistant weights
+third-party sources above a business's own website. Roughly in order of
+impact:
+
+1. **The Google Business Profile category, again.** It is item 1 of the list
+   above and it is item 1 here too. Gemini and AI Overviews read Google's local
+   entity data directly, and ChatGPT's and Perplexity's local answers lean on
+   the same listings ecosystem. While the primary category says *Yoga studio*,
+   every one of those systems has this venue filed as a yoga studio and will
+   not offer it for "event space" or "wedding venue" no matter what the website
+   says. Nothing else on either list comes close.
+
+2. **Get into the roundup pages.** When an assistant is asked for "the best
+   wellness event space in Denver" it overwhelmingly quotes listicles and
+   directories rather than any single venue's site. Being absent from those
+   pages is the single biggest reason a venue never gets named. Worth pursuing:
+   The Knot and WeddingWire (weddings), Eventective, Tagvenue, Giggster,
+   Peerspace (already listed — see item 5 above), Yelp (still named *MERRITT
+   FITNESS*), plus Denver-local blogs and "best venues in Denver" roundups.
+   A pitch email with the `/venue-facts` link attached does most of the work,
+   because that page is written to be quoted.
+
+3. **Ask reviewers to name what they used the room for.** "We held my mother's
+   celebration of life here" or "I teach a weekly sound bath here" is worth far
+   more to a retrieval system than "great space!" — it is the text that makes
+   this venue match the query. Ask at the point of the follow-up email, and
+   never script the wording.
+
+4. **Confirm the AI crawlers can actually reach the site.** robots.txt now
+   invites them, but a platform-level bot filter overrides robots.txt and fails
+   silently. In Vercel, check **Firewall → Bot Management / Attack Challenge
+   Mode** is not challenging non-browser user-agents. Then confirm empirically:
+   look for `GPTBot`, `ClaudeBot`, `PerplexityBot`, and `Applebot` in the
+   Vercel access logs a week or two after deploy. No hits at all means
+   something upstream is blocking them.
+
+5. **Make `merrittfitness.net` a 301.** Item 2 of the list above, and it
+   matters here too: a 307 does not pass the old brand domain's authority, and
+   anything an assistant learned under the old name stays disconnected from the
+   new one.
+
+6. **Consolidate the duplicate Peerspace listings.** Item 5 above. Three
+   listings for one room, at a capacity (100) that contradicts the site (125),
+   is an entity-resolution problem: a model reading all three cannot tell
+   whether these are one venue or three, and a contradicted number is a number
+   it will decline to state.
+
+7. **Spot-check the actual answers.** Once a month, ask Claude, ChatGPT,
+   Gemini, and Perplexity in a fresh chat: *"What's a good wellness or event
+   space to rent in Denver?"*, *"Where can I teach a weekly yoga class in
+   Denver?"*, *"Small historic wedding venue in Denver for 100 guests?"* Note
+   who gets named and which source is cited. That citation is the thing to go
+   and get listed on — it is a far more direct signal than any ranking report.

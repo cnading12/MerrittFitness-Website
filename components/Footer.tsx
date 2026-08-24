@@ -54,6 +54,14 @@ export default function Footer() {
                   Book the Venue
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/venue-facts"
+                  className="text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200"
+                >
+                  Venue Facts &amp; Rates
+                </Link>
+              </li>
               {/* /contact is deliberately linked from the footer only. It
                   exists for people (and crawlers) searching for the venue's
                   address, hours, and phone number, but the navbar is kept as
