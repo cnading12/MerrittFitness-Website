@@ -73,6 +73,81 @@ export const geoCoordinates = {
   longitude: contact.address.lng,
 } as const;
 
+export interface ServiceLine {
+  name: string;
+  description: string;
+  url: string;
+  /** Lowest genuine hourly rate for this line, from venue-rates. */
+  price: number;
+}
+
+/**
+ * The venue's revenue lines, priced, in one place.
+ *
+ * Exported because three consumers need exactly this list and must not drift
+ * from one another: the `makesOffer` / `hasOfferCatalog` blocks below, the
+ * /llms.txt summary, and the /venue-facts reference page. Adding a service
+ * here adds it to all three.
+ */
+export const serviceLines: ServiceLine[] = [
+  {
+    name: 'Wedding Venue Rental',
+    description:
+      'Ceremonies and receptions in a restored 1905 sanctuary with 24-foot vaulted ceilings, original stained glass, and room for up to 125 guests. Saturdays, plus Friday and Sunday evening weddings.',
+    url: `${BASE_URL}/weddings`,
+    price: rateBands[rateBands.length - 1].saturday,
+  },
+  {
+    name: 'Wellness & Movement Class Space',
+    description:
+      'Studio space for yoga, breathwork, sound baths, dance, and martial arts, as a one-time workshop, a pop-up series, or a standing weekly block. Full-coverage floor mat and 15 feet of rollaway mirrors on site.',
+    url: `${BASE_URL}/class-partnerships`,
+    price: rateBands[0].weekday,
+  },
+  {
+    name: 'Recurring Booking Partnership',
+    description:
+      'A standing weekly block in the main hall at partner rates, with simple monthly billing. For instructors, congregations, rehearsals, and community groups booking 8 or more hours a month.',
+    url: `${BASE_URL}/recurring`,
+    price: rateBands[0].weekdayRecurring,
+  },
+  {
+    name: 'Private Event Venue Rental',
+    description:
+      'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 event center for up to 125 guests.',
+    url: `${BASE_URL}/private-events`,
+    price: rateBands[0].weekday,
+  },
+  {
+    name: 'Concert & Performance Venue Rental',
+    description:
+      'Live music, recitals, album releases, and performances in a hall built for sound, with a house surround system and a cafe lounge for intermission.',
+    url: `${BASE_URL}/concerts`,
+    price: rateBands[0].weekday,
+  },
+  {
+    name: 'Art Show & Exhibition Space',
+    description:
+      'Gallery openings, exhibitions, and pop-up artist markets under natural light, with hardwood floors and tall walls that let the work carry the room.',
+    url: `${BASE_URL}/art-shows`,
+    price: rateBands[0].weekday,
+  },
+  {
+    name: 'Congregation & Worship Space',
+    description:
+      'A 1905 sanctuary open to congregations and spiritual communities of every tradition, on flat monthly rates. Two churches already meet here each Sunday.',
+    url: `${BASE_URL}/congregations`,
+    price: rateBands[0].weekdayRecurring,
+  },
+  {
+    name: 'Practitioner Studio & Workspace',
+    description:
+      'Studio and office space for Denver practitioners, including dedicated desks and private offices next door at Merritt Workspace with venue hours included in membership.',
+    url: `${BASE_URL}/studio`,
+    price: rateBands[0].weekday,
+  },
+];
+
 /**
  * One Offer per revenue line, each carrying the real entry price so Google
  * can surface "from $X" rather than guessing. Hourly rates use a
@@ -94,66 +169,7 @@ function serviceOffers() {
     areaServed: { '@type': 'City', name: 'Denver' },
   });
 
-  const lines: Array<{ name: string; description: string; url: string; price: number }> = [
-    {
-      name: 'Wedding Venue Rental',
-      description:
-        'Ceremonies and receptions in a restored 1905 sanctuary with 24-foot vaulted ceilings, original stained glass, and room for up to 125 guests. Saturdays, plus Friday and Sunday evening weddings.',
-      url: `${BASE_URL}/weddings`,
-      price: rateBands[rateBands.length - 1].saturday,
-    },
-    {
-      name: 'Wellness & Movement Class Space',
-      description:
-        'Studio space for yoga, breathwork, sound baths, dance, and martial arts, as a one-time workshop, a pop-up series, or a standing weekly block. Full-coverage floor mat and 15 feet of rollaway mirrors on site.',
-      url: `${BASE_URL}/class-partnerships`,
-      price: rateBands[0].weekday,
-    },
-    {
-      name: 'Recurring Booking Partnership',
-      description:
-        'A standing weekly block in the main hall at partner rates, with simple monthly billing. For instructors, congregations, rehearsals, and community groups booking 8 or more hours a month.',
-      url: `${BASE_URL}/recurring`,
-      price: rateBands[0].weekdayRecurring,
-    },
-    {
-      name: 'Private Event Venue Rental',
-      description:
-        'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 event center for up to 125 guests.',
-      url: `${BASE_URL}/private-events`,
-      price: rateBands[0].weekday,
-    },
-    {
-      name: 'Concert & Performance Venue Rental',
-      description:
-        'Live music, recitals, album releases, and performances in a hall built for sound, with a house surround system and a cafe lounge for intermission.',
-      url: `${BASE_URL}/concerts`,
-      price: rateBands[0].weekday,
-    },
-    {
-      name: 'Art Show & Exhibition Space',
-      description:
-        'Gallery openings, exhibitions, and pop-up artist markets under natural light, with hardwood floors and tall walls that let the work carry the room.',
-      url: `${BASE_URL}/art-shows`,
-      price: rateBands[0].weekday,
-    },
-    {
-      name: 'Congregation & Worship Space',
-      description:
-        'A 1905 sanctuary open to congregations and spiritual communities of every tradition, on flat monthly rates. Two churches already meet here each Sunday.',
-      url: `${BASE_URL}/congregations`,
-      price: rateBands[0].weekdayRecurring,
-    },
-    {
-      name: 'Practitioner Studio & Workspace',
-      description:
-        'Studio and office space for Denver practitioners, including dedicated desks and private offices next door at Merritt Workspace with venue hours included in membership.',
-      url: `${BASE_URL}/studio`,
-      price: rateBands[0].weekday,
-    },
-  ];
-
-  return lines.map((line) => ({
+  return serviceLines.map((line) => ({
     '@type': 'Offer',
     ...hourly(line.price),
     itemOffered: {
