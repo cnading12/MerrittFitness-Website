@@ -280,7 +280,7 @@ fallback stacks, so a font failure degrades exactly as it used to.
 
 ---
 
-## Google Business Profile — reviewed August 2026
+## Google Business Profile — reviewed August 2026, re-checked August 25 2026
 
 Reviewed against screenshots of the live profile. Recording it here because
 the site's NAP, hours, and `aggregateRating` are all supposed to mirror it.
@@ -290,7 +290,8 @@ the site's NAP, hours, and `aggregateRating` are all supposed to mirror it.
 | Field | Value |
 |---|---|
 | Name | Merritt Wellness |
-| Primary category | Yoga studio (a change to **Event venue** is pending) |
+| Primary category | **Event venue** — the pending edit landed, confirmed with the owner 25 Aug 2026 |
+| Verification | Verified, no prompt outstanding (confirmed 25 Aug 2026) |
 | Phone | (720) 357-9499 |
 | Website | `https://www.merrittwellness.net/` |
 | Hours | Mon–Sat 7 AM–10 PM, Sun 4:30 PM–10 PM |
@@ -365,18 +366,34 @@ the apex.
 
 Ordered by impact.
 
-1. **Resolve the stuck category edit and the profile's verification state.**
-   The switch to *Event venue* as primary has been pending for about a month;
-   normal is minutes to a few days. Changing a primary category is one of the
-   edits Google most often gates behind re-verification, so the pending edit
-   and the unverified appearance are probably the same problem. Look for a
-   "Get verified" prompt on the profile and complete it (video verification is
-   the usual route now, ~5 business days). Do not stack further edits while
-   one is pending — new edits can restart the review. If no verification
-   prompt appears, a month is far outside normal and warrants a support
-   ticket. **Nothing else on this list matters as much: while the primary
-   category is still "Yoga studio", the profile is competing for yoga queries
-   instead of event-venue ones.**
+> ✅ **The category blocker is cleared.** The former item 1 of this list — the
+> *Event venue* primary category stuck pending behind an unverified profile —
+> resolved. As of 25 Aug 2026 the primary category is **Event venue** and the
+> profile is verified with no prompt outstanding. Everything below is
+> re-ordered on that basis: the profile now competes for event-venue queries,
+> and the work that was pointless while it read "Yoga studio" is the work that
+> pays now.
+
+1. **Fill out the fields the Event venue category just unlocked.** A primary
+   category is what a profile is *eligible* to rank for; the categories,
+   services, attributes and description are what it actually matches on. In
+   priority order:
+
+   * **Secondary categories.** The queued set is right — Wedding venue,
+     Banquet hall, Yoga studio, Community center, Live music venue, Meditation
+     center — plus **Dance school**, the omission noted below, given the weekly
+     salsa, bachata and tango inventory. Nine is the cap; that is eight.
+   * **Services.** The one genuinely underused surface. Add the eight lines in
+     `serviceLines` (`lib/site-schema.ts`) with their descriptions, so the
+     profile's service list and the site's `hasOfferCatalog` say the same
+     thing. Every line is a query surface the category alone does not cover.
+   * **Description.** It still opens on the wellness framing written when the
+     category said *Yoga studio*. Lead with the venue.
+   * **Attributes**, including the honest accessibility ones — ramp entrance,
+     main-hall restrooms not ADA accessible. `policies` in `app/data/site.ts`
+     is the source; the site and the profile must not disagree.
+
+   Do these as separate edits, and let each clear before making the next.
 
 2. **Make the `merrittfitness.net` redirect permanent.** It currently answers
    `307 Temporary`, so none of the old brand domain's authority transfers. Find
@@ -403,11 +420,8 @@ Ordered by impact.
    capacity of 100 against the site's 125. Pick one capacity, make it true
    everywhere, and consolidate the listings if Peerspace allows it.
 
-6. **Consider adding categories once the pending edit lands.** The queued set
-   (Event venue, Yoga studio, Banquet hall, Wedding venue, Community center,
-   Live music venue, Meditation center) is good and covers the revenue lines.
-   *Dance school* is the notable omission given the weekly salsa, bachata, and
-   tango inventory. Add it only after the current edit clears.
+6. **Categories — folded into item 1.** No longer gated on anything; the
+   queued set plus *Dance school* is listed there.
 
 7. **Prices for externally ticketed events.** Filling `price` on the remaining
    Eventbrite-style events would let each show a price in Google's event
@@ -431,13 +445,15 @@ assistant *names* this venue does not, because an assistant weights
 third-party sources above a business's own website. Roughly in order of
 impact:
 
-1. **The Google Business Profile category, again.** It is item 1 of the list
-   above and it is item 1 here too. Gemini and AI Overviews read Google's local
-   entity data directly, and ChatGPT's and Perplexity's local answers lean on
-   the same listings ecosystem. While the primary category says *Yoga studio*,
-   every one of those systems has this venue filed as a yoga studio and will
-   not offer it for "event space" or "wedding venue" no matter what the website
-   says. Nothing else on either list comes close.
+1. **The Google Business Profile entity — now worth filling out.** Gemini and
+   AI Overviews read Google's local entity data directly, and ChatGPT's and
+   Perplexity's local answers lean on the same listings ecosystem. The primary
+   category is now *Event venue*, so every one of those systems has this venue
+   filed correctly and the remaining lift is the detail underneath it — the
+   secondary categories, the eight service lines, and the attributes, per item
+   1 of the list above. Expect a lag: these systems re-read the local graph on
+   their own schedule, so the category change will not show up in their answers
+   the week it lands.
 
 2. **Get into the roundup pages.** When an assistant is asked for "the best
    wellness event space in Denver" it overwhelmingly quotes listicles and
