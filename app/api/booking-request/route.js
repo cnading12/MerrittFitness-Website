@@ -16,6 +16,16 @@ import {
 // Stripe, so this route confirms them immediately and runs the same side
 // effects directly via the shared fulfillment helper.
 import { fulfillConfirmedBookings } from '../../lib/booking-fulfillment.js';
+import {
+  findFlexSpaceViolations,
+  findCalendarConflicts,
+  findSelfOverlaps,
+  describeConflict,
+  formatDateLabel,
+  FLEX_SPACE_RESTRICTION_MESSAGE,
+} from '../../lib/booking-guards.js';
+import { findBusyRangesInRange } from '../../lib/calendar.js';
+import { computeOccurrences, findOccurrenceConflicts } from '../../lib/recurring-occurrences.js';
 import { enforceRateLimit } from '../../lib/rate-limit.js';
 import { corsHeaders, corsPreflightResponse, withCors, requestTooLarge } from '../../lib/http.js';
 
@@ -299,6 +309,87 @@ const RecurringBookingSchema = z.object({
 // Pricing helpers (calculateAccuratePricing, isSaturday, endsBy10PM,
 // findRecurringSlotConflicts) live in app/lib/booking-pricing.js so they can
 // be unit-tested without spinning up the request layer.
+
+// Pull the calendar's busy ranges across a span of dates for the conflict
+// guards below.
+//
+// FAILS CLOSED. If Google is unreachable we reject the submission rather than
+// accept a booking we could not verify. That is the deliberate trade: a
+// calendar outage turns into a handful of renters told to try again in a few
+// minutes, whereas accepting blind turns into two events showing up at the
+// same time on the same evening — which is unrecoverable, because by then both
+// renters have paid and planned. Returns null on failure; callers turn that
+// into a 503.
+async function fetchBusyRanges(startDate, endDate) {
+  try {
+    return await findBusyRangesInRange(startDate, endDate);
+  } catch (error) {
+    console.error('❌ Calendar lookup failed during booking conflict check:', error);
+    return null;
+  }
+}
+
+const CALENDAR_UNAVAILABLE_RESPONSE = {
+  success: false,
+  error: 'Unable to verify calendar availability',
+  details:
+    'We could not reach the booking calendar to confirm your time is still ' +
+    'open, so we have not taken the booking. Please try again in a few ' +
+    'minutes — no payment has been collected.',
+  code: 'CALENDAR_UNAVAILABLE',
+};
+
+// How far ahead a submitted recurring series is verified against the calendar.
+// Matches the horizon of the pre-submit scan (/api/recurring-conflicts,
+// horizonMonths default 3) and of the sync that actually books the occurrences
+// out (app/lib/recurring-calendar.js) — the window the renter cleared is the
+// window we check and the window we write.
+const RECURRING_CONFLICT_HORIZON_MONTHS = 3;
+
+// Verify a recurring series against the live calendar, honoring the renter's
+// skip / reschedule / resolve-with-staff exceptions exactly as the pre-submit
+// scan does. Returns a Response to send when the series can't be accepted, or
+// null when it's clear.
+async function checkRecurringCalendarConflicts(schedule) {
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const scanStart = schedule.startDate > todayIso ? schedule.startDate : todayIso;
+  const [scanYear, scanMonth] = scanStart.split('-').map(Number);
+
+  const occurrences = [];
+  for (let i = 0; i < RECURRING_CONFLICT_HORIZON_MONTHS; i++) {
+    const cursor = new Date(Date.UTC(scanYear, scanMonth - 1 + i, 1));
+    occurrences.push(...computeOccurrences(
+      { slots: schedule.slots, exceptions: schedule.exceptions || [] },
+      cursor.getUTCFullYear(),
+      cursor.getUTCMonth() + 1,
+      { startDate: schedule.startDate, endDate: schedule.endDate || null },
+    ));
+  }
+
+  if (occurrences.length === 0) return null;
+
+  const dates = occurrences.map((occ) => occ.date).sort();
+  const busyRanges = await fetchBusyRanges(dates[0], dates[dates.length - 1]);
+  if (busyRanges === null) {
+    return Response.json(CALENDAR_UNAVAILABLE_RESPONSE, { status: 503 });
+  }
+
+  const conflicts = findOccurrenceConflicts(occurrences, busyRanges);
+  if (conflicts.length === 0) return null;
+
+  console.error(`❌ Recurring series conflicts with ${conflicts.length} existing booking(s)`);
+  return Response.json({
+    success: false,
+    error: 'Some dates in your schedule are already reserved',
+    // Dates and times only — never the other bookings' names. This response
+    // reaches an anonymous caller.
+    details: conflicts.map(({ occurrence }) =>
+      `${formatDateLabel(occurrence.date)} at ${occurrence.slot?.startTime} is already reserved`),
+    conflictCount: conflicts.length,
+    code: 'RECURRING_CONFLICT'
+  }, { status: 409 });
+}
 
 // PostgREST reports a column the schema doesn't have as PGRST204 ("Could not
 // find the 'needs_mat' column of 'bookings' in the schema cache"); raw
@@ -597,6 +688,17 @@ async function bookingHandler(request) {
         }, { status: 400 });
       }
 
+      // Re-check the series against the live calendar. The booking page
+      // already walks the renter through /api/recurring-conflicts and makes
+      // them skip or move every colliding date — but that scan happened on the
+      // client, possibly minutes ago, and nothing stops a submission that
+      // never ran it. This is the same check with the same engine, applied
+      // where the row actually gets written.
+      const recurringConflictResponse = await checkRecurringCalendarConflicts(
+        validatedRecurring.recurringSchedule
+      );
+      if (recurringConflictResponse) return recurringConflictResponse;
+
       try {
         const created = await createRecurringApplication(validatedRecurring);
         console.log('✅ Recurring application created:', {
@@ -656,8 +758,62 @@ async function bookingHandler(request) {
       }
     }
 
-    // Recalculate pricing with promo code validation
     const clientPromoCode = validatedData.pricing?.promoCode || '';
+
+    // Weekday daytime is held for Merritt Workspace next door unless the
+    // renter has a code that unlocks it. Checked against the code as
+    // SUBMITTED, before any pricing runs — the unlock is about access, not
+    // about whether the code ends up being the discount that wins.
+    const flexViolations = findFlexSpaceViolations(validatedData.bookings, clientPromoCode);
+    if (flexViolations.length > 0) {
+      console.error('❌ Booking falls inside workspace hours without a code:',
+        flexViolations.map((v) => `${v.date} ${v.startTime}`).join(', '));
+      return Response.json({
+        success: false,
+        error: 'This time is reserved for Merritt Workspace',
+        details: FLEX_SPACE_RESTRICTION_MESSAGE,
+        conflicts: flexViolations.map((v) =>
+          `"${v.eventName}" on ${formatDateLabel(v.date)} at ${v.startTime}`),
+        code: 'FLEX_SPACE_HOURS_RESTRICTED'
+      }, { status: 400 });
+    }
+
+    // Two bookings in the SAME application landing on the same hours. Neither
+    // is on the calendar yet, so the calendar check below cannot see it.
+    const selfOverlaps = findSelfOverlaps(validatedData.bookings);
+    if (selfOverlaps.length > 0) {
+      return Response.json({
+        success: false,
+        error: 'Two of your events overlap',
+        details: selfOverlaps.map((o) =>
+          `"${o.first}" and "${o.second}" overlap on ${formatDateLabel(o.date)}`),
+        code: 'SELF_OVERLAP'
+      }, { status: 400 });
+    }
+
+    // The authoritative double-booking guard. Until now this lived only in the
+    // browser: the form greyed out taken slots and nothing re-checked at
+    // submit, so a stale tab, two simultaneous renters, or a direct POST all
+    // wrote straight through to a booking the venue cannot honor.
+    const bookingDates = validatedData.bookings.map((b) => b.selectedDate).sort();
+    const busyRanges = await fetchBusyRanges(bookingDates[0], bookingDates[bookingDates.length - 1]);
+    if (busyRanges === null) {
+      return Response.json(CALENDAR_UNAVAILABLE_RESPONSE, { status: 503 });
+    }
+
+    const calendarConflicts = findCalendarConflicts(validatedData.bookings, busyRanges);
+    if (calendarConflicts.length > 0) {
+      console.error('❌ Booking conflicts with existing calendar events:',
+        calendarConflicts.map((c) => `${c.date} ${c.startTime}`).join(', '));
+      return Response.json({
+        success: false,
+        error: 'That time has already been reserved',
+        details: calendarConflicts.map(describeConflict),
+        code: 'TIME_SLOT_CONFLICT'
+      }, { status: 409 });
+    }
+
+    // Recalculate pricing with promo code validation
     const accuratePricing = calculateAccuratePricing(
       validatedData.bookings,
       validatedData.contactInfo,

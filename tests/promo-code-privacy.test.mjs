@@ -20,6 +20,9 @@
 // file pins what has to stay true:
 //
 //   1. No configured code appears in ANY source file — not just client ones.
+//      This covers every configured role automatically, including the daytime
+//      code that unlocks the weekday workspace hours — it is a lesser
+//      credential than the comp code, but it is still one.
 //   2. No code is reachable from a `use client` component (the import-graph
 //      walk at the bottom), so a future refactor cannot re-bundle them.
 //   3. The endpoint validates one submitted code and returns only THAT code's
@@ -40,8 +43,9 @@ import { join, dirname } from 'node:path';
 process.env.PROMO_CODE_PARTNER = 'TEST-PARTNER-4H7KQ2NX';
 process.env.PROMO_CODE_COMP = 'TEST-COMP-9P3RJ6WM';
 process.env.PROMO_CODE_SPONSOR = 'TEST-SPONSOR-5T8DGY2C';
+process.env.PROMO_CODE_DAYTIME = 'TEST-DAYTIME-6Q2WVK8B';
 
-const { validPromoCodes, sponsoredPromoCodes, __resetPromoWarning } =
+const { validPromoCodes, sponsoredPromoCodes, daytimeAllowedPromoCodes, promoCodeAllowsDaytime, __resetPromoWarning } =
   await import('../app/lib/promo-codes.js');
 const { isSponsoredBooking } = await import('../app/lib/calendar-flags.js');
 const { POST: validatePromo } = await import('../app/api/validate-promo/route.js');
@@ -238,6 +242,7 @@ test('unset promo variables fail closed — no codes, not all codes', () => {
     PROMO_CODE_PARTNER: process.env.PROMO_CODE_PARTNER,
     PROMO_CODE_COMP: process.env.PROMO_CODE_COMP,
     PROMO_CODE_SPONSOR: process.env.PROMO_CODE_SPONSOR,
+    PROMO_CODE_DAYTIME: process.env.PROMO_CODE_DAYTIME,
   };
   try {
     for (const key of Object.keys(saved)) delete process.env[key];
@@ -249,6 +254,11 @@ test('unset promo variables fail closed — no codes, not all codes', () => {
     // configured — that books the venue for free.
     assert.equal(isSponsoredBooking({ promo_code: saved.PROMO_CODE_COMP }), false);
     assert.equal(isSponsoredBooking({ promo_code: '' }), false);
+    // Same direction for the daytime unlock: with nothing configured, the
+    // weekday window stays protected rather than opening to everyone.
+    assert.deepEqual(daytimeAllowedPromoCodes(), []);
+    assert.equal(promoCodeAllowsDaytime(saved.PROMO_CODE_DAYTIME), false);
+    assert.equal(promoCodeAllowsDaytime(''), false);
   } finally {
     Object.assign(process.env, saved);
     __resetPromoWarning();
@@ -478,4 +488,49 @@ test('the pricing engine is not reachable from any client component', () => {
       'VALID_PROMO_CODES, so it must never enter the client bundle — import the ' +
       'numbers from app/lib/pricing-constants.js instead.'
   );
+});
+
+test('the promo dictionary and the intake guards stay out of the client bundle', () => {
+  // Structural companions to the booking-pricing check above. promo-codes.js
+  // IS the dictionary now, and booking-guards.js imports it to decide who may
+  // book weekday daytime — so neither may ever become client-reachable, no
+  // matter how convenient it looks to import a helper from a page.
+  const { modules } = clientReachableModules();
+  const leaked = [...modules].filter((f) =>
+    f.endsWith('app/lib/promo-codes.js') || f.endsWith('app/lib/booking-guards.js'));
+
+  assert.deepEqual(
+    leaked,
+    [],
+    'A module holding or reading the promo dictionary is reachable from a `use client` ' +
+      'component, so it compiles into the public JavaScript bundle:\n' + leaked.join('\n')
+  );
+});
+
+test('the modules the booking form DOES import carry no codes and no promo imports', () => {
+  // The booking form needs the weekday-window rule and the slot math to draw
+  // the time picker, so these two are deliberately client-reachable. That is
+  // only safe while they stay pure: constants and date math, with no path to
+  // the dictionary. This asserts the walker actually sees them (so the check
+  // is not vacuous) and that they hold nothing they shouldn't.
+  const { modules } = clientReachableModules();
+  const CLIENT_SAFE = ['app/lib/flex-space-hours.js', 'app/lib/availability.js'];
+
+  for (const name of CLIENT_SAFE) {
+    const file = [...modules].find((f) => f.endsWith(name));
+    assert.ok(file, `expected ${name} to be reachable from the booking form — if it is not, ` +
+      'this test is passing vacuously and the import graph has changed');
+
+    const contents = readFileSync(file, 'utf8');
+    for (const code of CODES) {
+      assert.equal(contents.includes(code), false, `${name} contains a promo code`);
+    }
+    const imports = importSpecifiersIn(contents);
+    assert.deepEqual(
+      imports.filter((i) => /promo-codes|booking-pricing|booking-guards/.test(i)),
+      [],
+      `${name} imports a server-only module. It is reachable from a client component, ` +
+        'so that would pull the promo dictionary into the public bundle.'
+    );
+  }
 });

@@ -225,7 +225,10 @@ function buildSubmission({ promoCode, needsTables = true, needsChairs = true, ne
         eventType: 'workshop',
         eventVisibility: 'private',
         selectedDate: futureDate(),
-        selectedTime: '2:00 PM',
+        // Evening, so these fixtures exercise equipment handling and not the
+        // weekday-daytime restriction (app/lib/flex-space-hours.js), which
+        // would reject a 2 PM weekday booking before pricing ever runs.
+        selectedTime: '6:00 PM',
         hoursRequested: 2,
         specialRequests: '',
         needsTables,

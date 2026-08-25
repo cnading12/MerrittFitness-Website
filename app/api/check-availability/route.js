@@ -1,7 +1,9 @@
 // app/api/check-availability/route.js
 // PRODUCTION VERSION - Better error handling and fallback
 
-import { checkCalendarAvailability } from '../../lib/calendar.js';
+import { getDayBusyRanges } from '../../lib/calendar.js';
+import { TIME_SLOTS, slotAvailability } from '../../lib/availability.js';
+import { isFlexSpaceDay, FLEX_SPACE_WINDOW_FULL_LABEL } from '../../lib/flex-space-hours.js';
 import { enforceRateLimit } from '../../lib/rate-limit.js';
 import { corsHeaders, corsPreflightResponse } from '../../lib/http.js';
 
@@ -47,19 +49,15 @@ export async function GET(request) {
       console.warn('⚠️ Requested date is in the past:', date);
       // Return all slots as unavailable for past dates
       const pastAvailability = {};
-      const timeSlots = [
-        '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-        '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-        '6:00 PM', '7:00 PM', '8:00 PM'
-      ];
-      
-      timeSlots.forEach(slot => {
+      TIME_SLOTS.forEach(slot => {
         pastAvailability[slot] = false;
       });
-      
+
       return Response.json({
         date,
         availability: pastAvailability,
+        busy: [],
+        flexSpaceDay: isFlexSpaceDay(date),
         message: 'Past dates are not available for booking'
       });
     }
@@ -83,8 +81,9 @@ export async function GET(request) {
     console.log('📅 Checking calendar availability...');
     
     try {
-      const availability = await checkCalendarAvailability(date);
-      
+      const busyRanges = await getDayBusyRanges(date);
+      const availability = slotAvailability(busyRanges);
+
       console.log('✅ Availability check completed:', {
         date,
         totalSlots: Object.keys(availability).length,
@@ -94,7 +93,25 @@ export async function GET(request) {
 
       return Response.json({
         date,
+        // Start-time map, kept for older clients. It can only answer for the
+        // minimum bookable block, so a current client uses `busy` below and
+        // recomputes as the renter changes the duration.
         availability,
+        // The day's occupied windows as minutes-from-midnight. This is what
+        // makes the picker duration-aware without a Google call per duration
+        // change — the quota is finite and shared with the conflict checks.
+        //
+        // Times only, never the event summaries. This endpoint is anonymous
+        // and calendar titles read "🔒 BOOKED: <event name>", so returning
+        // them would let anyone walk the calendar and harvest the name of
+        // every private booking at the venue. /api/recurring-conflicts
+        // withholds them for the same reason.
+        busy: busyRanges.map(({ startMinutes, endMinutes }) => ({ startMinutes, endMinutes })),
+        // Whether this date falls in the weekday window held for the workspace
+        // next door. The form uses it to gate daytime start times; the rule
+        // itself is enforced server-side at /api/booking-request.
+        flexSpaceDay: isFlexSpaceDay(date),
+        flexSpaceWindow: FLEX_SPACE_WINDOW_FULL_LABEL,
         message: 'Availability retrieved successfully',
         lastUpdated: new Date().toISOString()
       });

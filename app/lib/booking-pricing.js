@@ -13,6 +13,7 @@ import {
   lookupPromoCode,
   isPartnerPromoCode,
   isStaffingBilledPromoCode,
+  waivesStaffCoveragePromoCode,
 } from './promo-codes.js';
 
 // Rate, fee and discount constants live in ./pricing-constants.js.
@@ -244,6 +245,9 @@ export {
   isSponsoredPromoCode,
   isPartnerPromoCode,
   isStaffingBilledPromoCode,
+  promoCodeAllowsDaytime,
+  waivesStaffCoveragePromoCode,
+  daytimeAllowedPromoCodes,
 } from './promo-codes.js';
 
 // True iff `dateString` (YYYY-MM-DD) lands on a Saturday in local time. Parses
@@ -349,8 +353,16 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   // fees. Unlike the staff-coverage exemption, this waiver has no first-event
   // caveat — anyone on the partnership code pays no equipment fee.
   const waivesEquipmentFees = isPartnerPromoCode(clientPromoCode);
+  // The community daytime code comps staff coverage outright — no Facility
+  // Host charge and no first-hour onboarding fee, whatever the attendee count
+  // and even on a first event. Unlike the partnership exemption below, it has
+  // no first-event caveat: the code is issued by hand to renters we've already
+  // spoken to, and the coverage it comps is a cost we're choosing to absorb to
+  // make daytime programming happen.
+  const waivesStaffCoverage = waivesStaffCoveragePromoCode(clientPromoCode);
+
   const exemptFromStaffCoverage =
-    isRecurringPartner && contactInfo.isFirstEvent !== true;
+    waivesStaffCoverage || (isRecurringPartner && contactInfo.isFirstEvent !== true);
 
   // The staffing-billed sponsorship code comps everything except
   // staff coverage — so staffing is always charged: small events carry the $35
@@ -416,7 +428,11 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
   // returning renter opted in, or the booking is on the staffing-billed
   // sponsorship code (staffing is mandatory on every sponsored event). Renters
   // who have been to the space before are not charged unless they opt in.
+  // `waivesStaffCoverage` (the community daytime code) suppresses this fee
+  // outright — it comps ALL staff coverage, so a first-event renter on that
+  // code is not charged the onboarding hour either.
   if (
+    !waivesStaffCoverage &&
     eventSupervisionFee === 0 &&
     (contactInfo.isFirstEvent === true || contactInfo.wantsOnsiteAssistance || staffingBilledSponsor)
   ) {
@@ -450,16 +466,24 @@ export function calculateAccuratePricing(bookings, contactInfo, clientPromoCode 
 
   // Automatic extended-booking discount: 8+ total hours → 10% off, no code
   // needed. Discounts never stack — the larger one wins, so a valid promo
-  // code (all currently ≥ 10%) keeps precedence over the automatic discount.
+  // code keeps precedence over the automatic discount whenever it's worth more.
   let extendedDiscountApplied = false;
   if (totalHours >= EXTENDED_BOOKING_DISCOUNT_MIN_HOURS) {
     const extendedDiscount = Math.round(preDiscountSubtotal * EXTENDED_BOOKING_DISCOUNT);
     if (extendedDiscount > promoDiscount) {
       promoDiscount = extendedDiscount;
       promoDescription = EXTENDED_BOOKING_DISCOUNT_DESCRIPTION;
-      validatedPromoCode = '';
       sponsored = false;
       extendedDiscountApplied = true;
+      // Clearing the code here used to be right, because every code was a
+      // discount and a losing discount is not "applied". The community daytime
+      // code broke that: it discounts nothing (it buys ACCESS to the weekday
+      // daytime window and comps staff coverage), so the extended discount
+      // always beats it — and blanking the code would erase the only record of
+      // WHY this booking was allowed into workspace hours, from the booking
+      // row, the calendar badge and the staff email alike. So a code that was
+      // never a discount survives; a code that lost on price still clears.
+      if (promoData?.discount) validatedPromoCode = '';
     }
   }
 

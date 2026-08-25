@@ -77,6 +77,14 @@ export async function POST(request) {
     partner: promo.partner === true,
     sponsored: promo.sponsored === true,
     staffingBilled: promo.staffingBilled === true,
+    // Whether this code opens the weekday daytime window held for the
+    // workspace next door (app/lib/flex-space-hours.js). A boolean, so the
+    // form can unlock those start times without ever learning which codes
+    // exist — the same reason this route returns one code's metadata and
+    // never the dictionary. The rule is enforced again at intake.
+    daytimeAllowed: promo.daytimeAllowed === true,
+    // Comps staff coverage outright — no onboarding fee, no Facility Host.
+    waivesStaffCoverage: promo.waivesStaffCoverage === true,
     minHours: promo.minHours ?? null,
   });
 }
