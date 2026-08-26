@@ -21,7 +21,7 @@
 // 3. aggregateRating comes from `reviews` in app/data/site.ts and must stay
 //    tied to real, verifiable Google reviews. See the warning on that export.
 
-import { contact, specs, hours, reviews, areaServed, workspace } from '@/app/data/site';
+import { contact, specs, hours, reviews, areaServed, workspace, maps } from '@/app/data/site';
 import { rateBands } from '@/app/lib/venue-rates';
 
 // CANONICAL HOST — www, and it is not arbitrary.
@@ -205,9 +205,7 @@ function businessNode() {
     email: contact.inquiries.email,
     address: postalAddress,
     geo: geoCoordinates,
-    hasMap: `https://maps.google.com/?q=${encodeURIComponent(
-      `${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip}`
-    )}`,
+    hasMap: maps.url,
     logo: { '@type': 'ImageObject', url: LOGO_URL, width: 512, height: 512 },
     image: [
       `${BASE_URL}/images/hero/1.webp`,
@@ -273,7 +271,7 @@ function businessNode() {
       'Congregation and worship space rental',
       'Celebration of life and memorial venue',
     ],
-    sameAs: [contact.social.instagram, contact.social.facebook, workspace.url],
+    sameAs: [contact.social.instagram, contact.social.facebook, workspace.url, maps.url],
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: reviews.ratingValue,

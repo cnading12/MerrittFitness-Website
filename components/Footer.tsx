@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Instagram, Facebook, Phone, Mail, MapPin } from "lucide-react";
-import { navItems, contact } from "@/app/data/site";
+import { navItems, contact, maps } from "@/app/data/site";
 
 export default function Footer() {
   return (
@@ -82,7 +82,7 @@ export default function Footer() {
                 Visit
               </span>
               <a
-                href="https://maps.google.com/?q=2246+Irving+Street+Denver+CO+80211"
+                href={maps.url}
                 target="_blank"
                 rel="noopener"
                 className="flex items-start gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200"

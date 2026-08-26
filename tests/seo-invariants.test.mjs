@@ -231,3 +231,75 @@ test('every absolute site URL uses the canonical host', () => {
     `These files use the non-canonical apex host instead of www.merrittwellness.net:\n${files}`
   );
 });
+
+test('every Google Maps reference points at the Business Profile, not the street address', () => {
+  // The site used to embed a maps URL built from "2246 Irving Street, Denver,
+  // CO 80211". Google resolves an address query to a bare pin: no business
+  // name, no 5.0 rating, no review count, no photos, no Directions button.
+  // So the homepage and /contact — the two places a visitor goes to size the
+  // venue up — showed an anonymous dot, while the same pages cited the Google
+  // reviews in copy and in `aggregateRating`.
+  //
+  // The fix is `maps` in app/data/site.ts: the Business Profile's own embed
+  // URL and share link. This test fails if any source file rebuilds a maps
+  // URL out of the address again, and if the embed stops naming the business.
+  const site = read('app/data/site.ts');
+
+  const embed = site.match(/embed:\s*\n?\s*'([^']+)'/);
+  assert.ok(embed, 'could not find `maps.embed` in app/data/site.ts');
+  assert.match(
+    embed[1],
+    /^https:\/\/www\.google\.com\/maps\/embed\?pb=/,
+    'maps.embed must be a Google Maps embed URL'
+  );
+  // The `!2s` segment is the label Google resolved the place to. A business
+  // embed names the business; an address embed names the street.
+  assert.match(
+    embed[1],
+    /!2sMerritt%20Wellness!/,
+    'maps.embed no longer resolves to the Merritt Wellness business listing — ' +
+      're-copy it from Share -> Embed a map on the Business Profile'
+  );
+
+  // No file may assemble a maps URL from the postal address. Matches both the
+  // `?q=<address>` form and the `!2s2246%20Irving...` embed segment.
+  const repoRoot = new URL('..', import.meta.url).pathname;
+  const offenders = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!/\.(ts|tsx|js|mjs)$/.test(entry.name)) continue;
+      // Whole-line comments are skipped so the notes on `maps` can explain
+      // the old address-query form without tripping the guard.
+      const code = readFileSync(full, 'utf8')
+        .split('\n')
+        .filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line))
+        .join('\n');
+      // Line-scoped on purpose: app/data/site.ts legitimately holds both the
+      // postal address and the maps URLs, and a file-wide match would call
+      // that drift. What is banned is one LINE carrying both — i.e. a maps
+      // URL with the street baked into it.
+      const bad = code
+        .split('\n')
+        .filter(
+          (line) =>
+            /maps\.google\.com|google\.com\/maps/.test(line) &&
+            (/2246/.test(line) || /Irving/i.test(line))
+        );
+      if (bad.length) offenders.push(full);
+    }
+  };
+  for (const root of ['app', 'lib', 'components']) walk(`${repoRoot}${root}`);
+
+  const files = offenders.map((f) => f.replace(repoRoot, '')).join('\n');
+  assert.equal(
+    files,
+    '',
+    `These files build a Google Maps URL from the street address instead of ` +
+      `using \`maps\` from app/data/site.ts:\n${files}`
+  );
+});
