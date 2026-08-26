@@ -41,7 +41,7 @@ export const SUPERVISION_GROUP_THRESHOLD = 40;
 // bills staffing (onboarding / supervision), so payment IS collected and the
 // "fully comped, no payment" badge and $0.00 labels must not apply to it. That
 // distinction is the `sponsored` flag in promo-codes.js.
-import { isSponsoredPromoCode, waivesStaffCoveragePromoCode } from './promo-codes.js';
+import { isSponsoredPromoCode, waivesStaffCoveragePromoCode, isTestPromoCode } from './promo-codes.js';
 import { overlapsFlexSpaceHours, FLEX_SPACE_WINDOW_FULL_LABEL } from './flex-space-hours.js';
 
 // A booking is "sponsored" when it was comped via a sponsored promo code (or an
@@ -51,6 +51,16 @@ export function isSponsoredBooking(booking) {
   if (!booking) return false;
   if (booking.is_sponsored === true) return true;
   return isSponsoredPromoCode(booking.promo_code || '');
+}
+
+// A booking made with the end-to-end test code (PROMO_CODE_TEST). Mechanically
+// it is a sponsored booking like any other — the point of the test is that it
+// takes the real path — so the ONLY thing separating it from a genuine comped
+// reservation is this label. Derived from the stored promo_code, like every
+// other flag here, so no migration is involved.
+export function isTestBooking(booking) {
+  if (!booking) return false;
+  return isTestPromoCode(booking.promo_code || '');
 }
 
 export function buildStaffAttentionFlags(booking) {
@@ -208,6 +218,21 @@ export function buildStaffAttentionFlags(booking) {
     });
   }
 
+  // Test bookings unshift LAST so this badge ends up ahead of the SPONSORED
+  // one it always accompanies. If a calendar grid view truncates the title
+  // down to a single tag, "not a real booking" is the one that has to survive
+  // — everything else on the event is a lie about a reservation the venue
+  // does not have.
+  if (isTestBooking(booking)) {
+    flags.unshift({
+      tag: '🧪 TEST BOOKING',
+      detail:
+        'TEST BOOKING — created with the end-to-end test code to exercise the ' +
+        'booking pipeline. This is NOT a real reservation and no one is ' +
+        'coming. Delete this calendar event once the test has been checked.',
+    });
+  }
+
   return flags;
 }
 
@@ -218,6 +243,10 @@ export function buildStaffAttentionFlags(booking) {
 // "booked" color when nothing extra is needed.
 export function pickCalendarColorId(flags) {
   if (!flags || flags.length === 0) return '11'; // Tomato — default booked
+  // Checked before everything else: a test event should be visually unlike
+  // any real booking on the calendar, not shaded as a comped one.
+  const hasTest = flags.some((f) => f.tag.includes('TEST BOOKING'));
+  if (hasTest) return '8';                       // Graphite — obviously not real
   const hasSponsored = flags.some((f) => f.tag.includes('SPONSORED'));
   if (hasSponsored) return '10';                 // Basil — comped / sponsored
   const hasSupervision = flags.some((f) => f.tag.includes('SUPERVISION'));

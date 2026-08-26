@@ -40,7 +40,7 @@
 // The roles, their environment variables, and the pricing behavior each one
 // triggers. `flags` are merged into the code's metadata.
 //
-// Every configured code carries `daytimeAllowed: true`: all four are issued by
+// Every configured code carries `daytimeAllowed: true`: each one is issued by
 // hand, so anyone holding one has already talked to us and can be trusted with
 // the weekday daytime window (app/lib/flex-space-hours.js). The `daytime` role
 // exists for the case where that is ALL you want to grant — daytime access and
@@ -82,6 +82,37 @@ const PROMO_ROLES = [
     discount: 1.0,
     description: 'Sponsored — Venue Comped (staffing billed)',
     flags: { staffingBilled: true, daytimeAllowed: true },
+  },
+  {
+    role: 'test',
+    env: 'PROMO_CODE_TEST',
+    // END-TO-END TEST BOOKINGS.
+    //
+    // Mechanically identical to `comp` — 100% off, no Stripe, confirmed on
+    // the spot — because that is the only way to exercise the real pipeline:
+    // the conflict guards, the database write, the Google Calendar insert, and
+    // all four emails, on the live venue calendar, without a card.
+    //
+    // What it adds is a LABEL. `isTest` puts a 🧪 TEST BOOKING badge at the
+    // front of the calendar title and into the staff notification, so a test
+    // event can never be mistaken for a real reservation and is trivial to
+    // find and delete afterwards. Without it a test is indistinguishable from
+    // a genuine sponsored booking, which is how a phantom event ends up on
+    // the calendar the venue actually runs off.
+    //
+    // Keep it a SEPARATE variable from PROMO_CODE_COMP. Testing with the real
+    // comp code means typing the venue's most dangerous credential into a form
+    // repeatedly, and it cannot be revoked afterwards without also revoking
+    // every genuine sponsorship. Leave PROMO_CODE_TEST unset in production and
+    // the role simply does not exist — same fail-closed rule as every other
+    // code here.
+    //
+    // A test booking is still a REAL booking: it holds the slot on the live
+    // calendar and it emails whoever you put in the form. Delete the calendar
+    // event when you are done, and use your own address, not a client's.
+    discount: 1.0,
+    description: 'Test Booking — end-to-end pipeline check',
+    flags: { sponsored: true, daytimeAllowed: true, isTest: true },
   },
   {
     role: 'daytime',
@@ -191,6 +222,17 @@ export function staffingBilledPromoCodes() {
 
 export function isSponsoredPromoCode(code) {
   return lookupPromoCode(code)?.sponsored === true;
+}
+
+// Whether this code marks the booking as an end-to-end TEST. Fails closed the
+// same way everything else here does: an unset PROMO_CODE_TEST means no code
+// answers true, so nothing gets silently labelled a test.
+export function isTestPromoCode(code) {
+  return lookupPromoCode(code)?.isTest === true;
+}
+
+export function testPromoCodes() {
+  return codesWithFlag('isTest');
 }
 
 export function isPartnerPromoCode(code) {

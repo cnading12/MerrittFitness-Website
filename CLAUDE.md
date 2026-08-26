@@ -129,6 +129,16 @@ found in the code.
    self-confirms, books the live calendar — so whoever has it can rent the
    venue for free.
 
+   `PROMO_CODE_TEST` is the end-to-end test code: the same 100%-off,
+   no-Stripe, self-confirming path as `PROMO_CODE_COMP` (the only way to
+   exercise the real pipeline without a card), but labelled — a 🧪 TEST
+   BOOKING badge leads the calendar title, the event gets its own colour, and
+   the staff email subject says TEST. It is a separate variable on purpose:
+   testing must never mean typing the real comp credential into a public form,
+   and the test code has to be revocable on its own. A test booking is still a
+   REAL booking — it holds the live calendar slot and sends real email — so
+   delete the calendar event afterwards. `tests/test-booking-code.test.mjs`.
+
    Never put a code back in a source file. Not in `booking-pricing.js`, not in
    a comment, not in a test fixture, not in user-facing copy. The repo is
    public, so a committed code is published at github.com and stays published
@@ -172,7 +182,7 @@ found in the code.
    running four hours is not. Checking the start time alone is the obvious
    wrong implementation.
 
-   All four promo codes unlock the window; `PROMO_CODE_DAYTIME` is the one that
+   Every promo code unlocks the window; `PROMO_CODE_DAYTIME` is the one that
    ONLY does that, plus comping staff coverage — venue time is still billed in
    full, because it is an access key and not a price cut. Enforced server-side
    by `findFlexSpaceViolations` (`app/lib/booking-guards.js`) at
