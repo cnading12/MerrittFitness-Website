@@ -80,8 +80,12 @@ const IndividualBookingSchema = z.object({
   selectedTime: z.string()
     .regex(/^\d{1,2}:\d{2} (AM|PM)$/, 'Invalid time format'),
 
+  // Two-hour minimum per event — the same floor RecurringBookingSchema applies
+  // to each recurring slot, and what the Terms and the booking page's Rental
+  // Information both state. The form's duration select starts at 2 hours; this
+  // is the gate a direct POST or a stale tab hits.
   hoursRequested: z.coerce.number()
-    .min(0.5, 'Minimum 0.5 hours')
+    .min(2, 'Minimum 2 hours per booking')
     .max(16, 'Maximum 16 hours per booking'),
 
   specialRequests: z.string()

@@ -22,13 +22,13 @@ const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/og-venue.jp
 export const metadata: Metadata = {
   title: 'Private Event Venue in Denver | Historic 1905 Event Center | Merritt Wellness',
   description:
-    'Rent a historic 1905 event center in Denver for private events: celebrations of life, memorials, parties, quinceañeras, birthdays, showers, graduations, and corporate offsites. Up to 125 guests, real pricing, 22 parking spots.',
+    'Rent a historic 1905 event center in Denver for private events: celebrations of life, memorials, parties, quinceañeras, birthdays, showers, graduations, and corporate offsites. Up to 130 guests, real pricing, 22 parking spots.',
   keywords:
     'private event venue Denver, event space rental Denver, celebration of life venue Denver, party venue Denver, quinceañera venue Denver, corporate offsite Denver, memorial service venue Denver',
   openGraph: {
     title: 'Private Event Venue in Denver | Merritt Wellness',
     description:
-      'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
+      'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 130 guests.',
     url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: venueImages.mainHallRoseWindow.alt }],
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Private Event Venue in Denver | Merritt Wellness',
     description:
-      'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 125 guests.',
+      'A historic 1905 event center near Sloans Lake for celebrations, memorials, milestones, and offsites. Up to 130 guests.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
@@ -69,7 +69,7 @@ export default function PrivateEventsPage() {
           name: 'Private Event Venue Rental',
           serviceType: 'Private event venue',
           description:
-            'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 Denver event center for up to 125 guests.',
+            'Celebrations of life and memorials, birthdays, quinceañeras, showers, graduations, anniversaries, and corporate offsites in a historic 1905 Denver event center for up to 130 guests.',
           priceFrom: rateBands[0].weekday,
         }}
       />
@@ -81,7 +81,7 @@ export default function PrivateEventsPage() {
               path: PATH,
               name: 'Merritt Wellness — Private Event Venue',
               description:
-                'Historic 1905 event center in Denver for private events of up to 125 guests: weddings, concerts, art shows, celebrations of life, parties, and corporate offsites.',
+                'Historic 1905 event center in Denver for private events of up to 130 guests: weddings, concerts, art shows, celebrations of life, parties, and corporate offsites.',
               images: [venueImages.sunlitHall.src, venueImages.exteriorFront.src, venueImages.seatedSemicircle.src],
             })
           ),
@@ -98,7 +98,7 @@ export default function PrivateEventsPage() {
             <span className="block font-bold">Every Kind of Gathering</span>
           </>
         }
-        subtitle="A historic 1905 event center in Sloans Lake with vaulted ceilings, stained glass, and space for up to 125 guests."
+        subtitle="A historic 1905 event center in Sloans Lake with vaulted ceilings, stained glass, and space for up to 130 guests."
         ctas={[
           { label: 'Check Availability & Book', href: '/book' },
           { label: 'Ask About Your Event', href: '#inquiry', variant: 'ghost' },

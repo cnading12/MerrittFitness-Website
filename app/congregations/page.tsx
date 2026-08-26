@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 };
 
 const included = [
-  `Sanctuary seating for up to ${specs.capacity}, vaulted ceilings, original stained glass, hardwood floors`,
+  `Sanctuary seating for up to ${specs.seatedCapacity}, vaulted ceilings, original stained glass, hardwood floors`,
   'Surround sound system, projector, and screen already installed',
   `${specs.parkingSpots} on-site parking spots`,
   'Cafe lounge and breakout rooms for fellowship, childcare, and classes',

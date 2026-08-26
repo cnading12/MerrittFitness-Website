@@ -26,13 +26,13 @@ const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/weddings/og-weddi
 export const metadata: Metadata = {
   title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
   description:
-    'Historic Denver wedding venue near Sloans Lake: a restored 1905 sanctuary with 24-foot vaulted ceilings, original stained glass, and room for up to 125 guests. Saturday weddings, real pricing, tours by appointment.',
+    'Historic Denver wedding venue near Sloans Lake: a restored 1905 sanctuary with 24-foot vaulted ceilings, original stained glass, and room for up to 130 guests. Saturday weddings, real pricing, tours by appointment.',
   keywords:
     'Denver wedding venue, historic wedding venue Denver, sanctuary wedding venue Denver, small wedding venue Denver, Sloans Lake wedding venue, intimate wedding venue Colorado',
   openGraph: {
     title: 'Denver Wedding Venue in a Restored 1905 Sanctuary | Merritt Wellness',
     description:
-      'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
+      'Vaulted ceilings, original stained glass, and room for 130 guests in Sloans Lake. Real pricing, no mystery quotes.',
     url: `https://www.merrittwellness.net${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 1080, height: 567, alt: weddingsImages.celebrationKiss.alt }],
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Denver Wedding Venue in a Restored 1905 Sanctuary',
     description:
-      'Vaulted ceilings, original stained glass, and room for 125 guests in Sloans Lake. Real pricing, no mystery quotes.',
+      'Vaulted ceilings, original stained glass, and room for 130 guests in Sloans Lake. Real pricing, no mystery quotes.',
     images: [OG_IMAGE],
   },
   alternates: { canonical: `https://www.merrittwellness.net${PATH}` },
@@ -53,7 +53,7 @@ const faqs: Faq[] = [
   {
     question: 'How many guests can the venue hold?',
     answer:
-      'Up to 125 guests. The main hall is about 1,100 square feet, with roughly 2,400 square feet across the full building including the upstairs, cafe lounge, and breakout rooms.',
+      'Up to 130 guests standing, or 100 seated. The main hall is about 1,100 square feet, with roughly 2,400 square feet across the full building including the upstairs, cafe lounge, and breakout rooms.',
   },
   {
     question: 'What days can we book our wedding?',
@@ -131,7 +131,7 @@ export default function WeddingsPage() {
           name: 'Wedding Venue Rental',
           serviceType: 'Wedding venue',
           description:
-            'Ceremonies and receptions in a restored 1905 Denver sanctuary with 24-foot vaulted ceilings, original stained glass, a downstairs getting-ready suite, and room for up to 125 guests.',
+            'Ceremonies and receptions in a restored 1905 Denver sanctuary with 24-foot vaulted ceilings, original stained glass, a downstairs getting-ready suite, and room for up to 130 guests.',
           priceFrom: rateBands[0].saturday,
         }}
       />
@@ -143,7 +143,7 @@ export default function WeddingsPage() {
               path: PATH,
               name: 'Merritt Wellness — Wedding Venue',
               description:
-                'Historic Denver wedding venue in a restored 1905 sanctuary near Sloans Lake, with 24-foot vaulted ceilings, original stained glass, and capacity for 125 guests.',
+                'Historic Denver wedding venue in a restored 1905 sanctuary near Sloans Lake, with 24-foot vaulted ceilings, original stained glass, and capacity for 130 guests.',
               images: [
                 venueImages.mainHallRoseWindow.src,
                 weddingsImages.celebrationKiss.src,
