@@ -2,7 +2,7 @@
 // UPDATED VERSION - Includes home address in manager notification
 
 import { Resend } from 'resend';
-import { isSponsoredBooking } from './calendar-flags.js';
+import { isSponsoredBooking, isTestBooking } from './calendar-flags.js';
 import { saturdayRateForWeekdayRate, isSaturday } from './booking-pricing.js';
 import { recordEmailEvent } from './email-log.js';
 
@@ -492,7 +492,7 @@ const EMAIL_TEMPLATES = {
   }),
 
   managerNotification: (booking, groupContext = null) => ({
-    subject: `🆕 New Booking: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
+    subject: `${isTestBooking(booking) ? '🧪 TEST — ' : ''}🆕 New Booking: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         ${LOGO_HEADER}
@@ -500,6 +500,13 @@ const EMAIL_TEMPLATES = {
           <h2 style="color: #1e40af; margin: 0 0 15px 0;">🆕 New Booking Request</h2>
           <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
         </div>
+
+        ${isTestBooking(booking) ? `
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="color: #92400e; margin: 0 0 8px 0;">🧪 TEST BOOKING — Not A Real Reservation</h2>
+          <p style="color: #b45309; margin: 0;">This booking was created with the end-to-end test code to check that the booking pipeline works. <strong>No one is coming.</strong> The matching Google Calendar event should be deleted once the test has been reviewed.</p>
+        </div>
+        ` : ''}
 
         ${isSponsoredBooking(booking) ? `
         <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">

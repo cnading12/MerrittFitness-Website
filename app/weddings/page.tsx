@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import PageHero from '@/components/venue/PageHero';
 import PageSchema from '@/components/venue/PageSchema';
 import SpecsBlock from '@/components/venue/SpecsBlock';
-import AmenitiesBlock from '@/components/venue/AmenitiesBlock';
 import PoliciesBlock from '@/components/venue/PoliciesBlock';
 import Gallery from '@/components/venue/Gallery';
 import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
 import RateTable from '@/components/venue/RateTable';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
+import { hoursDisplay } from '@/app/data/site';
 import { venueImages, weddingsImages } from '@/app/data/venue-images';
 import {
   extendedDiscount,
@@ -17,6 +17,7 @@ import {
   money,
   saturdayExample,
   rateBands,
+  addOns,
 } from '@/app/lib/venue-rates';
 
 const PATH = '/weddings';
@@ -57,7 +58,7 @@ const faqs: Faq[] = [
   {
     question: 'What days can we book our wedding?',
     answer:
-      'Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday and Sunday evening weddings starting at 4 PM or later are also available (Sunday services wrap by 4:30 PM), and they bill at the lower Sunday-to-Friday rate. For any other date or time, like a full Friday wedding day, reach out and we will talk through whether it can work.',
+      `Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday evening weddings from ${hoursDisplay.weekdayEveningFrom} and Sunday weddings from ${hoursDisplay.sundayOpensAt} are also available, and they bill at the lower Sunday-to-Friday rate. The two start times have different reasons: Fridays open up when the workspace next door finishes its day, and Sundays open up when the resident congregations are out. For any other date or time, like a full Friday wedding day, reach out and we will talk through whether it can work.`,
   },
   {
     question: 'Can we hold both the ceremony and the reception here?',
@@ -72,7 +73,7 @@ const faqs: Faq[] = [
   {
     question: 'Are tables and chairs included?',
     answer:
-      'No. Most couples bring in a rental company for tables, chairs, and linens, which also gives you exactly the look you want. Delivery and pickup need to happen within your booked rental window.',
+      'Not in the base rate, but we rent our own. In-house tables and chairs are an itemized add-on on the booking page, priced by guest count. Linens are the exception — those come from your rental company or caterer. Any outside delivery and pickup needs to happen within your booked rental window.',
   },
   {
     question: 'What time do events end?',
@@ -195,7 +196,8 @@ export default function WeddingsPage() {
         </div>
       </section>
 
-      {/* When weddings happen — Saturdays, with Friday/Sunday evening exceptions */}
+      {/* When weddings happen — Saturdays, with Friday evening and Sunday
+          afternoon exceptions. Both start times are derived, never typed. */}
       <section className="pb-24">
         <div className="max-w-4xl mx-auto px-6">
           <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm text-center">
@@ -204,10 +206,13 @@ export default function WeddingsPage() {
             </h2>
             <p className="text-[#6b5f5b] leading-relaxed max-w-2xl mx-auto">
               We host weddings on Saturdays, so the building and our full attention belong to
-              one celebration. Friday and Sunday evening weddings starting at 4 PM or later
-              can work beautifully too, and they bill at the lower Sunday-to-Friday rate.
-              Have a different date or time in mind, like a full Friday wedding day? Reach
-              out and we will talk it through.
+              one celebration. Fridays and Sundays work beautifully too, and they bill at the
+              lower Sunday-to-Friday rate: Friday evenings from{' '}
+              {hoursDisplay.weekdayEveningFrom}, once the workspace next door finishes its
+              day, and Sundays from {hoursDisplay.sundayOpensAt}, once the congregations who
+              meet here in the morning have gone — early enough for an afternoon ceremony and
+              an evening reception on the same day. Have a different date or time in mind,
+              like a full Friday wedding day? Reach out and we will talk it through.
             </p>
           </div>
         </div>
@@ -254,10 +259,48 @@ export default function WeddingsPage() {
               </p>
             ))}
           </div>
-          <p className="mt-8 text-[#6b5f5b] leading-relaxed">
-            Tables and chairs are not included. Most couples bring in a rental company for
-            tables, chairs, and linens, which also gives you full control of the look.
-          </p>
+          {/* This used to read "most couples bring in a rental company" —
+              which pointed couples at a vendor for something we rent
+              ourselves, and buried the facility host entirely. Say what we
+              do and do not provide, and price the add-ons from `addOns` so
+              these figures track the booking engine. */}
+          <div className="mt-10 grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm">
+              <h3 className="font-bold text-[#735e59] font-serif text-lg mb-3">
+                Available at additional cost
+              </h3>
+              <ul className="space-y-3 text-[#6b5f5b] text-sm leading-relaxed">
+                {addOns.map((addOn) => (
+                  <li key={addOn.name}>
+                    <span className="font-semibold text-[#4a3f3c]">{addOn.name}</span>
+                    {' — '}
+                    {addOn.detail}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-[#6b5f5b] text-sm leading-relaxed">
+                Every add-on is itemized on the booking page before you pay. Linens are the
+                one thing we do not stock, so those come from your rental company or caterer.
+              </p>
+            </div>
+            <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm">
+              <h3 className="font-bold text-[#735e59] font-serif text-lg mb-3">
+                A facility host on the day
+              </h3>
+              <p className="text-[#6b5f5b] text-sm leading-relaxed">
+                You are not handed a key and left to it. Add event staffing and one of our
+                team is on site through your booking — letting vendors in, working the sound
+                and lights, sorting out the questions that always come up, and putting the
+                room back afterwards. Most couples find it is the difference between running
+                the day and getting to be at it.
+              </p>
+              <p className="mt-4 text-[#6b5f5b] text-sm leading-relaxed">
+                We do not provide decorations, florals, or styling. The hall is the backdrop;
+                what you bring in is yours to choose, and it comes down at the end of your
+                window.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -288,20 +331,20 @@ export default function WeddingsPage() {
               <h3 className="font-bold text-[#735e59] font-serif text-lg mb-3">Payment</h3>
               <p className="text-[#6b5f5b] text-sm leading-relaxed">
                 Pay by bank transfer at no extra cost, or by card with a {cardFeePercent}%
-                processing fee. Optional add-ons like our in-house tables and chairs or event
-                staffing are itemized on the booking page before you pay.
+                processing fee. Whatever you add on, the full itemized total is on screen
+                before you pay — no deposit against an invoice that arrives later.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. Amenities */}
-      <section className="py-24 bg-white/60">
-        <div className="max-w-7xl mx-auto px-6">
-          <AmenitiesBlock heading="Amenities Your Guests Will Notice" />
-        </div>
-      </section>
+      {/* The Amenities block that used to sit here listed the surround sound,
+          projector, air conditioning, cafe lounge, breakout rooms and
+          getting-ready space — all six of them already in "What Your Rental
+          Includes" above, in wedding-specific words rather than generic ones.
+          Two lists of the same six things read as padding. /private-events
+          still renders AmenitiesBlock, where it is the only place they appear. */}
 
       {/* 8. Policies */}
       <section className="py-24">

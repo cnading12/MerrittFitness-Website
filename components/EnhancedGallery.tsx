@@ -222,6 +222,63 @@ const EnhancedGallery = () => {
       category: "art"
     },
     {
+      id: 40,
+      src: "/images/pages/weddings/celebration-kiss.webp",
+      title: "Weddings in the Sanctuary",
+      desc: "A wedding party cheers as the couple kisses before the grand stained-glass window",
+      category: "weddings"
+    },
+    {
+      id: 41,
+      src: "/images/pages/weddings/ceremony-arch.webp",
+      title: "Ceremony Under the Beams",
+      desc: "A petal-lined aisle runs beneath a draped arch toward the altar",
+      category: "weddings"
+    },
+    {
+      id: 42,
+      src: "/images/pages/weddings/aisle-recessional.webp",
+      title: "The Recessional",
+      desc: "Newlyweds walk back down the aisle to applause beneath the stained glass",
+      category: "weddings"
+    },
+    {
+      id: 43,
+      src: "/images/pages/weddings/head-table-cake.webp",
+      title: "Reception in the Hall",
+      desc: "A decorated head table and tiered cake against the wooden partition",
+      category: "weddings",
+      orientation: "portrait"
+    },
+    {
+      id: 44,
+      src: "/images/pages/concerts/songwriters-round.webp",
+      title: "Songwriters' Round",
+      desc: "Four musicians perform beneath the rose window as an audience looks on",
+      category: "events"
+    },
+    {
+      id: 45,
+      src: "/images/pages/concerts/acoustic-audience.webp",
+      title: "Live Music",
+      desc: "An audience watches an acoustic set beneath the stained-glass rose window",
+      category: "events"
+    },
+    {
+      id: 46,
+      src: "/images/pages/concerts/tango-starry-ceiling.webp",
+      title: "Tango Under a Starry Ceiling",
+      desc: "Couples dance beneath a projected night sky, the tall arched window glowing behind",
+      category: "events"
+    },
+    {
+      id: 47,
+      src: "/images/pages/congregations/sunday-service.webp",
+      title: "Sunday Service",
+      desc: "A bilingual Sunday service in the hall, one of two congregations that meet here",
+      category: "events"
+    },
+    {
       id: 36,
       src: "/images/pages/art-shows/partition-wall-paintings.webp",
       title: "Karen Borthick Fine Art",
@@ -237,8 +294,8 @@ const EnhancedGallery = () => {
     {
       id: 37,
       src: "/images/pages/art-shows/paintings-over-pews.webp",
-      title: "Karen Borthick Fine Art",
-      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      title: "Paintings Over the Pews",
+      desc: "Work by resident artist Karen Borthick, hung above the original pews",
       category: "art",
       artist: {
         name: "Karen Borthick",
@@ -250,8 +307,8 @@ const EnhancedGallery = () => {
     {
       id: 38,
       src: "/images/pages/art-shows/exhibition-stained-glass.webp",
-      title: "Karen Borthick Fine Art",
-      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      title: "Hung Against the Stained Glass",
+      desc: "An exhibition lit by the sanctuary's original 1905 windows",
       category: "art",
       artist: {
         name: "Karen Borthick",
@@ -263,8 +320,8 @@ const EnhancedGallery = () => {
     {
       id: 39,
       src: "/images/pages/art-shows/vaulted-hall-exhibition.webp",
-      title: "Karen Borthick Fine Art",
-      desc: "Original artwork displayed in our Merritt Wellness Gallery",
+      title: "A Show in the Vaulted Hall",
+      desc: "Original work carried by 24-foot ceilings and afternoon light",
       category: "art",
       artist: {
         name: "Karen Borthick",
@@ -287,10 +344,11 @@ const EnhancedGallery = () => {
 
   const categories = [
     { id: 'all', name: 'All', count: galleryItems.length },
-    { id: 'yoga', name: 'Yoga', count: galleryItems.filter(item => item.category === 'yoga').length },
-    { id: 'events', name: 'Events', count: galleryItems.filter(item => item.category === 'events').length },
+    { id: 'weddings', name: 'Weddings', count: galleryItems.filter(item => item.category === 'weddings').length },
+    { id: 'events', name: 'Events & Music', count: galleryItems.filter(item => item.category === 'events').length },
+    { id: 'yoga', name: 'Classes', count: galleryItems.filter(item => item.category === 'yoga').length },
     { id: 'art', name: 'Art', count: galleryItems.filter(item => item.category === 'art').length },
-    { id: 'space', name: 'Space', count: galleryItems.filter(item => item.category === 'space' || item.category === 'exterior').length }
+    { id: 'space', name: 'The Space', count: galleryItems.filter(item => item.category === 'space' || item.category === 'exterior').length }
   ];
 
   // Filter functionality

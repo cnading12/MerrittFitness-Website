@@ -44,10 +44,13 @@ process.env.PROMO_CODE_PARTNER = 'TEST-PARTNER-4H7KQ2NX';
 process.env.PROMO_CODE_COMP = 'TEST-COMP-9P3RJ6WM';
 process.env.PROMO_CODE_SPONSOR = 'TEST-SPONSOR-5T8DGY2C';
 process.env.PROMO_CODE_DAYTIME = 'TEST-DAYTIME-6Q2WVK8B';
+// The end-to-end test code comps 100% and skips Stripe exactly like the comp
+// code, so it is the same class of credential and gets the same scan.
+process.env.PROMO_CODE_TEST = 'TEST-TESTCODE-3M9XBF7L';
 
-const { validPromoCodes, sponsoredPromoCodes, daytimeAllowedPromoCodes, promoCodeAllowsDaytime, __resetPromoWarning } =
+const { validPromoCodes, sponsoredPromoCodes, daytimeAllowedPromoCodes, promoCodeAllowsDaytime, testPromoCodes, __resetPromoWarning } =
   await import('../app/lib/promo-codes.js');
-const { isSponsoredBooking } = await import('../app/lib/calendar-flags.js');
+const { isSponsoredBooking, isTestBooking } = await import('../app/lib/calendar-flags.js');
 const { POST: validatePromo } = await import('../app/api/validate-promo/route.js');
 const { __resetRateLimits } = await import('../app/lib/rate-limit.js');
 
@@ -183,11 +186,31 @@ test('calendar labelling follows the configured sponsored code', () => {
   // still comped, but stopped being LABELLED "Sponsored" on the calendar and
   // in staff emails, so a free booking looked like a paid one and nobody
   // found out until someone asked. It now derives from promo-codes.js.
-  assert.equal(SPONSORED_PROMO_CODES.length, 1, 'exactly one code comps a booking outright');
+  // Two codes comp a booking outright: the real sponsorship (PROMO_CODE_COMP)
+  // and the end-to-end test code (PROMO_CODE_TEST), which has to take the same
+  // no-payment path to be a real test of it. Both must be labelled.
+  assert.equal(SPONSORED_PROMO_CODES.length, 2, 'exactly two codes comp a booking outright');
+  assert.ok(
+    SPONSORED_PROMO_CODES.includes(process.env.PROMO_CODE_COMP) &&
+      SPONSORED_PROMO_CODES.includes(process.env.PROMO_CODE_TEST),
+    'the comp code and the test code are the two that comp outright'
+  );
 
+  for (const code of SPONSORED_PROMO_CODES) {
+    assert.equal(
+      isSponsoredBooking({ promo_code: code }), true,
+      'a booking carrying a configured comp code must be labelled sponsored'
+    );
+  }
+
+  // ...and the test code carries a SECOND label on top, because a comped
+  // booking and a fake booking are different things to a person reading the
+  // calendar. Without it a test is indistinguishable from a real sponsorship.
+  assert.deepEqual(testPromoCodes(), [process.env.PROMO_CODE_TEST]);
+  assert.equal(isTestBooking({ promo_code: process.env.PROMO_CODE_TEST }), true);
   assert.equal(
-    isSponsoredBooking({ promo_code: SPONSORED_PROMO_CODES[0] }), true,
-    'a booking carrying the configured comp code must be labelled sponsored'
+    isTestBooking({ promo_code: process.env.PROMO_CODE_COMP }), false,
+    'a genuine sponsored booking must never be labelled a test'
   );
   // The staffing-billed sponsorship collects payment, so it is NOT sponsored
   // in this sense and must not get the "fully comped" badge or $0.00 labels.
@@ -243,6 +266,7 @@ test('unset promo variables fail closed — no codes, not all codes', () => {
     PROMO_CODE_COMP: process.env.PROMO_CODE_COMP,
     PROMO_CODE_SPONSOR: process.env.PROMO_CODE_SPONSOR,
     PROMO_CODE_DAYTIME: process.env.PROMO_CODE_DAYTIME,
+    PROMO_CODE_TEST: process.env.PROMO_CODE_TEST,
   };
   try {
     for (const key of Object.keys(saved)) delete process.env[key];
@@ -259,6 +283,11 @@ test('unset promo variables fail closed — no codes, not all codes', () => {
     assert.deepEqual(daytimeAllowedPromoCodes(), []);
     assert.equal(promoCodeAllowsDaytime(saved.PROMO_CODE_DAYTIME), false);
     assert.equal(promoCodeAllowsDaytime(''), false);
+    // And nothing may be labelled a test when no test code is configured —
+    // a stray TEST badge on a real reservation reads as "no one is coming".
+    assert.deepEqual(testPromoCodes(), []);
+    assert.equal(isTestBooking({ promo_code: saved.PROMO_CODE_TEST }), false);
+    assert.equal(isTestBooking({ promo_code: '' }), false);
   } finally {
     Object.assign(process.env, saved);
     __resetPromoWarning();
@@ -266,18 +295,24 @@ test('unset promo variables fail closed — no codes, not all codes', () => {
 });
 
 test('a blank or whitespace-only variable is treated as unset', () => {
-  const saved = process.env.PROMO_CODE_COMP;
+  const saved = {
+    PROMO_CODE_COMP: process.env.PROMO_CODE_COMP,
+    PROMO_CODE_TEST: process.env.PROMO_CODE_TEST,
+  };
   try {
     // A cleared dashboard field can arrive as "" or " ", and an empty-string
     // code would otherwise become a dictionary key that matches a renter
     // submitting nothing at all.
     for (const blank of ['', '   ', '\n']) {
       process.env.PROMO_CODE_COMP = blank;
+      process.env.PROMO_CODE_TEST = blank;
       assert.deepEqual(sponsoredPromoCodes(), [], `"${blank}" must not register a code`);
+      assert.deepEqual(testPromoCodes(), [], `"${blank}" must not register a code`);
       assert.equal(isSponsoredBooking({ promo_code: '' }), false);
+      assert.equal(isTestBooking({ promo_code: '' }), false);
     }
   } finally {
-    process.env.PROMO_CODE_COMP = saved;
+    Object.assign(process.env, saved);
   }
 });
 

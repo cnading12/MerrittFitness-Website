@@ -135,12 +135,18 @@ export default function CongregationsPage() {
             Sundays here today
           </h2>
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-10">
-            Two churches currently hold their Sunday services here, between{' '}
-            {sundaySchedule.serviceWindow}. We think that matters to anyone considering the
-            space: you would be joining a building that already carries an active life of
-            worship, with neighbors who understand what Sunday means. The building holds{' '}
-            {sundaySchedule.daytimeSlots} daytime congregation slots, so one remains open, and
-            the hall is fully available on {sundaySchedule.eveningAvailability.toLowerCase()}.
+            Two churches currently hold their Sunday services here, and between them they use
+            the sanctuary from {sundaySchedule.serviceWindow}. We think that matters to anyone
+            considering the space: you would be joining a building that already carries an
+            active life of worship, with neighbors who understand what Sunday means.
+          </p>
+          <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-10">
+            It also means the room is genuinely open. Nothing is booked after{' '}
+            {sundaySchedule.vacatedBy}, so we are looking to fill{' '}
+            {sundaySchedule.openSlots === 2 ? 'two more Sunday slots' : `${sundaySchedule.openSlots} more Sunday slots`}{' '}
+            — an early afternoon service, an evening gathering, or something that does not fit
+            the usual shape of a Sunday morning. If your community meets at a time most
+            buildings cannot offer, that is exactly the time we have.
           </p>
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
@@ -149,13 +155,17 @@ export default function CongregationsPage() {
             </div>
             <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
               <p className="text-3xl font-bold text-[#735e59] font-serif">
-                {sundaySchedule.daytimeSlots - sundaySchedule.communitiesInResidence}
+                {sundaySchedule.openSlots}
               </p>
-              <p className="text-[#6b5f5b] mt-1 text-sm">daytime Sunday slot open now</p>
+              <p className="text-[#6b5f5b] mt-1 text-sm">
+                Sunday slots we are looking to fill
+              </p>
             </div>
             <div className="bg-white rounded-3xl p-8 border border-[#735e59]/10 shadow-sm text-center">
-              <p className="text-3xl font-bold text-[#735e59] font-serif">4:30 PM</p>
-              <p className="text-[#6b5f5b] mt-1 text-sm">Sunday evenings open after this</p>
+              <p className="text-3xl font-bold text-[#735e59] font-serif">
+                {sundaySchedule.vacatedBy}
+              </p>
+              <p className="text-[#6b5f5b] mt-1 text-sm">nothing booked after this on Sundays</p>
             </div>
           </div>
         </div>

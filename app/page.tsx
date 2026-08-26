@@ -11,7 +11,7 @@ import { Landmark, Sun, HeartHandshake, Music2, Star } from "lucide-react";
 import { faqJsonLd, type Faq } from "@/lib/venue-schema";
 import { jsonLdScript } from "@/lib/site-schema";
 import { rateBands, money, recurringDiscount, minimumHours } from "@/app/lib/venue-rates";
-import { contact, specs, reviews, maps } from "@/app/data/site";
+import { contact, specs, reviews, maps, hoursDisplay } from "@/app/data/site";
 import {
   venueImages,
   weddingsImages,
@@ -247,16 +247,16 @@ export default function Home() {
                   </span>
                   <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
                     Denver's Sacred Space
-                    <span className="block font-bold text-[#735e59]">for Wellness & Community</span>
+                    <span className="block font-bold text-[#735e59]">for Every Gathering</span>
                   </h2>
                   <div className="w-16 h-0.5 bg-gradient-to-r from-[#735e59] to-transparent mb-8"></div>
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. The building offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. Weddings, concerts, art openings, movement and wellness classes, memorials, milestone parties, and two Sunday congregations all share the same hall.
                     </p>
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
+                      Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and acoustics good enough that a string quartet and a sound bath both sound right in it. From Highland to Berkeley, Regis to Sloans Lake, this is where Denver comes to gather.
                     </p>
                   </div>
                 </div>
@@ -339,15 +339,6 @@ export default function Home() {
 
         <EnhancedGallery />
 
-        {/* FAQ — the visible counterpart to the FAQPage JSON-LD above. These
-            two read from the same `faqs` array so the markup can never
-            describe answers a visitor cannot find on the page. */}
-        <section className="py-20 bg-[#faf8f5]">
-          <div className="max-w-7xl mx-auto px-6">
-            <FaqSection faqs={faqs} heading="Questions About the Venue, Answered" />
-          </div>
-        </section>
-
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section
           id="booking"
@@ -367,14 +358,14 @@ export default function Home() {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                 </svg>
-                Book Your Denver Wellness Experience
+                Book the Hall
               </span>
               <h2 className="text-4xl md:text-6xl font-light text-[#f2eee9] mb-8 font-serif">
                 Reserve Your
                 <span className="block font-bold">Sloans Lake Sanctuary</span>
               </h2>
               <p className="text-xl text-[#f2eee9]/80 max-w-3xl mx-auto leading-relaxed mb-12">
-                Join Denver's vibrant wellness community or create your own transformative experience in Colorado's most inspiring historic yoga and meditation space
+Whatever you are planning — a wedding, a concert, a weekly class, a celebration of life, or a Sunday service — the calendar below is live, and the rates are published. No quote request, no waiting to hear back.
               </p>
             </div>
 
@@ -521,14 +512,17 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Denver Studio Hours</h3>
-                      {/* Reads from `hours` so this can never drift from the
-                          Google Business Profile. It used to claim 6 AM to
-                          10 PM every day, which was wrong twice over. */}
+                      {/* Derived from `hours` via hoursDisplay so this can
+                          never drift from the Google Business Profile. The
+                          comment here used to CLAIM it read from `hours`
+                          while both clock lines were typed by hand — so when
+                          Sunday moved from 4:30 PM to 12:30 PM, this line
+                          quietly kept turning away four hours of bookings. */}
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Available for bookings<br />
                         Monday - Saturday<br />
-                        <span className="text-sm text-[#a08b84]">7:00 AM - 10:00 PM Mountain Time</span><br />
-                        <span className="text-sm text-[#a08b84]">Sundays from 4:30 PM</span>
+                        <span className="text-sm text-[#a08b84]">{hoursDisplay.weekday}</span><br />
+                        <span className="text-sm text-[#a08b84]">{hoursDisplay.sundayFrom}</span>
                       </p>
                     </div>
                   </div>
@@ -588,6 +582,24 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* FAQ — the visible counterpart to the FAQPage JSON-LD above. These
+            two read from the same `faqs` array so the markup can never
+            describe answers a visitor cannot find on the page, which is what
+            FAQPage rich results require. Position is not part of that
+            requirement, so this sits LAST on purpose.
+
+            It used to run between the gallery and the booking calendar —
+            eight collapsed rows of objection-handling wedged into the step
+            from "look at the room" to "check my date", which is the highest
+            intent moment on the page. Questions are what someone has after
+            they have seen the room, the dates and where it is, so the page now
+            ends on them: photos, book, find us, still wondering. */}
+        <section className="py-20 bg-[#faf8f5]">
+          <div className="max-w-7xl mx-auto px-6">
+            <FaqSection faqs={faqs} heading="Questions About the Venue, Answered" />
           </div>
         </section>
       </main>

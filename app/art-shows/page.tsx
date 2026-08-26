@@ -9,7 +9,9 @@ import InquiryForm from '@/components/venue/InquiryForm';
 import CoPromotionBlock from '@/components/venue/CoPromotionBlock';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
 import { venueImages, artShowsImages } from '@/app/data/venue-images';
-import { extendedDiscount, rateBands } from '@/app/lib/venue-rates';
+import { specs } from '@/app/data/site';
+import Link from 'next/link';
+import { extendedDiscount, recurringDiscount, rateBands } from '@/app/lib/venue-rates';
 
 const PATH = '/art-shows';
 const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/art-shows/exhibition-stained-glass.webp';
@@ -65,6 +67,11 @@ const faqs: Faq[] = [
     question: 'How many people can attend an opening?',
     answer:
       'Up to 125 guests. Openings tend to flow between the main hall and the cafe lounge, which comfortably absorbs the crowd around the work.',
+  },
+  {
+    question: 'Can I run a recurring art class here, not just a one-off show?',
+    answer:
+      `Yes, and we are actively looking for them. Paint-and-sip nights, life drawing, kids’ classes, and multi-week workshop series all work well in the hall. A standing block bills at the partner rate — ${recurringDiscount.percent}% off every hour — once you reach ${recurringDiscount.minMonthlyHours} hours a month, which a weekly two-hour class clears on its own, and public sessions get co-promoted on our calendar at no charge.`,
   },
   {
     question: 'Can a show run multiple days?',
@@ -146,7 +153,9 @@ export default function ArtShowsPage() {
             wood, white brick, and stained glass that shifts the light through the afternoon.
             Openings, pop-up markets, student shows, and photography exhibitions have all hung
             here, and the cafe lounge keeps conversation going long after the first pass
-            through the show.
+            through the show. We also host the teaching side of the art world — paint
+            nights, life drawing, kids&apos; classes — and we are actively looking for more
+            of it.
           </p>
         </div>
       </section>
@@ -179,6 +188,57 @@ export default function ArtShowsPage() {
               automatically.
             </p>
             <RateTable />
+          </div>
+        </div>
+      </section>
+
+      {/* Teaching partnerships.
+          The page sold exhibitions and nothing else — every section addressed
+          an artist with a show to hang, i.e. one date and then gone. The
+          recurring side of the art programme (paint-and-sip nights, life
+          drawing, kids' classes, multi-week workshops) had no entry point on
+          the page at all, even though it is the half we are actively
+          recruiting. Rates and terms come from /recurring; this block is the
+          invitation, not a second rate card. */}
+      <section className="pb-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm">
+            <span className="inline-flex items-center px-4 py-2 bg-[#735e59]/10 text-[#735e59] text-sm font-semibold rounded-full tracking-wide uppercase mb-5">
+              We are looking for partners
+            </span>
+            <h2 className="text-2xl md:text-3xl font-light text-[#4a3f3c] font-serif mb-4">
+              Teach here, not just show here
+            </h2>
+            <p className="text-[#6b5f5b] leading-relaxed mb-4">
+              We are actively looking for artists and studios to run something regular in
+              this room: paint-and-sip nights, life drawing sessions, kids&apos; art classes,
+              multi-week workshop series, printmaking or ceramics intensives. Hardwood floors
+              that take a spill, tall walls for finished work, natural light through the
+              afternoon, breakout rooms for supplies between sessions, and{' '}
+              {specs.parkingSpots} on-site parking spots so your students are not circling
+              the block.
+            </p>
+            <p className="text-[#6b5f5b] leading-relaxed mb-6">
+              A standing block bills at the partner rate — {recurringDiscount.percent}% off
+              every hour once you reach {recurringDiscount.minMonthlyHours} hours a month,
+              which a weekly two-hour class clears on its own. Public sessions get co-promoted
+              on our calendar and social channels at no charge, the same as every other class
+              here.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/recurring"
+                className="inline-flex items-center gap-2 bg-[#735e59] text-[#f2eee9] font-semibold px-6 py-3 rounded-xl hover:bg-[#5a4a46] transition-colors duration-300"
+              >
+                Recurring rates &amp; terms
+              </Link>
+              <a
+                href="#inquiry"
+                className="inline-flex items-center gap-2 bg-white text-[#735e59] font-semibold px-6 py-3 rounded-xl border border-[#735e59]/20 hover:border-[#735e59]/40 transition-colors duration-300"
+              >
+                Pitch us your class
+              </a>
+            </div>
           </div>
         </div>
       </section>
