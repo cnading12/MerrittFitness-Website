@@ -27,7 +27,7 @@ const homeEventTypes = [
     label: "Weddings",
     href: "/weddings",
     image: weddingsImages.celebrationKiss,
-    description: "Ceremonies and receptions under the rose window, for up to 125 guests.",
+    description: "Ceremonies and receptions under the rose window, for up to 130 guests.",
   },
   {
     label: "Concerts & Performances",
@@ -456,7 +456,7 @@ Whatever you are planning — a wedding, a concert, a weekly class, a celebratio
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
                 { number: `${new Date().getFullYear() - 1905}`, label: "Years in Denver" },
-                { number: "125", label: "Guest Capacity" },
+                { number: "130", label: "Guest Capacity" },
                 { number: "22", label: "On-Site Parking Spots" },
                 { number: "2,400", label: "Square Feet" }
               ].map((item, index) => (

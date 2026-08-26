@@ -15,6 +15,33 @@ import {
   FLEX_SPACE_DAYS_LABEL,
   FLEX_SPACE_RESTRICTION_MESSAGE,
 } from '@/app/lib/flex-space-hours';
+// Numbers only, and explicitly safe to ship to the browser (see the header of
+// pricing-constants.js). Importing them keeps the partnership copy below in
+// lockstep with what the pricing engine actually charges.
+import {
+  RECURRING_VOLUME_DISCOUNT,
+  RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS,
+  TABLES_CHAIRS_FEE_SMALL,
+  TABLES_CHAIRS_FEE_LARGE,
+  TABLES_CHAIRS_GROUP_THRESHOLD,
+  MAT_RENTAL_FEE,
+  DIVIDER_REMOVAL_FEE,
+  EXTENDED_BOOKING_DISCOUNT,
+  EXTENDED_BOOKING_DISCOUNT_MIN_HOURS,
+} from '@/app/lib/pricing-constants';
+
+// Partnership pricing, as advertised on this page: 8+ hours a month bills at
+// 20% off. Derived from the constants above so a rate change updates the copy.
+const PARTNER_DISCOUNT_PERCENT = Math.round(RECURRING_VOLUME_DISCOUNT * 100);
+const PARTNER_MIN_MONTHLY_HOURS = RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS;
+const EXTENDED_BOOKING_DISCOUNT_PERCENT = Math.round(EXTENDED_BOOKING_DISCOUNT * 100);
+
+// Two-hour minimum per event, as stated in the Rental Information copy and in
+// the Terms. Recurring slots have always enforced it (RecurringBookingSchema
+// and the slot validation below); single events used to offer 30-minute and
+// 1-hour durations, which contradicted both. /api/booking-request enforces the
+// same floor server-side — this select is the courtesy, not the gate.
+const MINIMUM_BOOKING_HOURS = 2;
 
 type ApplicationType = 'single' | 'recurring';
 type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
@@ -680,8 +707,8 @@ export default function BookingPage() {
         }
         if (!booking.hoursRequested) {
           errors[`booking_${index}_hoursRequested`] = 'Duration is required';
-        } else if (parseFloat(booking.hoursRequested) < 0.5) {
-          errors[`booking_${index}_hoursRequested`] = 'Minimum duration is 30 minutes';
+        } else if (parseFloat(booking.hoursRequested) < MINIMUM_BOOKING_HOURS) {
+          errors[`booking_${index}_hoursRequested`] = `Minimum duration is ${MINIMUM_BOOKING_HOURS} hours`;
         } else if (booking.selectedTime && !endsBy10PM(booking.selectedTime, booking.hoursRequested)) {
           errors[`booking_${index}_hoursRequested`] = 'All events must end by 10 PM. Please select an earlier start time or shorter duration.';
         }
@@ -1070,12 +1097,10 @@ export default function BookingPage() {
     }, 0);
   };
 
-  // Recurring volume discount (mirror app/lib/booking-pricing.js — the server
-  // recomputes and is the source of truth): a schedule whose slots guarantee
-  // at least 8 hours in EVERY month (weekly ≥4×, biweekly ≥2×, monthly 1×)
-  // automatically bills 20% off the attendee-tiered hourly rate.
-  const RECURRING_VOLUME_DISCOUNT = 0.20;
-  const RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS = 8;
+  // Recurring volume discount (the server recomputes and is the source of
+  // truth): a schedule whose slots guarantee at least 8 hours in EVERY month
+  // (weekly ≥4×, biweekly ≥2×, monthly 1×) automatically bills 20% off the
+  // attendee-tiered hourly rate. Constants imported from pricing-constants.js.
 
   const calculateRecurringPricing = () => {
     const weeklyHours = calculateWeeklyHours();
@@ -1756,7 +1781,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
+                  <span><strong>Partnership Pricing:</strong> Any renter using the space {PARTNER_MIN_MONTHLY_HOURS}+ hours a month qualifies for our partner rate — {PARTNER_DISCOUNT_PERCENT}% off every hour, weekdays and Saturdays alike, plus tables, chairs and the roll-out mat at no charge. Recurring schedules earn it automatically; if you book one-off dates that add up to {PARTNER_MIN_MONTHLY_HOURS} hours a month, call (720) 357-9499 and we&apos;ll set you up.</span>
                 </li>
               </ul>
               </div>
@@ -2207,9 +2232,9 @@ export default function BookingPage() {
                         className={getInputClassName(`booking_${index}_hoursRequested`)}
                       >
                         <option value="">Select duration...</option>
-                        {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(hours => (
+                        {[2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(hours => (
                           <option key={hours} value={hours}>
-                            {hours === 0.5 ? '30 minutes' : hours === 1 ? '1 hour' : `${hours} hours`}
+                            {`${hours} hours`}
                           </option>
                         ))}
                       </select>
@@ -2985,15 +3010,28 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                {/* REMOVED: Partnership discount section - replaced with informational text */}
+                {/* Partnership pricing. The policy is a single, plain threshold —
+                    8+ hours a month earns the 20% partner rate — so the copy
+                    states it outright and nudges anyone close to the bar toward
+                    clearing it. Numbers come from pricing-constants.js. */}
                 <div className="border-t border-gray-100 pt-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">Partnership Pricing Available</h3>
+                    <h3 className="font-semibold text-blue-900 mb-2">
+                      Partnership Pricing — {PARTNER_DISCOUNT_PERCENT}% off at {PARTNER_MIN_MONTHLY_HOURS}+ hours a month
+                    </h3>
                     <p className="text-blue-800 text-sm mb-2">
-                      Regular partners booking 2+ hours per week can benefit from flexible pricing. We can start at a reduced rate and grow with your program to the full rate.
+                      Anyone who books {PARTNER_MIN_MONTHLY_HOURS} or more hours a month qualifies for our partner
+                      rate: <strong>{PARTNER_DISCOUNT_PERCENT}% off every hour</strong>, weekdays and Saturdays alike.
+                      A single weekly two-hour class clears the bar on its own.
+                    </p>
+                    <p className="text-blue-800 text-sm mb-2">
+                      Close to {PARTNER_MIN_MONTHLY_HOURS} hours? One more session a month is usually all it takes —
+                      and partners have tables, chairs and the roll-out mat included at no charge. Recurring
+                      schedules that guarantee {PARTNER_MIN_MONTHLY_HOURS}+ hours every month get the discount
+                      applied automatically, no promo code needed.
                     </p>
                     <p className="text-blue-800 text-sm font-medium">
-                      📞 Call (720) 357-9499 for partnership pricing details
+                      📞 Call (720) 357-9499 and we&apos;ll help you build a schedule that qualifies
                     </p>
                   </div>
                 </div>
@@ -3205,15 +3243,25 @@ export default function BookingPage() {
                   </p>
 
                   <ul className="list-disc pl-5 space-y-2">
-                    <li>A signed agreement is due on day of booking for events more than 60 days out for guaranteed booking.</li>
                     <li>
-                      The rental fee is due no later than thirty (30) days prior to the first reserved event and then on or before
-                      the first for all recurring reservations.
+                      Submitting this application and checking the box below constitutes your agreement to these Terms. No separate
+                      signed document is required.
                     </li>
                     <li>
-                      Any event serving alcohol requires a Certificate of Insurance (COI) for general liability (see Insurance section
-                      below), due no later than ten (10) days prior to your event. For all events, the credit card on file will be held
-                      for damages should they occur.
+                      <strong>Single events</strong> are paid in full at the time of booking. Your date is held while you complete
+                      checkout and is confirmed once payment clears; an unpaid application does not reserve the space.
+                      <strong> Recurring rentals</strong> are not charged at signup — they are billed on or before the first of each
+                      month for that month&apos;s scheduled sessions, at the rate stored with your schedule.
+                    </li>
+                    <li>
+                      Any event at which alcohol will be present requires a Certificate of Insurance (COI) for general liability
+                      including liquor liability (see Insurance section below). It must be uploaded with this application — the
+                      booking cannot be submitted or confirmed without it. For all events, the credit card on file will be held for
+                      damages should they occur.
+                    </li>
+                    <li>
+                      A photo of a government-issued ID (driver&apos;s license, state ID, or passport) is required from the person
+                      making the reservation, and is uploaded with this application.
                     </li>
                     <li>
                       Alcohol service is permitted with the proper general liability insurance certificate (COI) provided by you, the
@@ -3233,11 +3281,56 @@ export default function BookingPage() {
                     30–60 guests, and <strong>$155/hour</strong> for 60+ guests, with a two (2) hour minimum for all events.
                     Saturday events are billed at <strong>$200/hour</strong> for 0–30 guests, <strong>$260/hour</strong> for 30–60
                     guests, and <strong>$320/hour</strong> for 60+ guests, with a two (2) hour minimum. Payments made by credit card
-                    are subject to a 3% processing surcharge. Payment for recurring rentals is due on or before the first of each month.
-                    Failure to submit payment within 30 days of the due date will result in suspension or cancellation of the Client's
-                    scheduled class sessions and/or termination of this Agreement at the sole discretion of Merritt Wellness. Any
-                    outstanding balance must be paid in full prior to resuming use of the Premises.
+                    are subject to a 3% processing surcharge; recurring rentals paid by bank transfer (ACH) carry no surcharge.
                   </p>
+
+                  <p>
+                    <strong>Single events</strong> are paid in full at the time of booking, before the reservation is confirmed.
+                    <strong> Recurring rentals</strong> are billed monthly rather than up front: the first invoice, covering the
+                    remainder of the starting month, is charged on the first of the following month, and each month thereafter is
+                    charged on or before the first for that month&apos;s scheduled sessions. Failure to submit payment within 30 days
+                    of the due date will result in suspension or cancellation of the Client&apos;s scheduled class sessions and/or
+                    termination of this Agreement at the sole discretion of Merritt Wellness. Any outstanding balance must be paid in
+                    full prior to resuming use of the Premises.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Add-Ons and Discounts</h3>
+
+                  <p>
+                    The following are itemized on your booking summary before you pay. Every amount is recomputed by Merritt Wellness
+                    at the time of booking; the figures shown while filling out this form are an estimate.
+                  </p>
+
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li>
+                      <strong>Tables and chairs:</strong> ${TABLES_CHAIRS_FEE_SMALL} per item type for events under{' '}
+                      {TABLES_CHAIRS_GROUP_THRESHOLD} guests and ${TABLES_CHAIRS_FEE_LARGE} per item type for{' '}
+                      {TABLES_CHAIRS_GROUP_THRESHOLD}+ guests, charged separately for tables and for chairs. Included at no charge for
+                      partners.
+                    </li>
+                    <li>
+                      <strong>Roll-out mat:</strong> a flat ${MAT_RENTAL_FEE} per booking, covering use of the full-hall mat plus
+                      setup and breakdown by our staff within your reserved time. Included at no charge for partners, who are then
+                      responsible for their own setup and breakdown.
+                    </li>
+                    <li>
+                      <strong>Cafe/lounge divider removal:</strong> a flat ${DIVIDER_REMOVAL_FEE.toLocaleString('en-US')} per
+                      booking, covering removal of the dividers and breakdown of the cafe furniture before your event and restoration
+                      afterward. Single events only.
+                    </li>
+                    <li>
+                      <strong>Extended booking discount:</strong> a single reservation totalling{' '}
+                      {EXTENDED_BOOKING_DISCOUNT_MIN_HOURS}+ hours receives {EXTENDED_BOOKING_DISCOUNT_PERCENT}% off the pre-discount
+                      subtotal automatically, with no promo code. It does not stack with a promo code — whichever single discount is
+                      larger applies.
+                    </li>
+                    <li>
+                      <strong>Partner rate:</strong> renters using the space {PARTNER_MIN_MONTHLY_HOURS}+ hours per month receive{' '}
+                      {PARTNER_DISCOUNT_PERCENT}% off the hourly rate, weekdays and Saturdays alike. Recurring schedules that
+                      guarantee {PARTNER_MIN_MONTHLY_HOURS}+ hours in every month receive it automatically; renters reaching that
+                      threshold through separate bookings should contact Merritt Wellness to have it applied.
+                    </li>
+                  </ul>
 
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">On-Site Assistance &amp; Event Supervision</h3>
 
@@ -3276,10 +3369,9 @@ export default function BookingPage() {
 
                   <p>
                     <strong>Event Cancellations:</strong> Cancellations made 90 or more days in advance of the scheduled event date
-                    receive a full refund. For cancellations made within 90 days of your event, please contact Merritt Wellness
-                    directly to discuss options. If the full rental payment is not received 90 days prior to your event, Merritt
-                    Wellness reserves the right to cancel your reservation without a deposit refund. If circumstances beyond the
-                    control of Merritt Wellness force us to cancel your reservation, Merritt Wellness will refund all sums paid.
+                    receive a full refund of all sums paid. For cancellations made within 90 days of your event, please contact
+                    Merritt Wellness directly to discuss options. If circumstances beyond the control of Merritt Wellness force us to
+                    cancel your reservation, Merritt Wellness will refund all sums paid.
                   </p>
 
                   <p>
@@ -3292,9 +3384,10 @@ export default function BookingPage() {
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Insurance</h3>
 
                   <p>
-                    A Certificate of Insurance (COI) for general liability is required for any event at which alcohol is served, and is
-                    due no later than ten (10) days prior to your event. Merritt Wellness may also, at its sole discretion, require a COI
-                    for general liability for other higher-risk events. The insurance must, at client's sole expense, provide and
+                    A Certificate of Insurance (COI) for general liability including liquor liability is required for any event at
+                    which alcohol will be present, whether it is served or brought by guests, and must be uploaded with your booking
+                    application — the booking cannot be submitted or confirmed without it. Merritt Wellness may also, at its sole
+                    discretion, require a COI for general liability for other higher-risk events. The insurance must, at client's sole expense, provide and
                     maintain public liability and personal property damage insurance, insuring Merritt Wellness LLC and Merritt Wellness
                     employees, contractors and contracted vendors against all bodily injury, property damage, personal injury and other
                     loss arising out of Client's use and occupancy of the premises, or any other occupant on the premises, including
@@ -3313,6 +3406,16 @@ export default function BookingPage() {
                     Events that do not serve alcohol are not required to carry special event liability insurance. For all events,
                     however, a valid credit card must remain on file for the duration of the event and may be held or charged for
                     damages should they occur.
+                  </p>
+
+                  <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Identification and Documents</h3>
+
+                  <p>
+                    A photo of a government-issued ID — driver&apos;s license, state ID, or passport — is required from the person
+                    making the reservation and is uploaded with this application. It identifies the party responsible for the booking,
+                    the space, and the card on file, and a booking cannot be confirmed without it. Your ID photo and any Certificate of
+                    Insurance you upload are stored with your booking record, are shared only with the Merritt Wellness team, and are
+                    never sold, published, or disclosed to any other renter, vendor, or third party except where required by law.
                   </p>
 
                   <h3 className="text-lg font-semibold text-[#4a3f3c] mb-3 font-serif mt-6">Smoke-Free Facility</h3>

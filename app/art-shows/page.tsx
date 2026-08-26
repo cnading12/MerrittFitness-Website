@@ -19,7 +19,7 @@ const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/art-shows/exhibit
 export const metadata: Metadata = {
   title: 'Art Show & Exhibition Venue in Denver | Merritt Wellness',
   description:
-    'Host art shows, gallery openings, and pop-up exhibitions in a historic Denver art gallery: natural light, hardwood floors, stained glass, and room for 125 guests near Sloans Lake.',
+    'Host art shows, gallery openings, and pop-up exhibitions in a historic Denver art gallery: natural light, hardwood floors, stained glass, and room for 130 guests near Sloans Lake.',
   keywords:
     'art show venue Denver, gallery space rental Denver, pop-up gallery Denver, exhibition space Denver, art opening venue Denver, artist market venue Colorado',
   openGraph: {
@@ -66,7 +66,7 @@ const faqs: Faq[] = [
   {
     question: 'How many people can attend an opening?',
     answer:
-      'Up to 125 guests. Openings tend to flow between the main hall and the cafe lounge, which comfortably absorbs the crowd around the work.',
+      'Up to 130 guests. Openings tend to flow between the main hall and the cafe lounge, which comfortably absorbs the crowd around the work.',
   },
   {
     question: 'Can I run a recurring art class here, not just a one-off show?',
@@ -112,7 +112,7 @@ export default function ArtShowsPage() {
               path: PATH,
               name: 'Merritt Wellness — Art Show & Exhibition Venue',
               description:
-                'Historic 1905 art gallery and exhibition hall in Denver with natural light, hardwood floors, stained glass, and capacity for 125 guests.',
+                'Historic 1905 art gallery and exhibition hall in Denver with natural light, hardwood floors, stained glass, and capacity for 130 guests.',
               images: [artShowsImages.exhibitionStainedGlass.src, artShowsImages.vaultedHallExhibition.src],
             })
           ),

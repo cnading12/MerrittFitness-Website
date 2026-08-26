@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   title:
     "Merritt Wellness | Historic Event, Wedding & Class Venue in Sloans Lake, Denver",
   description:
-    "A restored 1905 sanctuary in Denver's Sloans Lake: weddings, private events, concerts, art shows, and weekly yoga, breathwork, sound bath, and dance classes. Up to 125 guests under 24-foot vaulted ceilings, with 22 on-site parking spots and published hourly rates from $95.",
+    "A restored 1905 sanctuary in Denver's Sloans Lake: weddings, private events, concerts, art shows, and weekly yoga, breathwork, sound bath, and dance classes. Up to 130 guests under 24-foot vaulted ceilings, with 22 on-site parking spots and published hourly rates from $95.",
   keywords: [
     'event venue Denver',
     "Sloans Lake event space",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     title:
       "Merritt Wellness | Historic Event, Wedding & Class Venue in Sloans Lake, Denver",
     description:
-      "A restored 1905 sanctuary for weddings, private events, concerts, and weekly wellness and movement classes. 24-foot vaulted ceilings, 125 guests, published rates.",
+      "A restored 1905 sanctuary for weddings, private events, concerts, and weekly wellness and movement classes. 24-foot vaulted ceilings, 130 guests, published rates.",
     url: 'https://www.merrittwellness.net',
     siteName: 'Merritt Wellness',
     images: [

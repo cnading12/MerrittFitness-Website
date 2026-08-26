@@ -244,7 +244,12 @@ export const coPromotion = {
 // { label: 'Corporate Events', href: '/corporate' },                 // pending photography
 
 export const specs = {
-  capacity: 125,
+  // Headline capacity is the STANDING maximum; seated events top out lower
+  // because the chairs have to fit. Both numbers are stated in the Terms on
+  // /book ("Seating for 100, accommodates up to 130 standing") and the booking
+  // form caps attendee counts at the standing figure — keep all three in step.
+  capacity: 130,
+  seatedCapacity: 100,
   mainHallSqFt: 1100,
   upstairsSqFt: 1600,
   fullBuildingSqFt: 2400,
@@ -255,7 +260,7 @@ export const specs = {
 } as const;
 
 export const specItems = [
-  { label: 'Guest capacity', value: 'Up to 125' },
+  { label: 'Guest capacity', value: '100 seated · up to 130 standing' },
   { label: 'Main hall', value: '~1,100 sq ft' },
   { label: 'Upstairs', value: '~1,600 sq ft' },
   { label: 'Full building', value: '~2,400 sq ft' },
@@ -390,7 +395,7 @@ export const eventTypes: EventTypeBlock[] = [
     title: 'Weddings',
     href: '/weddings',
     description:
-      'Ceremonies and receptions under 24-foot vaulted ceilings, with original stained glass and room for up to 125 guests.',
+      'Ceremonies and receptions under 24-foot vaulted ceilings, with original stained glass and room for up to 130 guests.',
   },
   {
     key: 'wellness-classes',
