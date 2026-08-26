@@ -303,3 +303,69 @@ test('every Google Maps reference points at the Business Profile, not the street
       `using \`maps\` from app/data/site.ts:\n${files}`
   );
 });
+
+test('no page types an opening time out by hand — hours are always derived', () => {
+  // Sunday moved from 4:30 PM to 12:30 PM when the Business Profile changed,
+  // and `hours` in app/data/site.ts moved with it. Two pages did not, because
+  // they had the clock typed into the JSX:
+  //
+  //   app/page.tsx     "Sundays from 4:30 PM", sitting directly beneath a
+  //                    comment claiming it read from `hours` so it "can never
+  //                    drift from the Google Business Profile".
+  //   app/weddings/…   "Friday and Sunday evening weddings starting at 4 PM",
+  //                    one figure standing in for two unrelated constraints —
+  //                    the workspace window on Fridays, the congregations on
+  //                    Sundays — so it could not follow either.
+  //
+  // Both quietly turned away hours the venue was open for. Hardcoding is the
+  // whole failure: a comment promising a value is derived does not derive it.
+  // Clock times next to a day name must come from `hoursDisplay`.
+  const repoRoot = new URL('..', import.meta.url).pathname;
+
+  // app/data/site.ts DEFINES the hours and the congregation schedule, and
+  // flex-space-hours.js defines the workspace window — those are the sources
+  // being derived FROM, so they are the one place a literal time belongs.
+  const TIME_SOURCES = ['app/data/site.ts', 'app/lib/flex-space-hours.js'];
+
+  // "Sunday(s) from 4:30 PM", "Sundays after 12:30PM", "Friday evenings from 4 PM".
+  const HARDCODED_TIME = /(Sunday|Saturday|Monday|Friday|weekday)s?\b[^.<>{}\n]{0,40}?\b(from|after|starting at|until|by)\s+\d{1,2}(:\d{2})?\s*(AM|PM)/i;
+
+  const offenders = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!/\.(ts|tsx|js)$/.test(entry.name)) continue;
+      const relative = full.replace(repoRoot, '');
+      if (TIME_SOURCES.includes(relative)) continue;
+
+      // Comments are stripped first: the notes explaining WHY a time moved
+      // need to quote the old one, and those are documentation, not output.
+      // JSX block comments are stripped WHOLE rather than line-by-line —
+      // `{/* ... */}` spans several lines whose continuations carry no comment
+      // marker of their own, so a per-line filter leaves the middle of the
+      // note looking like rendered copy.
+      const code = readFileSync(full, 'utf8')
+        .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .split('\n')
+        .filter((line) => !/^\s*\/\//.test(line))
+        .join('\n');
+
+      const match = code.match(HARDCODED_TIME);
+      if (match) offenders.push(`${relative}: ${match[0].trim()}`);
+    }
+  };
+  for (const root of ['app', 'lib', 'components']) walk(`${repoRoot}${root}`);
+
+  const found = offenders.join('\n');
+  assert.equal(
+    found,
+    '',
+    'These hardcode an opening time instead of deriving it from `hoursDisplay` ' +
+      `in app/data/site.ts:\n${found}`
+  );
+});

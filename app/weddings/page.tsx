@@ -8,6 +8,7 @@ import FaqSection from '@/components/venue/FaqSection';
 import InquiryForm from '@/components/venue/InquiryForm';
 import RateTable from '@/components/venue/RateTable';
 import { venueJsonLd, faqJsonLd, type Faq } from '@/lib/venue-schema';
+import { hoursDisplay } from '@/app/data/site';
 import { venueImages, weddingsImages } from '@/app/data/venue-images';
 import {
   extendedDiscount,
@@ -57,7 +58,7 @@ const faqs: Faq[] = [
   {
     question: 'What days can we book our wedding?',
     answer:
-      'Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday and Sunday evening weddings starting at 4 PM or later are also available, and they bill at the lower Sunday-to-Friday rate. For any other date or time, like a full Friday wedding day, reach out and we will talk through whether it can work.',
+      `Weddings are hosted on Saturdays, so the building belongs to one celebration at a time. Friday evening weddings from ${hoursDisplay.weekdayEveningFrom} and Sunday weddings from ${hoursDisplay.sundayOpensAt} are also available, and they bill at the lower Sunday-to-Friday rate. The two start times have different reasons: Fridays open up when the workspace next door finishes its day, and Sundays open up when the resident congregations are out. For any other date or time, like a full Friday wedding day, reach out and we will talk through whether it can work.`,
   },
   {
     question: 'Can we hold both the ceremony and the reception here?',
@@ -195,7 +196,8 @@ export default function WeddingsPage() {
         </div>
       </section>
 
-      {/* When weddings happen — Saturdays, with Friday/Sunday evening exceptions */}
+      {/* When weddings happen — Saturdays, with Friday evening and Sunday
+          afternoon exceptions. Both start times are derived, never typed. */}
       <section className="pb-24">
         <div className="max-w-4xl mx-auto px-6">
           <div className="bg-white rounded-3xl p-8 md:p-10 border border-[#735e59]/10 shadow-sm text-center">
@@ -204,10 +206,13 @@ export default function WeddingsPage() {
             </h2>
             <p className="text-[#6b5f5b] leading-relaxed max-w-2xl mx-auto">
               We host weddings on Saturdays, so the building and our full attention belong to
-              one celebration. Friday and Sunday evening weddings starting at 4 PM or later
-              can work beautifully too, and they bill at the lower Sunday-to-Friday rate.
-              Have a different date or time in mind, like a full Friday wedding day? Reach
-              out and we will talk it through.
+              one celebration. Fridays and Sundays work beautifully too, and they bill at the
+              lower Sunday-to-Friday rate: Friday evenings from{' '}
+              {hoursDisplay.weekdayEveningFrom}, once the workspace next door finishes its
+              day, and Sundays from {hoursDisplay.sundayOpensAt}, once the congregations who
+              meet here in the morning have gone — early enough for an afternoon ceremony and
+              an evening reception on the same day. Have a different date or time in mind,
+              like a full Friday wedding day? Reach out and we will talk it through.
             </p>
           </div>
         </div>

@@ -13,7 +13,11 @@
 // Safe to import from this file even though marketing pages are client
 // components: flex-space-hours.js is a dependency-free module of constants and
 // date math, with no path to the promo dictionary.
-import { FLEX_SPACE_WINDOW_LABEL, FLEX_SPACE_DAYS_LABEL } from '@/app/lib/flex-space-hours';
+import {
+  FLEX_SPACE_WINDOW_LABEL,
+  FLEX_SPACE_DAYS_LABEL,
+  FLEX_SPACE_END_MINUTES,
+} from '@/app/lib/flex-space-hours';
 
 export const contact = {
   inquiries: {
@@ -98,6 +102,19 @@ function to12Hour(hhmm: string): string {
 export const hoursDisplay = {
   weekday: `${to12Hour(hours.weekdayOpens)} - ${to12Hour(hours.weekdayCloses)} Mountain Time`,
   sundayFrom: `Sundays from ${to12Hour(hours.sundayOpens)}`,
+  /** Just the clock: '12:30 PM'. When the sanctuary frees up on a Sunday. */
+  sundayOpensAt: to12Hour(hours.sundayOpens),
+  /**
+   * The earliest a weekday event can start — the moment the Merritt Workspace
+   * window closes (app/lib/flex-space-hours.js), NOT anything to do with the
+   * Sunday congregations. The two floors have separate causes and separate
+   * constants; a page that quotes one figure for both will be wrong the next
+   * time either moves, which is exactly what happened to the weddings copy.
+   */
+  weekdayEveningFrom: to12Hour(
+    `${String(Math.floor(FLEX_SPACE_END_MINUTES / 60)).padStart(2, '0')}:` +
+      `${String(FLEX_SPACE_END_MINUTES % 60).padStart(2, '0')}`
+  ),
 } as const;
 
 // REVIEW DATA — READ BEFORE EDITING.
