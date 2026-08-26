@@ -15,6 +15,18 @@ import {
   FLEX_SPACE_DAYS_LABEL,
   FLEX_SPACE_RESTRICTION_MESSAGE,
 } from '@/app/lib/flex-space-hours';
+// Numbers only, and explicitly safe to ship to the browser (see the header of
+// pricing-constants.js). Importing them keeps the partnership copy below in
+// lockstep with what the pricing engine actually charges.
+import {
+  RECURRING_VOLUME_DISCOUNT,
+  RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS,
+} from '@/app/lib/pricing-constants';
+
+// Partnership pricing, as advertised on this page: 8+ hours a month bills at
+// 20% off. Derived from the constants above so a rate change updates the copy.
+const PARTNER_DISCOUNT_PERCENT = Math.round(RECURRING_VOLUME_DISCOUNT * 100);
+const PARTNER_MIN_MONTHLY_HOURS = RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS;
 
 type ApplicationType = 'single' | 'recurring';
 type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
@@ -1065,12 +1077,10 @@ export default function BookingPage() {
     }, 0);
   };
 
-  // Recurring volume discount (mirror app/lib/booking-pricing.js — the server
-  // recomputes and is the source of truth): a schedule whose slots guarantee
-  // at least 8 hours in EVERY month (weekly ≥4×, biweekly ≥2×, monthly 1×)
-  // automatically bills 20% off the attendee-tiered hourly rate.
-  const RECURRING_VOLUME_DISCOUNT = 0.20;
-  const RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS = 8;
+  // Recurring volume discount (the server recomputes and is the source of
+  // truth): a schedule whose slots guarantee at least 8 hours in EVERY month
+  // (weekly ≥4×, biweekly ≥2×, monthly 1×) automatically bills 20% off the
+  // attendee-tiered hourly rate. Constants imported from pricing-constants.js.
 
   const calculateRecurringPricing = () => {
     const weeklyHours = calculateWeeklyHours();
@@ -1751,7 +1761,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
+                  <span><strong>Partnership Pricing:</strong> Any renter using the space {PARTNER_MIN_MONTHLY_HOURS}+ hours a month qualifies for our partner rate — {PARTNER_DISCOUNT_PERCENT}% off every hour, weekdays and Saturdays alike, plus tables, chairs and the roll-out mat at no charge. Recurring schedules earn it automatically; if you book one-off dates that add up to {PARTNER_MIN_MONTHLY_HOURS} hours a month, call (720) 357-9499 and we&apos;ll set you up.</span>
                 </li>
               </ul>
               </div>
@@ -2945,15 +2955,28 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                {/* REMOVED: Partnership discount section - replaced with informational text */}
+                {/* Partnership pricing. The policy is a single, plain threshold —
+                    8+ hours a month earns the 20% partner rate — so the copy
+                    states it outright and nudges anyone close to the bar toward
+                    clearing it. Numbers come from pricing-constants.js. */}
                 <div className="border-t border-gray-100 pt-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">Partnership Pricing Available</h3>
+                    <h3 className="font-semibold text-blue-900 mb-2">
+                      Partnership Pricing — {PARTNER_DISCOUNT_PERCENT}% off at {PARTNER_MIN_MONTHLY_HOURS}+ hours a month
+                    </h3>
                     <p className="text-blue-800 text-sm mb-2">
-                      Regular partners booking 2+ hours per week can benefit from flexible pricing. We can start at a reduced rate and grow with your program to the full rate.
+                      Anyone who books {PARTNER_MIN_MONTHLY_HOURS} or more hours a month qualifies for our partner
+                      rate: <strong>{PARTNER_DISCOUNT_PERCENT}% off every hour</strong>, weekdays and Saturdays alike.
+                      A single weekly two-hour class clears the bar on its own.
+                    </p>
+                    <p className="text-blue-800 text-sm mb-2">
+                      Close to {PARTNER_MIN_MONTHLY_HOURS} hours? One more session a month is usually all it takes —
+                      and partners have tables, chairs and the roll-out mat included at no charge. Recurring
+                      schedules that guarantee {PARTNER_MIN_MONTHLY_HOURS}+ hours every month get the discount
+                      applied automatically, no promo code needed.
                     </p>
                     <p className="text-blue-800 text-sm font-medium">
-                      📞 Call (720) 357-9499 for partnership pricing details
+                      📞 Call (720) 357-9499 and we&apos;ll help you build a schedule that qualifies
                     </p>
                   </div>
                 </div>
