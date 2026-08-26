@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText, X } from 'lucide-react';
+import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText, X, ChevronDown } from 'lucide-react';
 // Both of these are dependency-free modules holding only constants and date
 // math, which is what makes them safe to import into a `use client` component.
 // Never reach for app/lib/booking-pricing.js or app/lib/promo-codes.js here —
@@ -56,6 +56,11 @@ export default function BookingPage() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   // Rental information lives behind a popup so the form leads the page.
   const [showRentalInfo, setShowRentalInfo] = useState(false);
+
+  // Which bookings have the "Need daytime hours?" explanation expanded, keyed
+  // by booking id. Collapsed by default: the renter who needs it goes looking
+  // for it, and the renter booking a 6 PM slot should not have to read past it.
+  const [flexDetailsOpen, setFlexDetailsOpen] = useState<Record<number, boolean>>({});
 
   // Application type — the very first choice: single event vs. recurring series.
   const [applicationType, setApplicationType] = useState<ApplicationType>('single');
@@ -2076,6 +2081,67 @@ export default function BookingPage() {
                           Saturday: Special rates apply
                         </p>
                       )}
+                      {/* How a weekday works, stated under the DATE — the field
+                          this is actually a property of.
+                          It used to sit under the Start Time picker in amber,
+                          on every weekday regardless of what was selected, so a
+                          renter who had just chosen a perfectly clear 6 PM slot
+                          read a caution-coloured block as a problem with their
+                          booking (and a renter who chose a slot that DID run
+                          into the window got this plus the red field error,
+                          saying the same thing twice). Neutral tone, one line,
+                          and the "we'll unlock it for you" pitch folded behind
+                          a disclosure: the person who wants daytime will open
+                          it, the person booking an evening never has to. The
+                          greyed-out slots still label themselves in the
+                          dropdown, and a real violation still gets the red
+                          error — this line only explains the day. */}
+                      {bookingDayInfo(booking).flexRestricted && (
+                        <div className="text-[#6b5f5b] text-sm mt-2">
+                          <p className="flex items-start gap-1.5">
+                            <Info size={14} className="mt-0.5 flex-shrink-0 text-[#8a7a75]" />
+                            <span>
+                              Daytime ({FLEX_SPACE_WINDOW_LABEL}) is held for Merritt Workspace
+                              next door, so those start times are greyed out. Start times from
+                              4:00 PM are open as usual.
+                            </span>
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setFlexDetailsOpen(prev => ({
+                              ...prev,
+                              [booking.id]: !prev[booking.id]
+                            }))}
+                            aria-expanded={flexDetailsOpen[booking.id] === true}
+                            className="mt-1 ml-[22px] inline-flex items-center gap-1 text-[#735e59] underline underline-offset-2 hover:text-[#4a3f3c] transition-colors"
+                          >
+                            Need daytime hours?
+                            <ChevronDown
+                              size={13}
+                              className={`transition-transform ${flexDetailsOpen[booking.id] ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                          {flexDetailsOpen[booking.id] && (
+                            <p className="mt-1.5 ml-[22px]">
+                              Daytime programming the whole building benefits from — yoga,
+                              meditation, a class or a quiet workshop — is genuinely welcome.
+                              Call <a href="tel:+17203579499" className="underline font-medium">(720) 357-9499</a> and
+                              we&apos;ll issue you a code that unlocks these hours.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {/* The code is applied; say so here too, so the renter
+                          understands why the daytime slots opened up. */}
+                      {daytimeUnlocked && isFlexSpaceDay(booking.selectedDate) && (
+                        <p className="text-green-700 text-sm mt-2 flex items-start gap-1.5">
+                          <CheckCircle size={14} className="mt-0.5 flex-shrink-0" />
+                          <span>
+                            Daytime hours unlocked by your code. Please keep sound levels
+                            considerate — the workspace next door is at work.
+                          </span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -2112,7 +2178,7 @@ export default function BookingPage() {
                               value={time}
                               disabled={blocked || !day.loaded}
                               style={{
-                                color: blocked ? '#dc2626' : '#374151',
+                                color: !isAvailable ? '#dc2626' : isWorkspaceHours ? '#8a7a75' : '#374151',
                                 textDecoration: !isAvailable ? 'line-through' : 'none'
                               }}
                             >
@@ -2128,32 +2194,6 @@ export default function BookingPage() {
                       </select>
                       {getFieldError(`booking_${index}_selectedTime`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedTime`)}</p>
-                      )}
-                      {/* Explain the greyed-out daytime block before the renter
-                          goes hunting for it in the dropdown. */}
-                      {bookingDayInfo(booking).flexRestricted && (
-                        <p className="text-amber-700 text-sm mt-2 flex items-start gap-1.5">
-                          <Info size={14} className="mt-0.5 flex-shrink-0" />
-                          <span>
-                            <strong>{FLEX_SPACE_WINDOW_LABEL}</strong> is reserved for Merritt
-                            Workspace {FLEX_SPACE_DAYS_LABEL} — members are working next door.
-                            Evening start times are open. Hosting something the whole building
-                            benefits from (yoga, meditation, a class or quiet workshop)?
-                            Call <a href="tel:+17203579499" className="underline font-medium">(720) 357-9499</a> and
-                            we&apos;ll issue you a code that unlocks these hours.
-                          </span>
-                        </p>
-                      )}
-                      {/* The code is applied; say so, so the renter understands
-                          why the daytime slots opened up. */}
-                      {daytimeUnlocked && isFlexSpaceDay(booking.selectedDate) && (
-                        <p className="text-green-700 text-sm mt-2 flex items-start gap-1.5">
-                          <CheckCircle size={14} className="mt-0.5 flex-shrink-0" />
-                          <span>
-                            Daytime hours unlocked by your code. Please keep sound levels
-                            considerate — the workspace next door is at work.
-                          </span>
-                        </p>
                       )}
                     </div>
 
