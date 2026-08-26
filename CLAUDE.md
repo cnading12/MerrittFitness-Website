@@ -159,12 +159,57 @@ found in the code.
    when the codes are made to fail open; both earlier versions of this test
    passed on a vulnerable tree.
 
-2. **Prices are always recomputed server-side.** `calculateAccuratePricing` /
+2. **Weekday 8 AM – 4 PM is held for Merritt Workspace next door.** The two
+   properties share a wall, so a general event in the main hall during the
+   workday lands on people trying to work. The window, the days (Mon–Fri) and
+   the date math live in `app/lib/flex-space-hours.js` — a pure module with
+   **no imports**, because the booking page is a `use client` component and
+   imports it directly. Never make it import `promo-codes.js` or
+   `booking-pricing.js`.
+
+   Overlap is **half-open** and **duration-aware**: a booking ending at exactly
+   8:00 AM and one starting at exactly 4:00 PM are both fine, but a 7 AM start
+   running four hours is not. Checking the start time alone is the obvious
+   wrong implementation.
+
+   All four promo codes unlock the window; `PROMO_CODE_DAYTIME` is the one that
+   ONLY does that, plus comping staff coverage — venue time is still billed in
+   full, because it is an access key and not a price cut. Enforced server-side
+   by `findFlexSpaceViolations` (`app/lib/booking-guards.js`) at
+   `/api/booking-request`; the form's greyed-out slots are a courtesy, not the
+   gate. `tests/flex-space-hours.test.mjs`.
+
+   **Recurring applications are deliberately NOT covered.** They have no promo
+   code field at all — the form renders one for single bookings only, and
+   `RecurringBookingSchema.pricing` has no `promoCode` — so a recurring series
+   can still take weekday daytime slots. Wiring a code into the recurring form
+   is the fix when that matters.
+
+3. **The venue hosts one event at a time, and the SERVER decides that.**
+   `/api/booking-request` re-checks every submission against the live calendar
+   (`findCalendarConflicts`) and against itself (`findSelfOverlaps`) before
+   writing a row, and re-runs the recurring conflict scan on the recurring
+   path. This used to live only in the browser, which meant a stale tab, two
+   simultaneous renters, or a direct POST each wrote a booking the venue could
+   not honor.
+
+   The calendar lookup **fails closed**: if Google is unreachable the request
+   gets a 503, not a booking. An outage costs a few renters a retry; accepting
+   blind costs two events on the same evening, discovered after both have paid.
+
+   Slot math is shared by the form and both APIs through
+   `app/lib/availability.js`, so what the picker offers and what intake accepts
+   cannot disagree — and it is **duration-aware**. It did not used to be: a
+   slot was blocked only when its own start fell inside a busy range, so with
+   6–8 PM booked, a 5 PM start for 3 hours was offered, accepted, and written
+   to the calendar. `tests/booking-conflict-guard.test.mjs`.
+
+4. **Prices are always recomputed server-side.** `calculateAccuratePricing` /
    `computeRecurringIntakePricing` decide the amount; the client's `pricing`
    block is display-only and is never trusted. Stripe amounts come from the
    stored `total_amount`, never from the request.
 
-3. **Supabase runs on the service-role key, with RLS deny-all.** Use the shared
+5. **Supabase runs on the service-role key, with RLS deny-all.** Use the shared
    client in `app/lib/supabase-server.js` — do not call `createClient` anywhere
    else. The anon key is designed to be public; RLS
    (`scripts/migrations/2026_enable_rls_lockdown.sql`) is what protects the
@@ -172,33 +217,33 @@ found in the code.
    Rollout order matters: set `SUPABASE_SERVICE_ROLE_KEY` and deploy BEFORE
    running the migration.
 
-4. **Escape every renter-supplied value in an email template.** Use `esc()`
+6. **Escape every renter-supplied value in an email template.** Use `esc()`
    from `app/lib/email.js` on anything off the booking or inquiry form. These
    templates are string-interpolated HTML sent from our domain, so unescaped
    input turns a staff notification into a phishing channel.
    `tests/email-html-injection.test.mjs` covers this.
 
-5. **Secrets are compared with `requireAdminAuth` / `requireCronAuth`**
+7. **Secrets are compared with `requireAdminAuth` / `requireCronAuth`**
    (`app/lib/auth.js`), never with `!==`. They are constant-time and fail
    closed when the env var is missing. `tests/admin-cron-auth.test.mjs`.
 
-6. **Every anonymous route gets a rate limit.** Add `enforceRateLimit` from
+8. **Every anonymous route gets a rate limit.** Add `enforceRateLimit` from
    `app/lib/rate-limit.js` to any new public endpoint — especially ones that
    send email, store uploads, or call the Google Calendar API. Note the
    limiter is per-instance and best-effort (see the file's own caveats).
 
-7. **No wildcard CORS.** Use `corsHeaders(request)` from `app/lib/http.js`,
+9. **No wildcard CORS.** Use `corsHeaders(request)` from `app/lib/http.js`,
    which reflects only our own origins.
 
-8. **API responses are allowlists.** `/api/booking/[id]` returns only the
+10. **API responses are allowlists.** `/api/booking/[id]` returns only the
    fields the payment/success pages render. The booking id is the only
    credential this app has, so don't widen that response — and never return
    `id_photo_*` or `coi_document_*`.
 
-9. **Don't return raw `error.message` to clients.** Log it; send a generic
+11. **Don't return raw `error.message` to clients.** Log it; send a generic
    message. Database and Stripe errors leak schema and internals.
 
-10. **CSP: don't add a nonce, and don't narrow the Stripe origins.** Pages are
+12. **CSP: don't add a nonce, and don't narrow the Stripe origins.** Pages are
     statically prerendered, so the HTML carries no nonce and a nonce (or
     `'strict-dynamic'`) would block every script on the site, checkout
     included. The origin list is Stripe's own — `*.js.stripe.com` carries the
@@ -207,5 +252,5 @@ found in the code.
     `frame-src` are the calendar and map embeds, which also fail quietly. See
     `app/lib/security-headers.js` before touching any of it.
 
-11. **API responses are `no-store`.** They carry renter PII, so no shared cache
+13. **API responses are `no-store`.** They carry renter PII, so no shared cache
     or CDN may hold them. Set in `securityHeaders({ isApi: true })`.

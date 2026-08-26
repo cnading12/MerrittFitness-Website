@@ -10,6 +10,11 @@
 // `contact.inquiries`. clientservices@merrittwellness.net is for existing
 // booked clients only and must never receive new-inquiry traffic.
 
+// Safe to import from this file even though marketing pages are client
+// components: flex-space-hours.js is a dependency-free module of constants and
+// date math, with no path to the promo dictionary.
+import { FLEX_SPACE_WINDOW_LABEL, FLEX_SPACE_DAYS_LABEL } from '@/app/lib/flex-space-hours';
+
 export const contact = {
   inquiries: {
     email: 'manager@merrittwellness.net',
@@ -250,10 +255,18 @@ export const sundaySchedule = {
   eveningAvailability: 'Sunday evenings after 4:30 PM',
 } as const;
 
-// Merritt Workspace member benefit: included Merritt Wellness venue hours,
-// Monday through Friday, 9 AM to 5 PM. Shown side by side on /studio.
+// Merritt Workspace member benefit: included Merritt Wellness venue hours.
+// Shown side by side on /studio.
+//
+// The window is DERIVED from app/lib/flex-space-hours.js rather than written
+// out here, because it is the same window: weekday daytime is the block the
+// workspace holds the hall for, and members booking it is exactly what that
+// block is for. The two used to be stated independently — this file advertised
+// 9 AM to 5 PM while the booking form enforced 8 AM to 4 PM — so the site and
+// the software disagreed about when members could actually book. Deriving it
+// means changing the hours in one place changes them everywhere.
 export const workspaceMemberHours = {
-  window: 'Monday through Friday, 9 AM to 5 PM',
+  window: `${FLEX_SPACE_DAYS_LABEL}, ${FLEX_SPACE_WINDOW_LABEL}`,
   tiers: [
     { name: 'Dedicated desk', hoursPerMonth: 4 },
     { name: 'Private office', hoursPerMonth: 8 },

@@ -41,7 +41,8 @@ export const SUPERVISION_GROUP_THRESHOLD = 40;
 // bills staffing (onboarding / supervision), so payment IS collected and the
 // "fully comped, no payment" badge and $0.00 labels must not apply to it. That
 // distinction is the `sponsored` flag in promo-codes.js.
-import { isSponsoredPromoCode } from './promo-codes.js';
+import { isSponsoredPromoCode, waivesStaffCoveragePromoCode } from './promo-codes.js';
+import { overlapsFlexSpaceHours, FLEX_SPACE_WINDOW_FULL_LABEL } from './flex-space-hours.js';
 
 // A booking is "sponsored" when it was comped via a sponsored promo code (or an
 // explicit is_sponsored flag, if the column is ever added). Derived from the
@@ -55,6 +56,13 @@ export function isSponsoredBooking(booking) {
 export function buildStaffAttentionFlags(booking) {
   const flags = [];
   if (!booking) return flags;
+
+  // Coverage comped by the community daytime code. This flag exists because
+  // waiving the FEES silently removed the badges: every other flag below keys
+  // off a persisted dollar amount, so a comped 60-person daytime event showed
+  // up on the calendar with no supervision badge at all — the staffing was
+  // free, not unnecessary. Derived from the stored promo_code, so no migration.
+  const coverageComped = waivesStaffCoveragePromoCode(booking.promo_code || '');
 
   const isFirstEvent = booking.is_first_event === true;
   const attendees = parseInt(booking.expected_attendees, 10) || 0;
@@ -76,7 +84,24 @@ export function buildStaffAttentionFlags(booking) {
   const supervisionTriggered = supervisionFee > 0;
   const hoursLabel = supervisionHours > 0 ? `the entire ${supervisionHours}hr event` : 'the entire event';
 
-  if (supervisionTriggered) {
+  if (coverageComped && attendees >= SUPERVISION_GROUP_THRESHOLD) {
+    flags.push({
+      tag: '🛡️ SUPERVISION (comped)',
+      detail:
+        `ON-SITE SUPERVISION STILL REQUIRED — ${attendees} expected attendees ` +
+        `(threshold ${SUPERVISION_GROUP_THRESHOLD}+). Staff must be present for ` +
+        `${hoursLabel}. The fee was COMPED by the community daytime code — no ` +
+        `charge was collected, but the coverage is not optional.`,
+    });
+  } else if (coverageComped) {
+    flags.push({
+      tag: '🤝 ONBOARDING (comped)',
+      detail:
+        'First-hour onboarding/setup assistance is COMPED by the community ' +
+        'daytime code. No charge was collected — please still onboard the ' +
+        'renter (wifi, speakers, building access) as usual.',
+    });
+  } else if (supervisionTriggered) {
     flags.push({
       tag: '🛡️ SUPERVISION REQUIRED',
       detail:
@@ -152,6 +177,21 @@ export function buildStaffAttentionFlags(booking) {
         `. Staff removes the glass & wood dividers AND breaks down all cafe ` +
         `tables & chairs before the event, then reinstalls them afterward — ` +
         `the cafe/lounge and main hall open into one space for this event.`,
+    });
+  }
+
+  // Booked inside the weekday window the workspace next door normally holds.
+  // On-site staff need to know before they arrive: this event was cleared as
+  // quiet, collaborative programming, and the building is full of people
+  // working. Amplified sound in this window is a problem, not a preference.
+  if (overlapsFlexSpaceHours(booking.event_date, booking.event_time, booking.hours_requested)) {
+    flags.push({
+      tag: '🕗 WORKSPACE HOURS',
+      detail:
+        `Runs inside the Merritt Workspace window (${FLEX_SPACE_WINDOW_FULL_LABEL}). ` +
+        `Members are working next door — this booking was approved as quiet, ` +
+        `collaborative daytime programming. Keep sound levels down and watch ` +
+        `for setup noise on the shared wall.`,
     });
   }
 

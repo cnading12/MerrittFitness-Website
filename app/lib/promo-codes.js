@@ -37,8 +37,14 @@
 // validates. Unset is the safe direction: a renter sees "invalid promo code"
 // (annoying, recoverable) rather than the venue being comped by accident.
 
-// The three roles, their environment variables, and the pricing behavior each
-// one triggers. `flags` are merged into the code's metadata.
+// The roles, their environment variables, and the pricing behavior each one
+// triggers. `flags` are merged into the code's metadata.
+//
+// Every configured code carries `daytimeAllowed: true`: all four are issued by
+// hand, so anyone holding one has already talked to us and can be trusted with
+// the weekday daytime window (app/lib/flex-space-hours.js). The `daytime` role
+// exists for the case where that is ALL you want to grant — daytime access and
+// comped staff coverage, with venue time still billed in full.
 const PROMO_ROLES = [
   {
     role: 'partner',
@@ -49,7 +55,7 @@ const PROMO_ROLES = [
     // everyone pays for.
     discount: 0.20,
     description: 'Partnership Discount (20% off)',
-    flags: { partner: true },
+    flags: { partner: true, daytimeAllowed: true },
   },
   {
     role: 'comp',
@@ -61,7 +67,7 @@ const PROMO_ROLES = [
     // "Sponsored".
     discount: 1.0,
     description: 'Sponsored — Complimentary Event',
-    flags: { sponsored: true },
+    flags: { sponsored: true, daytimeAllowed: true },
   },
   {
     role: 'sponsor',
@@ -75,7 +81,29 @@ const PROMO_ROLES = [
     // no `sponsored` flag here.
     discount: 1.0,
     description: 'Sponsored — Venue Comped (staffing billed)',
-    flags: { staffingBilled: true },
+    flags: { staffingBilled: true, daytimeAllowed: true },
+  },
+  {
+    role: 'daytime',
+    env: 'PROMO_CODE_DAYTIME',
+    // Community daytime access. Unlocks the weekday 8 AM – 4 PM window that is
+    // otherwise held for Merritt Workspace next door (see
+    // app/lib/flex-space-hours.js for why that window exists), and comps staff
+    // coverage — no $35 first-hour onboarding, no $30/hr Facility Host, on any
+    // event booked with it.
+    //
+    // Venue time itself is NOT discounted: `discount: 0`. This code is an
+    // access key, not a price cut. It exists so daytime programming that
+    // benefits the whole building — a yoga class, a meditation sit, a quiet
+    // workshop the workspace members can walk into — can be waved through by a
+    // person, while a form keeps everything else out of the window.
+    //
+    // It is issued after a conversation with the renter, which is the whole
+    // point: whether an event is "collaborative and quiet" or "amplified and
+    // loud" is a judgement call, not something a booking form can infer.
+    discount: 0,
+    description: 'Community Daytime Access (workspace hours unlocked)',
+    flags: { daytimeAllowed: true, waivesStaffCoverage: true },
   },
 ];
 
@@ -171,6 +199,30 @@ export function isPartnerPromoCode(code) {
 
 export function isStaffingBilledPromoCode(code) {
   return lookupPromoCode(code)?.staffingBilled === true;
+}
+
+// Whether this code unlocks the weekday daytime window otherwise held for the
+// workspace next door (app/lib/flex-space-hours.js).
+//
+// Fails closed by construction: an unknown, empty, or unconfigured code
+// resolves to null and answers false, so the window stays protected. That is
+// the safe direction — a renter who was issued a code and can't use it calls
+// us; a party that gets in at 11 AM on a Tuesday is next door's whole workday.
+export function promoCodeAllowsDaytime(code) {
+  return lookupPromoCode(code)?.daytimeAllowed === true;
+}
+
+// Whether this code comps staff coverage outright — no first-hour onboarding
+// fee, no Facility Host charge, regardless of attendee count or whether it's
+// the renter's first event. Distinct from the partnership exemption, which
+// never applies to a renter's first event.
+export function waivesStaffCoveragePromoCode(code) {
+  return lookupPromoCode(code)?.waivesStaffCoverage === true;
+}
+
+// Codes that unlock the weekday daytime window.
+export function daytimeAllowedPromoCodes() {
+  return codesWithFlag('daytimeAllowed');
 }
 
 // Test seam only: the "have we warned yet" latch is module state, so a test

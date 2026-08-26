@@ -63,118 +63,23 @@ function timeStringTo24Hour(timeStr) {
   return { hour: hour24, minute: minutes };
 }
 
-// FIXED: Availability checking with proper timezone handling
-export async function checkCalendarAvailability(date) {
-  try {
-    console.log('🗓️ Checking availability for:', date);
-
-    const auth = await getGoogleAuth();
-    const calendar = google.calendar('v3');
-
-    // Get events for the day - use the date string directly
-    const startTime = new Date(date + 'T00:00:00-07:00');
-    const endTime = new Date(date + 'T23:59:59-07:00');
-
-    const response = await calendar.events.list({
-      auth,
-      calendarId: process.env.GOOGLE_CALENDAR_ID,
-      timeMin: startTime.toISOString(),
-      timeMax: endTime.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-      timeZone: 'America/Denver'
-    });
-
-    const events = response.data.items || [];
-    console.log('📅 Found events:', events.length);
-
-    // Extract the booked time ranges
-    const bookedRanges = [];
-    
-    events.forEach(event => {
-      if (event.start.dateTime && event.end.dateTime) {
-        // Get the LOCAL time strings from the event
-        const startLocal = new Date(event.start.dateTime).toLocaleString('en-US', { 
-          timeZone: 'America/Denver',
-          hour12: true,
-          hour: 'numeric',
-          minute: '2-digit'
-        });
-        
-        const endLocal = new Date(event.end.dateTime).toLocaleString('en-US', { 
-          timeZone: 'America/Denver',
-          hour12: true,
-          hour: 'numeric',
-          minute: '2-digit'
-        });
-
-        console.log(`📌 Event: ${event.summary}`);
-        console.log(`   Local time: ${startLocal} to ${endLocal}`);
-        
-        // Convert to 24-hour for easy comparison
-        const startTime = timeStringTo24Hour(startLocal);
-        const endTime = timeStringTo24Hour(endLocal);
-        
-        bookedRanges.push({
-          startHour: startTime.hour,
-          startMin: startTime.minute,
-          endHour: endTime.hour,
-          endMin: endTime.minute,
-          summary: event.summary
-        });
-        
-        console.log(`   24hr format: ${startTime.hour}:${String(startTime.minute).padStart(2,'0')} to ${endTime.hour}:${String(endTime.minute).padStart(2,'0')}`);
-      }
-    });
-
-    // Check each time slot
-    const timeSlots = [
-      '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-      '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-      '6:00 PM', '7:00 PM', '8:00 PM'
-    ];
-
-    const availability = {};
-
-    timeSlots.forEach(slot => {
-      const slotTime = timeStringTo24Hour(slot);
-      let isBlocked = false;
-      
-      console.log(`\n🕐 Checking slot: ${slot} (${slotTime.hour}:${String(slotTime.minute).padStart(2,'0')})`);
-      
-      // Check against each booked range
-      bookedRanges.forEach(range => {
-        // Convert everything to minutes for easy comparison
-        const slotMinutes = slotTime.hour * 60 + slotTime.minute;
-        const rangeStartMinutes = range.startHour * 60 + range.startMin;
-        const rangeEndMinutes = range.endHour * 60 + range.endMin;
-        
-        console.log(`   vs ${range.summary}: ${range.startHour}:${String(range.startMin).padStart(2,'0')} to ${range.endHour}:${String(range.endMin).padStart(2,'0')}`);
-        console.log(`   Minutes: slot=${slotMinutes}, range=${rangeStartMinutes}-${rangeEndMinutes}`);
-        
-        // Slot is blocked if it starts within the booked range
-        if (slotMinutes >= rangeStartMinutes && slotMinutes < rangeEndMinutes) {
-          isBlocked = true;
-          console.log(`   ❌ BLOCKED: Slot starts within booked period`);
-        } else {
-          console.log(`   ✅ Available against this event`);
-        }
-      });
-      
-      availability[slot] = !isBlocked;
-      console.log(`   FINAL: ${slot} is ${isBlocked ? 'BLOCKED' : 'AVAILABLE'}`);
-    });
-
-    console.log('\n📊 FINAL RESULT:');
-    console.log('Available:', Object.entries(availability).filter(([,avail]) => avail).map(([slot]) => slot));
-    console.log('Blocked:', Object.entries(availability).filter(([,avail]) => !avail).map(([slot]) => slot));
-
-    return availability;
-
-  } catch (error) {
-    console.error('❌ Calendar error:', error);
-    throw error;
-  }
+// Busy ranges for a single day, in minutes-from-midnight (Denver wall-clock).
+// Thin wrapper over findBusyRangesInRange so there is exactly ONE piece of
+// code turning Google's timestamps into local minute windows.
+//
+// It did not used to be one. This function had its own event parser that read
+// each event through a 12-hour toLocaleString and re-parsed the result, while
+// findBusyRangesInRange (used by the recurring conflict check) parsed the same
+// events in 24-hour form and additionally clipped multi-day events per day.
+// Two parsers answering the same question is a bug waiting for the day they
+// disagree — an all-day or overnight event was already handled by one and not
+// the other. Now the availability picker and the conflict checks see exactly
+// the same busy ranges.
+export async function getDayBusyRanges(date) {
+  const ranges = await findBusyRangesInRange(date, date);
+  return ranges
+    .filter((range) => range.date === date)
+    .map(({ startMinutes, endMinutes, summary }) => ({ startMinutes, endMinutes, summary }));
 }
 
 // Fetch every busy range across a date span (inclusive). Used by the

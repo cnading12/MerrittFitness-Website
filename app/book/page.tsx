@@ -1,6 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Mail, Phone, CreditCard, CheckCircle, MapPin, ArrowRight, Loader2, AlertCircle, Star, TrendingUp, Plus, Minus, DollarSign, Info, Tag, Repeat, CalendarDays, Banknote, Wine, FileText, X } from 'lucide-react';
+// Both of these are dependency-free modules holding only constants and date
+// math, which is what makes them safe to import into a `use client` component.
+// Never reach for app/lib/booking-pricing.js or app/lib/promo-codes.js here —
+// anything imported from a client component ships in the public JavaScript
+// bundle, which is how the promo codes leaked twice (see promo-codes.js).
+import { TIME_SLOTS, slotAvailability, findConflict, minutesToTime } from '@/app/lib/availability';
+import {
+  isFlexSpaceDay,
+  overlapsFlexSpaceHours,
+  startsInFlexSpaceHours,
+  FLEX_SPACE_WINDOW_LABEL,
+  FLEX_SPACE_DAYS_LABEL,
+  FLEX_SPACE_RESTRICTION_MESSAGE,
+} from '@/app/lib/flex-space-hours';
 
 type ApplicationType = 'single' | 'recurring';
 type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
@@ -17,12 +31,29 @@ type RecurringSlot = {
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+type BusyRange = { startMinutes: number; endMinutes: number };
+
 export default function BookingPage() {
-  const [availableSlots, setAvailableSlots] = useState({});
+  // Busy windows per date, as fetched from /api/check-availability.
+  //
+  // Keyed by date rather than held as one flat slot map, because this form can
+  // hold several bookings on several different dates at once — a single shared
+  // map answered whichever date was fetched last, so booking #1 was validated
+  // against booking #2's day. Storing the raw minute windows also means the
+  // picker can re-evaluate instantly when the renter changes the DURATION,
+  // with no extra Google Calendar call (the quota is finite and shared).
+  const [busyByDate, setBusyByDate] = useState<Record<string, BusyRange[]>>({});
+  // Dates we have a definitive answer for. Separate from busyByDate because a
+  // completely free day legitimately has zero busy ranges, and "no ranges" must
+  // not be indistinguishable from "not loaded yet".
+  const [datesChecked, setDatesChecked] = useState<Record<string, boolean>>({});
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  const [validationErrors, setValidationErrors] = useState({});
+  // Field key -> message. Typed, so indexing it is checked: the keys are built
+  // by template literal (`booking_${index}_selectedTime`) and a typo in one
+  // silently means an error that is set but never rendered.
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   // Rental information lives behind a popup so the form leads the page.
   const [showRentalInfo, setShowRentalInfo] = useState(false);
 
@@ -150,6 +181,11 @@ export default function BookingPage() {
     partner?: boolean;
     sponsored?: boolean;
     staffingBilled?: boolean;
+    // Opens the weekday daytime window held for the workspace next door. A
+    // boolean from /api/validate-promo — the page never learns which codes
+    // exist, and the server re-enforces the rule at intake regardless.
+    daytimeAllowed?: boolean;
+    waivesStaffCoverage?: boolean;
     minHours?: number | null;
   } | null>(null);
 
@@ -191,11 +227,10 @@ export default function BookingPage() {
     }
   ];
 
-  const timeSlots = [
-    '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-    '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-    '6:00 PM', '7:00 PM', '8:00 PM'
-  ];
+  // Start times come from app/lib/availability.js, shared with
+  // /api/check-availability so a slot can never exist in the picker but not in
+  // the API's answer (or the reverse).
+  const timeSlots = TIME_SLOTS;
 
   // ENHANCED: Check if date is Saturday (timezone-safe)
   const isSaturday = (dateString) => {
@@ -390,23 +425,30 @@ export default function BookingPage() {
     if (!date) return;
 
     setIsCheckingAvailability(true);
-    setAvailableSlots({});
 
     try {
       console.log('🔍 Checking availability for:', date);
       const response = await fetch(`/api/check-availability?date=${date}`);
       const data = await parseJsonSafely(response);
 
-      if (response.ok && data?.availability) {
-        setAvailableSlots(data.availability);
-        console.log('✅ Availability loaded:', data.availability);
+      if (response.ok && Array.isArray(data?.busy)) {
+        // Raw minute windows, not a pre-computed slot map: the picker
+        // re-evaluates them locally as the renter changes the duration, so
+        // choosing a longer booking doesn't cost another Google Calendar call.
+        const ranges: BusyRange[] = data.busy;
+        setBusyByDate(prev => ({ ...prev, [date]: ranges }));
+        setDatesChecked(prev => ({ ...prev, [date]: true }));
+        console.log('✅ Availability loaded:', ranges);
 
         const newErrors = { ...validationErrors };
         delete newErrors.calendar;
         setValidationErrors(newErrors);
       } else {
         console.error('Calendar availability check failed:', data);
-        setAvailableSlots({});
+        // Drop any stale answer for this date — showing yesterday's
+        // availability as though it were current is how a renter picks a slot
+        // that is already gone.
+        setDatesChecked(prev => ({ ...prev, [date]: false }));
         setValidationErrors(prev => ({
           ...prev,
           calendar: data?.message || 'Unable to check availability. Please try a different date or contact us.'
@@ -414,7 +456,7 @@ export default function BookingPage() {
       }
     } catch (error) {
       console.error('Error checking availability:', error);
-      setAvailableSlots({});
+      setDatesChecked(prev => ({ ...prev, [date]: false }));
       setValidationErrors(prev => ({
         ...prev,
         calendar: 'Calendar service temporarily unavailable. Please try again later.'
@@ -422,6 +464,30 @@ export default function BookingPage() {
     } finally {
       setIsCheckingAvailability(false);
     }
+  };
+
+  // Whether the renter's applied promo code opens the weekday daytime window.
+  // The page never sees which codes exist — /api/validate-promo answers with
+  // this one boolean, and the rule is enforced again server-side at intake.
+  const daytimeUnlocked = promoCodeApplied && appliedPromo?.daytimeAllowed === true;
+
+  // Everything the time picker needs to know about one booking's date.
+  const bookingDayInfo = (booking: { selectedDate?: string; selectedTime?: string; hoursRequested?: string | number } | undefined) => {
+    const date = booking?.selectedDate || '';
+    const loaded = datesChecked[date] === true;
+    const busy = busyByDate[date] || [];
+    // Duration-aware once a duration is chosen: a slot only counts as open if
+    // the WHOLE booking fits. Before that, slotAvailability probes with the
+    // minimum bookable block.
+    const availability = slotAvailability(busy, { durationHours: booking?.hoursRequested });
+    return {
+      date,
+      loaded,
+      busy,
+      availability,
+      // Daytime is gated only on the days the workspace next door is running.
+      flexRestricted: isFlexSpaceDay(date) && !daytimeUnlocked,
+    };
   };
 
   // ENHANCED: Comprehensive form validation
@@ -584,13 +650,27 @@ export default function BookingPage() {
         if (!booking.selectedTime) {
           errors[`booking_${index}_selectedTime`] = 'Time is required';
         } else {
-          const isAvailable = availableSlots[booking.selectedTime] !== false;
-          const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+          const day = bookingDayInfo(booking);
 
-          if (!hasAvailabilityData && booking.selectedDate) {
+          if (!day.loaded && booking.selectedDate) {
             errors[`booking_${index}_selectedTime`] = 'Please wait for availability check to complete.';
-          } else if (!isAvailable) {
-            errors[`booking_${index}_selectedTime`] = 'This time slot is no longer available. Please choose another time.';
+          } else if (day.flexRestricted
+              && overlapsFlexSpaceHours(booking.selectedDate, booking.selectedTime, booking.hoursRequested)) {
+            // Checked before the calendar conflict below, because it's the more
+            // actionable answer: the slot may be perfectly free and still not
+            // bookable, and the renter needs to know it's a rule rather than a
+            // clash. Mirrors findFlexSpaceViolations in app/lib/booking-guards.js,
+            // which re-decides this server-side at submit.
+            errors[`booking_${index}_selectedTime`] = FLEX_SPACE_RESTRICTION_MESSAGE;
+          } else {
+            // Duration-aware: the booking must fit end to end, not merely
+            // start in a free slot. A 5 PM start with 6–8 PM already booked
+            // used to sail through with a 3-hour duration.
+            const hit = findConflict(day.busy, booking.selectedTime, booking.hoursRequested);
+            if (hit) {
+              errors[`booking_${index}_selectedTime`] =
+                `That window overlaps an existing reservation (${minutesToTime(hit.startMinutes)} to ${minutesToTime(hit.endMinutes)}). Please choose another time or a shorter duration.`;
+            }
           }
         }
         if (!booking.hoursRequested) {
@@ -615,6 +695,34 @@ export default function BookingPage() {
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Errors raised by the weekday-daytime rule, cleared when a code unlocks it.
+  // Matched on the message so only these clear — a genuine calendar conflict on
+  // the same field must survive.
+  const clearFlexSpaceErrors = () => {
+    setValidationErrors(prev => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (next[key] === FLEX_SPACE_RESTRICTION_MESSAGE) delete next[key];
+      }
+      return next;
+    });
+  };
+
+  // Re-apply the restriction to any already-chosen daytime slot when the code
+  // that was unlocking it goes away.
+  const flagFlexSpaceViolations = () => {
+    setValidationErrors(prev => {
+      const next = { ...prev };
+      bookings.forEach((booking, index) => {
+        if (isFlexSpaceDay(booking.selectedDate)
+            && overlapsFlexSpaceHours(booking.selectedDate, booking.selectedTime, booking.hoursRequested)) {
+          next[`booking_${index}_selectedTime`] = FLEX_SPACE_RESTRICTION_MESSAGE;
+        }
+      });
+      return next;
+    });
   };
 
   // Promo code validation. Asks the server rather than checking a local
@@ -675,13 +783,20 @@ export default function BookingPage() {
     setAppliedPromo(promoData);
     setPromoCodeApplied(true);
     setPromoCodeError('');
+    // A code that unlocks the daytime window clears any restriction errors the
+    // renter already collected. The promo field sits in the pricing sidebar,
+    // well below the date and time inputs, so picking a daytime slot FIRST and
+    // entering the code afterwards is the normal order — not the exception.
+    if (promoData?.daytimeAllowed === true) clearFlexSpaceErrors();
   };
 
   const removePromoCode = () => {
+    const wasDaytimeUnlocked = appliedPromo?.daytimeAllowed === true;
     setPromoCode('');
     setPromoCodeApplied(false);
     setAppliedPromo(null);
     setPromoCodeError('');
+    if (wasDaytimeUnlocked) flagFlexSpaceViolations();
   };
 
   // Pricing calculations with Saturday rates
@@ -1191,17 +1306,35 @@ export default function BookingPage() {
       checkAvailability(value);
     }
 
-    if (field === 'selectedTime' && value) {
-      const isAvailable = availableSlots[value] !== false;
-      const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+    // Immediate feedback on the two fields that can invalidate a chosen time.
+    // Changing the DURATION matters as much as changing the time — a booking
+    // that fit at 2 hours may run straight through the next reservation at 4.
+    if ((field === 'selectedTime' || field === 'hoursRequested') && value) {
+      const booking = bookings.find(b => b.id === id);
+      if (!booking) return;
+      const next = { ...booking, [field]: value };
+      const day = bookingDayInfo(next);
+      if (!day.loaded || !next.selectedTime) return;
 
-      if (hasAvailabilityData && !isAvailable) {
-        setValidationErrors(prev => ({
-          ...prev,
-          [`booking_${bookingIndex}_selectedTime`]: 'This time slot is no longer available. Please choose another time.'
-        }));
-        return;
+      const errorKey = `booking_${bookingIndex}_selectedTime`;
+      let message = '';
+
+      if (day.flexRestricted
+          && overlapsFlexSpaceHours(next.selectedDate, next.selectedTime, next.hoursRequested)) {
+        message = FLEX_SPACE_RESTRICTION_MESSAGE;
+      } else {
+        const hit = findConflict(day.busy, next.selectedTime, next.hoursRequested);
+        if (hit) {
+          message = `That window overlaps an existing reservation (${minutesToTime(hit.startMinutes)} to ${minutesToTime(hit.endMinutes)}). Please choose another time or a shorter duration.`;
+        }
       }
+
+      setValidationErrors(prev => {
+        const nextErrors = { ...prev };
+        if (message) nextErrors[errorKey] = message;
+        else delete nextErrors[errorKey];
+        return nextErrors;
+      });
     }
   };
 
@@ -1558,6 +1691,20 @@ export default function BookingPage() {
               </div>
               <div className="overflow-y-auto px-6 md:px-8 py-6">
               <ul className="space-y-3 text-[#4a3f3c] text-sm md:text-base">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span>
+                    <strong>Weekday Daytime ({FLEX_SPACE_WINDOW_LABEL}, {FLEX_SPACE_DAYS_LABEL}):</strong>{' '}
+                    These hours are reserved for Merritt Workspace next door, whose members
+                    are working during the day — so we can&apos;t host general events, parties,
+                    or amplified programming in that window. <strong>Evenings from 4:00 PM,
+                    plus all day Saturday and Sunday, are open as usual.</strong> Daytime
+                    programming that benefits the whole building — yoga, meditation, classes,
+                    quiet workshops — is genuinely welcome: give us a call and we&apos;ll issue
+                    you a code that unlocks these hours (and comps your Facility Host or
+                    onboarding fee).
+                  </span>
+                </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
                   <span><strong>Standard Rate (by guest count):</strong> $95/hour for 0–30 guests, $125/hour for 30–60, and $155/hour for 60+. A 2-hour minimum applies to all events.</span>
@@ -1945,32 +2092,68 @@ export default function BookingPage() {
                         value={booking.selectedTime}
                         onChange={(e) => updateBooking(booking.id, 'selectedTime', e.target.value)}
                         className={getInputClassName(`booking_${index}_selectedTime`)}
-                        disabled={isCheckingAvailability || Object.keys(availableSlots).length === 0}
+                        disabled={isCheckingAvailability || !bookingDayInfo(booking).loaded}
                       >
                         <option value="">
                           {isCheckingAvailability ? 'Checking availability...' : 'Select time...'}
                         </option>
                         {timeSlots.map(time => {
-                          const isAvailable = availableSlots[time] !== false;
-                          const hasAvailabilityData = Object.keys(availableSlots).length > 0;
+                          const day = bookingDayInfo(booking);
+                          const isAvailable = day.availability[time] !== false;
+                          // Held for the workspace next door. Distinct from
+                          // "already booked": the room is free, the rule isn't.
+                          const isWorkspaceHours =
+                            day.flexRestricted && startsInFlexSpaceHours(day.date, time);
+                          const blocked = !isAvailable || isWorkspaceHours;
 
                           return (
                             <option
                               key={time}
                               value={time}
-                              disabled={!isAvailable || !hasAvailabilityData}
+                              disabled={blocked || !day.loaded}
                               style={{
-                                color: !isAvailable ? '#dc2626' : '#374151',
+                                color: blocked ? '#dc2626' : '#374151',
                                 textDecoration: !isAvailable ? 'line-through' : 'none'
                               }}
                             >
-                              {time} {!isAvailable ? '(Unavailable - Already Booked)' : hasAvailabilityData ? '' : '(Loading...)'}
+                              {time} {
+                                !isAvailable ? '(Unavailable - Already Booked)'
+                                : isWorkspaceHours ? '(Workspace hours - code required)'
+                                : !day.loaded ? '(Loading...)'
+                                : ''
+                              }
                             </option>
                           );
                         })}
                       </select>
                       {getFieldError(`booking_${index}_selectedTime`) && (
                         <p className="text-red-600 text-sm mt-1">{getFieldError(`booking_${index}_selectedTime`)}</p>
+                      )}
+                      {/* Explain the greyed-out daytime block before the renter
+                          goes hunting for it in the dropdown. */}
+                      {bookingDayInfo(booking).flexRestricted && (
+                        <p className="text-amber-700 text-sm mt-2 flex items-start gap-1.5">
+                          <Info size={14} className="mt-0.5 flex-shrink-0" />
+                          <span>
+                            <strong>{FLEX_SPACE_WINDOW_LABEL}</strong> is reserved for Merritt
+                            Workspace {FLEX_SPACE_DAYS_LABEL} — members are working next door.
+                            Evening start times are open. Hosting something the whole building
+                            benefits from (yoga, meditation, a class or quiet workshop)?
+                            Call <a href="tel:+17203579499" className="underline font-medium">(720) 357-9499</a> and
+                            we&apos;ll issue you a code that unlocks these hours.
+                          </span>
+                        </p>
+                      )}
+                      {/* The code is applied; say so, so the renter understands
+                          why the daytime slots opened up. */}
+                      {daytimeUnlocked && isFlexSpaceDay(booking.selectedDate) && (
+                        <p className="text-green-700 text-sm mt-2 flex items-start gap-1.5">
+                          <CheckCircle size={14} className="mt-0.5 flex-shrink-0" />
+                          <span>
+                            Daytime hours unlocked by your code. Please keep sound levels
+                            considerate — the workspace next door is at work.
+                          </span>
+                        </p>
                       )}
                     </div>
 
