@@ -1652,7 +1652,7 @@ export default function BookingPage() {
           <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-6"></div>
           <p className="text-xl text-[#6b5f5b] max-w-3xl mx-auto">
             Join our community of wellness professionals in Denver's most inspiring historic sanctuary.
-            <span className="font-semibold text-[#735e59]"> From $95/hour • Flexible pricing for partners</span>
+            <span className="font-semibold text-[#735e59]"> From $95/hour • 20% off at 8+ hours a month</span>
           </p>
           {/* Rates, fees, and policies live in a popup so the form comes first */}
           <button
@@ -1751,7 +1751,7 @@ export default function BookingPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-bold mt-0.5">•</span>
-                  <span><strong>Partnership Pricing:</strong> Regular partners booking 2+ hours weekly can start at reduced rates and grow to full rate. Call (720) 357-9499 for details.</span>
+                  <span><strong>Partnership Pricing:</strong> Any renter booking 8+ hours in a calendar month qualifies for the 20% partnership rate &mdash; about two hours a week. Partners also skip the tables, chairs and mat fees. Close to 8 hours? Call (720) 357-9499 and we&apos;ll help you get there.</span>
                 </li>
               </ul>
               </div>
@@ -2945,15 +2945,32 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                {/* REMOVED: Partnership discount section - replaced with informational text */}
+                {/* Partnership pricing. One rule, stated plainly: 8+ hours in a
+                    month earns 20% off. Mirrors RECURRING_VOLUME_DISCOUNT and
+                    RECURRING_VOLUME_DISCOUNT_MIN_MONTHLY_HOURS in
+                    app/lib/pricing-constants.js and the matching bullet in the
+                    "Rental Information" popup above - change all three together.
+                    Aimed at the renter sitting just under the line: the nudge is
+                    the point, so keep the "one more session gets you there"
+                    framing rather than describing a rate that ramps up. */}
                 <div className="border-t border-gray-100 pt-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">Partnership Pricing Available</h3>
+                    <h3 className="font-semibold text-blue-900 mb-2">Partnership Pricing &mdash; 20% off at 8+ hours a month</h3>
                     <p className="text-blue-800 text-sm mb-2">
-                      Regular partners booking 2+ hours per week can benefit from flexible pricing. We can start at a reduced rate and grow with your program to the full rate.
+                      Book <strong>8 or more hours in a calendar month</strong> and every hour is{' '}
+                      <strong>20% off</strong> the standard rate, weekdays and Saturdays alike. Partners also
+                      skip the tables, chairs and roll-out mat fees, and are exempt from the Facility Host
+                      requirement on repeat events.
+                    </p>
+                    <p className="text-blue-800 text-sm mb-2">
+                      That is about two hours a week &mdash; one weekly class or a twice-monthly workshop usually
+                      gets you there. If you are sitting just under it, one more session or one more hour is the
+                      whole difference between the standard rate and the partnership rate. Recurring applications
+                      apply the discount automatically the moment the schedule guarantees 8 hours a month; no promo
+                      code needed.
                     </p>
                     <p className="text-blue-800 text-sm font-medium">
-                      📞 Call (720) 357-9499 for partnership pricing details
+                      📞 Not quite at 8 hours? Call (720) 357-9499 and we&apos;ll help you shape a schedule that qualifies.
                     </p>
                   </div>
                 </div>
@@ -3856,7 +3873,7 @@ export default function BookingPage() {
                 </div>
               </div>
               <p className="text-xs text-[#a08b84] mt-4">
-                💡 Call for partnership pricing & bulk discounts!
+                💡 8+ hours a month earns the 20% partnership rate &mdash; call if you&apos;d like help getting there.
               </p>
             </div>
           </div>
