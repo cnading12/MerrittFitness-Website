@@ -11,7 +11,7 @@ import { Landmark, Sun, HeartHandshake, Music2, Star } from "lucide-react";
 import { faqJsonLd, type Faq } from "@/lib/venue-schema";
 import { jsonLdScript } from "@/lib/site-schema";
 import { rateBands, money, recurringDiscount, minimumHours } from "@/app/lib/venue-rates";
-import { contact, specs, reviews, maps } from "@/app/data/site";
+import { contact, specs, reviews, maps, hoursDisplay } from "@/app/data/site";
 import {
   venueImages,
   weddingsImages,
@@ -339,15 +339,6 @@ export default function Home() {
 
         <EnhancedGallery />
 
-        {/* FAQ — the visible counterpart to the FAQPage JSON-LD above. These
-            two read from the same `faqs` array so the markup can never
-            describe answers a visitor cannot find on the page. */}
-        <section className="py-20 bg-[#faf8f5]">
-          <div className="max-w-7xl mx-auto px-6">
-            <FaqSection faqs={faqs} heading="Questions About the Venue, Answered" />
-          </div>
-        </section>
-
         {/* BOOKING SECTION - Enhanced with local keywords */}
         <section
           id="booking"
@@ -521,14 +512,17 @@ Whatever you are planning — a wedding, a concert, a weekly class, a celebratio
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Denver Studio Hours</h3>
-                      {/* Reads from `hours` so this can never drift from the
-                          Google Business Profile. It used to claim 6 AM to
-                          10 PM every day, which was wrong twice over. */}
+                      {/* Derived from `hours` via hoursDisplay so this can
+                          never drift from the Google Business Profile. The
+                          comment here used to CLAIM it read from `hours`
+                          while both clock lines were typed by hand — so when
+                          Sunday moved from 4:30 PM to 12:30 PM, this line
+                          quietly kept turning away four hours of bookings. */}
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Available for bookings<br />
                         Monday - Saturday<br />
-                        <span className="text-sm text-[#a08b84]">7:00 AM - 10:00 PM Mountain Time</span><br />
-                        <span className="text-sm text-[#a08b84]">Sundays from 4:30 PM</span>
+                        <span className="text-sm text-[#a08b84]">{hoursDisplay.weekday}</span><br />
+                        <span className="text-sm text-[#a08b84]">{hoursDisplay.sundayFrom}</span>
                       </p>
                     </div>
                   </div>
@@ -588,6 +582,24 @@ Whatever you are planning — a wedding, a concert, a weekly class, a celebratio
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* FAQ — the visible counterpart to the FAQPage JSON-LD above. These
+            two read from the same `faqs` array so the markup can never
+            describe answers a visitor cannot find on the page, which is what
+            FAQPage rich results require. Position is not part of that
+            requirement, so this sits LAST on purpose.
+
+            It used to run between the gallery and the booking calendar —
+            eight collapsed rows of objection-handling wedged into the step
+            from "look at the room" to "check my date", which is the highest
+            intent moment on the page. Questions are what someone has after
+            they have seen the room, the dates and where it is, so the page now
+            ends on them: photos, book, find us, still wondering. */}
+        <section className="py-20 bg-[#faf8f5]">
+          <div className="max-w-7xl mx-auto px-6">
+            <FaqSection faqs={faqs} heading="Questions About the Venue, Answered" />
           </div>
         </section>
       </main>

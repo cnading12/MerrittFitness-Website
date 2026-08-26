@@ -57,21 +57,47 @@ export const workspace = {
 // hours is a NAP inconsistency Google can see.
 //
 // These MUST match the Business Profile exactly. Verified against it in
-// August 2026: Monday to Saturday 7 AM to 10 PM, Sunday 4:30 PM to 10 PM.
+// August 2026: Monday to Saturday 7 AM to 10 PM, Sunday 12:30 PM to 10 PM.
+//
+// Sunday moved from 4:30 PM to 12:30 PM in August 2026, after the owner
+// updated the Business Profile to match: the two resident congregations are
+// out by 12:30 (see `sundaySchedule` below), so the four hours between 12:30
+// and 4:30 were bookable and the site was turning them away. The profile was
+// changed FIRST and this followed it — never the other way round, or the
+// listing and the site disagree about hours, which is a NAP inconsistency
+// Google can see.
 //
 // The site previously advertised a blanket "6 AM to 10 PM, seven days a
 // week", which contradicted the Business Profile on both counts and
-// contradicted this very file: `sundaySchedule` below states the building is
-// held by congregations until 4:30 PM every Sunday, so it was never
-// bookable from 6 AM on a Sunday.
+// contradicted this very file: `sundaySchedule` states the building is held
+// by congregations through the morning, so it was never bookable from 6 AM on
+// a Sunday.
 export const hours = {
   /** Monday through Saturday */
   weekdayOpens: '07:00',
   weekdayCloses: '22:00',
-  /** Sunday — congregations hold the sanctuary until 4:30 PM. */
-  sundayOpens: '16:30',
+  /** Sunday — the resident congregations hold the sanctuary until 12:30 PM. */
+  sundayOpens: '12:30',
   sundayCloses: '22:00',
-  display: 'Monday to Saturday, 7 AM to 10 PM, and Sunday evenings from 4:30 PM',
+  display: 'Monday to Saturday, 7 AM to 10 PM, and Sundays from 12:30 PM',
+} as const;
+
+/** '12:30' -> '12:30 PM'. */
+function to12Hour(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// Display strings DERIVED from the 24-hour values above, for the places that
+// print a clock rather than the `display` sentence. The homepage carried
+// "Sundays from 4:30 PM" typed out by hand, directly under a comment claiming
+// it read from `hours` — so when Sunday moved it stayed wrong. Derive it and
+// that class of drift stops being possible.
+export const hoursDisplay = {
+  weekday: `${to12Hour(hours.weekdayOpens)} - ${to12Hour(hours.weekdayCloses)} Mountain Time`,
+  sundayFrom: `Sundays from ${to12Hour(hours.sundayOpens)}`,
 } as const;
 
 // REVIEW DATA — READ BEFORE EDITING.
@@ -286,10 +312,12 @@ export const openClassBlocks = {
 // there is no fixed number of slots a Sunday holds — it depends on how long
 // each congregation needs. Set it to what we are genuinely trying to fill.
 //
-// ⚠️ NOT the same thing as `hours.sundayOpens` above, which stays at 16:30
-// because it must mirror the Google Business Profile exactly (see the warning
-// on `hours`). If Sunday afternoons are now genuinely bookable from 12:30,
-// update the Business Profile FIRST, then `hours` to match it.
+// `hours.sundayOpens` above now tracks `vacatedBy`: the Business Profile was
+// updated to Sunday 12:30 PM first, then `hours` to match it. They are still
+// two separate facts — this one is when the congregations leave, that one is
+// what the listing says we are open — so if they ever diverge again, the
+// Business Profile is the authority for `hours` and this constant is the
+// authority for the /congregations copy. Change the profile before `hours`.
 export const sundaySchedule = {
   serviceWindow: '7:30 AM to 12:30 PM',
   vacatedBy: '12:30 PM',
