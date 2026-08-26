@@ -95,6 +95,34 @@ export const reviews = {
   url: 'https://maps.app.goo.gl/AfqGvGfAzVwbMka3A',
 } as const;
 
+// GOOGLE MAPS — always point at the BUSINESS listing, never the street
+// address.
+//
+// A maps embed built from "2246 Irving Street, Denver, CO 80211" resolves to
+// a bare address pin: no business name, no rating, no reviews, no photos, and
+// no "Save"/"Directions" actions. The site used to embed exactly that, which
+// meant the one place a visitor is most likely to check us out showed a blank
+// dot instead of the 5.0-star Google Business Profile the rest of the page
+// cites.
+//
+// `embed` is the Business Profile's own embed URL — the `!1s0x...` segment is
+// the place's feature ID, and it is what makes Google render the business
+// card (name, stars, review count, directions) inside the iframe. If you ever
+// regenerate it, copy it from Share → Embed a map on the Business Profile
+// itself, and check the copied string still names `Merritt%20Wellness` rather
+// than a street address.
+//
+// `url` is the profile's share link, for "open in Google Maps" links.
+//
+// Note the iframe's own card sits at the TOP-LEFT of the embed, so do not
+// overlay UI there — that collision is why the homepage's custom location
+// badge was removed.
+export const maps = {
+  embed:
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3067.495321347999!2d-105.03455021378463!3d39.75098602255835!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c79ef928f5243%3A0xbb1687ee09f2ad08!2sMerritt%20Wellness!5e0!3m2!1sen!2sus!4v1787771131320!5m2!1sen!2sus',
+  url: 'https://maps.app.goo.gl/JphD2XBu6KVUDn4D9',
+} as const;
+
 // Neighborhoods and cities the venue actually draws from. Used for
 // `areaServed` in the graph — keep it to places a renter would plausibly
 // travel from, not a padded list of every Colorado municipality.

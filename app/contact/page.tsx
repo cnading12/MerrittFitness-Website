@@ -4,7 +4,7 @@ import { MapPin, Phone, Mail, Clock, Car, Accessibility } from 'lucide-react';
 import PageHero from '@/components/venue/PageHero';
 import InquiryForm from '@/components/venue/InquiryForm';
 import { venueImages } from '@/app/data/venue-images';
-import { contact, hours, specs, workspace } from '@/app/data/site';
+import { contact, hours, specs, workspace, maps } from '@/app/data/site';
 import {
   BASE_URL,
   BUSINESS_ID,
@@ -47,10 +47,6 @@ export const metadata: Metadata = {
   },
   alternates: { canonical: `${BASE_URL}${PATH}` },
 };
-
-const mapsQuery = encodeURIComponent(
-  `${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip}`
-);
 
 function contactPageJsonLd() {
   return {
@@ -154,7 +150,7 @@ export default function ContactPage() {
                   </span>
                 </address>
                 <a
-                  href={`https://maps.google.com/?q=${mapsQuery}`}
+                  href={maps.url}
                   target="_blank"
                   rel="noopener"
                   className="inline-block mt-4 text-sm font-semibold text-[#735e59] underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59]"
@@ -275,7 +271,7 @@ export default function ContactPage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="aspect-[16/9] rounded-3xl overflow-hidden shadow-xl border border-[#735e59]/10">
               <iframe
-                src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
+                src={maps.embed}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

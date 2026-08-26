@@ -11,7 +11,7 @@ import { Landmark, Sun, HeartHandshake, Music2, Star } from "lucide-react";
 import { faqJsonLd, type Faq } from "@/lib/venue-schema";
 import { jsonLdScript } from "@/lib/site-schema";
 import { rateBands, money, recurringDiscount, minimumHours } from "@/app/lib/venue-rates";
-import { contact, specs, reviews } from "@/app/data/site";
+import { contact, specs, reviews, maps } from "@/app/data/site";
 import {
   venueImages,
   weddingsImages,
@@ -575,7 +575,7 @@ export default function Home() {
                 </div>
                 <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3067.495501733334!2d-105.03225422320789!3d39.750981971554395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x876c78a04d1b6fa1%3A0x8c9ae4d693f97e2c!2s2246%20Irving%20St%2C%20Denver%2C%20CO%2080211!5e0!3m2!1sen!2sus!4v1754517213228!5m2!1sen!2sus"
+                    src={maps.embed}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -583,24 +583,8 @@ export default function Home() {
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Find Merritt Wellness - Historic yoga and wellness studio in Denver's Sloans Lake neighborhood"
-                    className="grayscale-[30%] hover:grayscale-0 transition-all duration-500"
+                    className="w-full h-full"
                   />
-                </div>
-
-                {/* Enhanced Location Badge */}
-                <div className="absolute top-6 left-6 bg-[#faf8f5]/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-[#735e59]/10">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#735e59] rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-[#f2eee9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-bold text-[#4a3f3c] font-serif">Merritt Wellness Denver</div>
-                      <div className="text-sm text-[#6b5f5b]">Historic Wellness Sanctuary</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
