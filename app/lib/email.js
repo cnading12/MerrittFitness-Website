@@ -72,6 +72,70 @@ const STAFF_FALLBACK_EMAILS = [
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.merrittwellness.net';
 const LOGO_HEADER = `<img src="${SITE_URL}/images/hero/logo.png" alt="Merritt Wellness" width="180" style="display: block; margin: 0 auto 16px auto; width: 180px; max-width: 60%; height: auto;" />`;
 
+// ---------------------------------------------------------------------------
+// Brand design tokens for email
+// ---------------------------------------------------------------------------
+//
+// These mirror the site's design tokens in app/globals.css (the CSS custom
+// properties under :root) so a confirmation email reads like the page the
+// renter just booked from: warm taupe on cream, Cormorant Garamond headings
+// over Jost body copy. Email clients can't read those CSS variables — no
+// external stylesheet, no :root, and many strip <style> blocks entirely — so
+// the values are duplicated here as plain constants and interpolated into
+// inline styles. If globals.css changes, change these to match.
+//
+// Fonts degrade rather than fail: Cormorant Garamond and Jost are webfonts
+// that most mail clients will not load, so each stack ends in the closest
+// widely-installed families (Georgia for the serif, Helvetica for the sans).
+const FONT_SERIF = "'Cormorant Garamond', Garamond, Georgia, 'Times New Roman', serif";
+const FONT_SANS = "'Jost', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+// Palette. The brand half is copied from globals.css; the semantic half
+// (success / warning / alert / info) is a muted, warm-leaning set chosen to
+// carry the same meanings the old Tailwind-default colors did — a surcharge
+// still reads as a caution, a failure still reads as a problem — without the
+// saturated primaries that made these emails look like system output.
+const C = {
+  // Brand — mirrors :root in app/globals.css
+  taupe: '#735e59',        // --brand-primary
+  taupeDark: '#5a4a46',    // --brand-primary-dark
+  taupeLight: '#8a7571',   // --brand-primary-light
+  accent: '#a08b84',       // --brand-accent
+  cream: '#f2eee9',        // --brand-cream
+  creamDark: '#e8e2db',    // --brand-cream-dark
+  warmWhite: '#faf8f5',    // --brand-warm-white
+  text: '#4a3f3c',         // --brand-text
+  textLight: '#6b5f5b',    // --brand-text-light
+  // Derived hairlines, between cream and taupe
+  border: '#e2d9cf',
+  borderStrong: '#ddd3c7',
+  // Semantic — muted so they sit inside the warm palette rather than shouting
+  successText: '#4f6b52',
+  successBg: '#edf2ec',
+  successBorder: '#cfdccd',
+  warnText: '#8a5a2b',
+  warnBody: '#5c4632',
+  warnBg: '#f9f0e4',
+  warnBorder: '#e8d4b4',
+  warnRule: '#c9a06a',
+  alertText: '#8f3a34',
+  alertBody: '#6d3f3a',
+  alertBg: '#f9ece9',
+  alertBorder: '#e7c8c2',
+  alertRule: '#a8564e',
+  // Info blocks stay inside the brand browns rather than the old blue: the
+  // site has no cool hue anywhere, and a blue panel was the one thing that
+  // still read as a system notice. They keep their own names so the
+  // multi-event banner and the onboarding-video block can be retuned
+  // without touching the neutral panels.
+  infoText: '#5a4a46',
+  infoBody: '#6b5f5b',
+  infoBg: '#eee7df',
+  infoBorder: '#ddd0c1',
+  infoRule: '#a08b84',
+  codeBg: '#e8e2db',
+};
+
 // A booking is public when the renter chose "public" on the form. Stored as a
 // boolean `is_public` column; tolerate string/legacy shapes. Kept local to this
 // module so the recurring email path can branch without importing from
@@ -129,7 +193,7 @@ function renderClientScheduleAdjustments(details, { saturdayHourlyRate, hourlyRa
   const items = [
     ...rescheduled.map((ex) => {
       const satNote = isSaturday(ex.newDate) && saturdayHourlyRate
-        ? ` <span style="color: #b45309;">(Saturday — billed at the $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturday rate${hourlyRate ? ` instead of $${Number(hourlyRate).toFixed(0)}/hr` : ''})</span>`
+        ? ` <span style="color: ${C.warnText};">(Saturday — billed at the $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturday rate${hourlyRate ? ` instead of $${Number(hourlyRate).toFixed(0)}/hr` : ''})</span>`
         : '';
       return `<li><strong>${formatBillingDate(ex.date)}</strong> moved to <strong>${formatBillingDate(ex.newDate)}</strong>${ex.newStartTime ? ` at ${ex.newStartTime}` : ''}.${satNote}</li>`;
     }),
@@ -140,12 +204,12 @@ function renderClientScheduleAdjustments(details, { saturdayHourlyRate, hourlyRa
   ];
 
   return `
-            <div style="background: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #9a3412; margin: 0 0 10px 0; font-size: 16px;">Schedule Adjustments</h3>
-              <p style="margin: 0 0 10px 0; color: #431407; line-height: 1.6;">
+            <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Schedule Adjustments</h3>
+              <p style="margin: 0 0 10px 0; color: ${C.warnBody}; line-height: 1.6;">
                 A few dates in your schedule overlapped existing bookings. Here's how each one was resolved:
               </p>
-              <ul style="margin: 0; padding-left: 20px; color: #431407; line-height: 1.8;">
+              <ul style="margin: 0; padding-left: 20px; color: ${C.warnBody}; line-height: 1.8;">
                 ${items.join('')}
               </ul>
             </div>`;
@@ -159,26 +223,26 @@ function renderManagerScheduleAdjustments(details, booking) {
   if (!skipped.length && !rescheduled.length && !resolveWithStaff.length) return '';
 
   const followUp = resolveWithStaff.length ? `
-          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #b91c1c; margin: 0 0 8px 0;">⚠️ Action needed — contact the renter</h3>
-            <p style="margin: 0 0 8px 0; color: #7f1d1d;">
+          <div style="background: ${C.alertBg}; border: 1px solid ${C.alertBorder}; border-left: 4px solid ${C.alertRule}; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; margin: 0 0 8px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">⚠️ Action needed — contact the renter</h3>
+            <p style="margin: 0 0 8px 0; color: ${C.alertBody};">
               The renter chose "resolve it with our team" for ${resolveWithStaff.length === 1 ? 'this date' : 'these dates'}. Each one was dropped from their schedule (not calendared, not billed) — reach out to ${esc(booking.contact_name || 'the renter')} to work out a replacement:
             </p>
-            <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; line-height: 1.8;">
+            <ul style="margin: 0; padding-left: 20px; color: ${C.alertBody}; line-height: 1.8;">
               ${resolveWithStaff.map((ex) => `<li><strong>${formatBillingDate(ex.date)}</strong></li>`).join('')}
             </ul>
           </div>` : '';
 
   const otherItems = [
     ...rescheduled.map((ex) =>
-      `<li><strong>${formatBillingDate(ex.date)}</strong> → renter moved it to <strong>${formatBillingDate(ex.newDate)}</strong>${ex.newStartTime ? ` at ${ex.newStartTime}` : ''}${isSaturday(ex.newDate) ? ' <span style="color: #b45309; font-weight: 600;">(Saturday — bills at the Saturday rate)</span>' : ''}</li>`),
+      `<li><strong>${formatBillingDate(ex.date)}</strong> → renter moved it to <strong>${formatBillingDate(ex.newDate)}</strong>${ex.newStartTime ? ` at ${ex.newStartTime}` : ''}${isSaturday(ex.newDate) ? ' <span style="color: ${C.warnText}; font-weight: 600;">(Saturday — bills at the Saturday rate)</span>' : ''}</li>`),
     ...skipped.map((ex) =>
       `<li><strong>${formatBillingDate(ex.date)}</strong> → renter skipped this week (not billed)</li>`),
   ];
   const others = otherItems.length ? `
-          <div style="background: #fff7ed; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #9a3412; margin: 0 0 8px 0;">Conflict resolutions the renter made</h3>
-            <ul style="margin: 0; padding-left: 20px; color: #431407; line-height: 1.8;">
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Conflict resolutions the renter made</h3>
+            <ul style="margin: 0; padding-left: 20px; color: ${C.warnBody}; line-height: 1.8;">
               ${otherItems.join('')}
             </ul>
           </div>` : '';
@@ -236,11 +300,11 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
 
   const row = (label, value, opts = {}) => {
     if (opts.skip) return '';
-    const color = opts.color || '#111827';
+    const color = opts.color || C.text;
     const weight = opts.bold ? '700' : '400';
-    const border = opts.border ? 'border-top: 1px solid #d1fae5;' : '';
+    const border = opts.border ? 'border-top: 1px solid ${C.border};' : '';
     return `<tr>
-      <td style="padding: 6px 0; color: #374151; ${border}">${label}</td>
+      <td style="padding: 6px 0; color: ${C.textLight}; ${border}">${label}</td>
       <td style="padding: 6px 0; color: ${color}; text-align: right; font-weight: ${weight}; ${border}">${value}</td>
     </tr>`;
   };
@@ -254,23 +318,23 @@ function renderCostBreakdown(booking, { heading = 'Cost Breakdown', groupContext
         : 'Card';
 
   return `
-    <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-      <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 20px;">${heading}</h2>
+    <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 22px;">${heading}</h2>
       <table style="width: 100%; border-collapse: collapse;">
         ${row('Venue rental (base)', money(base))}
-        ${row('Saturday surcharge', `+${money(saturday)}`, { skip: saturday <= 0, color: '#b45309' })}
-        ${row('Full-floor mat', `+${money(mat)}`, { skip: mat <= 0, color: '#4f46e5' })}
-        ${row('Cafe/lounge divider removal', `+${money(dividers)}`, { skip: dividers <= 0, color: '#4f46e5' })}
-        ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: '#7c3aed' })}
-        ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: '#0d9488' })}
-        ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: '#0f766e' })}
-        ${row(booking.promo_code ? `Discount (${esc(booking.promo_code)})` : 'Extended booking discount (8+ hours)', `-${money(promo)}`, { skip: promo <= 0, color: '#059669' })}
+        ${row('Saturday surcharge', `+${money(saturday)}`, { skip: saturday <= 0, color: C.warnText })}
+        ${row('Full-floor mat', `+${money(mat)}`, { skip: mat <= 0, color: C.taupeLight })}
+        ${row('Cafe/lounge divider removal', `+${money(dividers)}`, { skip: dividers <= 0, color: C.taupeLight })}
+        ${row('Tables &amp; chairs', `+${money(equipment)}`, { skip: equipment <= 0, color: C.taupeLight })}
+        ${row('Onboarding assistance (first hour)', `+${money(onsite)}`, { skip: onsite <= 0, color: C.taupeLight })}
+        ${row(`Facility host (${supervisionHours} hrs · entire event)`, `+${money(supervision)}`, { skip: supervision <= 0, color: C.taupeLight })}
+        ${row(booking.promo_code ? `Discount (${esc(booking.promo_code)})` : 'Extended booking discount (8+ hours)', `-${money(promo)}`, { skip: promo <= 0, color: C.successText })}
         ${row('Subtotal', money(subtotal), { bold: true, border: true })}
-        ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: '#ea580c' })}
-        ${row(isGroup ? `Total (all ${groupContext.total} events)` : 'Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: '#059669' })}
+        ${row('Processing fee (3% card)', `+${money(stripeFee)}`, { skip: stripeFee <= 0, color: C.warnText })}
+        ${row(isGroup ? `Total (all ${groupContext.total} events)` : 'Total', sponsored ? '$0.00' : money(total), { bold: true, border: true, color: C.taupe })}
       </table>
-      ${isGroup ? `<p style="color: #4338ca; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">This is the <strong>combined total for all ${groupContext.total} events</strong> in this booking, charged <strong>once</strong>. The same amount appears on every event's email — it is <strong>not</strong> billed again for each event.</p>` : ''}
-      <p style="color: #6b7280; font-size: 13px; margin: 12px 0 0 0;">Payment method: ${paymentLabel}</p>
+      ${isGroup ? `<p style="color: ${C.infoText}; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">This is the <strong>combined total for all ${groupContext.total} events</strong> in this booking, charged <strong>once</strong>. The same amount appears on every event's email — it is <strong>not</strong> billed again for each event.</p>` : ''}
+      <p style="color: ${C.textLight}; font-size: 13px; margin: 12px 0 0 0;">Payment method: ${paymentLabel}</p>
     </div>`;
 }
 
@@ -338,13 +402,13 @@ function renderMultiEventBanner(groupContext, { audience }) {
     ? `This renter booked <strong>${total} events</strong> in a single transaction. You receive one notification per event date, and they all refer to the <strong>same single payment</strong>.`
     : `You booked <strong>${total} events</strong> together in a single transaction. You receive one confirmation per event date, and they all refer to the <strong>same single payment</strong>.`;
   return `
-    <div style="background: #eef2ff; border: 2px solid #6366f1; padding: 18px 20px; border-radius: 8px; margin: 0 0 20px 0;">
-      <p style="margin: 0 0 8px 0; color: #3730a3; font-size: 16px; font-weight: 700;">📅 Multi-event booking — ${positionLabel}</p>
-      <p style="margin: 0 0 12px 0; color: #312e81; font-size: 14px; line-height: 1.5;">
+    <div style="background: ${C.infoBg}; border: 2px solid ${C.infoRule}; padding: 18px 20px; border-radius: 8px; margin: 0 0 20px 0;">
+      <p style="margin: 0 0 8px 0; color: ${C.infoText}; font-size: 16px; font-weight: 700;">📅 Multi-event booking — ${positionLabel}</p>
+      <p style="margin: 0 0 12px 0; color: ${C.infoBody}; font-size: 14px; line-height: 1.5;">
         ${intro} The amount below is the <strong>combined total for all ${total} events (${money(combinedTotal)}), charged once</strong> — it is <strong>not</strong> billed separately for each event.
       </p>
-      <p style="margin: 0 0 6px 0; color: #3730a3; font-size: 13px; font-weight: 600;">All ${total} events in this booking:</p>
-      <ul style="margin: 0; padding-left: 20px; color: #312e81; font-size: 13px; line-height: 1.6;">
+      <p style="margin: 0 0 6px 0; color: ${C.infoText}; font-size: 13px; font-weight: 600;">All ${total} events in this booking:</p>
+      <ul style="margin: 0; padding-left: 20px; color: ${C.infoBody}; font-size: 13px; line-height: 1.6;">
         ${renderGroupEventList(groupContext)}
       </ul>
     </div>`;
@@ -358,20 +422,20 @@ const EMAIL_TEMPLATES = {
   bookingConfirmation: (booking, groupContext = null) => ({
     subject: `Booking Confirmed: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+        <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 30px;">
             ${LOGO_HEADER}
-            <h1 style="color: #10b981; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
-            <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
+            <h1 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0; font-weight: 400; letter-spacing: 0.01em; font-size: 32px;">🎉 Booking Confirmed!</h1>
+            <p style="color: ${C.taupeLight}; margin: 12px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;">Merritt Wellness Historic Sanctuary</p>
           </div>
 
           ${isSponsoredBooking(booking) ? `
           <!-- Sponsored Banner -->
-          <div style="background: #ecfdf5; border: 2px solid #10b981; padding: 18px; border-radius: 8px; margin: 0 0 20px 0; text-align: center;">
-            <p style="margin: 0; color: #065f46; font-size: 18px; font-weight: 700;">🎁 Sponsored Event</p>
-            <p style="margin: 8px 0 0 0; color: #047857; font-size: 14px; line-height: 1.5;">
+          <div style="background: ${C.successBg}; border: 2px solid ${C.taupe}; padding: 18px; border-radius: 8px; margin: 0 0 20px 0; text-align: center;">
+            <p style="margin: 0; color: ${C.successText}; font-size: 18px; font-weight: 700;">🎁 Sponsored Event</p>
+            <p style="margin: 8px 0 0 0; color: ${C.successText}; font-size: 14px; line-height: 1.5;">
               This booking has been <strong>sponsored</strong> — there is <strong>no payment required</strong> and no card on file. Your total due is <strong>$0.00</strong>.
             </p>
           </div>
@@ -380,56 +444,56 @@ const EMAIL_TEMPLATES = {
           ${renderMultiEventBanner(groupContext, { audience: 'client' })}
 
           <!-- Booking Details -->
-          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 20px;">Event Details</h2>
+          <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 22px;">Event Details</h2>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Event:</td>
-                <td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Event:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_name)}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td>
-                <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Type:</td>
+                <td style="padding: 8px 0; color: ${C.text}; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Date:</td>
-                <td style="padding: 8px 0; color: #111827;">${new Date(booking.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Date:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${new Date(booking.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Time:</td>
-                <td style="padding: 8px 0; color: #111827;">${esc(booking.event_time)}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Time:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_time)}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Duration:</td>
-                <td style="padding: 8px 0; color: #111827;">${booking.hours_requested} hours</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Duration:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${booking.hours_requested} hours</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Guest count:</td>
-                <td style="padding: 8px 0; color: #111827;">${booking.expected_attendees ?? 'Not specified'}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Guest count:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${booking.expected_attendees ?? 'Not specified'}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Tables &amp; chairs:</td>
-                <td style="padding: 8px 0; color: #111827;">${equipmentSummary(booking)}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Tables &amp; chairs:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${equipmentSummary(booking)}</td>
               </tr>
               ${booking.needs_divider_removal ? `
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
-                <td style="padding: 8px 0; color: #111827;">Removed for your event (incl. breakdown of all cafe tables &amp; chairs) — the cafe/lounge and main hall open into one space</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Cafe/lounge dividers:</td>
+                <td style="padding: 8px 0; color: ${C.text};">Removed for your event (incl. breakdown of all cafe tables &amp; chairs) — the cafe/lounge and main hall open into one space</td>
               </tr>
               ` : ''}
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Event visibility:</td>
-                <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Event visibility:</td>
+                <td style="padding: 8px 0; color: ${C.text};">${publicLabel(booking)}</td>
               </tr>
               ${booking.serving_alcohol === true ? `
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol service:</td>
-                <td style="padding: 8px 0; color: #111827;">Yes — you confirmed alcohol will be present</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Alcohol service:</td>
+                <td style="padding: 8px 0; color: ${C.text};">Yes — you confirmed alcohol will be present</td>
               </tr>
               ` : ''}
               <tr>
-                <td style="padding: 8px 0; color: #374151; font-weight: 600;">Location:</td>
-                <td style="padding: 8px 0; color: #111827;">2246 Irving St, Denver, CO 80211</td>
+                <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Location:</td>
+                <td style="padding: 8px 0; color: ${C.text};">2246 Irving St, Denver, CO 80211</td>
               </tr>
             </table>
           </div>
@@ -438,23 +502,23 @@ const EMAIL_TEMPLATES = {
           ${renderCostBreakdown(booking, { heading: 'Your Receipt', groupContext })}
 
           ${booking.needs_mat || booking.needs_divider_removal ? `
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 18px;">🤝 Assistance Services</h3>
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">🤝 Assistance Services</h3>
             ${booking.needs_mat ? (
               Number(booking.mat_rental_fee) > 0
-                ? '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included — our team will set it up and break it down within your reserved time.</p>'
-                : '<p style="margin: 5px 0; color: #451a03;">✓ Full-floor mat included (partner) — setup and breakdown are your responsibility, within your reserved time.</p>'
+                ? '<p style="margin: 5px 0; color: ${C.warnBody};">✓ Full-floor mat included — our team will set it up and break it down within your reserved time.</p>'
+                : '<p style="margin: 5px 0; color: ${C.warnBody};">✓ Full-floor mat included (partner) — setup and breakdown are your responsibility, within your reserved time.</p>'
             ) : ''}
             ${booking.needs_divider_removal
-              ? '<p style="margin: 5px 0; color: #451a03;">✓ Cafe/lounge divider removal included — our team will remove the glass &amp; wood dividers and break down all cafe tables &amp; chairs before your event, then restore everything afterward, opening the cafe/lounge and main hall into one continuous space.</p>'
+              ? '<p style="margin: 5px 0; color: ${C.warnBody};">✓ Cafe/lounge divider removal included — our team will remove the glass &amp; wood dividers and break down all cafe tables &amp; chairs before your event, then restore everything afterward, opening the cafe/lounge and main hall into one continuous space.</p>'
               : ''}
           </div>
           ` : ''}
 
           <!-- Important Reminders -->
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">📋 Important Reminders</h3>
-            <ul style="margin: 0; padding-left: 20px; color: #451a03;">
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">📋 Important Reminders</h3>
+            <ul style="margin: 0; padding-left: 20px; color: ${C.warnBody};">
               <li style="margin-bottom: 8px;">Please include setup and cleanup time in your rental period</li>
               <li style="margin-bottom: 8px;">Return the space in the condition you found it</li>
               <li style="margin-bottom: 8px;">Arrive 15 minutes early for access</li>
@@ -463,25 +527,25 @@ const EMAIL_TEMPLATES = {
           </div>
 
           ${booking.special_requests ? `
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">💬 Your Special Requests</h3>
-            <p style="margin: 0; color: #451a03;">${esc(booking.special_requests)}</p>
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">💬 Your Special Requests</h3>
+            <p style="margin: 0; color: ${C.warnBody};">${esc(booking.special_requests)}</p>
           </div>
           ` : ''}
 
           <!-- Contact Info -->
-          <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; margin: 0;">Questions? Contact us:</p>
-            <p style="color: #374151; margin: 5px 0;">📞 (303) 359-8337</p>
-            <p style="color: #374151; margin: 5px 0;">📧 clientservices@merrittwellness.net</p>
-            <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
+          <div style="text-align: center; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+            <p style="color: ${C.textLight}; margin: 0;">Questions? Contact us:</p>
+            <p style="color: ${C.textLight}; margin: 5px 0;">📞 (303) 359-8337</p>
+            <p style="color: ${C.textLight}; margin: 5px 0;">📧 clientservices@merrittwellness.net</p>
+            <p style="color: ${C.taupeLight}; font-size: 12px; margin: 10px 0 0 0;">
               (Simply reply to this email to reach us directly)
             </p>
           </div>
 
           <!-- Footer -->
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+            <p style="color: ${C.taupeLight}; font-size: 12px; margin: 0;">
               Booking ID: <strong>${booking.id}</strong><br>
               Historic Merritt Wellness - Where Sacred Architecture Meets Modern Wellness
             </p>
@@ -494,96 +558,96 @@ const EMAIL_TEMPLATES = {
   managerNotification: (booking, groupContext = null) => ({
     subject: `${isTestBooking(booking) ? '🧪 TEST — ' : ''}🆕 New Booking: ${esc(booking.event_name)} on ${esc(booking.event_date)}${groupContext?.total > 1 && groupContext.position ? ` (${groupContext.position} of ${groupContext.total})` : ''}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.warmWhite};">
         ${LOGO_HEADER}
-        <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
-          <h2 style="color: #1e40af; margin: 0 0 15px 0;">🆕 New Booking Request</h2>
-          <p style="color: #1e3a8a; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
+        <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; border-left: 4px solid ${C.infoRule}; padding: 20px; border-radius: 8px;">
+          <h2 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 15px 0; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">🆕 New Booking Request</h2>
+          <p style="color: ${C.infoBody}; margin: 0;">A new event has been booked at Historic Merritt Wellness!</p>
         </div>
 
         ${isTestBooking(booking) ? `
-        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="color: #92400e; margin: 0 0 8px 0;">🧪 TEST BOOKING — Not A Real Reservation</h2>
-          <p style="color: #b45309; margin: 0;">This booking was created with the end-to-end test code to check that the booking pipeline works. <strong>No one is coming.</strong> The matching Google Calendar event should be deleted once the test has been reviewed.</p>
+        <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; border-left: 4px solid ${C.warnRule}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">🧪 TEST BOOKING — Not A Real Reservation</h2>
+          <p style="color: ${C.warnText}; margin: 0;">This booking was created with the end-to-end test code to check that the booking pipeline works. <strong>No one is coming.</strong> The matching Google Calendar event should be deleted once the test has been reviewed.</p>
         </div>
         ` : ''}
 
         ${isSponsoredBooking(booking) ? `
-        <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="color: #065f46; margin: 0 0 8px 0;">🎁 SPONSORED — No Payment Collected</h2>
-          <p style="color: #047857; margin: 0;">This booking was comped with a sponsored promo code (<strong>${esc(booking.promo_code || 'sponsored')}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
+        <div style="background: ${C.successBg}; border: 1px solid ${C.successBorder}; border-left: 4px solid ${C.taupe}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="font-family: ${FONT_SERIF}; color: ${C.successText}; margin: 0 0 8px 0; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">🎁 SPONSORED — No Payment Collected</h2>
+          <p style="color: ${C.successText}; margin: 0;">This booking was comped with a sponsored promo code (<strong>${esc(booking.promo_code || 'sponsored')}</strong>). No charge was made and no card is on file. It is fully confirmed.</p>
         </div>
         ` : ''}
 
         ${renderMultiEventBanner(groupContext, { audience: 'manager' })}
 
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1f2937; margin: 0 0 15px 0;">Event Details:</h3>
+        <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Event Details:</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 120px;">Event:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; width: 120px;">Event:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_name)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td>
-              <td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Type:</td>
+              <td style="padding: 8px 0; color: ${C.text}; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' '))}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Date:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_date)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Date:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_date)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Time:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.event_time)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Time:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_time)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Duration:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.hours_requested} hours</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Duration:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${booking.hours_requested} hours</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Guest count:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.expected_attendees ?? 'Not specified'}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Guest count:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${booking.expected_attendees ?? 'Not specified'}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Tables &amp; chairs:</td>
-              <td style="padding: 8px 0; color: #111827;">${equipmentSummary(booking)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Tables &amp; chairs:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${equipmentSummary(booking)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Full-floor mat:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.needs_mat ? (Number(booking.mat_rental_fee) > 0 ? 'Yes — staff sets up &amp; breaks down (within booked window)' : 'Yes — partner handles own setup &amp; breakdown') : 'No'}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Full-floor mat:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${booking.needs_mat ? (Number(booking.mat_rental_fee) > 0 ? 'Yes — staff sets up &amp; breaks down (within booked window)' : 'Yes — partner handles own setup &amp; breakdown') : 'No'}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Cafe/lounge dividers:</td>
-              <td style="padding: 8px 0; color: #111827;">${booking.needs_divider_removal ? '<strong style="color: #b45309;">REMOVE for this event</strong> — staff takes them out (incl. breaking down all cafe tables &amp; chairs) before &amp; restores after' : 'In place (no removal requested)'}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Cafe/lounge dividers:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${booking.needs_divider_removal ? '<strong style="color: ${C.warnText};">REMOVE for this event</strong> — staff takes them out (incl. breaking down all cafe tables &amp; chairs) before &amp; restores after' : 'In place (no removal requested)'}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Visibility:</td>
-              <td style="padding: 8px 0; color: #111827;">${publicLabel(booking)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Visibility:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${publicLabel(booking)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Amount:</td>
-              <td style="padding: 8px 0; color: #111827;">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}${groupContext?.total > 1 ? ` <span style="color: #4338ca;">— combined total for all ${groupContext.total} events (charged once, not per event)</span>` : ''}`}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Amount:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${isSponsoredBooking(booking) ? '$0.00 — 🎁 Sponsored (no charge)' : `$${booking.total_amount}${groupContext?.total > 1 ? ` <span style="color: ${C.infoText};">— combined total for all ${groupContext.total} events (charged once, not per event)</span>` : ''}`}</td>
             </tr>
           </table>
 
           ${booking.needs_mat || booking.needs_divider_removal ? `
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
-              <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Assistance Requested:</p>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid ${C.borderStrong};">
+              <p style="color: ${C.textLight}; font-weight: 600; margin: 0 0 5px 0;">Assistance Requested:</p>
               ${booking.needs_mat ? (
                 Number(booking.mat_rental_fee) > 0
-                  ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (+$100) — WE set up &amp; break down, within the booked window.</p>'
-                  : '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Full-floor mat (partner — no charge) — RENTER handles setup &amp; breakdown, within the booked window.</p>'
+                  ? '<p style="color: ${C.text}; margin: 5px 0; background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 10px; border-radius: 4px;">✓ Full-floor mat (+$100) — WE set up &amp; break down, within the booked window.</p>'
+                  : '<p style="color: ${C.text}; margin: 5px 0; background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 10px; border-radius: 4px;">✓ Full-floor mat (partner — no charge) — RENTER handles setup &amp; breakdown, within the booked window.</p>'
               ) : ''}
               ${booking.needs_divider_removal
-                ? '<p style="color: #111827; margin: 5px 0; background: white; padding: 10px; border-radius: 4px;">✓ Cafe/lounge divider removal (+$1,000) — STAFF removes the glass &amp; wood dividers AND breaks down all cafe tables &amp; chairs before the event, then restores everything after. Plan the crew accordingly.</p>'
+                ? '<p style="color: ${C.text}; margin: 5px 0; background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 10px; border-radius: 4px;">✓ Cafe/lounge divider removal (+$1,000) — STAFF removes the glass &amp; wood dividers AND breaks down all cafe tables &amp; chairs before the event, then restores everything after. Plan the crew accordingly.</p>'
                 : ''}
             </div>
           ` : ''}
 
           ${booking.special_requests ? `
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;">
-              <p style="color: #374151; font-weight: 600; margin: 0 0 5px 0;">Special Requests:</p>
-              <p style="color: #111827; margin: 0; background: white; padding: 10px; border-radius: 4px;">${esc(booking.special_requests)}</p>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid ${C.borderStrong};">
+              <p style="color: ${C.textLight}; font-weight: 600; margin: 0 0 5px 0;">Special Requests:</p>
+              <p style="color: ${C.text}; margin: 0; background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 10px; border-radius: 4px;">${esc(booking.special_requests)}</p>
             </div>
           ` : ''}
         </div>
@@ -591,48 +655,48 @@ const EMAIL_TEMPLATES = {
         <!-- Itemized cost breakdown so staff see exactly what the client paid for -->
         ${renderCostBreakdown(booking, { heading: 'Cost Breakdown', groupContext })}
 
-        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #059669; margin: 0 0 15px 0;">Customer Information:</h3>
+        <div style="background: ${C.successBg}; border: 1px solid ${C.successBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Customer Information:</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 120px;">Name:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.contact_name)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; width: 120px;">Name:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.contact_name)}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td>
-              <td style="padding: 8px 0; color: #111827;">
-                <a href="mailto:${esc(booking.email)}" style="color: #059669; text-decoration: none;">${esc(booking.email)}</a>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Email:</td>
+              <td style="padding: 8px 0; color: ${C.text};">
+                <a href="mailto:${esc(booking.email)}" style="color: ${C.taupe}; text-decoration: none;">${esc(booking.email)}</a>
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td>
-              <td style="padding: 8px 0; color: #111827;">
-                ${booking.phone ? `<a href="tel:${esc(booking.phone)}" style="color: #059669; text-decoration: none;">${esc(booking.phone)}</a>` : 'Not provided'}
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Phone:</td>
+              <td style="padding: 8px 0; color: ${C.text};">
+                ${booking.phone ? `<a href="tel:${esc(booking.phone)}" style="color: ${C.taupe}; text-decoration: none;">${esc(booking.phone)}</a>` : 'Not provided'}
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.home_address || 'Not provided')}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Address:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.home_address || 'Not provided')}</td>
             </tr>
             ${booking.business_name ? `
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td>
-              <td style="padding: 8px 0; color: #111827;">${esc(booking.business_name)}</td>
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Business:</td>
+              <td style="padding: 8px 0; color: ${C.text};">${esc(booking.business_name)}</td>
             </tr>
             ` : ''}
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td>
-              <td style="padding: 8px 0; color: #111827;">
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">ID Photo:</td>
+              <td style="padding: 8px 0; color: ${C.text};">
                 ${booking.id_photo_data
                   ? `Attached to this email (<code>${esc(booking.id_photo_name || 'id-photo')}</code>)`
-                  : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter</span>'}
+                  : '<span style="color: ${C.alertText};">⚠️ Not provided — contact renter</span>'}
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol:</td>
-              <td style="padding: 8px 0; color: #111827;">
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Alcohol:</td>
+              <td style="padding: 8px 0; color: ${C.text};">
                 ${booking.serving_alcohol === true
-                  ? '<strong style="color: #b45309;">Yes — alcohol will be present</strong>'
+                  ? '<strong style="color: ${C.warnText};">Yes — alcohol will be present</strong>'
                   : booking.serving_alcohol === false
                     ? 'No'
                     : 'Not specified'}
@@ -640,27 +704,27 @@ const EMAIL_TEMPLATES = {
             </tr>
             ${booking.serving_alcohol === true ? `
             <tr>
-              <td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td>
-              <td style="padding: 8px 0; color: #111827;">
+              <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">COI:</td>
+              <td style="padding: 8px 0; color: ${C.text};">
                 ${booking.coi_document_data
                   ? `Attached to this email (<code>${esc(booking.coi_document_name || 'coi')}</code>)`
-                  : '<span style="color: #b91c1c;">⚠️ Not provided — contact renter before the event</span>'}
+                  : '<span style="color: ${C.alertText};">⚠️ Not provided — contact renter before the event</span>'}
               </td>
             </tr>
             ` : ''}
           </table>
         </div>
 
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #0369a1; margin: 0 0 10px 0;">Booking Details:</h3>
-          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Booking ID:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
-          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Status:</strong> ${booking.status || 'Confirmed'}</p>
-          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Payment Method:</strong> ${isSponsoredBooking(booking) ? 'Sponsored — No Payment Required' : (booking.payment_method === 'pay-later' ? 'Pay Later (No fees)' : 'Card Payment')}</p>
-          <p style="margin: 5px 0; color: #0c4a6e;"><strong>Created:</strong> ${new Date().toLocaleString()}</p>
+        <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 10px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Booking Details:</h3>
+          <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Booking ID:</strong> <code style="background: ${C.codeBg}; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
+          <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Status:</strong> ${booking.status || 'Confirmed'}</p>
+          <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Payment Method:</strong> ${isSponsoredBooking(booking) ? 'Sponsored — No Payment Required' : (booking.payment_method === 'pay-later' ? 'Pay Later (No fees)' : 'Card Payment')}</p>
+          <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Created:</strong> ${new Date().toLocaleString()}</p>
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-          <p style="color: #6b7280; font-size: 14px;">
+          <p style="color: ${C.textLight}; font-size: 14px;">
             Calendar event automatically created<br>
             Customer confirmation email sent
           </p>
@@ -692,53 +756,53 @@ const EMAIL_TEMPLATES = {
     return {
       subject: `Recurring booking confirmed: ${esc(booking.event_name)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+          <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
             <div style="text-align: center; margin-bottom: 30px;">
               ${LOGO_HEADER}
-              <h1 style="color: #059669; margin: 0; font-size: 24px;">Recurring Booking Confirmed</h1>
-              <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
+              <h1 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0; font-weight: 400; letter-spacing: 0.01em; font-size: 28px;">Recurring Booking Confirmed</h1>
+              <p style="color: ${C.taupeLight}; margin: 12px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;">Merritt Wellness Historic Sanctuary</p>
             </div>
 
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 20px 0;">
               Your recurring rental for <strong>${esc(booking.event_name)}</strong> is all set. Your payment method is on file and we will auto-charge on the first of each month going forward.
             </p>
 
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Billing Details</h2>
+            <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Billing Details</h2>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600; width: 55%;">Start date:</td>
-                  <td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; width: 55%;">Start date:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">${formatBillingDate(startDate)}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td>
-                  <td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">First billing date:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">${firstBillingDate}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td>
-                  <td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">First-month prorated charge:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">$${firstMonthCharge.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td>
-                  <td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Base monthly estimate:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td>
-                  <td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit (no fee)' : 'Card (3% processing fee)'}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Payment method:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">${paymentMethod === 'ACH' ? 'ACH Auto-Debit (no fee)' : 'Card (3% processing fee)'}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
-                  <td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: #059669; font-weight: 600;">(includes 20% volume discount — 8+ hrs/month)</span>' : ''}</td>
+                  <td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Hourly rate:</td>
+                  <td style="padding: 8px 0; color: ${C.text};">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: ${C.taupe}; font-weight: 600;">(includes 20% volume discount — 8+ hrs/month)</span>' : ''}</td>
                 </tr>
               </table>
             </div>
 
             ${slots.length ? `
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #1f2937; margin: 0 0 10px 0; font-size: 16px;">Your Recurring Schedule</h3>
-              <ul style="margin: 0; padding-left: 20px; color: #374151; line-height: 1.8;">
+            <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Your Recurring Schedule</h3>
+              <ul style="margin: 0; padding-left: 20px; color: ${C.textLight}; line-height: 1.8;">
                 ${slots.map(s => `<li>${describeSlot(s)}</li>`).join('')}
               </ul>
             </div>
@@ -747,29 +811,29 @@ const EMAIL_TEMPLATES = {
             ${renderClientScheduleAdjustments(details, { saturdayHourlyRate, hourlyRate })}
 
             ${details?.needsMat ? `
-            <div style="background: #eef2ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #3730a3; margin: 0 0 10px 0; font-size: 16px;">Full-Floor Mat</h3>
-              <p style="margin: 0; color: #312e81; line-height: 1.6;">
+            <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Full-Floor Mat</h3>
+              <p style="margin: 0; color: ${C.infoBody}; line-height: 1.6;">
                 The full-floor roll-out mat is included with your partnership at no extra charge. Please note that setup and breakdown of the mat are your responsibility, and—like everything else—must happen within your reserved time so we can keep the calendar open for other bookings.
               </p>
             </div>
             ` : ''}
 
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px;">Note on Monthly Totals</h3>
-              <p style="margin: 0; color: #451a03; line-height: 1.6;">
+            <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Note on Monthly Totals</h3>
+              <p style="margin: 0; color: ${C.warnBody}; line-height: 1.6;">
                 Each month's total will vary based on the actual number of occurrences in that month. Weekly slots typically land 4–5 times per month, biweekly slots 2–3 times, and monthly slots once. The base monthly estimate above reflects the expected range.
               </p>
             </div>
 
-            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
-              <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+              <p style="color: ${C.textLight}; margin: 0;">Questions? Reach out any time:</p>
+              <p style="color: ${C.textLight}; margin: 5px 0;">(303) 359-8337</p>
+              <p style="color: ${C.textLight}; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+              <p style="color: ${C.taupeLight}; font-size: 12px; margin: 0;">
                 Booking ID: <strong>${booking.id}</strong><br>
                 Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
               </p>
@@ -802,32 +866,32 @@ const EMAIL_TEMPLATES = {
     return {
       subject: `New recurring booking: ${esc(booking.event_name)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.warmWhite};">
           ${LOGO_HEADER}
-          <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px;">
-            <h2 style="color: #1e40af; margin: 0 0 10px 0;">New Recurring Booking</h2>
-            <p style="color: #1e3a8a; margin: 0;">A new recurring series is active at Historic Merritt Wellness. Auto-debit is set up and the first invoice will close on ${firstBillingDate}.</p>
+          <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; border-left: 4px solid ${C.infoRule}; padding: 20px; border-radius: 8px;">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 10px 0; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">New Recurring Booking</h2>
+            <p style="color: ${C.infoBody}; margin: 0;">A new recurring series is active at Historic Merritt Wellness. Auto-debit is set up and the first invoice will close on ${firstBillingDate}.</p>
           </div>
 
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1f2937; margin: 0 0 15px 0;">Series Details</h3>
+          <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Series Details</h3>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Series:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.event_name)}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Type:</td><td style="padding: 8px 0; color: #111827; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' ') || '')}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Start date:</td><td style="padding: 8px 0; color: #111827;">${formatBillingDate(startDate)}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First billing date:</td><td style="padding: 8px 0; color: #111827;">${firstBillingDate}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">First-month prorated charge:</td><td style="padding: 8px 0; color: #111827;">$${firstMonthCharge.toFixed(2)}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Base monthly estimate:</td><td style="padding: 8px 0; color: #111827;">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Hourly rate:</td><td style="padding: 8px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: #059669; font-weight: 600;">(20% volume discount — 8+ hrs/month)</span>' : ''}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Payment method:</td><td style="padding: 8px 0; color: #111827;">${paymentMethod === 'ACH' ? 'ACH Auto-Debit' : 'Card (3% fee)'}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Expected attendees:</td><td style="padding: 8px 0; color: #111827;">${booking.expected_attendees || 'n/a'}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; width: 40%;">Series:</td><td style="padding: 8px 0; color: ${C.text};">${esc(booking.event_name)}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Type:</td><td style="padding: 8px 0; color: ${C.text}; text-transform: capitalize;">${esc(booking.event_type?.replace('-', ' ') || '')}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Start date:</td><td style="padding: 8px 0; color: ${C.text};">${formatBillingDate(startDate)}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">First billing date:</td><td style="padding: 8px 0; color: ${C.text};">${firstBillingDate}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">First-month prorated charge:</td><td style="padding: 8px 0; color: ${C.text};">$${firstMonthCharge.toFixed(2)}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Base monthly estimate:</td><td style="padding: 8px 0; color: ${C.text};">${monthlyMin !== null && monthlyMax !== null ? `$${Number(monthlyMin).toFixed(0)} – $${Number(monthlyMax).toFixed(0)}` : 'Calculated monthly'}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Hourly rate:</td><td style="padding: 8px 0; color: ${C.text};">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturdaySlot ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}${volumeDiscountApplied ? ' <span style="color: ${C.taupe}; font-weight: 600;">(20% volume discount — 8+ hrs/month)</span>' : ''}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Payment method:</td><td style="padding: 8px 0; color: ${C.text};">${paymentMethod === 'ACH' ? 'ACH Auto-Debit' : 'Card (3% fee)'}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Expected attendees:</td><td style="padding: 8px 0; color: ${C.text};">${booking.expected_attendees || 'n/a'}</td></tr>
             </table>
           </div>
 
           ${slots.length ? `
-          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #0369a1; margin: 0 0 10px 0;">Recurring Slots</h3>
-            <ul style="margin: 0; padding-left: 20px; color: #0c4a6e; line-height: 1.8;">
+          <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 10px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Recurring Slots</h3>
+            <ul style="margin: 0; padding-left: 20px; color: ${C.infoBody}; line-height: 1.8;">
               ${slots.map(s => `<li>${describeSlot(s)}</li>`).join('')}
             </ul>
           </div>
@@ -836,36 +900,36 @@ const EMAIL_TEMPLATES = {
           ${renderManagerScheduleAdjustments(details, booking)}
 
           ${details?.needsMat ? `
-          <div style="background: #eef2ff; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #3730a3; font-size: 14px;">
+          <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: ${C.infoText}; font-size: 14px;">
               <strong>Full-floor mat:</strong> Included (partner — no charge). The renter handles their own mat setup &amp; breakdown, within their reserved time.
             </p>
           </div>
           ` : ''}
 
-          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #059669; margin: 0 0 15px 0;">Renter Information</h3>
+          <div style="background: ${C.successBg}; border: 1px solid ${C.successBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Renter Information</h3>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600; width: 40%;">Name:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.contact_name)}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Email:</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${esc(booking.email)}" style="color: #059669; text-decoration: none;">${esc(booking.email)}</a></td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Phone:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.phone || 'Not provided')}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Address:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.home_address || 'Not provided')}</td></tr>
-              ${booking.business_name ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Business:</td><td style="padding: 8px 0; color: #111827;">${esc(booking.business_name)}</td></tr>` : ''}
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">ID Photo:</td><td style="padding: 8px 0; color: #111827;">${booking.id_photo_data ? `Attached (<code>${esc(booking.id_photo_name || 'id-photo')}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter</span>'}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">Alcohol:</td><td style="padding: 8px 0; color: #111827;">${booking.serving_alcohol === true ? '<strong style="color: #b45309;">Yes — alcohol present</strong>' : booking.serving_alcohol === false ? 'No' : 'Not specified'}</td></tr>
-              ${booking.serving_alcohol === true ? `<tr><td style="padding: 8px 0; color: #374151; font-weight: 600;">COI:</td><td style="padding: 8px 0; color: #111827;">${booking.coi_document_data ? `Attached (<code>${esc(booking.coi_document_name || 'coi')}</code>)` : '<span style="color: #b91c1c;">Not provided — contact renter before the event</span>'}</td></tr>` : ''}
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; width: 40%;">Name:</td><td style="padding: 8px 0; color: ${C.text};">${esc(booking.contact_name)}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Email:</td><td style="padding: 8px 0; color: ${C.text};"><a href="mailto:${esc(booking.email)}" style="color: ${C.taupe}; text-decoration: none;">${esc(booking.email)}</a></td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Phone:</td><td style="padding: 8px 0; color: ${C.text};">${esc(booking.phone || 'Not provided')}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Address:</td><td style="padding: 8px 0; color: ${C.text};">${esc(booking.home_address || 'Not provided')}</td></tr>
+              ${booking.business_name ? `<tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Business:</td><td style="padding: 8px 0; color: ${C.text};">${esc(booking.business_name)}</td></tr>` : ''}
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">ID Photo:</td><td style="padding: 8px 0; color: ${C.text};">${booking.id_photo_data ? `Attached (<code>${esc(booking.id_photo_name || 'id-photo')}</code>)` : '<span style="color: ${C.alertText};">Not provided — contact renter</span>'}</td></tr>
+              <tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">Alcohol:</td><td style="padding: 8px 0; color: ${C.text};">${booking.serving_alcohol === true ? '<strong style="color: ${C.warnText};">Yes — alcohol present</strong>' : booking.serving_alcohol === false ? 'No' : 'Not specified'}</td></tr>
+              ${booking.serving_alcohol === true ? `<tr><td style="padding: 8px 14px 8px 0; color: ${C.textLight}; font-weight: 600; white-space: nowrap;">COI:</td><td style="padding: 8px 0; color: ${C.text};">${booking.coi_document_data ? `Attached (<code>${esc(booking.coi_document_name || 'coi')}</code>)` : '<span style="color: ${C.alertText};">Not provided — contact renter before the event</span>'}</td></tr>` : ''}
             </table>
           </div>
 
-          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #0369a1; margin: 0 0 10px 0;">Stripe References</h3>
-            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Booking ID:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
-            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Subscription:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.stripe_subscription_id || 'pending'}</code></p>
-            <p style="margin: 5px 0; color: #0c4a6e;"><strong>Customer:</strong> <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">${booking.stripe_customer_id || 'pending'}</code></p>
+          <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 10px 0; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Stripe References</h3>
+            <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Booking ID:</strong> <code style="background: ${C.codeBg}; padding: 2px 6px; border-radius: 4px;">${booking.id}</code></p>
+            <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Subscription:</strong> <code style="background: ${C.codeBg}; padding: 2px 6px; border-radius: 4px;">${booking.stripe_subscription_id || 'pending'}</code></p>
+            <p style="margin: 5px 0; color: ${C.infoBody};"><strong>Customer:</strong> <code style="background: ${C.codeBg}; padding: 2px 6px; border-radius: 4px;">${booking.stripe_customer_id || 'pending'}</code></p>
           </div>
 
-          <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #451a03; font-size: 14px;">
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: ${C.warnBody}; font-size: 14px;">
               Monthly totals will vary based on actual occurrences. The next-PR monthly cron job will write invoice items against this subscription.
             </p>
           </div>
@@ -882,77 +946,77 @@ const EMAIL_TEMPLATES = {
   clientOnboarding: (booking) => ({
     subject: `Welcome to Merritt Wellness — Important Info for ${esc(booking.event_name || 'Your Upcoming Event')}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+        <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 30px;">
             ${LOGO_HEADER}
-            <h1 style="color: #10b981; margin: 0; font-size: 24px;">Welcome to Merritt Wellness</h1>
-            <p style="color: #6b7280; margin: 10px 0 0 0;">Important Information for Your Upcoming Event</p>
+            <h1 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0; font-weight: 400; letter-spacing: 0.01em; font-size: 28px;">Welcome to Merritt Wellness</h1>
+            <p style="color: ${C.taupeLight}; margin: 12px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;">Important Information for Your Upcoming Event</p>
           </div>
 
           <!-- Welcome Message -->
           <div style="margin-bottom: 25px;">
-            <p style="color: #374151; line-height: 1.6; margin: 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0;">
               Hi ${esc(booking.contact_name)},
             </p>
-            <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 15px 0;">
               Thank you so much for booking <strong>${esc(booking.event_name || 'your event')}</strong>${booking.event_date ? ` on ${formatEventDateShort(booking.event_date)}` : ''} at Merritt Wellness. We truly appreciate your business and are excited to host you in our space.
             </p>
-            <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 15px 0;">
               Now that your booking is confirmed and payment and agreements are complete, we want to share a few important details to ensure everything runs smoothly leading up to—and during—your event.
             </p>
           </div>
 
           <!-- Primary Point of Contact -->
-          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Primary Point of Contact</h2>
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 10px 0;">
+          <div style="background: ${C.successBg}; border: 1px solid ${C.successBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.taupe};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Primary Point of Contact</h2>
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 10px 0;">
               For all event-related questions, including:
             </p>
-            <ul style="margin: 10px 0; padding-left: 20px; color: #374151;">
+            <ul style="margin: 10px 0; padding-left: 20px; color: ${C.textLight};">
               <li style="margin-bottom: 5px;">Day-of logistics</li>
               <li style="margin-bottom: 5px;">On-site access or facility questions</li>
               <li style="margin-bottom: 5px;">Scheduling details</li>
               <li style="margin-bottom: 5px;">Setup, breakdown, or general event coordination</li>
             </ul>
-            <p style="color: #374151; line-height: 1.6; margin: 15px 0 10px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 15px 0 10px 0;">
               <strong>Please direct all communication to:</strong>
             </p>
             <p style="margin: 0 0 6px 0;">
-              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">clientservices@merrittwellness.net</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; font-weight: 600; font-size: 16px; text-decoration: none;">clientservices@merrittwellness.net</a>
             </p>
             <p style="margin: 0;">
-              <a href="tel:+13033598337" style="color: #059669; font-weight: 600; font-size: 16px; text-decoration: none;">303-359-8337</a>
+              <a href="tel:+13033598337" style="color: ${C.taupe}; font-weight: 600; font-size: 16px; text-decoration: none;">303-359-8337</a>
             </p>
-            <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
+            <p style="color: ${C.textLight}; font-size: 14px; margin: 10px 0 0 0;">
               This inbox and phone line are actively monitored by our on-site team and are the fastest way to get support before and during your event.
             </p>
           </div>
 
           <!-- Manager Contact -->
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-            <h2 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">Manager Contact</h2>
-            <p style="color: #451a03; line-height: 1.6; margin: 0 0 10px 0;">
-              The <strong>manager@merrittwellness.net</strong> email and <strong><a href="tel:+17203579499" style="color: #92400e; text-decoration: none;">720-357-9499</a></strong> phone line are reserved strictly for:
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.warnRule};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Manager Contact</h2>
+            <p style="color: ${C.warnBody}; line-height: 1.6; margin: 0 0 10px 0;">
+              The <strong>manager@merrittwellness.net</strong> email and <strong><a href="tel:+17203579499" style="color: ${C.warnText}; text-decoration: none;">720-357-9499</a></strong> phone line are reserved strictly for:
             </p>
-            <ul style="margin: 10px 0; padding-left: 20px; color: #451a03;">
+            <ul style="margin: 10px 0; padding-left: 20px; color: ${C.warnBody};">
               <li style="margin-bottom: 5px;">Future booking inquiries</li>
               <li style="margin-bottom: 5px;">Additional dates</li>
               <li style="margin-bottom: 5px;">Large-scale or long-term planning questions</li>
             </ul>
-            <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">
+            <p style="color: ${C.textLight}; font-size: 14px; margin: 10px 0 0 0;">
               Using the correct contact helps us respond quickly and keeps everything organized for your event.
             </p>
           </div>
 
           <!-- Facility Onboarding Playlist -->
-          <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-            <h2 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">Required: Watch the Onboarding Videos Before Your Event</h2>
-            <p style="color: #1e3a8a; line-height: 1.6; margin: 0 0 15px 0; font-weight: 600;">
+          <div style="background: ${C.infoBg}; border: 1px solid ${C.infoBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.infoRule};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.infoText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Required: Watch the Onboarding Videos Before Your Event</h2>
+            <p style="color: ${C.infoBody}; line-height: 1.6; margin: 0 0 15px 0; font-weight: 600;">
               You <u>must</u> watch the onboarding video playlist before your event. These videos cover everything you need to know to operate the space safely and leave it ready for the next guest. Please do not wait until the day of — watch them in advance so you arrive prepared.
             </p>
-            <ul style="margin: 0 0 15px 0; padding-left: 20px; color: #1e3a8a; line-height: 1.8;">
+            <ul style="margin: 0 0 15px 0; padding-left: 20px; color: ${C.infoBody}; line-height: 1.8;">
               <li><strong>How to lock up the building</strong> — the single most important video. Please watch it carefully (see policy section below).</li>
               <li>How to unlock and enter the building</li>
               <li>How to use the projector</li>
@@ -961,85 +1025,85 @@ const EMAIL_TEMPLATES = {
               <li>How to operate the heating and air conditioning</li>
             </ul>
             <p style="margin: 0 0 10px 0;">
-              <strong style="color: #1e40af;">Watch the Playlist:</strong>
-              <a href="https://www.youtube.com/playlist?list=PLkE5cGIi8Zdjl6Sb3aa7UKqFrYWQN3uiu" style="color: #3b82f6; text-decoration: none;">Merritt Wellness Onboarding Videos</a>
+              <strong style="color: ${C.infoText};">Watch the Playlist:</strong>
+              <a href="https://www.youtube.com/playlist?list=PLkE5cGIi8Zdjl6Sb3aa7UKqFrYWQN3uiu" style="color: ${C.taupe}; text-decoration: none;">Merritt Wellness Onboarding Videos</a>
             </p>
-            <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0 0 0;">
+            <p style="color: ${C.infoBody}; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>Need your access code?</strong> Please email
-              <a href="mailto:clientservices@merrittwellness.net" style="color: #3b82f6; text-decoration: none;">clientservices@merrittwellness.net</a>
-              or call <a href="tel:+13033598337" style="color: #3b82f6; text-decoration: none;">303-359-8337</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">clientservices@merrittwellness.net</a>
+              or call <a href="tel:+13033598337" style="color: ${C.taupe}; text-decoration: none;">303-359-8337</a>
               to receive your personal access code before your event.
             </p>
           </div>
 
           <!-- Important Policies & Potential Fines -->
-          <div style="background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-            <h2 style="color: #991b1b; margin: 0 0 15px 0; font-size: 18px;">Important Policies — Please Read Carefully</h2>
-            <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 15px 0;">
+          <div style="background: ${C.alertBg}; border: 1px solid ${C.alertBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.alertRule};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Important Policies — Please Read Carefully</h2>
+            <p style="color: ${C.alertBody}; line-height: 1.6; margin: 0 0 15px 0;">
               To keep our space running smoothly for every guest, we ask that you follow these two policies. Failure to do so may result in a fine. <strong>Whether a fine is applied is entirely at Merritt Wellness's discretion</strong> — we reserve the right to issue or waive any fine on a case-by-case basis.
             </p>
 
-            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fecaca;">
-              <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 16px;">1. Respect Your Booked Time — No Early Arrivals or Late Departures</h3>
-              <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 8px 0;">
+            <div style="background: ${C.warmWhite}; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid ${C.alertBorder};">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">1. Respect Your Booked Time — No Early Arrivals or Late Departures</h3>
+              <p style="color: ${C.alertBody}; line-height: 1.6; margin: 0 0 8px 0;">
                 You may be <strong>charged or fined</strong> if you use the space for longer than you have booked. <strong>There is no showing up early and no staying late.</strong> Please include any setup and cleanup time in your booked window.
               </p>
-              <p style="color: #7f1d1d; line-height: 1.6; margin: 0;">
+              <p style="color: ${C.alertBody}; line-height: 1.6; margin: 0;">
                 We frequently book events back-to-back. Other guests will respect your time, and we ask that you respect theirs.
               </p>
             </div>
 
-            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fecaca;">
-              <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 16px;">2. Lock Up Correctly — Watch the Lock-Up Video</h3>
-              <p style="color: #7f1d1d; line-height: 1.6; margin: 0 0 8px 0;">
+            <div style="background: ${C.warmWhite}; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid ${C.alertBorder};">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">2. Lock Up Correctly — Watch the Lock-Up Video</h3>
+              <p style="color: ${C.alertBody}; line-height: 1.6; margin: 0 0 8px 0;">
                 Locking up properly is the <strong>most important</strong> thing you'll do at the end of your event. The lock-up video in the onboarding playlist is the most important video we have — please make sure you (and anyone helping you close out) are fully familiar with the lock-up process before your event.
               </p>
-              <p style="color: #7f1d1d; line-height: 1.6; margin: 0;">
+              <p style="color: ${C.alertBody}; line-height: 1.6; margin: 0;">
                 If the building is not locked up correctly, you may be fined <strong>up to an additional $50</strong>.
               </p>
             </div>
 
-            <p style="color: #7f1d1d; line-height: 1.6; margin: 12px 0 0 0; font-size: 14px;">
+            <p style="color: ${C.alertBody}; line-height: 1.6; margin: 12px 0 0 0; font-size: 14px;">
               Again, any fines are <strong>completely at Merritt Wellness's discretion</strong>. We'd much rather never have to issue one — watching the videos in advance is the easiest way to make sure that's the case.
             </p>
           </div>
 
           <!-- Wi-Fi Info -->
-          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Wi-Fi Access</h2>
+          <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.taupe};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Wi-Fi Access</h2>
             <table style="border-collapse: collapse;">
               <tr>
-                <td style="padding: 4px 12px 4px 0; color: #374151; font-weight: 600;">Network:</td>
-                <td style="padding: 4px 0; color: #111827;">merrittcowork</td>
+                <td style="padding: 4px 12px 4px 0; color: ${C.textLight}; font-weight: 600;">Network:</td>
+                <td style="padding: 4px 0; color: ${C.text};">merrittcowork</td>
               </tr>
               <tr>
-                <td style="padding: 4px 12px 4px 0; color: #374151; font-weight: 600;">Password:</td>
-                <td style="padding: 4px 0; color: #111827;">Merritt23X</td>
+                <td style="padding: 4px 12px 4px 0; color: ${C.textLight}; font-weight: 600;">Password:</td>
+                <td style="padding: 4px 0; color: ${C.text};">Merritt23X</td>
               </tr>
             </table>
           </div>
 
           <!-- Closing -->
-          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
+          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">
               If anything comes up as you prepare, don't hesitate to reach out to
-              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a>
-              or call <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">clientservices@merrittwellness.net</a>
+              or call <a href="tel:+13033598337" style="color: ${C.taupe}; text-decoration: none;">303-359-8337</a>
               — we're happy to help.
             </p>
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">
               Thank you again for choosing Merritt Wellness. We're grateful to be part of your event and look forward to hosting you.
             </p>
           </div>
 
           <!-- Signature -->
           <div style="margin-top: 25px;">
-            <p style="color: #374151; margin: 0 0 5px 0;">Warm regards,</p>
-            <p style="color: #111827; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
-              <a href="mailto:clientservices@merrittwellness.net" style="color: #059669; text-decoration: none;">clientservices@merrittwellness.net</a><br>
-              <a href="tel:+13033598337" style="color: #059669; text-decoration: none;">303-359-8337</a>
+            <p style="color: ${C.textLight}; margin: 0 0 5px 0;">Warm regards,</p>
+            <p style="color: ${C.text}; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
+            <p style="color: ${C.textLight}; font-size: 14px; margin: 0;">
+              <a href="https://MerrittWellness.net" style="color: ${C.taupe}; text-decoration: none;">MerrittWellness.net</a><br>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">clientservices@merrittwellness.net</a><br>
+              <a href="tel:+13033598337" style="color: ${C.taupe}; text-decoration: none;">303-359-8337</a>
             </p>
           </div>
         </div>
@@ -1056,29 +1120,29 @@ const EMAIL_TEMPLATES = {
     // collapsed Gmail thread (see the clientOnboarding subject note).
     subject: `Let's promote ${esc(booking.event_name)}${booking.event_date ? ` (${formatEventDateShort(booking.event_date)})` : ''} together — materials we need from you`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+        <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
           <!-- Header with Logo -->
           <div style="text-align: center; margin-bottom: 30px;">
             ${LOGO_HEADER}
-            <h1 style="color: #10b981; margin: 0; font-size: 24px;">Let's Promote Your Event Together</h1>
-            <p style="color: #6b7280; margin: 10px 0 0 0;">Collaborative Marketing for Public Events</p>
+            <h1 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0; font-weight: 400; letter-spacing: 0.01em; font-size: 28px;">Let's Promote Your Event Together</h1>
+            <p style="color: ${C.taupeLight}; margin: 12px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;">Collaborative Marketing for Public Events</p>
           </div>
 
           <!-- Intro -->
           <div style="margin-bottom: 25px;">
-            <p style="color: #374151; line-height: 1.6; margin: 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0;">
               Hi ${esc(booking.contact_name)},
             </p>
-            <p style="color: #374151; line-height: 1.6; margin: 15px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 15px 0;">
               Thank you for booking <strong>${esc(booking.event_name)}</strong> as a <strong>public event</strong> at Merritt Wellness. Because it's open to the community, we'd love to help you spread the word — at no extra cost — as part of a collaborative marketing effort. Here's exactly what we offer and the materials we'll need from you to make it happen.
             </p>
           </div>
 
           <!-- What We Offer -->
-          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-            <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">What We Offer</h2>
-            <ul style="margin: 0; padding-left: 20px; color: #065f46; line-height: 1.8;">
+          <div style="background: ${C.successBg}; border: 1px solid ${C.successBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.taupe};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">What We Offer</h2>
+            <ul style="margin: 0; padding-left: 20px; color: ${C.successText}; line-height: 1.8;">
               <li><strong>A printed flyer</strong> hung on the community bulletin board in our wellness space.</li>
               <li><strong>A feature on the "Upcoming Events" tab</strong> of our website.</li>
               <li><strong>Social media support</strong> — we're happy to help advertise your event across our channels.</li>
@@ -1086,32 +1150,32 @@ const EMAIL_TEMPLATES = {
           </div>
 
           <!-- What We Need -->
-          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-            <h2 style="color: #92400e; margin: 0 0 8px 0; font-size: 18px;">What We Need From You</h2>
-            <p style="color: #451a03; line-height: 1.6; margin: 0 0 16px 0;">
+          <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.warnRule};">
+            <h2 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">What We Need From You</h2>
+            <p style="color: ${C.warnBody}; line-height: 1.6; margin: 0 0 16px 0;">
               To execute the three methods above, please reply to this email with the following:
             </p>
 
             <!-- For the bulletin board -->
-            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
-              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">1. For the Bulletin-Board Flyer</h3>
-              <p style="color: #451a03; line-height: 1.6; margin: 0;">
+            <div style="background: ${C.warmWhite}; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid ${C.warnBorder};">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">1. For the Bulletin-Board Flyer</h3>
+              <p style="color: ${C.warnBody}; line-height: 1.6; margin: 0;">
                 A <strong>print-ready PDF</strong> of your flyer that we can print and hang in our wellness space.
               </p>
             </div>
 
             <!-- For the website -->
-            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
-              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">2. For Our Website's "Upcoming Events" Tab</h3>
-              <ul style="margin: 0 0 12px 0; padding-left: 20px; color: #451a03; line-height: 1.8;">
+            <div style="background: ${C.warmWhite}; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid ${C.warnBorder};">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">2. For Our Website's "Upcoming Events" Tab</h3>
+              <ul style="margin: 0 0 12px 0; padding-left: 20px; color: ${C.warnBody}; line-height: 1.8;">
                 <li>An <strong>event description</strong></li>
                 <li>Your <strong>social media handles</strong></li>
                 <li>A <strong>link to purchase tickets</strong> (how customers can buy/register)</li>
                 <li>An <strong>event image</strong> (specs below)</li>
               </ul>
-              <div style="background: #f0fdf4; padding: 14px; border-radius: 6px; border: 1px solid #bbf7d0;">
-                <p style="color: #065f46; font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Image specs:</p>
-                <ul style="margin: 0; padding-left: 20px; color: #065f46; line-height: 1.7; font-size: 14px;">
+              <div style="background: ${C.cream}; padding: 14px; border-radius: 6px; border: 1px solid ${C.successBorder};">
+                <p style="color: ${C.successText}; font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Image specs:</p>
+                <ul style="margin: 0; padding-left: 20px; color: ${C.successText}; line-height: 1.7; font-size: 14px;">
                   <li><strong>Aspect ratio: 16:10</strong> — most important. Off-ratio images get cropped.</li>
                   <li><strong>Dimensions:</strong> 1600×1000px (or 1920×1200 for retina). A bigger source is fine — the site downscales.</li>
                   <li><strong>Format:</strong> JPG or PNG are both fine — the site auto-converts to WebP/AVIF.</li>
@@ -1121,37 +1185,37 @@ const EMAIL_TEMPLATES = {
             </div>
 
             <!-- For social media -->
-            <div style="background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid #fde68a;">
-              <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 16px;">3. For Social Media Promotion</h3>
-              <p style="color: #451a03; line-height: 1.6; margin: 0;">
+            <div style="background: ${C.warmWhite}; padding: 16px; border-radius: 6px; margin: 12px 0; border: 1px solid ${C.warnBorder};">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 8px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">3. For Social Media Promotion</h3>
+              <p style="color: ${C.warnBody}; line-height: 1.6; margin: 0;">
                 Either <strong>tag us as a collaborator</strong> on your post, <em>or</em> <strong>send us the content</strong> you'd like shared and we'll post it to our social media.
               </p>
             </div>
           </div>
 
           <!-- Closing -->
-          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
+          <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">
               The sooner we receive these, the more runway we have to promote your event. Just reply to this email with your materials, or reach out to
-              <a href="mailto:manager@merrittwellness.net" style="color: #059669; text-decoration: none;">manager@merrittwellness.net</a>
+              <a href="mailto:manager@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">manager@merrittwellness.net</a>
               with any questions — we're excited to help make your event a success.
             </p>
           </div>
 
           <!-- Signature -->
           <div style="margin-top: 25px;">
-            <p style="color: #374151; margin: 0 0 5px 0;">Warm regards,</p>
-            <p style="color: #111827; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              <a href="https://MerrittWellness.net" style="color: #059669; text-decoration: none;">MerrittWellness.net</a><br>
-              <a href="mailto:manager@merrittwellness.net" style="color: #059669; text-decoration: none;">manager@merrittwellness.net</a><br>
-              <a href="tel:+17203579499" style="color: #059669; text-decoration: none;">720-357-9499</a>
+            <p style="color: ${C.textLight}; margin: 0 0 5px 0;">Warm regards,</p>
+            <p style="color: ${C.text}; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
+            <p style="color: ${C.textLight}; font-size: 14px; margin: 0;">
+              <a href="https://MerrittWellness.net" style="color: ${C.taupe}; text-decoration: none;">MerrittWellness.net</a><br>
+              <a href="mailto:manager@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">manager@merrittwellness.net</a><br>
+              <a href="tel:+17203579499" style="color: ${C.taupe}; text-decoration: none;">720-357-9499</a>
             </p>
           </div>
 
           <!-- Footer -->
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+            <p style="color: ${C.taupeLight}; font-size: 12px; margin: 0;">
               Booking ID: <strong>${booking.id}</strong><br>
               Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
             </p>
@@ -1182,79 +1246,79 @@ const EMAIL_TEMPLATES = {
         weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC'
       });
       return `<tr>
-        <td style="padding: 6px 12px 6px 0; color: #111827;">${pretty}</td>
-        <td style="padding: 6px 0; color: #374151; text-align: right;">${occ.hours} hrs</td>
+        <td style="padding: 6px 12px 6px 0; color: ${C.text};">${pretty}</td>
+        <td style="padding: 6px 0; color: ${C.textLight}; text-align: right;">${occ.hours} hrs</td>
       </tr>`;
     }).join('');
 
     return {
       subject: `Your ${monthLabel} invoice — ${esc(booking.event_name)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="font-family: ${FONT_SANS}; max-width: 600px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+          <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
             <div style="text-align: center; margin-bottom: 30px;">
               ${LOGO_HEADER}
-              <h1 style="color: #059669; margin: 0; font-size: 24px;">${monthLabel} Invoice Ready</h1>
-              <p style="color: #6b7280; margin: 10px 0 0 0;">Merritt Wellness Historic Sanctuary</p>
+              <h1 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0; font-weight: 400; letter-spacing: 0.01em; font-size: 28px;">${monthLabel} Invoice Ready</h1>
+              <p style="color: ${C.taupeLight}; margin: 12px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;">Merritt Wellness Historic Sanctuary</p>
             </div>
 
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
-            <p style="color: #374151; line-height: 1.6; margin: 0 0 20px 0;">
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">Hi ${esc(booking.contact_name)},</p>
+            <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 20px 0;">
               Here is your upcoming ${monthLabel} invoice for <strong>${esc(booking.event_name)}</strong>. The charge below will appear on your ${paymentMethod === 'ach' ? 'bank' : 'card'} statement shortly after the billing date.
             </p>
 
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #059669; margin: 0 0 15px 0; font-size: 18px;">Invoice Summary</h2>
+            <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Invoice Summary</h2>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600; width: 55%;">Billing period:</td>
-                  <td style="padding: 6px 0; color: #111827;">${monthLabel}</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600; width: 55%;">Billing period:</td>
+                  <td style="padding: 6px 0; color: ${C.text};">${monthLabel}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Total hours:</td>
-                  <td style="padding: 6px 0; color: #111827;">${totalHours} hrs</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600;">Total hours:</td>
+                  <td style="padding: 6px 0; color: ${C.text};">${totalHours} hrs</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Hourly rate:</td>
-                  <td style="padding: 6px 0; color: #111827;">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturday ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600;">Hourly rate:</td>
+                  <td style="padding: 6px 0; color: ${C.text};">$${Number(hourlyRate).toFixed(0)}/hr${hasSaturday ? ` &middot; $${Number(saturdayHourlyRate).toFixed(0)}/hr Saturdays` : ''}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Amount due:</td>
-                  <td style="padding: 6px 0; color: #111827; font-weight: 600;">$${Number(amount).toFixed(2)}</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600;">Amount due:</td>
+                  <td style="padding: 6px 0; color: ${C.text}; font-weight: 600;">$${Number(amount).toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Payment method:</td>
-                  <td style="padding: 6px 0; color: #111827;">${paymentLabel}</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600;">Payment method:</td>
+                  <td style="padding: 6px 0; color: ${C.text};">${paymentLabel}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 0; color: #374151; font-weight: 600;">Charge date:</td>
-                  <td style="padding: 6px 0; color: #111827;">${chargeLabel}</td>
+                  <td style="padding: 6px 14px 6px 0; color: ${C.textLight}; font-weight: 600;">Charge date:</td>
+                  <td style="padding: 6px 0; color: ${C.text};">${chargeLabel}</td>
                 </tr>
               </table>
             </div>
 
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #1f2937; margin: 0 0 10px 0; font-size: 16px;">Scheduled Dates</h3>
-              <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">${summaryText || ''}</p>
+            <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Scheduled Dates</h3>
+              <p style="color: ${C.textLight}; font-size: 14px; margin: 0 0 10px 0;">${summaryText || ''}</p>
               <table style="width: 100%; border-collapse: collapse;">
-                ${rowsHtml || '<tr><td style="padding: 6px 0; color: #6b7280;">No scheduled dates in this month.</td></tr>'}
+                ${rowsHtml || '<tr><td style="padding: 6px 0; color: ${C.textLight};">No scheduled dates in this month.</td></tr>'}
               </table>
             </div>
 
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #451a03; line-height: 1.6; font-size: 14px;">
+            <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: ${C.warnBody}; line-height: 1.6; font-size: 14px;">
                 Need to adjust your schedule, add a date, or cancel? Reply to this email or reach us at clientservices@merrittwellness.net. Changes made before the charge date can be applied to this invoice.
               </p>
             </div>
 
-            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #6b7280; margin: 0;">Questions? Reach out any time:</p>
-              <p style="color: #374151; margin: 5px 0;">(303) 359-8337</p>
-              <p style="color: #374151; margin: 5px 0;">clientservices@merrittwellness.net</p>
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+              <p style="color: ${C.textLight}; margin: 0;">Questions? Reach out any time:</p>
+              <p style="color: ${C.textLight}; margin: 5px 0;">(303) 359-8337</p>
+              <p style="color: ${C.textLight}; margin: 5px 0;">clientservices@merrittwellness.net</p>
             </div>
 
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+              <p style="color: ${C.taupeLight}; font-size: 12px; margin: 0;">
                 Booking ID: <strong>${booking.id}</strong><br>
                 Historic Merritt Wellness — Where Sacred Architecture Meets Modern Wellness
               </p>
@@ -1274,19 +1338,19 @@ const EMAIL_TEMPLATES = {
     const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
     const renderRow = (r) => `<tr>
-      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${esc(r.contactName || '')}<br><span style="color: #6b7280; font-size: 12px;">${esc(r.eventName || '')}</span></td>
-      <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.occurrenceCount != null ? r.occurrenceCount : '—'}</td>
-      <td style="padding: 8px 12px 8px 0; color: #374151; border-bottom: 1px solid #e5e7eb;">${r.totalHours != null ? `${r.totalHours} hrs` : '—'}</td>
-      <td style="padding: 8px 12px 8px 0; color: #111827; border-bottom: 1px solid #e5e7eb;">${r.amount != null ? money(r.amount) : '—'}</td>
-      <td style="padding: 8px 0; color: #6b7280; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${esc(r.note || '')}</td>
+      <td style="padding: 8px 12px 8px 0; color: ${C.text}; border-bottom: 1px solid ${C.creamDark};">${esc(r.contactName || '')}<br><span style="color: ${C.textLight}; font-size: 12px;">${esc(r.eventName || '')}</span></td>
+      <td style="padding: 8px 12px 8px 0; color: ${C.textLight}; border-bottom: 1px solid ${C.creamDark};">${r.occurrenceCount != null ? r.occurrenceCount : '—'}</td>
+      <td style="padding: 8px 12px 8px 0; color: ${C.textLight}; border-bottom: 1px solid ${C.creamDark};">${r.totalHours != null ? `${r.totalHours} hrs` : '—'}</td>
+      <td style="padding: 8px 12px 8px 0; color: ${C.text}; border-bottom: 1px solid ${C.creamDark};">${r.amount != null ? money(r.amount) : '—'}</td>
+      <td style="padding: 8px 0; color: ${C.textLight}; font-size: 12px; border-bottom: 1px solid ${C.creamDark};">${esc(r.note || '')}</td>
     </tr>`;
 
     const tableHead = `<thead><tr>
-      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Client / Series</th>
-      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Occurrences</th>
-      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Hours</th>
-      <th style="text-align: left; padding: 8px 12px 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Amount</th>
-      <th style="text-align: left; padding: 8px 0; color: #374151; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #d1d5db;">Note</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: ${C.textLight}; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid ${C.borderStrong};">Client / Series</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: ${C.textLight}; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid ${C.borderStrong};">Occurrences</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: ${C.textLight}; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid ${C.borderStrong};">Hours</th>
+      <th style="text-align: left; padding: 8px 12px 8px 0; color: ${C.textLight}; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid ${C.borderStrong};">Amount</th>
+      <th style="text-align: left; padding: 8px 0; color: ${C.textLight}; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid ${C.borderStrong};">Note</th>
     </tr></thead>`;
 
     const succeededTotal = results.succeeded.reduce((s, r) => s + Number(r.amount || 0), 0);
@@ -1294,7 +1358,7 @@ const EMAIL_TEMPLATES = {
     const section = (title, rows, color) => {
       if (!rows || rows.length === 0) return '';
       return `<div style="margin: 20px 0;">
-        <h2 style="color: ${color}; margin: 0 0 10px 0; font-size: 18px;">${title} (${rows.length})</h2>
+        <h2 style="font-family: ${FONT_SERIF}; color: ${color}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">${title} (${rows.length})</h2>
         <table style="width: 100%; border-collapse: collapse;">
           ${tableHead}
           <tbody>${rows.map(renderRow).join('')}</tbody>
@@ -1303,57 +1367,57 @@ const EMAIL_TEMPLATES = {
     };
 
     const headerBanner = dryRun
-      ? `<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-           <strong style="color: #92400e;">DRY RUN</strong>
-           <span style="color: #451a03;"> — No Stripe invoice items were created and no client emails were sent.</span>
+      ? `<div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; border-left: 4px solid ${C.warnRule}; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+           <strong style="color: ${C.warnText};">DRY RUN</strong>
+           <span style="color: ${C.warnBody};"> — No Stripe invoice items were created and no client emails were sent.</span>
          </div>`
       : '';
 
     return {
       subject: `Monthly recurring billing — ${monthLabel}${dryRun ? ' (dry run)' : ''}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="font-family: ${FONT_SANS}; max-width: 720px; margin: 0 auto; padding: 20px; background: ${C.creamDark};">
+          <div style="background: ${C.warmWhite}; border: 1px solid ${C.border}; padding: 32px; border-radius: 14px; box-shadow: 0 1px 3px rgba(74, 63, 60, 0.06);">
             ${LOGO_HEADER}
-            <h1 style="color: #111827; margin: 0 0 5px 0; font-size: 22px;">Monthly Recurring Billing Roll-Up</h1>
-            <p style="color: #6b7280; margin: 0 0 20px 0;">Billing period: <strong>${monthLabel}</strong></p>
+            <h1 style="font-family: ${FONT_SERIF}; color: ${C.text}; margin: 0 0 5px 0; font-weight: 400; letter-spacing: 0.01em; font-size: 26px;">Monthly Recurring Billing Roll-Up</h1>
+            <p style="color: ${C.textLight}; margin: 0 0 20px 0;">Billing period: <strong>${monthLabel}</strong></p>
 
             ${headerBanner}
 
-            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="background: ${C.cream}; border: 1px solid ${C.border}; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Succeeded:</td>
-                  <td style="padding: 4px 0; color: #059669; font-weight: 600;">${results.succeeded.length}</td>
-                  <td style="padding: 4px 16px 4px 24px; color: #374151; font-weight: 600;">Skipped:</td>
-                  <td style="padding: 4px 0; color: #d97706; font-weight: 600;">${results.skipped.length}</td>
-                  <td style="padding: 4px 16px 4px 24px; color: #374151; font-weight: 600;">Failed:</td>
-                  <td style="padding: 4px 0; color: #b91c1c; font-weight: 600;">${results.failed.length}</td>
+                  <td style="padding: 4px 16px 4px 0; color: ${C.textLight}; font-weight: 600;">Succeeded:</td>
+                  <td style="padding: 4px 0; color: ${C.taupe}; font-weight: 600;">${results.succeeded.length}</td>
+                  <td style="padding: 4px 16px 4px 24px; color: ${C.textLight}; font-weight: 600;">Skipped:</td>
+                  <td style="padding: 4px 0; color: ${C.warnText}; font-weight: 600;">${results.skipped.length}</td>
+                  <td style="padding: 4px 16px 4px 24px; color: ${C.textLight}; font-weight: 600;">Failed:</td>
+                  <td style="padding: 4px 0; color: ${C.alertText}; font-weight: 600;">${results.failed.length}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Total billed:</td>
-                  <td style="padding: 4px 0; color: #111827; font-weight: 600;" colspan="5">${money(succeededTotal)}</td>
+                  <td style="padding: 4px 16px 4px 0; color: ${C.textLight}; font-weight: 600;">Total billed:</td>
+                  <td style="padding: 4px 0; color: ${C.text}; font-weight: 600;" colspan="5">${money(succeededTotal)}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 4px 16px 4px 0; color: #374151; font-weight: 600;">Duration:</td>
-                  <td style="padding: 4px 0; color: #111827;" colspan="5">${durationMs} ms</td>
+                  <td style="padding: 4px 16px 4px 0; color: ${C.textLight}; font-weight: 600;">Duration:</td>
+                  <td style="padding: 4px 0; color: ${C.text};" colspan="5">${durationMs} ms</td>
                 </tr>
               </table>
             </div>
 
-            ${section('Succeeded', results.succeeded, '#059669')}
-            ${section('Skipped (idempotent — already billed this month)', results.skipped, '#d97706')}
-            ${section('Failed', results.failed, '#b91c1c')}
+            ${section('Succeeded', results.succeeded, C.successText)}
+            ${section('Skipped (idempotent — already billed this month)', results.skipped, C.warnText)}
+            ${section('Failed', results.failed, C.alertText)}
 
             ${results.failed.length > 0 ? `
-            <div style="background: #fee2e2; padding: 16px; border-radius: 8px; margin-top: 20px;">
-              <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">Failure Details</h3>
-              ${results.failed.map(r => `<p style="margin: 6px 0; color: #7f1d1d; font-size: 13px;"><strong>${esc(r.eventName || r.bookingId)}:</strong> ${esc(r.error || 'Unknown error')}</p>`).join('')}
+            <div style="background: ${C.alertBg}; border: 1px solid ${C.alertBorder}; padding: 16px; border-radius: 8px; margin-top: 20px;">
+              <h3 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; margin: 0 0 10px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 18px;">Failure Details</h3>
+              ${results.failed.map(r => `<p style="margin: 6px 0; color: ${C.alertBody}; font-size: 13px;"><strong>${esc(r.eventName || r.bookingId)}:</strong> ${esc(r.error || 'Unknown error')}</p>`).join('')}
             </div>
             ` : ''}
 
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
+              <p style="color: ${C.taupeLight}; font-size: 12px; margin: 0;">
                 Generated by the monthly-recurring-billing cron. A full row is stored in <code>cron_runs</code> for audit.
               </p>
             </div>
@@ -2088,7 +2152,7 @@ function inquiryDetailRows(inquiry) {
     .filter(([, v]) => v)
     // `k` is our own label; `v` is whatever the inquirer typed, so it is the
     // half that gets escaped.
-    .map(([k, v]) => `<tr><td style="padding: 4px 12px 4px 0; color: #6b5f5b; white-space: nowrap;"><strong>${k}</strong></td><td style="padding: 4px 0; color: #4a3f3c;">${esc(v)}</td></tr>`)
+    .map(([k, v]) => `<tr><td style="padding: 4px 12px 4px 0; color: ${C.textLight}; white-space: nowrap;"><strong>${k}</strong></td><td style="padding: 4px 0; color: ${C.text};">${esc(v)}</td></tr>`)
     .join('');
 }
 
@@ -2096,19 +2160,19 @@ export async function sendInquiryAck(inquiry) {
   const isWaitlist = inquiry.kind === 'waitlist';
   const heading = isWaitlist ? "You're on the list" : 'We received your inquiry';
   const body = isWaitlist
-    ? `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${esc(inquiry.startWindow)}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
-    : `<p style="color: #4a3f3c; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (720) 357-9499.</p>`;
+    ? `<p style="color: ${C.text}; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${esc(inquiry.startWindow)}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
+    : `<p style="color: ${C.text}; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (720) 357-9499.</p>`;
 
   const template = {
     subject: `${heading} — Merritt Wellness (${inquirySubjectDetail(inquiry)})`,
     html: `
-      <div style="font-family: Georgia, 'Times New Roman', serif; max-width: 560px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+      <div style="font-family: ${FONT_SANS}; max-width: 560px; margin: 0 auto; padding: 24px; background: ${C.warmWhite};">
         ${LOGO_HEADER}
-        <h2 style="color: #735e59; text-align: center;">${heading}</h2>
+        <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; text-align: center; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">${heading}</h2>
         ${body}
         <table style="margin: 16px 0; border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
-        ${inquiry.message ? `<p style="color: #6b5f5b; line-height: 1.6; border-left: 3px solid #a08b84; padding-left: 12px;">${esc(inquiry.message)}</p>` : ''}
-        <p style="color: #4a3f3c; line-height: 1.6;">Warmly,<br/>The Merritt Wellness team<br/>2246 Irving Street, Denver</p>
+        ${inquiry.message ? `<p style="color: ${C.textLight}; line-height: 1.6; border-left: 3px solid ${C.accent}; padding-left: 12px;">${esc(inquiry.message)}</p>` : ''}
+        <p style="color: ${C.text}; line-height: 1.6;">Warmly,<br/>The Merritt Wellness team<br/>2246 Irving Street, Denver</p>
       </div>`,
   };
 
@@ -2129,11 +2193,11 @@ export async function sendInquiryNotification(inquiry) {
   const template = {
     subject: `${inquiryKindLabel(inquiry)}: ${inquirySubjectDetail(inquiry)}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 16px;">
-        <h2 style="color: #735e59;">${inquiryKindLabel(inquiry)}</h2>
+      <div style="font-family: ${FONT_SANS}; max-width: 560px; margin: 0 auto; padding: 16px; background: ${C.warmWhite};">
+        <h2 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">${inquiryKindLabel(inquiry)}</h2>
         <table style="border-collapse: collapse;">${inquiryDetailRows(inquiry)}</table>
-        ${inquiry.message ? `<h3 style="color: #735e59; margin-bottom: 4px;">Message</h3><p style="color: #333; line-height: 1.5; white-space: pre-wrap;">${esc(inquiry.message)}</p>` : ''}
-        <p style="color: #888; font-size: 12px;">Submitted via merrittwellness.net (${esc(inquiry.page || 'unknown page')}). Reply goes straight to the inquirer.</p>
+        ${inquiry.message ? `<h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin-bottom: 4px; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">Message</h3><p style="color: ${C.text}; line-height: 1.5; white-space: pre-wrap;">${esc(inquiry.message)}</p>` : ''}
+        <p style="color: ${C.taupeLight}; font-size: 12px;">Submitted via merrittwellness.net (${esc(inquiry.page || 'unknown page')}). Reply goes straight to the inquirer.</p>
       </div>`,
   };
 
@@ -2174,21 +2238,21 @@ export async function sendDatabaseUnreachableAlert({ error, checkedAt = new Date
     to: recipients,
     subject: `⚠️ Merritt Wellness database unreachable (${day})`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 16px;">
-        <h2 style="color: #b3261e;">Database keep-alive failed</h2>
-        <p style="color: #333; line-height: 1.5;">
+      <div style="font-family: ${FONT_SANS}; max-width: 560px; margin: 0 auto; padding: 16px; background: ${C.warmWhite};">
+        <h2 style="font-family: ${FONT_SERIF}; color: ${C.alertText}; font-size: 21px; font-weight: 600; letter-spacing: 0.01em;">Database keep-alive failed</h2>
+        <p style="color: ${C.text}; line-height: 1.5;">
           The daily Supabase keep-alive check could not reach the database at
           ${checkedAt.toISOString()}. While this is failing, new bookings on
           merrittwellness.net may fail too.
         </p>
-        <p style="color: #333; line-height: 1.5;"><strong>Error:</strong> ${error || 'unknown'}</p>
-        <h3 style="color: #735e59; margin-bottom: 4px;">What to check</h3>
-        <ol style="color: #333; line-height: 1.6;">
+        <p style="color: ${C.text}; line-height: 1.5;"><strong>Error:</strong> ${error || 'unknown'}</p>
+        <h3 style="font-family: ${FONT_SERIF}; color: ${C.taupe}; margin-bottom: 4px; font-size: 17px; font-weight: 600; letter-spacing: 0.01em;">What to check</h3>
+        <ol style="color: ${C.text}; line-height: 1.6;">
           <li>Open the Supabase dashboard. If the project shows as <em>paused</em>, click Restore — it takes a few minutes.</li>
           <li>If it is active, check Supabase status for an ongoing incident.</li>
           <li>Once it is back, re-run the keep-alive to confirm: it should return <code>ok: true</code>.</li>
         </ol>
-        <p style="color: #888; font-size: 12px;">Sent by the supabase-keepalive cron job.</p>
+        <p style="color: ${C.taupeLight}; font-size: 12px;">Sent by the supabase-keepalive cron job.</p>
       </div>`,
   }, {
     label: `database unreachable alert ${day}`,

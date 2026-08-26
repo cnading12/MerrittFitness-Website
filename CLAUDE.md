@@ -107,6 +107,12 @@ Keep this cron even then — it doubles as a daily database health check.
 ## Email architecture map
 
 - `app/lib/email.js` — templates + individual send functions + retry wrapper.
+  Every template is styled from the `C` palette and the `FONT_SERIF` /
+  `FONT_SANS` stacks defined at the top of that file, which mirror the site
+  design tokens in `app/globals.css`. Mail clients ignore `<style>` blocks
+  and CSS variables, so the values are duplicated there and interpolated
+  into inline styles — style new templates from those constants rather than
+  pasting hex codes, and update them together with `globals.css`.
 - `app/lib/booking-fulfillment.js` — shared post-confirmation side effects
   (calendar event + email set). Used by BOTH the Stripe webhook (paid bookings)
   and `app/api/booking-request/route.js` (sponsored bookings, which never hit
