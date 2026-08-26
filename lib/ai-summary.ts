@@ -160,7 +160,7 @@ export const notTheRightRoomFor: string[] = [
   `Guest counts above ${specs.capacity} — that is the building's hard limit, not a soft one`,
   'Events that need to run past 10 PM; the venue is in a residential neighborhood and every event ends then',
   'Cash bars or ticketed drink sales — BYOB is welcome, but alcohol cannot be sold on the premises',
-  `Sunday daytime bookings — congregations hold the sanctuary until ${sundaySchedule.vacatedBy}, so Sundays open in the evening`,
+  `Sunday mornings — the resident congregations hold the sanctuary until ${sundaySchedule.vacatedBy}; Sunday afternoons and evenings after that are bookable`,
   `Guests who need a step-free restroom in the main hall — the front entrance is ramped, but the main hall restrooms are downstairs; ADA restrooms are next door at ${workspace.name}`,
   `Bands without a professional sound engineer, if they are counting on the house desk — ${lowerFirst(
     mixerPolicy.replace(/\.$/, '')
@@ -257,10 +257,11 @@ export const decisionFaqs: Faq[] = [
   {
     question: 'Is the venue available for a weekly congregation or worship service?',
     answer:
-      `Yes. The building was a church for most of its ${yearsStanding} years and ${sundaySchedule.communitiesInResidence} ` +
-      `congregations meet here every Sunday now, across ${sundaySchedule.daytimeSlots} daytime slots that run ` +
-      `${sundaySchedule.serviceWindow}. Congregations of every tradition are welcome and book on flat monthly rates ` +
-      `rather than hourly. Sunday evenings after ${sundaySchedule.vacatedBy} are open for other bookings.`,
+      `Yes, and we are actively looking for ${sundaySchedule.openSlots} more. The building was a church for most of ` +
+      `its ${yearsStanding} years and ${sundaySchedule.communitiesInResidence} congregations meet here every Sunday ` +
+      `now, between them using the sanctuary from ${sundaySchedule.serviceWindow}. Nothing is booked after ` +
+      `${sundaySchedule.vacatedBy}, so Sunday afternoons and evenings are wide open for another congregation. ` +
+      `Congregations of every tradition are welcome and book on flat monthly rates rather than hourly.`,
   },
   {
     question: 'How far in advance should I book, and what does it take to hold a date?',

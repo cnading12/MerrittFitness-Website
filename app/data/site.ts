@@ -273,14 +273,29 @@ export const openClassBlocks = {
   ],
 } as const;
 
-// Sunday congregation schedule shown on /congregations. The building holds
-// three daytime congregation slots; the space is vacated by 4:30 PM.
+// Sunday congregation schedule shown on /congregations.
+//
+// The two resident congregations between them hold 7:30 AM to 12:30 PM, and
+// nothing after that — so the sanctuary is free from 12:30 PM every Sunday and
+// we are actively looking to fill TWO more slots, not one. This used to read
+// "7 AM to 4:30 PM, three daytime slots, one open", which described a fuller
+// building than the real one and advertised a third of the availability we
+// actually have.
+//
+// `openSlots` is stated outright rather than derived from a total, because
+// there is no fixed number of slots a Sunday holds — it depends on how long
+// each congregation needs. Set it to what we are genuinely trying to fill.
+//
+// ⚠️ NOT the same thing as `hours.sundayOpens` above, which stays at 16:30
+// because it must mirror the Google Business Profile exactly (see the warning
+// on `hours`). If Sunday afternoons are now genuinely bookable from 12:30,
+// update the Business Profile FIRST, then `hours` to match it.
 export const sundaySchedule = {
-  serviceWindow: '7 AM to 4:30 PM',
-  vacatedBy: '4:30 PM',
+  serviceWindow: '7:30 AM to 12:30 PM',
+  vacatedBy: '12:30 PM',
   communitiesInResidence: 2,
-  daytimeSlots: 3,
-  eveningAvailability: 'Sunday evenings after 4:30 PM',
+  openSlots: 2,
+  availabilityAfter: 'Sunday afternoons and evenings from 12:30 PM',
 } as const;
 
 // Merritt Workspace member benefit: included Merritt Wellness venue hours.
@@ -318,6 +333,12 @@ export interface EventTypeBlock {
   description: string;
 }
 
+// ORDER IS THE EMPHASIS. This array renders left-to-right, three across, on
+// /private-events, so the first row is what a visitor sees before scrolling.
+// It used to open weddings / concerts / art shows — three one-off bookings —
+// which put both RECURRING lines, the ones that actually fill a calendar week
+// after week, below the fold. Weddings still lead (highest value per booking),
+// then the two standing-block lines. Reorder only with that trade in mind.
 export const eventTypes: EventTypeBlock[] = [
   {
     key: 'weddings',
@@ -325,20 +346,6 @@ export const eventTypes: EventTypeBlock[] = [
     href: '/weddings',
     description:
       'Ceremonies and receptions under 24-foot vaulted ceilings, with original stained glass and room for up to 125 guests.',
-  },
-  {
-    key: 'concerts',
-    title: 'Concerts & Performances',
-    href: '/concerts',
-    description:
-      'Live music, recitals, and performances in a hall built for sound, with a surround system and a cafe lounge for intermission.',
-  },
-  {
-    key: 'art-shows',
-    title: 'Art Shows & Exhibitions',
-    href: '/art-shows',
-    description:
-      'Openings and exhibitions with hardwood floors, tall walls, and natural light that lets the work carry the room.',
   },
   {
     key: 'wellness-classes',
@@ -353,6 +360,20 @@ export const eventTypes: EventTypeBlock[] = [
     href: '/congregations',
     description:
       'A sanctuary since 1905, open to congregations and spiritual communities of every tradition. Two churches meet here every Sunday.',
+  },
+  {
+    key: 'concerts',
+    title: 'Concerts & Performances',
+    href: '/concerts',
+    description:
+      'Live music, recitals, and performances in a hall built for sound, with a surround system and a cafe lounge for intermission.',
+  },
+  {
+    key: 'art-shows',
+    title: 'Art Shows & Exhibitions',
+    href: '/art-shows',
+    description:
+      'Openings and exhibitions with hardwood floors, tall walls, and natural light that lets the work carry the room.',
   },
   {
     key: 'celebrations-of-life',

@@ -116,13 +116,32 @@ export default function PrivateEventsPage() {
               Built for gathering, whatever the occasion
             </h2>
           </div>
+          {/* Two audiences read this paragraph, and it used to serve only one.
+              The list ran weddings, concerts, celebrations of life, parties,
+              offsites — every one of them a single date. But the bookings that
+              actually fill a calendar are the standing ones: the instructor
+              with a Tuesday block, the congregation with a Sunday morning. So
+              the recurring and wellness side leads now, with the one-off list
+              kept whole behind it. Do not cut the long list to make room —
+              breadth is the other half of the point, and a venue that names
+              only classes stops reading as a venue. */}
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mx-auto text-center mb-14">
-            The hall has spent 120 years holding the moments that matter to people. Today that
-            means weddings and concerts, and just as often celebrations of life, memorial
-            services, quinceañeras, birthday parties, baby and bridal showers, graduation
-            parties, and corporate offsites. If it involves people gathering with intention,
-            the room already knows how to hold it. Host it privately or open the doors to
-            the public; that choice is yours, made booking by booking.
+            Most weeks the hall belongs to the people who are here every week: yoga and
+            breathwork teachers, sound practitioners, dance instructors, martial arts
+            schools, and two congregations who have made Sunday mornings theirs. We hold{' '}
+            <Link
+              href="/class-partnerships"
+              className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
+            >
+              standing weekly blocks at partner rates
+            </Link>{' '}
+            for exactly that, and we are always looking for more of them. Around that runs
+            everything else the room has held in 120 years — weddings and concerts, art
+            openings, celebrations of life and memorial services, quinceañeras, birthday
+            parties, baby and bridal showers, graduation parties, and corporate offsites.
+            If it involves people gathering with intention, the room already knows how to
+            hold it. Host it privately or open the doors to the public; that choice is
+            yours, made booking by booking.
           </p>
 
           {/* One grid for every event type. Types with a dedicated page link

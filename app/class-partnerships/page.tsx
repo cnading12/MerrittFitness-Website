@@ -175,14 +175,16 @@ export default function ClassPartnershipsPage() {
       <section className="py-24 bg-white/60">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-            Built for movement, not just yoga
+            Built for every kind of practice
           </h2>
           <p className="text-[#6b5f5b] leading-relaxed max-w-3xl mb-12">
-            Yoga and sound work started here, and dance socials, line dance nights, and a youth
-            martial arts program all followed. The full-coverage mat rolls out over the entire
-            floor for grappling and groundwork, {specs.mirrorFeet} feet of rollaway mirrors
-            handle form and technique, and the surround system fills the room without a
-            portable speaker in sight.
+            Yoga and sound work fill most weeks on this calendar, alongside breathwork,
+            dance socials, line dance nights, tai chi, pilates, and a youth martial arts
+            program — frequently in the same week, sometimes on the same day. The
+            full-coverage mat rolls out over the entire floor for grappling and groundwork,
+            {' '}{specs.mirrorFeet} feet of rollaway mirrors handle form and technique, and
+            the surround system fills the room without a portable speaker in sight. Whatever
+            you teach, the room has almost certainly held something like it.
           </p>
           <Gallery
             images={[

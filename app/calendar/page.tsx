@@ -558,65 +558,6 @@ export default function EventsPage() {
           </div>
         </section>
 
-        {/* What actually happens here.
-            The page used to say only "transformative experiences in our
-            historic sanctuary" — evocative, but it named none of the things
-            people actually search for, so the only indexable text on the
-            venue's highest-intent public page was the event cards themselves.
-            This block states the real recurring programme in plain language
-            and links each thread to the page that sells it. */}
-        <section className="pt-16 pb-4">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
-              What happens here
-              <span className="block font-bold text-[#735e59]">most weeks</span>
-            </h2>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-8" />
-            <div className="space-y-5 text-left md:text-center">
-              <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                Merritt Wellness is a public venue as much as a private one. In
-                any given month the calendar below holds{' '}
-                <strong className="font-semibold text-[#4a3f3c]">sound baths</strong> and
-                sound immersions, <strong className="font-semibold text-[#4a3f3c]">breathwork</strong>{' '}
-                gatherings, yin, restorative and vinyasa{' '}
-                <strong className="font-semibold text-[#4a3f3c]">yoga classes</strong>,
-                salsa and bachata{' '}
-                <strong className="font-semibold text-[#4a3f3c]">dance classes</strong>,
-                songwriters&apos; rounds and live concerts, somatic therapy
-                sessions, neighborhood meetings, and two Sunday church services
-                — nearly all of it run by independent Denver practitioners who
-                rent the hall.
-              </p>
-              <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                The 24-foot vaulted ceilings and original sanctuary acoustics
-                are why so many sound and breath practitioners choose this room,
-                and the 22 on-site parking spots are why their students keep
-                coming back. Everything listed here is open to the public;
-                prices and booking links are on each card.
-              </p>
-              <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                Teach something?{' '}
-                <Link
-                  href="/class-partnerships"
-                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
-                >
-                  Host a class or workshop here
-                </Link>
-                , or hold a{' '}
-                <Link
-                  href="/recurring"
-                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
-                >
-                  standing weekly block at partner rates
-                </Link>
-                . Every public event you run here gets co-promoted on this
-                calendar, our community board, and our social channels at no
-                charge.
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* Events Grid */}
         <section className="py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
@@ -673,6 +614,73 @@ export default function EventsPage() {
             ) : (
               <EmptyState dateRange={dateRange} />
             )}
+          </div>
+        </section>
+
+        {/* What actually happens here.
+            The page used to say only "transformative experiences in our
+            historic sanctuary" — evocative, but it named none of the things
+            people actually search for, so the only indexable text on the
+            venue's highest-intent public page was the event cards themselves.
+            This block states the real recurring programme in plain language
+            and links each thread to the page that sells it.
+
+            It sits BELOW the events grid on purpose. Someone landing on
+            "What's On" is asking one question — what can I go to? — and three
+            paragraphs of venue prose above the fold answered a different one.
+            The copy still earns its keep for search and for the visitor who
+            scrolls past the cards wanting the fuller picture, so it stays on
+            the page; it just no longer outranks the events themselves. Do not
+            move it back above the grid. */}
+        <section className="pt-4 pb-4">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-light text-[#4a3f3c] font-serif mb-6">
+              What happens here
+              <span className="block font-bold text-[#735e59]">most weeks</span>
+            </h2>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-[#735e59] to-transparent mx-auto mb-8" />
+            <div className="space-y-5 text-left md:text-center">
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                Merritt Wellness is a public venue as much as a private one. In
+                any given month the calendar below holds{' '}
+                <strong className="font-semibold text-[#4a3f3c]">sound baths</strong> and
+                sound immersions, <strong className="font-semibold text-[#4a3f3c]">breathwork</strong>{' '}
+                gatherings, yin, restorative and vinyasa{' '}
+                <strong className="font-semibold text-[#4a3f3c]">yoga classes</strong>,
+                salsa and bachata{' '}
+                <strong className="font-semibold text-[#4a3f3c]">dance classes</strong>,
+                songwriters&apos; rounds and live concerts, somatic therapy
+                sessions, neighborhood meetings, and two Sunday church services
+                — nearly all of it run by independent Denver practitioners who
+                rent the hall.
+              </p>
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                The 24-foot vaulted ceilings and original sanctuary acoustics
+                are why so many sound and breath practitioners choose this room,
+                and the 22 on-site parking spots are why their students keep
+                coming back. Everything listed here is open to the public;
+                prices and booking links are on each card.
+              </p>
+              <p className="text-lg text-[#6b5f5b] leading-relaxed">
+                Teach something?{' '}
+                <Link
+                  href="/class-partnerships"
+                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
+                >
+                  Host a class or workshop here
+                </Link>
+                , or hold a{' '}
+                <Link
+                  href="/recurring"
+                  className="text-[#735e59] font-semibold underline decoration-[#735e59]/30 underline-offset-4 hover:decoration-[#735e59] transition-colors"
+                >
+                  standing weekly block at partner rates
+                </Link>
+                . Every public event you run here gets co-promoted on this
+                calendar, our community board, and our social channels at no
+                charge.
+              </p>
+            </div>
           </div>
         </section>
 

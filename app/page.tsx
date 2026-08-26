@@ -247,16 +247,16 @@ export default function Home() {
                   </span>
                   <h2 className="text-4xl md:text-5xl font-light leading-tight text-[#4a3f3c] mb-6 font-serif">
                     Denver's Sacred Space
-                    <span className="block font-bold text-[#735e59]">for Wellness & Community</span>
+                    <span className="block font-bold text-[#735e59]">for Every Gathering</span>
                   </h2>
                   <div className="w-16 h-0.5 bg-gradient-to-r from-[#735e59] to-transparent mb-8"></div>
                   <div className="space-y-6">
                     {/* ENHANCED: Better local SEO content */}
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. The building offers Denver's wellness community, event hosts, and celebrating families a truly unique sanctuary.
+                      Located in Denver's beloved Sloans Lake neighborhood, Merritt Wellness occupies a lovingly restored 1905 landmark that has served our community for over a century. Weddings, concerts, art openings, movement and wellness classes, memorials, milestone parties, and two Sunday congregations all share the same hall.
                     </p>
                     <p className="text-lg text-[#6b5f5b] leading-relaxed">
-                      Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and perfect acoustics that make every yoga class, sound bath, and meditation session an extraordinary experience. From Highland to Berkeley, Regis to Sloans Lake, Denver wellness seekers find their home here.
+                      Our 2,400 square foot space features original stained glass, soaring 24-foot ceilings, and acoustics good enough that a string quartet and a sound bath both sound right in it. From Highland to Berkeley, Regis to Sloans Lake, this is where Denver comes to gather.
                     </p>
                   </div>
                 </div>
@@ -367,14 +367,14 @@ export default function Home() {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                 </svg>
-                Book Your Denver Wellness Experience
+                Book the Hall
               </span>
               <h2 className="text-4xl md:text-6xl font-light text-[#f2eee9] mb-8 font-serif">
                 Reserve Your
                 <span className="block font-bold">Sloans Lake Sanctuary</span>
               </h2>
               <p className="text-xl text-[#f2eee9]/80 max-w-3xl mx-auto leading-relaxed mb-12">
-                Join Denver's vibrant wellness community or create your own transformative experience in Colorado's most inspiring historic yoga and meditation space
+Whatever you are planning — a wedding, a concert, a weekly class, a celebration of life, or a Sunday service — the calendar below is live, and the rates are published. No quote request, no waiting to hear back.
               </p>
             </div>
 
