@@ -7,7 +7,7 @@ import { getBlurDataURL } from '@/lib/blur-data';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Calendar, ChevronDown } from 'lucide-react';
-import { navItems } from '@/app/data/site';
+import { navItems, contact } from '@/app/data/site';
 
 // Routes whose pages open with a full-bleed photo hero. On these, the navbar
 // starts fully transparent (light text over the darkened image) and gains its
@@ -329,10 +329,10 @@ export default function Navbar() {
                 Book the Venue
               </Link>
               <a
-                href="tel:720-357-9499"
+                href={contact.primary.phoneHref}
                 className="block text-center text-sm text-[#735e59]/80 mt-3"
               >
-                Questions? Call (720) 357-9499
+                Questions? Call {contact.primary.phone}
               </a>
             </div>
           </div>

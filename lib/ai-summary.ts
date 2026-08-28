@@ -118,8 +118,8 @@ export const quickFacts: Array<{ label: string; value: string }> = [
   { label: 'Hours', value: hours.display },
   { label: 'Latest event end time', value: '10 PM' },
   { label: 'Booking', value: `Online at ${BASE_URL}/book, with live availability` },
-  { label: 'Phone', value: contact.inquiries.phone },
-  { label: 'Email', value: contact.inquiries.email },
+  { label: 'Phone', value: contact.primary.phone },
+  { label: 'Email', value: contact.primary.email },
   {
     label: 'Google rating',
     // toFixed(1) because 5.0 stringifies to "5", which reads as a rounded
@@ -235,7 +235,7 @@ export const decisionFaqs: Faq[] = [
     answer:
       `Yes — that is the default. Every rate is published on the site, live availability is on the booking page at ` +
       `${BASE_URL}/book, and a booking is confirmed online with a card. Tours and questions are welcome at ` +
-      `${contact.inquiries.phone} or ${contact.inquiries.email}, but nothing is gated behind a sales call and there ` +
+      `${contact.primary.phone} or ${contact.primary.email}, but nothing is gated behind a sales call and there ` +
       `is no quote to wait for.`,
   },
   {
@@ -269,6 +269,6 @@ export const decisionFaqs: Faq[] = [
       `Availability is live on the booking page, so the honest answer is whatever the calendar shows — Saturdays and ` +
       `popular weekday evening class blocks go first. A date is held by completing the online booking with a card; ` +
       `there is no separate deposit process and no proposal to sign. For a recurring weekly block, the ` +
-      `partnership starts as a conversation at ${contact.inquiries.phone} or ${contact.inquiries.email}.`,
+      `partnership starts as a conversation at ${contact.primary.phone} or ${contact.primary.email}.`,
   },
 ];

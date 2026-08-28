@@ -94,45 +94,47 @@ export default function Footer() {
                 </span>
               </a>
             </div>
-            <div>
-              <span className="block text-xs font-semibold uppercase tracking-wide text-[#a08b84] mb-1.5">
-                New Events &amp; Tours
-              </span>
-              <div className="space-y-1">
-                <a
-                  href={contact.inquiries.phoneHref}
-                  className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200"
-                >
-                  <Phone size={14} />
-                  {contact.inquiries.phone}
-                </a>
-                <a
-                  href={`mailto:${contact.inquiries.email}`}
-                  className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200 break-all"
-                >
-                  <Mail size={14} className="shrink-0" />
-                  {contact.inquiries.email}
-                </a>
-              </div>
-            </div>
+            {/* Client services first — it is the contact of record. See the
+                routing rule in app/data/site.ts before reordering these. */}
             <div>
               <span className="block text-xs font-semibold uppercase tracking-wide text-[#a08b84] mb-1.5">
                 Client Services
               </span>
               <div className="space-y-1">
                 <a
-                  href={contact.clientServices.phoneHref}
+                  href={contact.primary.phoneHref}
                   className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200"
                 >
                   <Phone size={14} />
-                  {contact.clientServices.phone}
+                  {contact.primary.phone}
                 </a>
                 <a
-                  href={`mailto:${contact.clientServices.email}`}
+                  href={`mailto:${contact.primary.email}`}
                   className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200 break-all"
                 >
                   <Mail size={14} className="shrink-0" />
-                  {contact.clientServices.email}
+                  {contact.primary.email}
+                </a>
+              </div>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-[#a08b84] mb-1.5">
+                Venue Manager
+              </span>
+              <div className="space-y-1">
+                <a
+                  href={contact.manager.phoneHref}
+                  className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200"
+                >
+                  <Phone size={14} />
+                  {contact.manager.phone}
+                </a>
+                <a
+                  href={`mailto:${contact.manager.email}`}
+                  className="flex items-center gap-2 text-sm text-[#6b5f5b] hover:text-[#735e59] transition-colors duration-200 break-all"
+                >
+                  <Mail size={14} className="shrink-0" />
+                  {contact.manager.email}
                 </a>
               </div>
             </div>

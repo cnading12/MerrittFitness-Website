@@ -229,8 +229,8 @@ export default function StudioPage() {
               {workspace.url.replace('https://', '')}
             </Link>
             . Questions about how the venue hours work? Email{' '}
-            <a href={`mailto:${contact.inquiries.email}`} className="underline hover:text-[#735e59]">
-              {contact.inquiries.email}
+            <a href={`mailto:${contact.primary.email}`} className="underline hover:text-[#735e59]">
+              {contact.primary.email}
             </a>
             .
           </p>

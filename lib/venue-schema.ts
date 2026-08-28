@@ -31,8 +31,8 @@ export function venueJsonLd({ path, name, description, images }: VenueJsonLdOpti
     description,
     url: `${BASE_URL}${path}`,
     image: images.map(absoluteUrl),
-    telephone: contact.inquiries.phoneE164,
-    email: contact.inquiries.email,
+    telephone: contact.primary.phoneE164,
+    email: contact.primary.email,
     address: {
       '@type': 'PostalAddress',
       streetAddress: contact.address.street,

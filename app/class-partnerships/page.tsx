@@ -156,10 +156,10 @@ export default function ClassPartnershipsPage() {
               </Link>
               , which shows every open date and time, or email{' '}
               <a
-                href={`mailto:${contact.inquiries.email}`}
+                href={`mailto:${contact.primary.email}`}
                 className="underline decoration-[#735e59]/40 hover:text-[#735e59] font-semibold"
               >
-                {contact.inquiries.email}
+                {contact.primary.email}
               </a>{' '}
               and we will walk the open blocks with you.
             </p>

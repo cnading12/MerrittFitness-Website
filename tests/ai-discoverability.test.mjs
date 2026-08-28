@@ -172,21 +172,24 @@ test('/llms.txt keeps the shape an answer engine expects', () => {
   );
 });
 
-test('/llms.txt routes every new enquiry to the inquiries contact only', () => {
-  // CLAUDE.md's contact-routing rule: clientservices@ is for people who have
-  // already booked. A machine-readable summary is precisely where that
-  // distinction gets flattened, so the client-services details are simply
-  // absent from this file rather than labelled.
+test('/llms.txt publishes the primary contact only', () => {
+  // The contact-routing rule in app/data/site.ts: contact.primary (client
+  // services) is the venue's contact of record, and the manager line is a
+  // secondary contact for partnerships and long-term planning. A
+  // machine-readable summary is precisely where that distinction gets
+  // flattened, so the manager details are simply absent from this file rather
+  // than labelled — an assistant that quotes one number must quote the one
+  // that answers fastest.
   const code = readCode(LLMS);
 
   assert.doesNotMatch(
     code,
-    /clientServices/,
-    '/llms.txt must not publish the client-services phone or email. An assistant summarising ' +
-      'this file will not reliably preserve the "existing clients only" caveat, and a new ' +
-      "renter's enquiry then lands in the wrong inbox."
+    /contact\.manager/,
+    '/llms.txt must not publish the manager phone or email. An assistant summarising this ' +
+      'file will not reliably preserve the "secondary contact" caveat, and a new renter\'s ' +
+      'enquiry then lands in the slower inbox.'
   );
-  assert.match(code, /contact\.inquiries/, '/llms.txt must still publish the inquiries contact');
+  assert.match(code, /contact\.primary/, '/llms.txt must publish the primary contact');
 });
 
 test('/venue-facts renders server-side with no facts behind an interaction', () => {

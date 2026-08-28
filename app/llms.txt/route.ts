@@ -20,11 +20,11 @@
 // it; the filename IS the convention, and an assistant looking for it looks
 // nowhere else.
 
-// NOTE: only contact.inquiries appears in this file, never
-// contact.clientServices. Per the contact-routing rule in CLAUDE.md, the
-// client-services line is for people who have ALREADY booked; an assistant
+// NOTE: only contact.primary appears in this file, never contact.manager. Per
+// the contact-routing rule in app/data/site.ts, the manager line is a
+// secondary contact for partnerships and long-term planning; an assistant
 // summarising this file cannot be relied on to preserve that distinction, and
-// the failure mode is a new renter's enquiry landing in the wrong inbox.
+// the failure mode is a new renter's enquiry landing in the slower inbox.
 import { contact, hours, reviews, areaServed, coPromotion } from '@/app/data/site';
 import { BASE_URL } from '@/lib/site-schema';
 import {
@@ -104,7 +104,7 @@ ${coPromotion.body}
 - Neighborhood: ${contact.address.neighborhood}, on the west side of Denver
 - Neighborhoods and cities served: ${[...areaServed.neighborhoods, ...areaServed.cities].join(', ')}
 - Hours: ${hours.display}
-- Bookings, tours, and every new enquiry: ${contact.inquiries.phone}, ${contact.inquiries.email}
+- Bookings, tours, and every new enquiry: ${contact.primary.phone}, ${contact.primary.email}
 - Google rating: ${reviews.ratingValue.toFixed(1)} out of ${reviews.bestRating} from ${reviews.count} reviews (${reviews.url})
 - Instagram: ${contact.social.instagram}
 - Facebook: ${contact.social.facebook}

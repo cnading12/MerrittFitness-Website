@@ -106,7 +106,7 @@ const faqs: Faq[] = [
   },
   {
     question: 'Where is Merritt Wellness located?',
-    answer: `${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip} — on the west side of Denver in the ${contact.address.neighborhood} neighborhood, minutes from Highland, Berkeley, West Colfax, Jefferson Park, and Edgewater. Call ${contact.inquiries.phone} or email ${contact.inquiries.email} to arrange a tour.`,
+    answer: `${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip} — on the west side of Denver in the ${contact.address.neighborhood} neighborhood, minutes from Highland, Berkeley, West Colfax, Jefferson Park, and Edgewater. Call ${contact.primary.phone} or email ${contact.primary.email} to arrange a tour.`,
   },
 ];
 
@@ -440,14 +440,14 @@ Whatever you are planning — a wedding, a concert, a weekly class, a celebratio
               </Link>
 
               <a
-                href="tel:720-357-9499"
+                href={contact.primary.phoneHref}
                 className="group border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-16 py-6 rounded-full backdrop-blur-sm hover:bg-[#f2eee9] hover:text-[#735e59] transition-all duration-500 hover:border-[#f2eee9] text-lg"
               >
                 <span className="flex items-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Call (720) 357-9499
+                  Call {contact.primary.phone}
                 </span>
               </a>
             </div>
@@ -537,7 +537,7 @@ Whatever you are planning — a wedding, a concert, a weekly class, a celebratio
                       <h3 className="text-xl font-bold text-[#4a3f3c] mb-2 group-hover:text-[#735e59] transition-colors duration-300 font-serif">Connect with Us</h3>
                       <p className="text-[#6b5f5b] text-lg leading-relaxed">
                         Ready to answer your call<br />
-                        <span className="text-sm text-[#a08b84]">(720) 357-9499 • manager@merrittwellness.net</span>
+                        <span className="text-sm text-[#a08b84]">{contact.primary.phone} • {contact.primary.email}</span>
                       </p>
                     </div>
                   </div>

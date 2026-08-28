@@ -117,12 +117,12 @@ export async function POST(request) {
     console.error('❌ Inquiry notification email failed:', error.message);
   }
 
-  // The inquiry is safe if it reached the database OR the manager's inbox.
+  // The inquiry is safe if it reached the database OR the ops team's inbox.
   if (stored || notificationSent) {
     return Response.json({ success: true, ackSent });
   }
   return Response.json(
-    { error: 'We could not submit your inquiry. Please email manager@merrittwellness.net or call (720) 357-9499.' },
+    { error: 'We could not submit your inquiry. Please email clientservices@merrittwellness.net or call (303) 359-8337.' },
     { status: 500 }
   );
 }

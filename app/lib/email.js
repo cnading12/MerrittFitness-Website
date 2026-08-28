@@ -998,13 +998,16 @@ const EMAIL_TEMPLATES = {
           <div style="background: ${C.warnBg}; border: 1px solid ${C.warnBorder}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${C.warnRule};">
             <h2 style="font-family: ${FONT_SERIF}; color: ${C.warnText}; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.01em; font-size: 20px;">Manager Contact</h2>
             <p style="color: ${C.warnBody}; line-height: 1.6; margin: 0 0 10px 0;">
-              The <strong>manager@merrittwellness.net</strong> email and <strong><a href="tel:+17203579499" style="color: ${C.warnText}; text-decoration: none;">720-357-9499</a></strong> phone line are reserved strictly for:
+              The <strong>manager@merrittwellness.net</strong> email and <strong><a href="tel:+17203579499" style="color: ${C.warnText}; text-decoration: none;">720-357-9499</a></strong> phone line are a secondary contact, for:
             </p>
             <ul style="margin: 10px 0; padding-left: 20px; color: ${C.warnBody};">
-              <li style="margin-bottom: 5px;">Future booking inquiries</li>
-              <li style="margin-bottom: 5px;">Additional dates</li>
-              <li style="margin-bottom: 5px;">Large-scale or long-term planning questions</li>
+              <li style="margin-bottom: 5px;">Partnerships and long-term planning questions</li>
+              <li style="margin-bottom: 5px;">Ownership questions</li>
             </ul>
+            <p style="color: ${C.warnBody}; line-height: 1.6; margin: 10px 0 0 0;">
+              Anything to do with an event — including additional dates and future bookings — is
+              faster through client services above.
+            </p>
             <p style="color: ${C.textLight}; font-size: 14px; margin: 10px 0 0 0;">
               Using the correct contact helps us respond quickly and keeps everything organized for your event.
             </p>
@@ -1197,7 +1200,7 @@ const EMAIL_TEMPLATES = {
           <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid ${C.creamDark};">
             <p style="color: ${C.textLight}; line-height: 1.6; margin: 0 0 15px 0;">
               The sooner we receive these, the more runway we have to promote your event. Just reply to this email with your materials, or reach out to
-              <a href="mailto:manager@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">manager@merrittwellness.net</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">clientservices@merrittwellness.net</a>
               with any questions — we're excited to help make your event a success.
             </p>
           </div>
@@ -1208,8 +1211,8 @@ const EMAIL_TEMPLATES = {
             <p style="color: ${C.text}; font-weight: 600; margin: 0 0 10px 0;">Merritt Wellness Team</p>
             <p style="color: ${C.textLight}; font-size: 14px; margin: 0;">
               <a href="https://MerrittWellness.net" style="color: ${C.taupe}; text-decoration: none;">MerrittWellness.net</a><br>
-              <a href="mailto:manager@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">manager@merrittwellness.net</a><br>
-              <a href="tel:+17203579499" style="color: ${C.taupe}; text-decoration: none;">720-357-9499</a>
+              <a href="mailto:clientservices@merrittwellness.net" style="color: ${C.taupe}; text-decoration: none;">clientservices@merrittwellness.net</a><br>
+              <a href="tel:+13033598337" style="color: ${C.taupe}; text-decoration: none;">303-359-8337</a>
             </p>
           </div>
 
@@ -1826,12 +1829,12 @@ export async function sendPublicEventMarketing(booking) {
 
     const template = EMAIL_TEMPLATES.publicEventMarketing(booking);
 
-    // Public events are handled by the manager, so renter replies (and their
-    // marketing materials) should land in the manager's inbox rather than
-    // client services. Fall back to client services if no manager is configured.
-    // No staff BCC — staff only receive the booking notification email.
+    // Renter replies (and their marketing materials) land with client
+    // services, the contact of record — the same address this email's body
+    // and signature give them, so a reply and a fresh email reach the same
+    // desk. No staff BCC — staff only receive the booking notification email.
     const ops = getOpsEmails();
-    const replyTo = ops.manager || EMAIL_CONFIG.clientServicesEmail;
+    const replyTo = ops.clientServices || EMAIL_CONFIG.clientServicesEmail;
 
     const payload = {
       from: EMAIL_CONFIG.from,
@@ -2111,7 +2114,8 @@ export async function sendConfirmationEmails(booking) {
 // inquiry object, not a booking. Both sends follow the delivery rules at the
 // top of CLAUDE.md: sendEmailWithRetry, Idempotency-Key per inquiry id,
 // client ack BEFORE the staff notification, and the staff notification goes
-// to the manager (new inquiries never route to client services).
+// to the whole ops team (client services is the contact of record and answers
+// new inquiries; see the routing rule in app/data/site.ts).
 // ---------------------------------------------------------------------------
 
 const INQUIRY_KIND_LABELS = {
@@ -2161,7 +2165,7 @@ export async function sendInquiryAck(inquiry) {
   const heading = isWaitlist ? "You're on the list" : 'We received your inquiry';
   const body = isWaitlist
     ? `<p style="color: ${C.text}; line-height: 1.6;">Thanks for your interest in studio space at Merritt Wellness. You're on the waitlist${inquiry.startWindow ? ` for a start around <strong>${esc(inquiry.startWindow)}</strong>` : ''}. When a block opens up, we reach out in the order inquiries came in.</p>`
-    : `<p style="color: ${C.text}; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (720) 357-9499.</p>`;
+    : `<p style="color: ${C.text}; line-height: 1.6;">Thanks for reaching out about hosting at Merritt Wellness. We read every inquiry and reply personally, usually within one business day. If it's time-sensitive, call us at (303) 359-8337.</p>`;
 
   const template = {
     subject: `${heading} — Merritt Wellness (${inquirySubjectDetail(inquiry)})`,
@@ -2176,11 +2180,13 @@ export async function sendInquiryAck(inquiry) {
       </div>`,
   };
 
+  // Replies land with client services, the contact of record — the same
+  // line the ack tells the inquirer to call.
   const ops = getOpsEmails();
   return sendEmailWithRetry({
     from: EMAIL_CONFIG.from,
     to: [inquiry.email],
-    replyTo: ops.manager || STAFF_FALLBACK_EMAILS[0],
+    replyTo: ops.clientServices || EMAIL_CONFIG.clientServicesEmail,
     ...template,
   }, {
     label: `inquiry ack ${inquiry.id}`,
@@ -2201,14 +2207,17 @@ export async function sendInquiryNotification(inquiry) {
       </div>`,
   };
 
-  // New inquiries route to the manager ONLY — never client services (that
-  // address is for existing booked clients).
-  const ops = getOpsEmails();
-  const to = ops.manager || STAFF_FALLBACK_EMAILS[0];
+  // New inquiries route to the WHOLE ops team, client services included.
+  // Client services is the venue's contact of record (see the routing rule in
+  // app/data/site.ts) and is the line every page now publishes, so it must see
+  // the lead it will be answering; the manager stays on the list so nothing is
+  // lost when they pick it up instead. This used to be manager-only, which
+  // meant a lead sat unread whenever that one inbox did.
+  const to = getStaffRecipients();
 
   return sendEmailWithRetry({
     from: EMAIL_CONFIG.from,
-    to: [to],
+    to,
     replyTo: inquiry.email,
     ...template,
   }, {

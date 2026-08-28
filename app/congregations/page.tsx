@@ -237,7 +237,7 @@ export default function CongregationsPage() {
             successMessage="Thank you. Finding the right home for a community is worth a real conversation, and we will reply personally, usually within one business day."
           />
           <p className="text-center text-sm text-[#a08b84] mt-6">
-            Or call {contact.inquiries.phone}. No pitch, just a walkthrough and honest answers
+            Or call {contact.primary.phone}. No pitch, just a walkthrough and honest answers
             about whether the space serves your community.
           </p>
         </div>

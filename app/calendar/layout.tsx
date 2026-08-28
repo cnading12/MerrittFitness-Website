@@ -194,7 +194,7 @@ function buildEventSchema(event: Event) {
       '@type': 'Organization',
       name: 'Merritt Wellness',
       url: BASE_URL,
-      telephone: contact.inquiries.phoneE164,
+      telephone: contact.primary.phoneE164,
     },
   };
 
