@@ -6,9 +6,19 @@
 // member benefits, and the event-type content blocks that feed
 // /private-events.
 //
-// CONTACT ROUTING RULE: all NEW inquiries (forms, mailto links, CTAs) go to
-// `contact.inquiries`. clientservices@merrittwellness.net is for existing
-// booked clients only and must never receive new-inquiry traffic.
+// CONTACT ROUTING RULE: `contact.primary` — client services — is the venue's
+// contact of record. Everything public-facing points at it: forms, mailto
+// links, phone CTAs, JSON-LD `telephone`/`email`, and the machine-readable
+// summaries in /llms.txt and lib/ai-summary.ts. It is a monitored inbox and
+// phone line, so it answers fastest and is never a single person's queue.
+//
+// `contact.manager` is the SECONDARY line, kept for ownership, partnership,
+// and long-term planning questions and for continuity with printed material
+// that still carries it. It is never the default anywhere, and it is never
+// the only contact shown — if a page lists one number, that number is
+// `contact.primary.phone`. This reverses an earlier rule that sent every new
+// inquiry to the manager line and reserved client services for booked
+// clients; if you find copy still saying that, it is stale.
 
 // Safe to import from this file even though marketing pages are client
 // components: flex-space-hours.js is a dependency-free module of constants and
@@ -20,18 +30,21 @@ import {
 } from '@/app/lib/flex-space-hours';
 
 export const contact = {
-  inquiries: {
-    email: 'manager@merrittwellness.net',
-    phone: '(720) 357-9499',
-    phoneHref: 'tel:720-357-9499',
-    // E.164, for JSON-LD `telephone` properties. Schema.org consumers expect
-    // an unambiguous international form, not the display format.
-    phoneE164: '+1-720-357-9499',
-  },
-  clientServices: {
+  /** The venue's contact of record. Default for every public-facing use. */
+  primary: {
     email: 'clientservices@merrittwellness.net',
     phone: '(303) 359-8337',
     phoneHref: 'tel:303-359-8337',
+    // E.164, for JSON-LD `telephone` properties. Schema.org consumers expect
+    // an unambiguous international form, not the display format.
+    phoneE164: '+1-303-359-8337',
+  },
+  /** Secondary line. See the routing rule above before pointing anything here. */
+  manager: {
+    email: 'manager@merrittwellness.net',
+    phone: '(720) 357-9499',
+    phoneHref: 'tel:720-357-9499',
+    phoneE164: '+1-720-357-9499',
   },
   address: {
     street: '2246 Irving Street',

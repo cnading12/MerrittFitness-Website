@@ -15,7 +15,7 @@ const rateSummary = `${money(rateBands[0].weekday)}-${money(
 
 export const metadata: Metadata = {
   title: "Book the Venue | Check Availability & Rates | Merritt Wellness Denver",
-  description: `Check real-time availability and book Merritt Wellness, a historic ${specs.built} event venue in Denver's ${contact.address.neighborhood}. Weddings, private events, concerts, workshops, and weekly class blocks for up to ${specs.capacity} guests. Published rates ${rateSummary}, ${minimumHours}-hour minimum. Call ${contact.inquiries.phone}.`,
+  description: `Check real-time availability and book Merritt Wellness, a historic ${specs.built} event venue in Denver's ${contact.address.neighborhood}. Weddings, private events, concerts, workshops, and weekly class blocks for up to ${specs.capacity} guests. Published rates ${rateSummary}, ${minimumHours}-hour minimum. Call ${contact.primary.phone}.`,
   keywords: [
     'book event venue Denver',
     "event space rental Sloans Lake",

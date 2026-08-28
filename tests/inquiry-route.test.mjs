@@ -5,8 +5,10 @@
 //   1. Client ack is sent BEFORE the staff notification, so a cut-short
 //      function never costs the inquirer their reply.
 //   2. Every send carries a Resend Idempotency-Key scoped to the inquiry id.
-//   3. The staff notification goes to the MANAGER only — new inquiries never
-//      route to client services (that address is for booked clients).
+//   3. The staff notification reaches the WHOLE ops team — client services is
+//      the venue's contact of record and is the line every page publishes, so
+//      it must see the lead it will be answering. This used to be manager-only,
+//      which meant a lead sat unread whenever that single inbox did.
 //   4. Subjects embed inquiry-specific detail so no two inquiries produce
 //      byte-identical messages.
 //   5. A failed DB insert does not lose the inquiry (email still goes out),
@@ -76,7 +78,7 @@ const baseInquiry = {
   message: 'Looking at a Saturday in June.',
 };
 
-test('inquiry sends client ack before manager notification, both with idempotency keys', async () => {
+test('inquiry sends client ack before staff notification, both with idempotency keys', async () => {
   attempts.length = 0;
   const res = await POST(makeRequest(baseInquiry));
   assert.equal(res.status, 200);
@@ -86,10 +88,10 @@ test('inquiry sends client ack before manager notification, both with idempotenc
   const [ack, notification] = attempts;
   assert.deepEqual(ack.payload.to, ['avery@example.com'],
     'first send is the client-facing ack');
-  assert.deepEqual(notification.payload.to, ['boss@example.com'],
-    'second send is the staff notification, to the manager ONLY');
-  assert.ok(!notification.payload.to.includes('desk@example.com'),
-    'new inquiries must never route to client services');
+  assert.ok(notification.payload.to.includes('desk@example.com'),
+    'client services is the contact of record and must receive every new inquiry');
+  assert.ok(notification.payload.to.includes('boss@example.com'),
+    'the manager stays on the staff notification so nothing is lost');
 
   assert.match(ack.options.idempotencyKey, /^inquiry-ack\//);
   assert.match(notification.options.idempotencyKey, /^inquiry-notification\//);
@@ -102,7 +104,9 @@ test('inquiry sends client ack before manager notification, both with idempotenc
   assert.ok(ack.payload.subject.includes('Avery Example'),
     'subject embeds inquiry-specific detail');
   assert.equal(notification.payload.replyTo, 'avery@example.com',
-    'manager can reply straight to the inquirer');
+    'staff can reply straight to the inquirer');
+  assert.equal(ack.payload.replyTo, 'desk@example.com',
+    "the inquirer's reply lands with client services, the line the ack tells them to call");
 });
 
 test('waitlist inquiries include the desired start window', async () => {

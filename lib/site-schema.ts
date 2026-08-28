@@ -201,8 +201,8 @@ function businessNode() {
     description:
       "A restored 1905 sanctuary in Denver's Sloans Lake neighborhood, hosting weddings, private events, concerts, art shows, congregations, and wellness and movement classes under 24-foot vaulted ceilings.",
     url: BASE_URL,
-    telephone: contact.inquiries.phoneE164,
-    email: contact.inquiries.email,
+    telephone: contact.primary.phoneE164,
+    email: contact.primary.email,
     address: postalAddress,
     geo: geoCoordinates,
     hasMap: maps.url,

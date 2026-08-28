@@ -79,7 +79,7 @@ const faqs: Faq[] = [
   },
   {
     question: 'What happens if I skip a week or need to change the schedule?',
-    answer: `You are billed for sessions that occur, so a skipped week is not billed. Schedule changes made before the charge date land on that month's invoice. Once your block is running, changes go through client services at ${contact.clientServices.email} or ${contact.clientServices.phone}.`,
+    answer: `You are billed for sessions that occur, so a skipped week is not billed. Schedule changes made before the charge date land on that month's invoice. Once your block is running, changes go through client services at ${contact.primary.email} or ${contact.primary.phone}.`,
   },
   {
     question: 'Do I keep the same room and time every week?',
@@ -95,7 +95,7 @@ const faqs: Faq[] = [
   },
   {
     question: 'Can I try a one-off session before committing to a block?',
-    answer: `Yes, and most partners do. Book a single session at the standard rate, see how the room works for your practice, and convert to a standing block when you are ready. Reach out at ${contact.inquiries.phone} or ${contact.inquiries.email} and we will walk you through the room first.`,
+    answer: `Yes, and most partners do. Book a single session at the standard rate, see how the room works for your practice, and convert to a standing block when you are ready. Reach out at ${contact.primary.phone} or ${contact.primary.email} and we will walk you through the room first.`,
   },
 ];
 

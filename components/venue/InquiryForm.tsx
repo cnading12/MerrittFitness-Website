@@ -189,12 +189,12 @@ export default function InquiryForm({
 
         <p className="text-xs text-[#a08b84]">
           Prefer to talk? Call{' '}
-          <a href={contact.inquiries.phoneHref} className="underline hover:text-[#735e59]">
-            {contact.inquiries.phone}
+          <a href={contact.primary.phoneHref} className="underline hover:text-[#735e59]">
+            {contact.primary.phone}
           </a>{' '}
           or email{' '}
-          <a href={`mailto:${contact.inquiries.email}`} className="underline hover:text-[#735e59]">
-            {contact.inquiries.email}
+          <a href={`mailto:${contact.primary.email}`} className="underline hover:text-[#735e59]">
+            {contact.primary.email}
           </a>
           .
         </p>

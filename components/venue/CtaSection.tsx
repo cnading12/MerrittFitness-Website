@@ -33,7 +33,7 @@ export default function CtaSection({
           </Link>
           {showTourLine && (
             <a
-              href={`mailto:${contact.inquiries.email}?subject=Tour%20request`}
+              href={`mailto:${contact.primary.email}?subject=Tour%20request`}
               className="inline-flex items-center justify-center border-2 border-[#f2eee9]/70 text-[#f2eee9] font-bold px-10 py-5 rounded-full backdrop-blur-sm hover:bg-[#f2eee9]/10 hover:-translate-y-1 transition-all duration-300"
             >
               Schedule a Tour
@@ -42,7 +42,7 @@ export default function CtaSection({
         </div>
         {showTourLine && (
           <p className="text-[#f2eee9]/60 text-sm mt-6">
-            Or call {contact.inquiries.phone}. We will find a time that works.
+            Or call {contact.primary.phone}. We will find a time that works.
           </p>
         )}
       </div>

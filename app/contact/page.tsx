@@ -27,12 +27,12 @@ const OG_IMAGE = 'https://www.merrittwellness.net/images/pages/venue/exterior-fr
 
 export const metadata: Metadata = {
   title: "Contact Merritt Wellness | Denver Event Venue in Sloans Lake",
-  description: `Contact Merritt Wellness at ${contact.inquiries.phone} or ${contact.inquiries.email}. Historic 1905 event and class venue at ${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip}, open ${hours.display}, with ${specs.parkingSpots} on-site parking spots. Tours by appointment.`,
+  description: `Contact Merritt Wellness at ${contact.primary.phone} or ${contact.primary.email}. Historic 1905 event and class venue at ${contact.address.street}, ${contact.address.city}, ${contact.address.state} ${contact.address.zip}, open ${hours.display}, with ${specs.parkingSpots} on-site parking spots. Tours by appointment.`,
   keywords:
     "Merritt Wellness contact, Merritt Wellness phone number, Merritt Wellness Denver address, event venue Sloans Lake contact, book a venue tour Denver",
   openGraph: {
     title: "Contact Merritt Wellness | Denver Event Venue in Sloans Lake",
-    description: `Call ${contact.inquiries.phone}, email ${contact.inquiries.email}, or book a tour of the historic 1905 sanctuary at ${contact.address.street}.`,
+    description: `Call ${contact.primary.phone}, email ${contact.primary.email}, or book a tour of the historic 1905 sanctuary at ${contact.address.street}.`,
     url: `${BASE_URL}${PATH}`,
     siteName: 'Merritt Wellness',
     images: [{ url: OG_IMAGE, width: 2048, height: 1142, alt: venueImages.exteriorFront.alt }],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Contact Merritt Wellness | Denver Event Venue',
-    description: `Call ${contact.inquiries.phone}, email ${contact.inquiries.email}, or book a tour of the historic 1905 sanctuary.`,
+    description: `Call ${contact.primary.phone}, email ${contact.primary.email}, or book a tour of the historic 1905 sanctuary.`,
     images: [OG_IMAGE],
   },
   alternates: { canonical: `${BASE_URL}${PATH}` },
@@ -63,28 +63,39 @@ function contactPageJsonLd() {
       name: 'Merritt Wellness',
       address: postalAddress,
       geo: geoCoordinates,
-      telephone: contact.inquiries.phoneE164,
-      email: contact.inquiries.email,
-      // Two contact points, because the venue genuinely routes them
-      // differently: new business goes to the manager line, booked clients go
-      // to client services. Saying so in the markup keeps assistants from
-      // handing a prospective renter the wrong number.
+      telephone: contact.primary.phoneE164,
+      email: contact.primary.email,
+      // Client services is the contact of record and answers both new
+      // enquiries and booked events, so it is listed under BOTH contactTypes
+      // an assistant is likely to look for. The manager line is listed once,
+      // and only for the long-horizon questions it actually handles — stating
+      // it that way keeps an assistant from handing a prospective renter the
+      // slower number.
       contactPoint: [
         {
           '@type': 'ContactPoint',
           contactType: 'sales',
           name: 'New events, tours, and bookings',
-          telephone: contact.inquiries.phoneE164,
-          email: contact.inquiries.email,
+          telephone: contact.primary.phoneE164,
+          email: contact.primary.email,
           areaServed: 'US',
           availableLanguage: ['English'],
         },
         {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          name: 'Client services (existing bookings)',
-          telephone: `+1-${contact.clientServices.phoneHref.replace('tel:', '')}`,
-          email: contact.clientServices.email,
+          name: 'Client services',
+          telephone: contact.primary.phoneE164,
+          email: contact.primary.email,
+          areaServed: 'US',
+          availableLanguage: ['English'],
+        },
+        {
+          '@type': 'ContactPoint',
+          contactType: 'billing support',
+          name: 'Venue manager (partnerships and long-term planning)',
+          telephone: contact.manager.phoneE164,
+          email: contact.manager.email,
           areaServed: 'US',
           availableLanguage: ['English'],
         },
@@ -117,7 +128,7 @@ export default function ContactPage() {
           }
           subtitle="Call, email, or send a note below. We answer personally, usually within one business day, and tours are free and take about twenty minutes."
           ctas={[
-            { label: `Call ${contact.inquiries.phone}`, href: contact.inquiries.phoneHref },
+            { label: `Call ${contact.primary.phone}`, href: contact.primary.phoneHref },
             { label: 'Check Availability', href: '/book', variant: 'ghost' },
           ]}
         />
@@ -159,27 +170,31 @@ export default function ContactPage() {
                 </a>
               </div>
 
+              {/* Client services leads. It is the contact of record (see the
+                  routing rule in app/data/site.ts), so it comes before the
+                  manager card on every screen width — do not reorder. */}
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-[#735e59]/10">
                 <div className="w-12 h-12 bg-[#735e59]/10 rounded-2xl flex items-center justify-center mb-5">
                   <Phone className="w-6 h-6 text-[#735e59]" />
                 </div>
                 <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-3">
-                  New events &amp; tours
+                  Call or email us
                 </h3>
                 <p className="text-[#6b5f5b] leading-relaxed">
-                  <a href={contact.inquiries.phoneHref} className="hover:text-[#735e59]">
-                    {contact.inquiries.phone}
+                  <a href={contact.primary.phoneHref} className="hover:text-[#735e59]">
+                    {contact.primary.phone}
                   </a>
                   <br />
                   <a
-                    href={`mailto:${contact.inquiries.email}`}
+                    href={`mailto:${contact.primary.email}`}
                     className="hover:text-[#735e59] break-all"
                   >
-                    {contact.inquiries.email}
+                    {contact.primary.email}
                   </a>
                 </p>
                 <p className="mt-4 text-sm text-[#a08b84] leading-relaxed">
-                  Every new inquiry — a wedding, a weekly class block, a tour — starts here.
+                  Client services is the fastest way to reach us and handles everything: new
+                  inquiries and tours, invoices, schedule changes, and day-of logistics.
                 </p>
               </div>
 
@@ -188,23 +203,23 @@ export default function ContactPage() {
                   <Mail className="w-6 h-6 text-[#735e59]" />
                 </div>
                 <h3 className="text-xl font-bold text-[#4a3f3c] font-serif mb-3">
-                  Already booked with us
+                  Venue manager
                 </h3>
                 <p className="text-[#6b5f5b] leading-relaxed">
-                  <a href={contact.clientServices.phoneHref} className="hover:text-[#735e59]">
-                    {contact.clientServices.phone}
+                  <a href={contact.manager.phoneHref} className="hover:text-[#735e59]">
+                    {contact.manager.phone}
                   </a>
                   <br />
                   <a
-                    href={`mailto:${contact.clientServices.email}`}
+                    href={`mailto:${contact.manager.email}`}
                     className="hover:text-[#735e59] break-all"
                   >
-                    {contact.clientServices.email}
+                    {contact.manager.email}
                   </a>
                 </p>
                 <p className="mt-4 text-sm text-[#a08b84] leading-relaxed">
-                  Client services handles invoices, schedule changes, and day-of logistics for
-                  events already on the calendar.
+                  For partnerships, long-term planning, and ownership questions. Anything to do
+                  with a specific event is quicker through client services.
                 </p>
               </div>
 

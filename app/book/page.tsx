@@ -2150,7 +2150,7 @@ export default function BookingPage() {
                             <p className="mt-1.5 ml-[22px]">
                               Daytime programming the whole building benefits from — yoga,
                               meditation, a class or a quiet workshop — is genuinely welcome.
-                              Call <a href="tel:+17203579499" className="underline font-medium">(720) 357-9499</a> and
+                              Call <a href="tel:+13033598337" className="underline font-medium">(303) 359-8337</a> and
                               we&apos;ll issue you a code that unlocks these hours.
                             </p>
                           )}
@@ -3991,11 +3991,11 @@ export default function BookingPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Phone size={14} className="text-[#735e59]" />
-                  <span>(720) 357-9499</span>
+                  <span>(303) 359-8337</span>
                 </div>
                 <div className="flex items-center gap-2 text-[#4a3f3c]">
                   <Mail size={14} className="text-[#735e59]" />
-                  <span>manager@merrittwellness.net</span>
+                  <span>clientservices@merrittwellness.net</span>
                 </div>
               </div>
               <p className="text-xs text-[#a08b84] mt-4">

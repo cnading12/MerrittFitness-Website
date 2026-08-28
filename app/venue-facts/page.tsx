@@ -134,7 +134,7 @@ export default function VenueFactsPage() {
         subtitle="Capacity, rates, square footage, parking, policies — and a plain list of what this room is not right for."
         ctas={[
           { label: 'Check Availability', href: '/book' },
-          { label: 'Call the Venue', href: contact.inquiries.phoneHref, variant: 'ghost' },
+          { label: 'Call the Venue', href: contact.primary.phoneHref, variant: 'ghost' },
         ]}
       />
 
@@ -160,18 +160,18 @@ export default function VenueFactsPage() {
               </span>
             </a>
             <a
-              href={contact.inquiries.phoneHref}
+              href={contact.primary.phoneHref}
               className="inline-flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200"
             >
               <Phone size={16} />
-              {contact.inquiries.phone}
+              {contact.primary.phone}
             </a>
             <a
-              href={`mailto:${contact.inquiries.email}`}
+              href={`mailto:${contact.primary.email}`}
               className="inline-flex items-center gap-2 hover:text-[#735e59] transition-colors duration-200 break-all"
             >
               <Mail size={16} />
-              {contact.inquiries.email}
+              {contact.primary.email}
             </a>
           </div>
         </div>
@@ -364,7 +364,7 @@ export default function VenueFactsPage() {
           </h2>
           <p className="text-lg text-[#6b5f5b] leading-relaxed mb-8">
             Tours take twenty minutes and the {specs.ceilingFeet}-foot ceilings do most of the talking. Call{' '}
-            {contact.inquiries.phone}, email {contact.inquiries.email}, or book straight from the calendar.
+            {contact.primary.phone}, email {contact.primary.email}, or book straight from the calendar.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
