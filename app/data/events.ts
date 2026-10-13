@@ -357,6 +357,23 @@ export const events: Event[] = [
     recurrence: "Second Sunday of every month"
   },
 
+  // ============ NOVEMBER 2026 ============
+  {
+    id: "death-disco-nov-2026",
+    price: { from: 222, unit: "per person", note: "with code MERRITT (regularly $555)" },
+    title: "The Death Disco",
+    date: "2026-11-06",
+    time: "3:00 PM",
+    endTime: "8:00 PM",
+    description: "Merritt Wellness community: use code MERRITT for $333 off — $222 (regularly $555). Where sacred death ceremony meets ecstatic disco dance party. You've sat in circle. You've journeyed on sound. You've met your breath, your shadow. This time, you meet your death — and come back changed. You'll leave this hybrid ceremonial x celebratory container with: • Clarity on what matters. Your mortality becomes a mirror, cutting through the conditioning and the shoulds, connecting you straight to the callings of your heart and soul. • Motivation to act now. When you realize there are no guarantees, the finitude of life becomes your fuel. You stop waiting for someday. You take the trip, launch the thing, go for the dream — while you still can. • Freedom from fear. Failure, rejection, not being enough — most of our fears are rooted in the instinct to stay alive. Face the ultimate one and the rest lose their grip. • Reverence for simply being alive. When tomorrow isn't promised, your breath and the sunrise become enough. Abundance is suddenly everywhere. These aren't concepts you learn today and forget tomorrow. This is medicine, imprinted in the body — for life. The experience: a five-hour immersive journey. An altar at the center, candlelight, palo santo, a disco ball overhead. A mortality workshop and a guided deathbed visualization. Circle sharing. A shared meal. A ritual to lay to rest what's ready to die — then a rebirth journey, and a dance floor to close it all out. Under the glittering light of a disco ball, we dance in the duality of life and death. 40 seats, held small on purpose so every part of the ceremony can go deep. Bring a journal, something for the altar, and something sparkly for the disco. Led by Emily Bingham — Certified Grief Educator trained under David Kessler, Dharma & Spiritual Life Coach, and Temple Guide through the 13 Moon Mystery School. Author of Love & Grief and host of the Death & Disco podcast. Widowed at 32, she found in her husband's death a doorway — piercing clarity on what matters, and appreciation for simply being alive. Now she distills that medicine for others. Because you don't need a loss to learn how to live. Leave nothing unlived.",
+    imageUrl: "/images/event-banners/death-disco.png",
+    imagePosition: "center",
+    ticketUrl: "https://iamemilybingham.com/death-disco",
+    ticketLabel: "Get Tickets — Code MERRITT",
+    instagramHandle: "iamemilybingham",
+    practitionerName: "Emily Bingham"
+  },
+
   // ============ OCTOBER 2026 ============
   {
     id: "sacred-pause-breathwork-oct-2026",
