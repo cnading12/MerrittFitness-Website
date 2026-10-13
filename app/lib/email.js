@@ -1636,20 +1636,24 @@ function getOpsEmails() {
   return { manager, clientServices, addrs };
 }
 
-// Recipients for staff-facing notifications (new booking, recurring setup).
-// These MUST reach the whole ops team — the manager AND client services — not a
-// single hardcoded address. Prefer the configured ops distribution list; fall
-// back to the known staff addresses if neither env var is set so staff are
-// never silently dropped from a booking notification. De-duplicated so a single
-// shared address (or an env value equal to the fallback) doesn't double-send.
+// Recipients for staff-facing notifications (new booking, recurring setup,
+// website inquiries). These MUST reach the whole ops team — the manager AND
+// client services — not a single hardcoded address. Each role prefers its
+// OPS_EMAIL_* env var and falls back to its known staff address on its own, so
+// a missing or blank variable can never silently drop that person (this used
+// to fall back only when BOTH were unset, so configuring just one sent every
+// notification to a single inbox). De-duplicated so a single shared address
+// doesn't double-send.
 function getStaffRecipients() {
   const ops = getOpsEmails();
-  const recipients = ops.addrs.length > 0 ? ops.addrs : STAFF_FALLBACK_EMAILS;
-  if (ops.addrs.length === 0) {
-    console.warn('⚠️ OPS_EMAIL_MANAGER and OPS_EMAIL_CLIENT_SERVICES both missing — using built-in staff fallback list for notification recipients');
-  } else if (ops.addrs.length === 1) {
-    console.warn(`⚠️ Only one ops email configured (${ops.addrs[0]}) — staff notification will reach a single recipient`);
+  const [managerFallback, clientServicesFallback] = STAFF_FALLBACK_EMAILS;
+  if (!ops.manager) {
+    console.warn(`⚠️ OPS_EMAIL_MANAGER missing — using ${managerFallback} for staff notifications`);
   }
+  if (!ops.clientServices) {
+    console.warn(`⚠️ OPS_EMAIL_CLIENT_SERVICES missing — using ${clientServicesFallback} for staff notifications`);
+  }
+  const recipients = [ops.manager || managerFallback, ops.clientServices || clientServicesFallback];
   return [...new Set(recipients.map((a) => a.trim()).filter(Boolean))];
 }
 

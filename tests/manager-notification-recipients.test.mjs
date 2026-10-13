@@ -28,7 +28,7 @@ class MockResend {
 }
 mock.module('resend', { namedExports: { Resend: MockResend } });
 
-const { sendManagerNotification, sendRecurringSetupManager } =
+const { sendManagerNotification, sendRecurringSetupManager, sendInquiryNotification } =
   await import('../app/lib/email.js');
 
 const sampleBooking = {
@@ -98,5 +98,51 @@ test('sendRecurringSetupManager: reaches the whole ops team', async () => {
     const { to } = sentEmails[0];
     assert.ok(to.includes('manager@merrittwellness.net'), 'manager must be a recipient');
     assert.ok(to.includes('clientservices@merrittwellness.net'), 'client services must be a recipient');
+  });
+});
+
+test('sendManagerNotification: a missing ops var falls back for that role only', async () => {
+  await withOpsEnv('boss@example.com', undefined, async () => {
+    sentEmails.length = 0;
+    await sendManagerNotification(sampleBooking);
+    assert.deepEqual([...sentEmails[0].to].sort(), ['boss@example.com', 'clientservices@merrittwellness.net']);
+  });
+  await withOpsEnv(undefined, 'desk@example.com', async () => {
+    sentEmails.length = 0;
+    await sendManagerNotification(sampleBooking);
+    assert.deepEqual([...sentEmails[0].to].sort(), ['desk@example.com', 'manager@merrittwellness.net']);
+  });
+});
+
+// Every website form (components/venue/InquiryForm.tsx) posts to /api/inquiry,
+// which sends this one staff email — it must reach manager AND client services.
+const sampleInquiry = {
+  id: 'inquiry_test_1',
+  kind: 'event',
+  page: '/weddings',
+  name: 'Sam Lee',
+  email: 'sam@example.com',
+  message: 'Hello',
+};
+
+for (const kind of ['event', 'tour', 'waitlist', 'congregation', 'class-partnership']) {
+  test(`sendInquiryNotification (${kind}): reaches manager and client services`, async () => {
+    await withOpsEnv(undefined, undefined, async () => {
+      sentEmails.length = 0;
+      await sendInquiryNotification({ ...sampleInquiry, kind });
+      assert.equal(sentEmails.length, 1, 'expected exactly one Resend send');
+      const { to, replyTo } = sentEmails[0];
+      assert.ok(to.includes('manager@merrittwellness.net'), 'manager must be a recipient');
+      assert.ok(to.includes('clientservices@merrittwellness.net'), 'client services must be a recipient');
+      assert.equal(replyTo, 'sam@example.com', 'staff replies go to the inquirer');
+    });
+  });
+}
+
+test('sendInquiryNotification: uses both configured ops addresses', async () => {
+  await withOpsEnv('boss@example.com', 'desk@example.com', async () => {
+    sentEmails.length = 0;
+    await sendInquiryNotification(sampleInquiry);
+    assert.deepEqual([...sentEmails[0].to].sort(), ['boss@example.com', 'desk@example.com']);
   });
 });
